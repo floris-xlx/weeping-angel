@@ -1,0 +1,17 @@
+id: template-spring-actuator
+name: Spring Actuator exposure
+severity: high
+description: Spring Boot actuator endpoints may leak configuration and env.
+remediation: Disable public actuators or require strong authentication.
+cwe: CWE-200
+paths:
+  - /actuator
+  - /actuator/health
+  - /actuator/env
+  - /actuator/mappings
+matchers:
+  - type: status
+    status: [200]
+  - type: body
+    regex:
+      - "(?i)(\"_links\"|\"status\"\\s*:\\s*\"UP\"|\"propertySources\")"

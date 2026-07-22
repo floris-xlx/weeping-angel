@@ -1,0 +1,17 @@
+id: template-git-exposed
+name: Exposed Git repository metadata
+severity: high
+description: /.git/HEAD or related Git metadata is publicly readable.
+remediation: Deny HTTP access to .git directories on all hosts.
+cwe: CWE-538
+paths:
+  - /.git/HEAD
+  - /.git/config
+matchers:
+  - type: status
+    status: [200]
+  - type: body
+    contains:
+      - "ref:"
+    regex:
+      - "(?i)ref:\\s*refs/"

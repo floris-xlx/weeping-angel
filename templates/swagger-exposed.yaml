@@ -1,0 +1,18 @@
+id: template-swagger-exposed
+name: Swagger / OpenAPI docs public
+severity: low
+description: API schema documentation is accessible without authentication.
+remediation: Restrict docs to internal networks or authenticated operators.
+paths:
+  - /openapi.json
+  - /swagger.json
+  - /swagger-ui.html
+  - /v3/api-docs
+  - /api-docs
+matchers:
+  - type: status
+    status: [200]
+  - type: body
+    contains: []
+    regex:
+      - "(?i)(openapi|swagger)"

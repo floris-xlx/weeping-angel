@@ -1,0 +1,19 @@
+id: template-exposed-env
+name: Exposed environment file
+severity: critical
+description: Common environment file paths returned successfully with key=value content.
+remediation: Block public access to .env and rotate any leaked secrets.
+cwe: CWE-538
+paths:
+  - /.env
+  - /.env.local
+  - /.env.production
+  - /.env.backup
+matchers:
+  - type: status
+    status: [200]
+  - type: body
+    contains:
+      - "="
+    regex:
+      - "(?i)(api[_-]?key|secret|password|token|database_url)\\s*="

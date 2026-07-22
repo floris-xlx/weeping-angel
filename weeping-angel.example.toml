@@ -1,0 +1,16 @@
+# Example config — copy to weeping-angel.toml and edit.
+
+[authorization]
+i_own_this = true
+allow_hosts = ["localhost", "127.0.0.1", "app.example.com"]
+enable_active = false
+allow_write_methods = false
+
+[scan]
+profile = "standard"
+depth = 2
+max_urls = 300
+concurrency = 10
+rps = 5.0
+ignore_robots = false
+fail_on = "medium"
