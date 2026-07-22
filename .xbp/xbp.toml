@@ -1,0 +1,82 @@
+project_name = "weeping-angel"
+version = "0.1.0"
+port = 8080
+build_dir = "./"
+app_type = "rust"
+build_command = "cargo build --release"
+start_command = "./target/release/weeping-angel"
+target = "rust"
+version_targets = ["Cargo.toml"]
+version_domains = []
+ignore_paths = []
+watch_ignore_paths = []
+versioning_disabled = []
+release_disabled = []
+
+[[services]]
+name = "weeping-angel"
+target = "rust"
+branch = "main"
+port = 8080
+root_directory = "./"
+restart_policy = "on_failure"
+restart_policy_max_failure_count = 10
+start_wrapper = "pm2"
+force_run_from_root = false
+version_targets = ["Cargo.toml"]
+
+[services.commands]
+build = "cargo build --release"
+start = "./target/release/weeping-angel"
+dev = "cargo run"
+check = "cargo check"
+clippy = "cargo clippy --all-targets -- -D warnings"
+test = "cargo test"
+
+[services.deploy]
+provider = "kubernetes"
+
+[services.deploy.destinations]
+
+[services.deploy.envs.production]
+namespace = "weeping-angel"
+replicas = 1
+health = []
+
+[services.deploy.envs.production.kubernetes]
+workload = "weeping-angel"
+service = "weeping-angel"
+selector = "app=weeping-angel"
+
+[deploy]
+default_env = "production"
+history_dir = ".xbp/deployments"
+lock_file = ".xbp/deploy.lock"
+
+[deploy.groups.all]
+services = ["weeping-angel"]
+order = ["weeping-angel"]
+description = "Selected deployable services"
+
+[github]
+repository = "floris-xlx/weeping-angel"
+
+[github.release_branch]
+enabled = true
+naming_template = "releases/{SERVICE_NAME}-{VERSION}"
+
+[publish.dist]
+enabled = true
+packages = ["weeping-angel"]
+installers = [
+    "shell",
+    "msi",
+    "homebrew",
+]
+targets = []
+artifacts_modes = [
+    "host",
+    "global",
+]
+allow_dirty = true
+generate_ci = true
