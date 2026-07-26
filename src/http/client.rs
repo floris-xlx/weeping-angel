@@ -1,12 +1,12 @@
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use reqwest::{Client, Method, redirect::Policy};
 use tokio::sync::Semaphore;
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 use url::Url;
 
 use crate::authz::Authorization;
@@ -152,7 +152,10 @@ impl HttpClient {
         }
 
         self.requests.fetch_add(1, Ordering::Relaxed);
-        let resp = req.send().await.with_context(|| format!("{method} {url}"))?;
+        let resp = req
+            .send()
+            .await
+            .with_context(|| format!("{method} {url}"))?;
 
         // Re-validate final URL after redirects
         let final_url = resp.url().clone();
@@ -162,8 +165,8 @@ impl HttpClient {
             ));
         }
 
-        let status = resp.status();
-        let mut headers = HashMap::new();
+        let status: reqwest::StatusCode = resp.status();
+        let mut headers: HashMap<String, String> = HashMap::new();
         for (k, v) in resp.headers().iter() {
             if let Ok(val) = v.to_str() {
                 // preserve multiple set-cookie by joining last-wins for map; also store individually if needed
@@ -178,18 +181,19 @@ impl HttpClient {
                     .or_insert_with(|| val.to_string());
             }
         }
-        let content_type = headers
+        let content_type: Option<String> = headers
             .iter()
             .find(|(k, _)| k.eq_ignore_ascii_case("content-type"))
             .map(|(_, v)| v.clone());
 
+        // Use reqwest's body bytes (do not depend on optional `axum` feature).
         let bytes = resp.bytes().await.context("read body")?;
-        let truncated = if bytes.len() > self.max_body_bytes {
+        let truncated: &[u8] = if bytes.len() > self.max_body_bytes {
             &bytes[..self.max_body_bytes]
         } else {
             &bytes[..]
         };
-        let body = String::from_utf8_lossy(truncated).into_owned();
+        let body: String = String::from_utf8_lossy(truncated).into_owned();
 
         Ok(ResponseSnapshot {
             url: url.clone(),
@@ -216,8 +220,8 @@ struct RateLimiter {
 
 impl RateLimiter {
     fn new(rps: f64) -> Self {
-        let interval_ms = (1000.0 / rps).ceil().max(1.0) as u64;
-        let mut ticker = interval(Duration::from_millis(interval_ms));
+        let interval_ms: u64 = (1000.0 / rps).ceil().max(1.0) as u64;
+        let mut ticker: tokio::time::Interval = interval(Duration::from_millis(interval_ms));
         ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
         // consume first immediate tick
         ticker.reset();
@@ -228,7 +232,7 @@ impl RateLimiter {
     }
 
     async fn until_ready(&self) {
-        let mut t = self.ticker.lock().await;
+        let mut t: tokio::sync::MutexGuard<'_, tokio::time::Interval> = self.ticker.lock().await;
         t.tick().await;
         let _ = self.interval_ms;
     }

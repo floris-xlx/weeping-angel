@@ -1,10 +1,13 @@
 [package]
+repository = "https://github.com/floris-xlx/weeping-angel"
+homepage = "https://github.com/floris-xlx/weeping-angel"
 name = "weeping-angel"
 version = "0.1.1"
 edition = "2024"
 description = "Authorized web application recon and security scanning CLI"
 license = "MIT"
 readme = "README.md"
+authors = ["floris-xlx"]
 keywords = [
     "security",
     "scanner",
@@ -21,18 +24,36 @@ default-run = "weeping-angel"
 name = "weeping-angel"
 path = "src/main.rs"
 
-[[bin]]
+# Lab / fixture HTTP server — example only (not a cargo-dist install artifact).
+# Run: cargo run --example weeping-angel-demo --features demo
+[[example]]
 name = "weeping-angel-demo"
-path = "src/bin/demo.rs"
+path = "examples/weeping-angel-demo.rs"
 required-features = ["demo"]
 
 [features]
-default = ["demo"]
+# Default stays lean for crates.io / dist installs; opt into the local lab server.
+default = []
 demo = [
     "dep:axum",
     "dep:tower",
     "dep:tower-http",
 ]
+
+# cargo-dist profile (required by `dist build`)
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# cargo-dist: only package the main CLI binary (examples are never dist artifacts).
+[package.metadata.dist]
+dist = true
+
+[package.metadata.wix]
+upgrade-guid = "56BAEF93-DBA2-4BB4-8502-89C386C68D67"
+path-guid = "DAA53BD2-B2CE-4B13-A9A7-61C7F515C785"
+license = false
+eula = false
 
 [dependencies]
 anyhow = "1"

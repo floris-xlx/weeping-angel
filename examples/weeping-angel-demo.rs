@@ -23,15 +23,15 @@ async fn main() {
         .and_then(|p| p.parse().ok())
         .unwrap_or(8787);
 
-    let app = demo_router();
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let app: Router = demo_router();
+    let addr: SocketAddr = SocketAddr::from(([127, 0, 0, 1], port));
     eprintln!("weeping-angel-demo listening on http://{addr}");
     eprintln!("Scan with:");
     eprintln!(
         "  cargo run --bin weeping-angel -- scan http://127.0.0.1:{port}/ --i-own-this --allow-host 127.0.0.1 --profile deep --enable-active --cookie \"session=admin-session\" --compare-auth"
     );
 
-    let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
+    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind(addr).await.expect("bind");
     axum::serve(listener, app).await.expect("serve");
 }
 

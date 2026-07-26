@@ -16,5 +16,5 @@ fi
 echo
 echo "Setup complete."
 echo "  Scanner:  cargo run --bin weeping-angel -- --help"
-echo "  Lab demo: cargo run --bin weeping-angel-demo"
+echo "  Lab demo: cargo run --example weeping-angel-demo --features demo"
 echo "  Full lab: ./scripts/demo-scan.sh"

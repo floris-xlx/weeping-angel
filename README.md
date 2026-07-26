@@ -25,9 +25,12 @@ chmod +x scripts/*.sh
 ## Manual install
 
 ```bash
-cargo build --release --bins
+cargo build --release
 # scanner: target/release/weeping-angel
-# lab:     target/release/weeping-angel-demo   (127.0.0.1 only)
+
+# optional local lab server (example, not a dist install artifact):
+cargo build --release --example weeping-angel-demo --features demo
+# lab: target/release/examples/weeping-angel-demo.exe   (127.0.0.1 only)
 ```
 
 ## Scan a target you control
@@ -45,7 +48,7 @@ cargo run --bin weeping-angel -- scan https://app.example.com \
 
 ```bash
 # terminal 1
-cargo run --bin weeping-angel-demo
+cargo run --example weeping-angel-demo --features demo
 # listens on http://127.0.0.1:8787
 
 # terminal 2
