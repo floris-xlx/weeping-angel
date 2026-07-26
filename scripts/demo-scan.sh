@@ -9,7 +9,7 @@ echo "==> Building"
 cargo build --bins
 
 echo "==> Starting demo on ${BASE}"
-PORT="$PORT" cargo run --quiet --bin weeping-angel-demo &
+PORT="$PORT" cargo run --quiet --example weeping-angel-demo --features demo &
 DEMO_PID=$!
 cleanup() { kill "$DEMO_PID" 2>/dev/null || true; }
 trap cleanup EXIT
