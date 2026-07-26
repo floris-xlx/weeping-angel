@@ -194,7 +194,7 @@ pub struct SeverityCounts {
 
 impl ScanStats {
     pub fn from_findings(findings: &[Finding], requests: u64, urls: usize) -> Self {
-        let mut by = SeverityCounts::default();
+        let mut by: SeverityCounts = SeverityCounts::default();
         for f in findings {
             match f.severity {
                 Severity::Info => by.info += 1,

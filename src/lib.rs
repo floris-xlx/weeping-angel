@@ -9,33 +9,35 @@ pub mod engine;
 pub mod finding;
 pub mod http;
 pub mod report;
+pub mod style;
 pub mod templates;
 
+use std::collections::HashSet;
 use std::time::Duration;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use tracing::info;
 
 use crate::authz::Authorization;
 use crate::cli::ScanArgs;
-use crate::config::{merge_hosts, FileConfig, Profile};
-use crate::engine::{run_scan, ScanOptions};
+use crate::config::{FileConfig, Profile, merge_hosts};
+use crate::engine::{ScanOptions, run_scan};
 use crate::finding::Severity;
 use crate::http::ClientConfig;
-use crate::report::{write_reports, Format};
+use crate::report::{Format, write_reports};
 
 pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
-    let file_cfg = if let Some(path) = &args.config {
+    let file_cfg: FileConfig = if let Some(path) = &args.config {
         FileConfig::load(path).with_context(|| format!("load config {}", path.display()))?
     } else {
         FileConfig::default()
     };
 
-    let i_own_this = args.i_own_this || file_cfg.authorization.i_own_this;
-    let enable_active = args.enable_active || file_cfg.authorization.enable_active;
-    let allow_write = args.allow_write_methods || file_cfg.authorization.allow_write_methods;
+    let i_own_this: bool = args.i_own_this || file_cfg.authorization.i_own_this;
+    let enable_active: bool = args.enable_active || file_cfg.authorization.enable_active;
+    let allow_write: bool = args.allow_write_methods || file_cfg.authorization.allow_write_methods;
 
-    let mut hosts = merge_hosts(
+    let mut hosts: HashSet<String> = merge_hosts(
         args.allow_hosts.clone(),
         file_cfg.authorization.allow_hosts.clone(),
     );
@@ -43,7 +45,7 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
     // Convenience: if user passed targets but forgot allow-host, do NOT auto-add —
     // security default. They must be explicit.
 
-    let authz = Authorization::new(
+    let authz: Authorization = Authorization::new(
         i_own_this,
         hosts.drain().collect::<Vec<_>>(),
         enable_active,
@@ -54,20 +56,23 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         bail!("provide at least one target URL");
     }
 
-    let targets = authz.validate_targets(&args.targets)?;
+    let targets: Vec<url::Url> = authz.validate_targets(&args.targets)?;
 
     // Auto-suggest: if allowlist empty we already error; good.
 
-    let profile_name = file_cfg
+    let profile_name: String = file_cfg
         .scan
         .profile
         .clone()
         .unwrap_or_else(|| args.profile.clone());
-    let profile = Profile::parse(&profile_name)
+    let profile: Profile = Profile::parse(&profile_name)
         .with_context(|| format!("unknown profile: {profile_name}"))?;
 
     let modules: Vec<String> = if let Some(m) = &args.modules {
-        m.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect()
+        m.split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
     } else if !file_cfg.scan.modules.is_empty() {
         file_cfg.scan.modules.clone()
     } else {
@@ -88,28 +93,21 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         .collect();
 
     if (!probes.is_empty() || modules.iter().any(|m| m == "active")) && !enable_active {
-        bail!(
-            "active probes requested but --enable-active was not set (second safety gate)"
-        );
+        bail!("active probes requested but --enable-active was not set (second safety gate)");
     }
 
-    let fail_on = Severity::from_str_loose(
-        file_cfg
-            .scan
-            .fail_on
-            .as_deref()
-            .unwrap_or(&args.fail_on),
-    )
-    .with_context(|| format!("invalid --fail-on {}", args.fail_on))?;
+    let fail_on: Severity =
+        Severity::from_str_loose(file_cfg.scan.fail_on.as_deref().unwrap_or(&args.fail_on))
+            .with_context(|| format!("invalid --fail-on {}", args.fail_on))?;
 
-    let mut extra_headers = cli::parse_header_lines(&args.headers)?;
+    let mut extra_headers: Vec<(String, String)> = cli::parse_header_lines(&args.headers)?;
     for h in &file_cfg.headers {
         if let Some((k, v)) = h.split_once(':') {
             extra_headers.push((k.trim().to_string(), v.trim().to_string()));
         }
     }
 
-    let client_cfg = ClientConfig {
+    let client_cfg: ClientConfig = ClientConfig {
         timeout: Duration::from_secs(args.timeout),
         max_redirects: 5,
         max_body_bytes: 2 * 1024 * 1024,
@@ -121,21 +119,18 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
     };
 
     // Auto-include auth-compare when --compare-auth and not already listed
-    let mut modules = modules;
+    let mut modules: Vec<String> = modules;
     if args.compare_auth && !modules.iter().any(|m| m == "auth-compare") {
         modules.push("auth-compare".into());
     }
 
-    let opts = ScanOptions {
+    let opts: ScanOptions = ScanOptions {
         targets,
         profile,
         modules: modules.clone(),
         depth: file_cfg.scan.depth.unwrap_or(args.depth),
         max_urls: file_cfg.scan.max_urls.unwrap_or(args.max_urls),
-        ignore_robots: file_cfg
-            .scan
-            .ignore_robots
-            .unwrap_or(args.ignore_robots),
+        ignore_robots: file_cfg.scan.ignore_robots.unwrap_or(args.ignore_robots),
         wordlist: args.wordlist.clone(),
         probes,
         fail_on: Some(fail_on),
@@ -143,18 +138,29 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         compare_auth: args.compare_auth,
     };
 
-    eprintln!(
-        "weeping-angel: authorized scan of {} (profile={}, modules={})",
-        args.targets.join(", "),
-        profile.as_str(),
-        modules.join(",")
-    );
+    crate::style::init();
+    crate::style::eprint_line(&format!(
+        "{} {} {}  {}={}  {}={}",
+        crate::style::brand("weeping-angel"),
+        crate::style::ok("authorized scan"),
+        crate::style::bold(&args.targets.join(", ")),
+        crate::style::cyan("profile"),
+        crate::style::bright_magenta(profile.as_str()),
+        crate::style::cyan("modules"),
+        crate::style::dim(&modules.join(",")),
+    ));
+    crate::style::eprint_line(&format!(
+        "{} rate ~{} req/s · concurrency {} · every HTTP request is printed live",
+        crate::style::brand("weeping-angel"),
+        client_cfg.rps,
+        client_cfg.concurrency,
+    ));
     info!("consent OK; starting scan");
 
-    let report = run_scan(authz, client_cfg, opts).await?;
+    let report: finding::ScanReport = run_scan(authz, client_cfg, opts).await?;
 
-    let formats = Format::parse_list(&args.format);
-    let formats = if formats.is_empty() {
+    let formats: Vec<Format> = Format::parse_list(&args.format);
+    let formats: Vec<Format> = if formats.is_empty() {
         vec![Format::Terminal]
     } else {
         formats

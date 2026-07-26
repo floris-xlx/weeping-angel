@@ -3,11 +3,14 @@ pub mod scope;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 use anyhow::Result;
 use chrono::Utc;
 use tracing::{info, warn};
 use url::Url;
+
+use crate::style;
 
 use crate::authz::Authorization;
 use crate::checks::{self, CheckKind, ScanContext};
@@ -64,6 +67,12 @@ pub async fn run_scan(
         profile = opts.profile.as_str(),
         "starting authorized scan"
     );
+    let phase_t0 = Instant::now();
+    progress(&format!(
+        "scan start target={} profile={} (progress lines mean it is working; default ~5 req/s)",
+        seed,
+        opts.profile.as_str()
+    ));
 
     let mut discovered: HashSet<String> = HashSet::new();
     let mut queue: VecDeque<(Url, u32)> = VecDeque::new();
@@ -77,6 +86,7 @@ pub async fn run_scan(
     }
 
     if module_enabled(&opts.modules, "discovery") {
+        progress("phase: robots.txt / sitemaps");
         for t in &opts.targets {
             match discovery::robots::fetch_robots(&client, t).await {
                 Ok(r) => {
@@ -103,6 +113,13 @@ pub async fn run_scan(
         }
     }
 
+    progress(&format!(
+        "phase: crawl (queue={}, depth≤{}, requests so far={})",
+        queue.len(),
+        opts.depth,
+        client.request_count()
+    ));
+    let mut crawl_done = 0usize;
     while let Some((url, depth)) = queue.pop_front() {
         if robots_blocked(&robots_disallow, url.path()) {
             continue;
@@ -110,6 +127,14 @@ pub async fn run_scan(
 
         match client.get(&url).await {
             Ok(resp) => {
+                crawl_done += 1;
+                if crawl_done == 1 || crawl_done % 10 == 0 {
+                    progress(&format!(
+                        "  crawl {crawl_done} fetched (queue left {}, reqs={})",
+                        queue.len(),
+                        client.request_count()
+                    ));
+                }
                 let key = resp.final_url.as_str().to_string();
                 assets.push(DiscoveredAsset {
                     url: resp.final_url.clone(),
@@ -190,6 +215,12 @@ pub async fn run_scan(
             Err(e) => warn!("fetch {url}: {e}"),
         }
     }
+    progress(&format!(
+        "phase: crawl done (assets={}, reqs={}, {:.1}s)",
+        assets.len(),
+        client.request_count(),
+        phase_t0.elapsed().as_secs_f64()
+    ));
 
     if module_enabled(&opts.modules, "wordlist") || module_enabled(&opts.modules, "exposures") {
         let origin = origin_of(&seed);
@@ -204,6 +235,11 @@ pub async fn run_scan(
                 .collect()
         };
 
+        let total_paths = paths.len();
+        progress(&format!(
+            "phase: wordlist ({total_paths} paths; this is usually the long quiet stretch)"
+        ));
+        let mut probed = 0usize;
         for path in paths {
             if discovered.len() >= opts.max_urls {
                 break;
@@ -224,6 +260,14 @@ pub async fn run_scan(
             }
             match client.get(&u).await {
                 Ok(resp) => {
+                    probed += 1;
+                    if probed == 1 || probed % 25 == 0 || probed == total_paths {
+                        progress(&format!(
+                            "  wordlist {probed}/{total_paths} (hits={}, reqs={})",
+                            assets.iter().filter(|a| a.source == "wordlist").count(),
+                            client.request_count()
+                        ));
+                    }
                     let status = resp.status.as_u16();
                     if status < 400 || discovery::wordlist::is_interesting_status(status) {
                         discovered.insert(u.as_str().to_string());
@@ -236,16 +280,35 @@ pub async fn run_scan(
                         response_cache.insert(resp.final_url.as_str().to_string(), resp);
                     }
                 }
-                Err(e) => tracing::debug!("wordlist miss {u}: {e}"),
+                Err(e) => {
+                    probed += 1;
+                    if probed == 1 || probed % 25 == 0 {
+                        progress(&format!(
+                            "  wordlist {probed}/{total_paths} (last error, reqs={})",
+                            client.request_count()
+                        ));
+                    }
+                    tracing::debug!("wordlist miss {u}: {e}");
+                }
             }
         }
+        progress(&format!(
+            "phase: wordlist done (probed={probed}, reqs={})",
+            client.request_count()
+        ));
     }
 
     if module_enabled(&opts.modules, "openapi") || module_enabled(&opts.modules, "discovery") {
+        progress("phase: openapi candidates");
+        // Cap path probing from huge OpenAPI docs so a large /openapi.yaml cannot
+        // stall the scan for minutes with near-zero feedback.
+        const MAX_OPENAPI_PATH_PROBES: usize = 40;
+        let mut openapi_probes = 0usize;
         for candidate in discovery::openapi::candidate_urls(&seed) {
             if !authz.url_in_scope(&candidate) {
                 continue;
             }
+            progress(&format!("  openapi probe {}", candidate.path()));
             if let Ok(resp) = client.get(&candidate).await {
                 if resp.status.is_success()
                     && (resp.is_json()
@@ -260,11 +323,18 @@ pub async fn run_scan(
                         source: "openapi".into(),
                     });
                     let more = discovery::openapi::extract_paths(&seed, &resp.body);
-                    for ep in more {
+                    let more_len = more.len();
+                    if more_len > MAX_OPENAPI_PATH_PROBES {
+                        progress(&format!(
+                            "  openapi extracted {more_len} paths; probing first {MAX_OPENAPI_PATH_PROBES}"
+                        ));
+                    }
+                    for ep in more.into_iter().take(MAX_OPENAPI_PATH_PROBES) {
                         if discovered.len() >= opts.max_urls {
                             break;
                         }
                         if authz.url_in_scope(&ep) && discovered.insert(ep.as_str().to_string()) {
+                            openapi_probes += 1;
                             if let Ok(r2) = client.get(&ep).await {
                                 assets.push(DiscoveredAsset {
                                     url: r2.final_url.clone(),
@@ -280,6 +350,10 @@ pub async fn run_scan(
                 }
             }
         }
+        progress(&format!(
+            "phase: openapi done (path probes={openapi_probes}, reqs={})",
+            client.request_count()
+        ));
     }
 
     let mut discovered_urls: Vec<String> = discovered.into_iter().collect();
@@ -316,9 +390,11 @@ pub async fn run_scan(
 
     // YAML path templates (Nuclei-lite)
     if module_enabled(&opts.modules, "templates") {
+        progress("phase: templates");
         match templates::load_templates(&opts.templates_dir) {
             Ok(tmpls) => {
                 info!(count = tmpls.len(), "loaded templates");
+                progress(&format!("  loaded {} templates", tmpls.len()));
                 match templates::run_templates(client.as_ref(), &seed, &tmpls, 80).await {
                     Ok(mut f) => findings.append(&mut f),
                     Err(e) => warn!("templates: {e}"),
@@ -328,6 +404,7 @@ pub async fn run_scan(
         }
     }
 
+    progress("phase: passive checks");
     for check in checks::registry() {
         if !should_run_check(check.as_ref(), &opts, authz.enable_active) {
             continue;
@@ -336,6 +413,7 @@ pub async fn run_scan(
         if check.id() == "auth-compare" && !opts.compare_auth {
             continue;
         }
+        progress(&format!("  check: {}", check.id()));
         match check.run(&ctx).await {
             Ok(mut f) => findings.append(&mut f),
             Err(e) => warn!("check {}: {e}", check.id()),
@@ -350,6 +428,13 @@ pub async fn run_scan(
         requests += a.request_count();
     }
     let stats = ScanStats::from_findings(&findings, requests, discovered_urls.len());
+    progress(&format!(
+        "scan finished in {:.1}s — {} requests, {} urls, {} findings",
+        phase_t0.elapsed().as_secs_f64(),
+        requests,
+        discovered_urls.len(),
+        findings.len()
+    ));
 
     Ok(ScanReport {
         tool: "weeping-angel".into(),
@@ -363,6 +448,12 @@ pub async fn run_scan(
         findings,
         stats,
     })
+}
+
+/// Human-visible progress on stderr (always, not only with -v). Colored + flushed.
+fn progress(msg: &str) {
+    style::log_progress(msg);
+    info!("{msg}");
 }
 
 fn should_run_check(

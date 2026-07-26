@@ -45,7 +45,7 @@ impl Authorization {
         enable_active: bool,
         allow_write_methods: bool,
     ) -> Self {
-        let allow_hosts = allow_hosts
+        let allow_hosts: HashSet<String> = allow_hosts
             .into_iter()
             .map(|h| normalize_host(&h))
             .filter(|h| !h.is_empty())
@@ -67,15 +67,16 @@ impl Authorization {
             return Err(AuthzError::EmptyAllowlist);
         }
 
-        let mut urls = Vec::with_capacity(targets.len());
+        let mut urls: Vec<Url> = Vec::with_capacity(targets.len());
         for t in targets {
-            let url = Url::parse(t).map_err(|e| AuthzError::InvalidUrl(format!("{t}: {e}")))?;
+            let url: Url =
+                Url::parse(t).map_err(|e| AuthzError::InvalidUrl(format!("{t}: {e}")))?;
             if url.scheme() != "http" && url.scheme() != "https" {
                 return Err(AuthzError::InvalidUrl(format!(
                     "{t}: only http/https schemes are supported"
                 )));
             }
-            let host = url
+            let host: &str = url
                 .host_str()
                 .ok_or_else(|| AuthzError::InvalidUrl(format!("{t}: missing host")))?;
             self.ensure_host_allowed(host)?;
@@ -85,7 +86,7 @@ impl Authorization {
     }
 
     pub fn ensure_host_allowed(&self, host: &str) -> Result<(), AuthzError> {
-        let host = normalize_host(host);
+        let host: String = normalize_host(host);
         if self.host_matches(&host) {
             Ok(())
         } else {
@@ -152,8 +153,8 @@ mod tests {
 
     #[test]
     fn rejects_without_consent() {
-        let authz = Authorization::new(false, ["example.com".into()], false, false);
-        let err = authz
+        let authz: Authorization = Authorization::new(false, ["example.com".into()], false, false);
+        let err: AuthzError = authz
             .validate_targets(&["https://example.com".into()])
             .unwrap_err();
         assert!(matches!(err, AuthzError::MissingConsent));
@@ -161,8 +162,8 @@ mod tests {
 
     #[test]
     fn rejects_empty_allowlist() {
-        let authz = Authorization::new(true, Vec::<String>::new(), false, false);
-        let err = authz
+        let authz: Authorization = Authorization::new(true, Vec::<String>::new(), false, false);
+        let err: AuthzError = authz
             .validate_targets(&["https://example.com".into()])
             .unwrap_err();
         assert!(matches!(err, AuthzError::EmptyAllowlist));
@@ -170,8 +171,8 @@ mod tests {
 
     #[test]
     fn rejects_host_not_allowlisted() {
-        let authz = Authorization::new(true, ["allowed.test".into()], false, false);
-        let err = authz
+        let authz: Authorization = Authorization::new(true, ["allowed.test".into()], false, false);
+        let err: AuthzError = authz
             .validate_targets(&["https://evil.test".into()])
             .unwrap_err();
         assert!(matches!(err, AuthzError::HostNotAllowed { .. }));
@@ -179,8 +180,8 @@ mod tests {
 
     #[test]
     fn accepts_allowlisted_host() {
-        let authz = Authorization::new(true, ["example.com".into()], false, false);
-        let urls = authz
+        let authz: Authorization = Authorization::new(true, ["example.com".into()], false, false);
+        let urls: Vec<Url> = authz
             .validate_targets(&["https://example.com/app".into()])
             .unwrap();
         assert_eq!(urls.len(), 1);
@@ -188,7 +189,7 @@ mod tests {
 
     #[test]
     fn wildcard_subdomain() {
-        let authz = Authorization::new(true, ["*.example.com".into()], false, false);
+        let authz: Authorization = Authorization::new(true, ["*.example.com".into()], false, false);
         assert!(authz.url_in_scope(&Url::parse("https://a.example.com").unwrap()));
         assert!(authz.url_in_scope(&Url::parse("https://example.com").unwrap()));
         assert!(!authz.url_in_scope(&Url::parse("https://evil.com").unwrap()));

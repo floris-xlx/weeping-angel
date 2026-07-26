@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, anyhow};
 use reqwest::{Client, Method, redirect::Policy};
@@ -11,6 +11,7 @@ use url::Url;
 
 use crate::authz::Authorization;
 use crate::http::response::ResponseSnapshot;
+use crate::style;
 
 const DEFAULT_UA: &str = "weeping-angel/0.1 (+authorized-security-scan; polite)";
 
@@ -151,15 +152,35 @@ impl HttpClient {
             req = req.body(b);
         }
 
-        self.requests.fetch_add(1, Ordering::Relaxed);
-        let resp = req
-            .send()
-            .await
-            .with_context(|| format!("{method} {url}"))?;
+        let n = self.requests.fetch_add(1, Ordering::Relaxed) + 1;
+        let started = Instant::now();
+        let method_s = method.as_str();
+
+        let send_result = req.send().await;
+        let resp = match send_result {
+            Ok(r) => r,
+            Err(e) => {
+                style::log_request_err(
+                    n,
+                    method_s,
+                    url.as_str(),
+                    started.elapsed().as_millis(),
+                    &e.to_string(),
+                );
+                return Err(e).with_context(|| format!("{method} {url}"));
+            }
+        };
 
         // Re-validate final URL after redirects
         let final_url = resp.url().clone();
         if !self.authz.url_in_scope(&final_url) {
+            style::log_request_err(
+                n,
+                method_s,
+                url.as_str(),
+                started.elapsed().as_millis(),
+                &format!("redirect left scope → {final_url}"),
+            );
             return Err(anyhow!(
                 "redirect left authorized scope: {url} -> {final_url}"
             ));
@@ -187,13 +208,41 @@ impl HttpClient {
             .map(|(_, v)| v.clone());
 
         // Use reqwest's body bytes (do not depend on optional `axum` feature).
-        let bytes = resp.bytes().await.context("read body")?;
+        let bytes = match resp.bytes().await {
+            Ok(b) => b,
+            Err(e) => {
+                style::log_request_err(
+                    n,
+                    method_s,
+                    url.as_str(),
+                    started.elapsed().as_millis(),
+                    &format!("read body: {e}"),
+                );
+                return Err(e).context("read body");
+            }
+        };
         let truncated: &[u8] = if bytes.len() > self.max_body_bytes {
             &bytes[..self.max_body_bytes]
         } else {
             &bytes[..]
         };
         let body: String = String::from_utf8_lossy(truncated).into_owned();
+        let body_len = body.len();
+
+        let redir = if final_url.as_str() != url.as_str() {
+            Some(final_url.as_str())
+        } else {
+            None
+        };
+        style::log_request_ok(
+            n,
+            method_s,
+            url.as_str(),
+            status.as_u16(),
+            started.elapsed().as_millis(),
+            body_len,
+            redir,
+        );
 
         Ok(ResponseSnapshot {
             url: url.clone(),

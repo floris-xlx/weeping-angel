@@ -2,3 +2,13 @@
 /report-lab*
 /report.*
 /weeping-angel.toml
+
+# xbp secrets (local only - never commit)
+.env
+.env.local
+.env.*.local
+scan-mirror3.html
+scan-mirror3.json
+scan-mirror3-rerun.json
+.xbp/releases/service-weeping-angel/service-weeping-angel-0.1.1.toml
+.xbp/versioning/history.jsonl

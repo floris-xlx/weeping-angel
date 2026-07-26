@@ -151,8 +151,10 @@ static PATTERNS: Lazy<Vec<Pattern>> = Lazy::new(|| {
         Pattern {
             id: "bearer-hardcoded",
             title: "Hardcoded Bearer token",
+            // Require a long token-shaped payload so prose like "Bearer sessions"
+            // in OpenAPI docs does not false-positive as a live secret.
             severity: Severity::High,
-            re: Regex::new(r#"(?i)bearer\s+[A-Za-z0-9\-._~+/]+=*"#).unwrap(),
+            re: Regex::new(r#"(?i)\bbearer\s+[A-Za-z0-9\-._~+/]{20,}=*"#).unwrap(),
         },
     ]
 });
@@ -241,5 +243,34 @@ mod tests {
             "key=AKIAIOSFODNN7EXAMPLE",
         );
         assert!(findings.iter().any(|f| f.id == "aws-access-key"));
+    }
+
+    #[test]
+    fn bearer_prose_is_not_a_finding() {
+        let mut findings = Vec::new();
+        scan_text(
+            &mut findings,
+            "secrets",
+            "https://example.com/openapi.yaml",
+            "body",
+            "Authorization: Bearer sessions and admin bearer sessions are supported.",
+        );
+        assert!(
+            findings.iter().all(|f| f.id != "bearer-hardcoded"),
+            "OpenAPI prose must not trip bearer-hardcoded"
+        );
+    }
+
+    #[test]
+    fn bearer_token_shaped_value_is_a_finding() {
+        let mut findings = Vec::new();
+        scan_text(
+            &mut findings,
+            "secrets",
+            "https://example.com",
+            "body",
+            "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc",
+        );
+        assert!(findings.iter().any(|f| f.id == "bearer-hardcoded"));
     }
 }
