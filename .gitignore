@@ -2,3 +2,6 @@
 /report-lab*
 /report.*
 /weeping-angel.toml
+.env
+.env.local
+.env.*
