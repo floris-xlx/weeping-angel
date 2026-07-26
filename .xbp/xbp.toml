@@ -1,12 +1,15 @@
 project_name = "weeping-angel"
 version = "0.1.0"
 port = 8080
-build_dir = "./"
+build_dir = 'C:\Users\floris\Documents\GitHub\weeping-angel'
 app_type = "rust"
 build_command = "cargo build --release"
 start_command = "./target/release/weeping-angel"
 target = "rust"
-version_targets = ["Cargo.toml"]
+version_targets = [
+    'C:\Users\floris\Documents\GitHub\weeping-angel\Cargo.toml',
+    "Cargo.toml",
+]
 version_domains = []
 ignore_paths = []
 watch_ignore_paths = []
@@ -18,12 +21,12 @@ name = "weeping-angel"
 target = "rust"
 branch = "main"
 port = 8080
-root_directory = "./"
+root_directory = 'C:\Users\floris\Documents\GitHub\weeping-angel'
 restart_policy = "on_failure"
 restart_policy_max_failure_count = 10
 start_wrapper = "pm2"
 force_run_from_root = false
-version_targets = ["Cargo.toml"]
+version_targets = ['C:\Users\floris\Documents\GitHub\weeping-angel\Cargo.toml']
 
 [services.commands]
 build = "cargo build --release"
@@ -65,12 +68,25 @@ repository = "floris-xlx/weeping-angel"
 enabled = true
 naming_template = "releases/{SERVICE_NAME}-{VERSION}"
 
+[publish.crates]
+enabled = true
+package_name = "weeping-angel"
+working_directory = "."
+manifest_path = "Cargo.toml"
+packages = []
+token = "${CARGO_REGISTRY_TOKEN}"
+preflight_commands = []
+publish_command = "cargo publish --locked"
+use_wsl = false
+no_verify_retry_packages = []
+
 [publish.dist]
 enabled = true
 packages = ["weeping-angel"]
 installers = [
     "shell",
     "msi",
+    "powershell",
     "homebrew",
 ]
 targets = []
@@ -80,3 +96,24 @@ artifacts_modes = [
 ]
 allow_dirty = true
 generate_ci = true
+
+[discord]
+enabled = true
+webhook_url = "${DISCORD_WEBHOOK_URL}"
+username = "XBP"
+
+[discord.events]
+version_release = true
+github_tag = false
+github_release = false
+crates_io = true
+npm = true
+linear = true
+cargo_dist = true
+oci = true
+workers_deploy = true
+kubernetes_deploy = true
+deploy = true
+openapi = true
+issues = true
+commit = true
