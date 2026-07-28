@@ -1,7 +1,6 @@
 # weeping-angel
 
-current version: `0.1.1`
-
+current version: `0.1.2`
 Authorized **web recon + security scanning** CLI (Rust). Discover routes (including SPA/JS surfaces), flag misconfigurations and exposed secrets, map auth, run YAML path templates, compare authenticated vs anonymous access, and optionally fire **gated** active probes.
 
 > **Legal:** Only scan systems you **own** or have **written permission** to test. The tool refuses to run without `--i-own-this` and a host allowlist.
@@ -68,23 +67,41 @@ cargo run --bin weeping-angel -- scan http://127.0.0.1:8787/ \
 
 | Profile | Modules |
 |---------|---------|
-| **recon** | discovery, headers, tls, cookies, secrets, exposures, tech |
-| **standard** | recon + cors, auth-surface, wordlist, **templates** |
+| **recon** | discovery, headers, tls, cookies, secrets, exposures, tech, **firebase** |
+| **standard** | recon + cors, auth-surface, **rate-limits**, wordlist, **templates** |
 | **deep** | standard + openapi, auth-compare + all active probes if `--enable-active` |
 
 | Module | Role |
 |--------|------|
-| `discovery` | HTML crawl, robots/sitemap, JS endpoints, **SPA** (`__NEXT_DATA__`, routers) |
+| `discovery` | HTML crawl, robots/sitemap, JS endpoints, **SPA**, **image hosting patterns** (`/assets/images/{section}/{name}.{ext}`) |
 | `wordlist` | Common path probing |
 | `templates` | YAML path templates in `templates/` (Nuclei-lite) |
 | `headers` / `tls` / `cookies` | Hardening signals |
 | `secrets` | Client-visible credential patterns |
 | `exposures` | `.env`, `.git`, phpinfo, actuator, dir listing, traces |
 | `cors` | Wildcard / reflected Origin |
-| `auth-surface` | Login forms, admin paths, session cookies |
+| `auth-surface` | Login/signup forms, **guarded vs unauthenticated** summary, admin paths, session cookies |
 | `auth-compare` | Anon vs `--cookie` / `Authorization` (enable with `--compare-auth`) |
-| `tech` | Light fingerprinting |
+| `firebase` | **Firestore / Firebase** client config, project IDs, Auth/RTDB surfaces, weakness checklist |
+| `rate-limits` | Per-route **429 / RateLimit headers**; optional light burst on auth paths with `--enable-active` |
+| `tech` | Light fingerprinting (includes Firebase/Firestore signatures) |
 | Active: `xss`, `sqli`, `open-redirect`, `path-traversal` | Opt-in via `--enable-active` |
+
+### Artifacts (report formats)
+
+```bash
+cargo run --bin weeping-angel -- scan http://127.0.0.1:8787/ \
+  --i-own-this --allow-host 127.0.0.1 \
+  --profile deep \
+  -o report-lab \
+  --format terminal,json,html,manifest,openapi
+```
+
+| Format | Output | Contents |
+|--------|--------|----------|
+| `manifest` | `*.manifest.json` | Route inventory, auth guesses, Firebase signals, rate-limit map, embedded image harvest |
+| `openapi` | `*.openapi.json` | **Synthesized** OpenAPI 3.0 from discovered routes + findings |
+| `images` | `*.images.json` | **Full image harvest**: every `img`/srcset/CSS/JS path + **OPTIONS preflight** + **HEAD** status/type/length |
 
 ## Templates
 

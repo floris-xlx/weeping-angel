@@ -1,5 +1,5 @@
 project_name = "weeping-angel"
-version = "0.1.1"
+version = "0.1.2"
 port = 8080
 build_dir = 'C:\Users\floris\Documents\GitHub\weeping-angel'
 app_type = "rust"
