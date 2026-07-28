@@ -107,6 +107,85 @@ async fn scan_lab_demo_finds_core_issues() {
         "expected auth surface findings, ids={ids:?}"
     );
 
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|f| f.module == "firebase" || f.id.contains("firebase") || f.id.contains("firestore")),
+        "expected firebase/firestore findings, ids={ids:?}"
+    );
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|f| f.module == "rate-limits" || f.id.contains("rate-limit")),
+        "expected rate-limit findings, ids={ids:?}"
+    );
+    assert!(
+        report.findings.iter().any(|f| f.id == "auth-guard-summary"
+            || f.id == "login-unguarded"
+            || f.id == "signup-form"
+            || f.id == "signup-unguarded"),
+        "expected login/signup guard classification, ids={ids:?}"
+    );
+    assert!(
+        report.discovered_urls.iter().any(|u| u.contains("dashboardpic")
+            || u.contains("/assets/images/")),
+        "expected image hosting path enumeration, urls={:?}",
+        report.discovered_urls
+    );
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|f| f.id == "image-asset"
+                || f.id == "image-hosting-pattern"
+                || f.description.contains("image")
+                    && f.module == "discovery"),
+        "expected image pattern findings, ids={ids:?}"
+    );
+
+    let manifest = weeping_angel::report::manifest::from_report(&report);
+    assert!(manifest.routes.len() > 2);
+    assert!(manifest.firebase.detected, "manifest should mark firebase");
+
+    let oas = weeping_angel::report::openapi_gen::from_report(&report);
+    assert_eq!(oas["openapi"], "3.0.3");
+    assert!(oas["paths"].as_object().map(|p| !p.is_empty()).unwrap_or(false));
+
+    let harvest = report
+        .image_harvest
+        .as_ref()
+        .expect("image_harvest manifest should be present");
+    assert!(
+        !harvest.all_paths.is_empty(),
+        "expected harvested image paths"
+    );
+    assert!(
+        harvest.stats.head_probes > 0,
+        "expected HEAD probes on image paths"
+    );
+    assert!(
+        harvest
+            .images
+            .iter()
+            .any(|i| i.path.contains("dashboardpic") && i.exists),
+        "expected dashboardpic HEAD-ok in harvest, sample={:?}",
+        harvest
+            .images
+            .iter()
+            .filter(|i| i.exists)
+            .map(|i| i.path.as_str())
+            .take(10)
+            .collect::<Vec<_>>()
+    );
+    assert!(
+        harvest
+            .images
+            .iter()
+            .any(|i| i.head.is_some() || i.options.is_some()),
+        "expected HEAD and/or OPTIONS probe records"
+    );
     }
 
 /// Re-export demo router without requiring binary link tricks.
@@ -129,7 +208,13 @@ mod demo_lab {
             .route("/", get(home))
             .route("/spa", get(spa))
             .route("/assets/app.js", get(app_js))
+            .route(
+                "/assets/images/home/dashboardpic.png",
+                get(dashboard_pic),
+            )
+            .route("/assets/images/home/hero.png", get(dashboard_pic))
             .route("/login", get(login))
+            .route("/signup", get(signup))
             .route("/admin", get(admin))
             .route("/search", get(search))
             .route("/redirect", get(redir))
@@ -139,6 +224,7 @@ mod demo_lab {
             .route("/api/config", get(api_config))
             .route("/api/v1/users", get(api_users))
             .route("/api/v1/me", get(api_me))
+            .route("/api/limited", get(api_limited))
             .route("/openapi.json", get(openapi))
             .route("/robots.txt", get(|| async { "User-agent: *\nDisallow:\n" }))
             .route("/sitemap.xml", get(sitemap))
@@ -155,11 +241,23 @@ mod demo_lab {
                 r#"<!DOCTYPE html><html><body>
                 <a href="/login">L</a><a href="/admin">A</a><a href="/spa">S</a>
                 <a href="/search?q=hi">Search</a>
+                <img src="/assets/images/home/dashboardpic.png" alt="dash"/>
                 <script src="/assets/app.js"></script>
                 <script>const STRIPE_KEY="sk_live_51DemoPlantedSecretKey000000";
-                window.__INITIAL_STATE__={routes:["/api/v1/me","/api/v1/users"]};</script>
+                const firebaseConfig={apiKey:"AIzaSyA-demoKeyNotReal0123456789ABCD",authDomain:"lab.firebaseapp.com",projectId:"weeping-angel-lab"};
+                window.__INITIAL_STATE__={routes:["/api/v1/me","/api/v1/users","/signup"]};
+                // firebase/firestore marker
+                </script>
                 </body></html>"#,
             ),
+        )
+    }
+
+    async fn dashboard_pic() -> impl IntoResponse {
+        (
+            [(header::CONTENT_TYPE, "image/png")],
+            // minimal PNG header bytes — enough for content-type checks
+            &[0x89u8, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a][..],
         )
     }
 
@@ -178,7 +276,25 @@ mod demo_lab {
     }
 
     async fn login() -> Html<&'static str> {
-        Html(r#"<form><input type="password" name="password"></form>"#)
+        Html(r#"<form action="/login"><input type="password" name="password"></form>"#)
+    }
+
+    async fn signup() -> Html<&'static str> {
+        Html(r#"<form action="/signup"><input name="email"><input type="password" name="password"><button>Sign up</button></form>"#)
+    }
+
+    async fn api_limited() -> Response {
+        let mut res = Response::new(r#"{"ok":true}"#.into());
+        *res.status_mut() = StatusCode::OK;
+        res.headers_mut().insert(
+            header::CONTENT_TYPE,
+            header::HeaderValue::from_static("application/json"),
+        );
+        res.headers_mut().insert(
+            header::HeaderName::from_static("x-ratelimit-limit"),
+            header::HeaderValue::from_static("10"),
+        );
+        res
     }
 
     fn is_admin(req: &Request) -> bool {

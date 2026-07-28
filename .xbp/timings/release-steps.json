@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "updated_at": "2026-07-28T15:35:30.434428100+00:00",
+  "steps": {
+    "dist:global": {
+      "samples": [
+        {
+          "at": "2026-07-28T15:35:30.130326300+00:00",
+          "ms": 1233,
+          "ok": true,
+          "meta": {
+            "tag": "weeping-angel-0.1.2"
+          }
+        }
+      ],
+      "ema_ms": 1233
+    },
+    "dist:host": {
+      "samples": [
+        {
+          "at": "2026-07-28T15:35:28.895946800+00:00",
+          "ms": 27606,
+          "ok": true,
+          "meta": {
+            "tag": "weeping-angel-0.1.2"
+          }
+        }
+      ],
+      "ema_ms": 27606
+    }
+  }
+}

@@ -1,0 +1,244 @@
+scope_kind = "service"
+scope_label = "weeping-angel"
+scope_slug = "service-weeping-angel"
+version = "0.1.2"
+tag_name = "weeping-angel-0.1.2"
+xbp_version = "10.55.0"
+branch_name = "releases/weeping-angel-0.1.2"
+cloudflare_evidence = []
+status = "Completed"
+created_at = "2026-07-28T15:34:52.200738200Z"
+updated_at = "2026-07-28T15:35:41.864524900Z"
+completed_at = "2026-07-28T15:35:41.864524900Z"
+
+[baseline]
+source = "local-tag"
+reference = "weeping-angel-0.1.1"
+tag = "weeping-angel-0.1.1"
+
+[selection]
+changed_files = [
+    ".github/workflows/release.yml",
+    ".gitignore",
+    ".xbp/xbp.toml",
+    "Cargo.lock",
+    "Cargo.toml",
+    "README.md",
+    "dist-workspace.toml",
+    "examples/weeping-angel-demo.rs",
+    "scripts/demo-scan.sh",
+    "scripts/setup.sh",
+    "src/authz.rs",
+    "src/checks/secrets.rs",
+    "src/engine/mod.rs",
+    "src/finding.rs",
+    "src/http/client.rs",
+    "src/lib.rs",
+    "src/main.rs",
+    "src/report/terminal.rs",
+    "src/style.rs",
+    "wix/main.wxs",
+]
+
+[[selection.version_targets]]
+path = "README.md"
+
+[[selection.version_targets]]
+path = "Cargo.toml"
+
+[[selection.version_targets]]
+path = "Cargo.lock"
+
+[[selection.version_targets]]
+path = ".xbp/xbp.toml"
+
+[[selection.publish_targets]]
+kind = "crates"
+manifest_path = "Cargo.toml"
+package_name = "weeping-angel"
+
+[steps.cargo_dist_build]
+status = "Completed"
+started_at = "2026-07-28T15:35:01.287407200Z"
+completed_at = "2026-07-28T15:35:30.433328100Z"
+
+[steps.cargo_dist_build.details]
+modes_run = [
+    "host",
+    "global",
+]
+announcement_github_body = """
+## Install weeping-angel 0.1.2
+
+### Install prebuilt binaries via shell script
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-installer.sh | sh
+```
+
+### Install prebuilt binaries via powershell script
+
+```sh
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-installer.ps1 | iex"
+```
+
+### Install prebuilt binaries via Homebrew
+
+```sh
+brew install weeping-angel
+```
+
+## Download weeping-angel 0.1.2
+
+|  File  | Platform | Checksum |
+|--------|----------|----------|
+| [weeping-angel-x86_64-pc-windows-msvc.zip](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-x86_64-pc-windows-msvc.zip.sha256) |
+| [weeping-angel-x86_64-pc-windows-msvc.msi](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-x86_64-pc-windows-msvc.msi.sha256) |"""
+
+[[steps.cargo_dist_build.details.install_methods]]
+package_name = "weeping-angel"
+title = "Install prebuilt binaries via powershell script"
+command = 'powershell -ExecutionPolicy Bypass -c "irm https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-installer.ps1 | iex"'
+
+[[steps.cargo_dist_build.details.install_methods]]
+package_name = "weeping-angel"
+title = "Install prebuilt binaries via shell script"
+command = "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.1.2/weeping-angel-installer.sh | sh"
+
+[steps.cargo_dist_build.details.timings_ms]
+global = 1233
+host = 27606
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "sha256.sum"
+path = "target/distrib/sha256.sum"
+kind = "unified-checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "source.tar.gz"
+path = "target/distrib/source.tar.gz"
+kind = "source-tarball"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "source.tar.gz.sha256"
+path = "target/distrib/source.tar.gz.sha256"
+kind = "checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-installer.ps1"
+path = "target/distrib/weeping-angel-installer.ps1"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-installer.sh"
+path = "target/distrib/weeping-angel-installer.sh"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.msi"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.msi"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.msi.sha256"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.msi.sha256"
+kind = "checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.zip"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.zip"
+kind = "executable-zip"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.zip.sha256"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.zip.sha256"
+kind = "checksum"
+
+[steps.commit_release_docs]
+status = "Completed"
+started_at = "2026-07-28T15:35:39.006539200Z"
+completed_at = "2026-07-28T15:35:41.863512800Z"
+
+[steps.commit_release_docs.details]
+paths = [
+    "CHANGELOG.md",
+    "SECURITY.md",
+]
+
+[steps.github_release]
+status = "Completed"
+started_at = "2026-07-28T15:35:00.611368800Z"
+completed_at = "2026-07-28T15:35:01.281916400Z"
+
+[steps.github_release.details]
+release_id = 361196605
+release_url = "https://github.com/floris-xlx/weeping-angel/releases/tag/weeping-angel-0.1.2"
+
+[steps.publish_linear]
+status = "Skipped"
+started_at = "2026-07-28T15:35:38.978578200Z"
+completed_at = "2026-07-28T15:35:38.978578200Z"
+
+[steps.publish_linear.details]
+reason = "no linear release config"
+
+[steps.push_tag]
+status = "Completed"
+started_at = "2026-07-28T15:34:57.051333600Z"
+completed_at = "2026-07-28T15:35:00.290984800Z"
+
+[steps.push_tag.details]
+tag_name = "weeping-angel-0.1.2"
+branch_name = "releases/weeping-angel-0.1.2"
+
+[steps.sync_release_docs]
+status = "Completed"
+started_at = "2026-07-28T15:35:38.979404400Z"
+completed_at = "2026-07-28T15:35:39.005181600Z"
+
+[steps.sync_release_docs.details]
+paths = [
+    "CHANGELOG.md",
+    "SECURITY.md",
+]
+
+[steps.sync_version]
+status = "Completed"
+started_at = "2026-07-28T15:34:52.312882800Z"
+completed_at = "2026-07-28T15:34:52.397581500Z"
+
+[steps.sync_version.details]
+updated_paths = [
+    "README.md",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".xbp/xbp.toml",
+]
+
+[steps.upload_dist_assets]
+status = "Completed"
+started_at = "2026-07-28T15:35:30.451156800Z"
+completed_at = "2026-07-28T15:35:38.658818Z"
+
+[steps.upload_dist_assets.details]
+uploaded_assets = [
+    "sha256.sum",
+    "source.tar.gz",
+    "source.tar.gz.sha256",
+    "weeping-angel-installer.ps1",
+    "weeping-angel-installer.sh",
+    "weeping-angel-x86_64-pc-windows-msvc.msi",
+    "weeping-angel-x86_64-pc-windows-msvc.msi.sha256",
+    "weeping-angel-x86_64-pc-windows-msvc.zip",
+    "weeping-angel-x86_64-pc-windows-msvc.zip.sha256",
+]
+release_id = 361196605
+
+[steps.upload_openapi_assets]
+status = "Completed"
+started_at = "2026-07-28T15:35:38.977018500Z"
+completed_at = "2026-07-28T15:35:38.977860200Z"
+
+[steps.upload_openapi_assets.details]
+uploaded_assets = []
+prepared_assets = []

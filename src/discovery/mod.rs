@@ -1,4 +1,6 @@
 pub mod crawl;
+pub mod image_assets;
+pub mod image_harvest;
 pub mod js_endpoints;
 pub mod openapi;
 pub mod robots;

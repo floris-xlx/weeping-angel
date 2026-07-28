@@ -49,6 +49,13 @@ impl Check for TechCheck {
                 ("csrfmiddlewaretoken", "Django"),
                 ("rails-env", "Ruby on Rails"),
                 ("laravel_session", "Laravel"),
+                ("firebase/app", "Firebase"),
+                ("firebase/firestore", "Cloud Firestore"),
+                ("getFirestore", "Cloud Firestore"),
+                ("firestore.googleapis.com", "Cloud Firestore"),
+                ("firebaseio.com", "Firebase Realtime Database"),
+                ("identitytoolkit.googleapis.com", "Firebase Auth"),
+                ("initializeApp", "Firebase (possible)"),
             ];
             for (sig, name) in signatures {
                 if body.contains(sig) && seen.insert(format!("body:{name}")) {

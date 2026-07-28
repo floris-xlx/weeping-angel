@@ -14,7 +14,10 @@ pub fn extract_links(base: &Url, html: &str) -> Vec<Url> {
         ("form", "action"),
         ("iframe", "src"),
         ("img", "src"),
+        ("img", "data-src"),
+        ("img", "data-lazy-src"),
         ("source", "src"),
+        ("video", "poster"),
     ];
 
     for (tag, attr) in selectors {
@@ -30,7 +33,25 @@ pub fn extract_links(base: &Url, html: &str) -> Vec<Url> {
         }
     }
 
-    // also catch plain absolute URLs lightly from comments? skip for now
+    // srcset lists (responsive images)
+    if let Ok(sel) = Selector::parse("[srcset], [data-srcset]") {
+        for el in document.select(&sel) {
+            for attr in ["srcset", "data-srcset"] {
+                if let Some(srcset) = el.value().attr(attr) {
+                    for part in srcset.split(',') {
+                        let token = part.split_whitespace().next().unwrap_or("");
+                        if token.is_empty() {
+                            continue;
+                        }
+                        if let Some(u) = resolve_link(base, token) {
+                            out.push(u);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     dedupe(out)
 }
 

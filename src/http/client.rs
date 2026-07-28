@@ -118,6 +118,34 @@ impl HttpClient {
         self.request(Method::GET, url, None, None).await
     }
 
+    /// HEAD probe (no body download) — used for image harvest / existence checks.
+    pub async fn head(&self, url: &Url) -> Result<ResponseSnapshot> {
+        self.request(Method::HEAD, url, None, None).await
+    }
+
+    /// OPTIONS preflight (CORS-style) for a resource.
+    pub async fn options(
+        &self,
+        url: &Url,
+        origin: Option<&str>,
+        request_method: &str,
+    ) -> Result<ResponseSnapshot> {
+        let mut headers = HashMap::new();
+        headers.insert(
+            "Access-Control-Request-Method".into(),
+            request_method.into(),
+        );
+        if let Some(o) = origin {
+            headers.insert("Origin".into(), o.to_string());
+            headers.insert(
+                "Access-Control-Request-Headers".into(),
+                "content-type".into(),
+            );
+        }
+        self.request(Method::OPTIONS, url, None, Some(headers))
+            .await
+    }
+
     pub async fn request(
         &self,
         method: Method,

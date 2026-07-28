@@ -105,7 +105,7 @@ pub struct ScanArgs {
     #[arg(long, short = 'o')]
     pub output: Option<PathBuf>,
 
-    /// Formats: terminal,json,sarif,html (comma-separated)
+    /// Formats: terminal,json,sarif,html,manifest,openapi,images (comma-separated)
     #[arg(long, default_value = "terminal")]
     pub format: String,
 

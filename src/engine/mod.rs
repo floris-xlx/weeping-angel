@@ -156,6 +156,19 @@ pub async fn run_scan(
                                 opts.max_urls,
                             );
                         }
+                        // Hosted images: img/srcset/meta/CSS (feeds pattern enumeration)
+                        let images =
+                            discovery::image_assets::extract_from_html(&resp.final_url, &resp.body);
+                        for img in images {
+                            try_enqueue(
+                                &authz,
+                                &mut discovered,
+                                &mut queue,
+                                img,
+                                depth + 1,
+                                opts.max_urls,
+                            );
+                        }
                         // SPA shells: __NEXT_DATA__, initial state, client routers
                         let spa_urls =
                             discovery::spa::extract_from_html(&resp.final_url, &resp.body);
@@ -204,9 +217,28 @@ pub async fn run_scan(
                                         opts.max_urls,
                                     );
                                 }
+                                // Image path strings inside JS bundles (not filtered as noise)
+                                let js_images = discovery::image_assets::extract_from_js(
+                                    &script_url,
+                                    &js_resp.body,
+                                );
+                                for img in js_images {
+                                    try_enqueue(
+                                        &authz,
+                                        &mut discovered,
+                                        &mut queue,
+                                        img,
+                                        depth + 1,
+                                        opts.max_urls,
+                                    );
+                                }
                                 response_cache.insert(script_url.as_str().to_string(), js_resp);
                             }
                         }
+                    } else if discovery::image_assets::is_image_url(&resp.final_url)
+                        || discovery::image_assets::is_image_path(resp.final_url.path())
+                    {
+                        // Hitting an image seed still allows pattern expansion later
                     }
                 }
 
@@ -221,6 +253,162 @@ pub async fn run_scan(
         client.request_count(),
         phase_t0.elapsed().as_secs_f64()
     ));
+
+    // Full image harvest: collect all img/srcset/CSS/JS paths → OPTIONS preflight → HEAD
+    let mut image_harvest: Option<discovery::image_harvest::ImageHarvestManifest> = None;
+    if module_enabled(&opts.modules, "discovery") {
+        progress("phase: image harvest (collect → OPTIONS preflight → HEAD)");
+        use discovery::image_harvest::{self, ImageCandidate, ImageSource};
+
+        let mut cand_map: std::collections::HashMap<String, ImageCandidate> =
+            std::collections::HashMap::new();
+
+        // Seed URL itself if it is an image
+        if discovery::image_assets::is_image_path(seed.path())
+            || discovery::image_assets::is_image_url(&seed)
+        {
+            let mut sources = std::collections::HashSet::new();
+            sources.insert(ImageSource::Seed);
+            image_harvest::merge_candidates(
+                &mut cand_map,
+                vec![ImageCandidate {
+                    url: seed.clone(),
+                    sources,
+                }],
+            );
+        }
+
+        for a in &assets {
+            if discovery::image_assets::is_image_url(&a.url)
+                || discovery::image_assets::is_image_path(a.url.path())
+            {
+                let mut sources = std::collections::HashSet::new();
+                sources.insert(if a.source == "crawl" {
+                    ImageSource::Crawl
+                } else if a.source == "wordlist" {
+                    ImageSource::Wordlist
+                } else {
+                    ImageSource::Other(a.source.clone())
+                });
+                image_harvest::merge_candidates(
+                    &mut cand_map,
+                    vec![ImageCandidate {
+                        url: a.url.clone(),
+                        sources,
+                    }],
+                );
+            }
+        }
+
+        for resp in response_cache.values() {
+            if discovery::image_assets::is_image_path(resp.final_url.path())
+                || discovery::image_assets::is_image_url(&resp.final_url)
+            {
+                let mut sources = std::collections::HashSet::new();
+                sources.insert(ImageSource::Crawl);
+                image_harvest::merge_candidates(
+                    &mut cand_map,
+                    vec![ImageCandidate {
+                        url: resp.final_url.clone(),
+                        sources,
+                    }],
+                );
+            }
+            if resp.is_html() {
+                image_harvest::merge_candidates(
+                    &mut cand_map,
+                    image_harvest::collect_from_html(&resp.final_url, &resp.body),
+                );
+            }
+            if resp.is_js()
+                || resp
+                    .content_type
+                    .as_deref()
+                    .map(|c| c.contains("css") || c.contains("javascript"))
+                    .unwrap_or(false)
+            {
+                image_harvest::merge_candidates(
+                    &mut cand_map,
+                    image_harvest::collect_from_js(&resp.final_url, &resp.body),
+                );
+            }
+        }
+
+        let observed: Vec<Url> = cand_map.values().map(|c| c.url.clone()).collect();
+        let observed_count = observed.len();
+        let pattern_urls = discovery::image_assets::enumerate_patterns(&seed, &observed);
+        for u in pattern_urls {
+            if !authz.url_in_scope(&u) {
+                continue;
+            }
+            let mut sources = std::collections::HashSet::new();
+            sources.insert(ImageSource::PatternEnum);
+            image_harvest::merge_candidates(
+                &mut cand_map,
+                vec![ImageCandidate { url: u, sources }],
+            );
+        }
+
+        // Drop out-of-scope
+        cand_map.retain(|_, c| authz.url_in_scope(&c.url));
+
+        progress(&format!(
+            "  image harvest: {} observed refs → {} total candidates (HEAD+OPTIONS, cap 160)",
+            observed_count,
+            cand_map.len()
+        ));
+
+        const MAX_IMAGE_PROBES: usize = 160;
+        let harvest = image_harvest::harvest(
+            client.as_ref(),
+            &seed,
+            cand_map.into_values(),
+            MAX_IMAGE_PROBES,
+            true, // OPTIONS preflight
+        )
+        .await;
+
+        progress(&format!(
+            "  image harvest HEAD: ok={} miss={} options_ok={} (reqs={})",
+            harvest.stats.head_ok,
+            harvest.stats.head_miss,
+            harvest.stats.options_ok,
+            client.request_count()
+        ));
+
+        // Fold successful images into discovery assets / URL set
+        for img in &harvest.images {
+            if !img.exists {
+                continue;
+            }
+            if let Ok(u) = Url::parse(&img.url) {
+                if discovered.insert(img.url.clone()) {
+                    assets.push(DiscoveredAsset {
+                        url: u,
+                        status: img
+                            .head
+                            .as_ref()
+                            .map(|h| h.status)
+                            .or_else(|| img.get.as_ref().map(|g| g.status))
+                            .unwrap_or(200),
+                        content_type: img
+                            .head
+                            .as_ref()
+                            .and_then(|h| h.content_type.clone())
+                            .or_else(|| img.get.as_ref().and_then(|g| g.content_type.clone())),
+                        source: "image-head".into(),
+                    });
+                }
+            }
+        }
+
+        progress(&format!(
+            "phase: image harvest done — {} paths, {} exist via HEAD/GET",
+            harvest.all_paths.len(),
+            harvest.stats.exists_total
+        ));
+        image_harvest = Some(harvest);
+    }
 
     if module_enabled(&opts.modules, "wordlist") || module_enabled(&opts.modules, "exposures") {
         let origin = origin_of(&seed);
@@ -373,6 +561,7 @@ pub async fn run_scan(
     let mut findings: Vec<Finding> = Vec::new();
 
     if module_enabled(&opts.modules, "discovery") {
+        let mut image_patterns: HashSet<String> = HashSet::new();
         for asset in &assets {
             findings.push(
                 Finding::builder("discovery", "route-discovered")
@@ -382,6 +571,48 @@ pub async fn run_scan(
                     .description(format!(
                         "URL discovered via {}. HTTP status {}.",
                         asset.source, asset.status
+                    ))
+                    .build(),
+            );
+
+            if asset.source == "image-pattern"
+                || asset.source == "image-head"
+                || discovery::image_assets::is_image_path(asset.url.path())
+            {
+                if let Some(info) = discovery::image_assets::describe_pattern(asset.url.path()) {
+                    image_patterns.insert(info.directory.clone());
+                    if (200..300).contains(&asset.status) {
+                        findings.push(
+                            Finding::builder("discovery", "image-asset")
+                                .title(format!(
+                                    "Hosted image asset ({}…/{}.{})",
+                                    info.family.trim_end_matches('/'),
+                                    info.stem,
+                                    info.extension
+                                ))
+                                .severity(Severity::Info)
+                                .url(asset.url.as_str())
+                                .description(format!(
+                                    "Image reachable via hosting pattern family `{}` \
+                                     (section=`{}`, template=`{}`). Source: {}.",
+                                    info.family, info.section, info.template, asset.source
+                                ))
+                                .build(),
+                        );
+                    }
+                }
+            }
+        }
+        for dir in image_patterns {
+            findings.push(
+                Finding::builder("discovery", "image-hosting-pattern")
+                    .title(format!("Image hosting directory pattern: {dir}"))
+                    .severity(Severity::Info)
+                    .url(seed.join(dir.trim_start_matches('/')).unwrap_or(seed.clone()).as_str())
+                    .description(format!(
+                        "Enumerated static image tree under `{dir}`. \
+                         Common layout example: /assets/images/home/dashboardpic.png \
+                         (prefix + section + basename + extension)."
                     ))
                     .build(),
             );
@@ -420,6 +651,64 @@ pub async fn run_scan(
         }
     }
 
+    // Emit findings for every HEAD-ok image path
+    if let Some(ref harvest) = image_harvest {
+        for img in &harvest.images {
+            if !img.exists {
+                continue;
+            }
+            let head_st = img.head.as_ref().map(|h| h.status).unwrap_or(0);
+            let ct = img
+                .head
+                .as_ref()
+                .and_then(|h| h.content_type.clone())
+                .unwrap_or_else(|| "unknown".into());
+            let cl = img
+                .head
+                .as_ref()
+                .and_then(|h| h.content_length)
+                .map(|n| n.to_string())
+                .unwrap_or_else(|| "?".into());
+            findings.push(
+                Finding::builder("discovery", "image-head-ok")
+                    .title(format!("Image HEAD ok: {}", img.path))
+                    .severity(Severity::Info)
+                    .url(&img.url)
+                    .description(format!(
+                        "HEAD status {head_st}, content-type={ct}, content-length={cl}. \
+                         sources=[{}]. OPTIONS={}",
+                        img.sources.join(","),
+                        img.options
+                            .as_ref()
+                            .map(|o| format!("{}", o.status))
+                            .unwrap_or_else(|| "n/a".into())
+                    ))
+                    .build(),
+            );
+        }
+        findings.push(
+            Finding::builder("discovery", "image-harvest-summary")
+                .title(format!(
+                    "Image harvest: {} paths, {} HEAD-ok, {} img-tag refs",
+                    harvest.stats.candidates,
+                    harvest.stats.exists_total,
+                    harvest.stats.img_tag_refs
+                ))
+                .severity(Severity::Info)
+                .url(seed.as_str())
+                .description(format!(
+                    "Harvested all image paths via OPTIONS preflight + HEAD. \
+                     head_probes={} head_ok={} head_miss={} options_ok={}. \
+                     Manifest: use --format images,manifest",
+                    harvest.stats.head_probes,
+                    harvest.stats.head_ok,
+                    harvest.stats.head_miss,
+                    harvest.stats.options_ok
+                ))
+                .build(),
+        );
+    }
+
     findings = dedupe_findings(findings);
 
     let finished = Utc::now();
@@ -447,6 +736,7 @@ pub async fn run_scan(
         discovered_urls,
         findings,
         stats,
+        image_harvest,
     })
 }
 

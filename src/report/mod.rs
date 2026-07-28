@@ -1,5 +1,7 @@
 pub mod html;
 pub mod json;
+pub mod manifest;
+pub mod openapi_gen;
 pub mod sarif;
 pub mod terminal;
 
@@ -7,6 +9,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
+use crate::discovery;
 use crate::finding::ScanReport;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,6 +18,12 @@ pub enum Format {
     Json,
     Sarif,
     Html,
+    /// Surface / route manifest (JSON)
+    Manifest,
+    /// Synthesized OpenAPI 3 from recon
+    OpenApi,
+    /// Image harvest manifest (all img paths + HEAD/OPTIONS probes)
+    Images,
 }
 
 impl Format {
@@ -25,6 +34,9 @@ impl Format {
                 "json" => Some(Self::Json),
                 "sarif" => Some(Self::Sarif),
                 "html" => Some(Self::Html),
+                "manifest" | "surface" => Some(Self::Manifest),
+                "openapi" | "oas" | "swagger" => Some(Self::OpenApi),
+                "images" | "image" | "image-manifest" | "img" => Some(Self::Images),
                 _ => None,
             })
             .collect()
@@ -65,9 +77,68 @@ pub fn write_reports(report: &ScanReport, formats: &[Format], output: Option<&Pa
                     println!("{s}");
                 }
             }
+            Format::Manifest => {
+                let s = manifest::to_string(report)?;
+                if let Some(path) = output {
+                    let p = with_suffix_ext(path, "manifest.json");
+                    std::fs::write(&p, s)?;
+                    eprintln!("wrote {}", p.display());
+                } else {
+                    println!("{s}");
+                }
+            }
+            Format::OpenApi => {
+                let s = openapi_gen::to_string(report)?;
+                if let Some(path) = output {
+                    let p = with_suffix_ext(path, "openapi.json");
+                    std::fs::write(&p, s)?;
+                    eprintln!("wrote {}", p.display());
+                } else {
+                    println!("{s}");
+                }
+            }
+            Format::Images => {
+                let s = if let Some(h) = &report.image_harvest {
+                    discovery::image_harvest::to_string(h)?
+                } else {
+                    // empty shell so callers always get a file
+                    let empty = crate::discovery::image_harvest::ImageHarvestManifest {
+                        tool: report.tool.clone(),
+                        version: report.version.clone(),
+                        target: report.target.clone(),
+                        generated_at: report.finished_at.to_rfc3339(),
+                        ..Default::default()
+                    };
+                    crate::discovery::image_harvest::to_string(&empty)?
+                };
+                if let Some(path) = output {
+                    let p = with_suffix_ext(path, "images.json");
+                    std::fs::write(&p, s)?;
+                    eprintln!("wrote {}", p.display());
+                } else {
+                    println!("{s}");
+                }
+            }
         }
     }
     Ok(())
+}
+
+fn with_suffix_ext(path: &Path, suffix: &str) -> std::path::PathBuf {
+    if path.extension().is_none() {
+        let mut p = path.to_path_buf();
+        p.set_extension(suffix);
+        return p;
+    }
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("report");
+    if let Some(parent) = path.parent() {
+        parent.join(format!("{stem}.{suffix}"))
+    } else {
+        std::path::PathBuf::from(format!("{stem}.{suffix}"))
+    }
 }
 
 fn with_ext(path: &Path, ext: &str) -> std::path::PathBuf {

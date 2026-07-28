@@ -3,7 +3,9 @@ pub mod auth_surface;
 pub mod cookies;
 pub mod cors;
 pub mod exposures;
+pub mod firebase;
 pub mod headers;
+pub mod rate_limits;
 pub mod secrets;
 pub mod tech;
 pub mod tls;
@@ -57,6 +59,8 @@ pub fn registry() -> Vec<Box<dyn Check>> {
         Box::new(cors::CorsCheck),
         Box::new(auth_surface::AuthSurfaceCheck),
         Box::new(auth_compare::AuthCompareCheck),
+        Box::new(firebase::FirebaseCheck),
+        Box::new(rate_limits::RateLimitsCheck),
     ];
     checks.extend(active::registry());
     checks

@@ -173,6 +173,9 @@ pub struct ScanReport {
     pub discovered_urls: Vec<String>,
     pub findings: Vec<Finding>,
     pub stats: ScanStats,
+    /// Full image path harvest (HEAD + OPTIONS preflight + sources).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_harvest: Option<crate::discovery::image_harvest::ImageHarvestManifest>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
