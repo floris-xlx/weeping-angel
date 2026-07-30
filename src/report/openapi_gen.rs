@@ -335,6 +335,26 @@ mod tests {
                 "http://127.0.0.1:8787/login".into(),
                 "http://127.0.0.1:8787/api/v1/users".into(),
             ],
+            routes: vec![
+                crate::finding::RouteRecord {
+                    url: "http://127.0.0.1:8787/login".into(),
+                    path: "/login".into(),
+                    method: "GET".into(),
+                    status: Some(200),
+                    source: "crawl".into(),
+                    content_type: Some("text/html".into()),
+                    tags: vec!["login".into()],
+                },
+                crate::finding::RouteRecord {
+                    url: "http://127.0.0.1:8787/api/v1/users".into(),
+                    path: "/api/v1/users".into(),
+                    method: "GET".into(),
+                    status: Some(200),
+                    source: "wordlist".into(),
+                    content_type: Some("application/json".into()),
+                    tags: vec!["api".into()],
+                },
+            ],
             findings: vec![
                 Finding::builder("discovery", "route-discovered")
                     .title("Discovered route (crawl)")

@@ -32,6 +32,13 @@ cargo build --release --example weeping-angel-demo --features demo
 # lab: target/release/examples/weeping-angel-demo.exe   (127.0.0.1 only)
 ```
 
+## Tests
+
+```bash
+# unit + integration + e2e (shared lab router requires demo feature)
+cargo test --features demo
+```
+
 ## Scan a target you control
 
 ```bash

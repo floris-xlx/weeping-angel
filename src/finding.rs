@@ -161,6 +161,56 @@ fn truncate(s: String, max: usize) -> String {
     out
 }
 
+/// Structured route discovered during recon (canonical source for reports).
+///
+/// Prefer this over re-parsing free-text `route-discovered` findings.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RouteRecord {
+    pub url: String,
+    pub path: String,
+    #[serde(default = "default_get")]
+    pub method: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<u16>,
+    /// Discovery source: crawl, wordlist, robots, sitemap, js, spa, image-*, …
+    pub source: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
+}
+
+fn default_get() -> String {
+    "GET".into()
+}
+
+impl RouteRecord {
+    pub fn from_asset(asset: &crate::discovery::DiscoveredAsset) -> Self {
+        Self {
+            url: asset.url.as_str().to_string(),
+            path: asset.url.path().to_string(),
+            method: "GET".into(),
+            status: Some(asset.status),
+            source: asset.source.clone(),
+            content_type: asset.content_type.clone(),
+            tags: Vec::new(),
+        }
+    }
+}
+
+/// Whether a finding is inventory noise (routes/images) rather than a security issue.
+pub fn is_inventory_finding(f: &Finding) -> bool {
+    if f.id == "route-discovered"
+        || f.id == "image-head-ok"
+        || f.id == "image-asset"
+        || f.id == "image-hosting-pattern"
+        || f.id.starts_with("image-")
+    {
+        return true;
+    }
+    f.module == "discovery" && f.severity == Severity::Info && f.id.contains("route")
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanReport {
     pub tool: String,
@@ -171,6 +221,9 @@ pub struct ScanReport {
     pub profile: String,
     pub modules: Vec<String>,
     pub discovered_urls: Vec<String>,
+    /// Structured route inventory (prefer over parsing discovery findings).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub routes: Vec<RouteRecord>,
     pub findings: Vec<Finding>,
     pub stats: ScanStats,
     /// Full image path harvest (HEAD + OPTIONS preflight + sources).

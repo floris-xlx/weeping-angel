@@ -75,3 +75,32 @@ impl Check for TechCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn fingerprints_server_header_and_next() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[
+                    ("content-type", "text/html"),
+                    ("server", "nginx/1.25"),
+                    ("x-powered-by", "Express"),
+                ],
+                r#"<script id="__NEXT_DATA__" type="application/json">{}</script>"#,
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = TechCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "tech-header"));
+        assert!(findings.iter().any(|f| f.title.contains("Next.js")));
+    }
+}

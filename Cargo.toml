@@ -132,7 +132,20 @@ features = ["fs"]
 [dev-dependencies]
 axum = "0.8"
 tempfile = "3"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs"] }
 
 [dev-dependencies.serde]
 version = "1"
 features = ["derive"]
+
+# E2E suites need the shared lab router (`feature = "demo"`).
+[[test]]
+name = "e2e_demo"
+path = "tests/e2e_demo.rs"
+required-features = ["demo"]
+
+[[test]]
+name = "e2e_recon"
+path = "tests/e2e_recon.rs"
+required-features = ["demo"]

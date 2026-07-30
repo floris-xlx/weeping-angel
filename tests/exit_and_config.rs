@@ -27,6 +27,7 @@ fn report_with(severities: &[Severity]) -> ScanReport {
         profile: "recon".into(),
         modules: vec![],
         discovered_urls: vec![],
+        routes: vec![],
         findings,
         stats: ScanStats::default(),
         image_harvest: None,

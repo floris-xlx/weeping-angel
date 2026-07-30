@@ -79,3 +79,46 @@ impl Check for TlsCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+    use url::Url;
+
+    #[tokio::test]
+    async fn http_seed_flags_no_tls() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "http://example.com/".into(),
+            snapshot(
+                "http://example.com/",
+                200,
+                &[("content-type", "text/html")],
+                "<html></html>",
+            ),
+        );
+        let mut ctx = context_with_responses(responses);
+        ctx.seed = Url::parse("http://example.com/").unwrap();
+        let findings = TlsCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "http-only-seed"));
+    }
+
+    #[tokio::test]
+    async fn https_page_with_http_refs_mixed_content() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[("content-type", "text/html")],
+                r#"<html><img src="http://cdn.example/a.png"></html>"#,
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = TlsCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "mixed-content-hint"));
+    }
+}

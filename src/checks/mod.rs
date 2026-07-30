@@ -65,3 +65,74 @@ pub fn registry() -> Vec<Box<dyn Check>> {
     checks.extend(active::registry());
     checks
 }
+
+/// Test helpers for building a minimal `ScanContext` without network I/O.
+#[cfg(test)]
+pub mod test_util {
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    use reqwest::StatusCode;
+    use url::Url;
+
+    use crate::authz::Authorization;
+    use crate::checks::ScanContext;
+    use crate::discovery::DiscoveredAsset;
+    use crate::http::{ClientConfig, HttpClient, ResponseSnapshot};
+
+    pub fn dummy_client() -> Arc<HttpClient> {
+        let authz = Authorization::new(true, vec!["example.com".into(), "127.0.0.1".into()], false, false);
+        Arc::new(
+            HttpClient::new(authz, ClientConfig::default()).expect("test client"),
+        )
+    }
+
+    pub fn snapshot(
+        url: &str,
+        status: u16,
+        headers: &[(&str, &str)],
+        body: &str,
+    ) -> ResponseSnapshot {
+        let u = Url::parse(url).expect("url");
+        let mut map = HashMap::new();
+        let mut content_type = None;
+        for (k, v) in headers {
+            if k.eq_ignore_ascii_case("content-type") {
+                content_type = Some((*v).to_string());
+            }
+            map.insert((*k).to_string(), (*v).to_string());
+        }
+        ResponseSnapshot {
+            url: u.clone(),
+            final_url: u,
+            status: StatusCode::from_u16(status).unwrap_or(StatusCode::OK),
+            headers: map,
+            body: body.to_string(),
+            content_type,
+        }
+    }
+
+    pub fn context_with_responses(responses: HashMap<String, ResponseSnapshot>) -> ScanContext {
+        let seed = Url::parse("https://example.com/").unwrap();
+        let assets: Vec<DiscoveredAsset> = responses
+            .values()
+            .map(|r| DiscoveredAsset {
+                url: r.final_url.clone(),
+                status: r.status.as_u16(),
+                content_type: r.content_type.clone(),
+                source: "test".into(),
+            })
+            .collect();
+        let discovered_urls: Vec<String> = responses.keys().cloned().collect();
+        ScanContext {
+            client: dummy_client(),
+            anon_client: None,
+            seed,
+            assets,
+            responses,
+            discovered_urls,
+            probes: vec![],
+            enable_active: false,
+        }
+    }
+}

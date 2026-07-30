@@ -2,8 +2,8 @@
 
 use chrono::Utc;
 use weeping_angel::finding::{
-    Evidence, Finding, ModuleSummary, PhaseTiming, ScanReport, ScanStats, Severity, SeverityCounts,
-    SourceCount, StatusCount, SurfaceInventory, TimingSummary,
+    Evidence, Finding, ModuleSummary, PhaseTiming, RouteRecord, ScanReport, ScanStats, Severity,
+    SeverityCounts, SourceCount, StatusCount, SurfaceInventory, TimingSummary,
 };
 use weeping_angel::report::{Format, html, json, manifest, openapi_gen, sarif, write_reports};
 
@@ -20,6 +20,35 @@ fn sample_report() -> ScanReport {
             "https://lab.example/".into(),
             "https://lab.example/login".into(),
             "https://lab.example/api/v1/me".into(),
+        ],
+        routes: vec![
+            RouteRecord {
+                url: "https://lab.example/".into(),
+                path: "/".into(),
+                method: "GET".into(),
+                status: Some(200),
+                source: "crawl".into(),
+                content_type: Some("text/html".into()),
+                tags: vec![],
+            },
+            RouteRecord {
+                url: "https://lab.example/login".into(),
+                path: "/login".into(),
+                method: "GET".into(),
+                status: Some(200),
+                source: "crawl".into(),
+                content_type: Some("text/html".into()),
+                tags: vec!["login".into()],
+            },
+            RouteRecord {
+                url: "https://lab.example/api/v1/me".into(),
+                path: "/api/v1/me".into(),
+                method: "GET".into(),
+                status: Some(401),
+                source: "js".into(),
+                content_type: Some("application/json".into()),
+                tags: vec!["api".into()],
+            },
         ],
         findings: vec![
             Finding::builder("secrets", "aws-key")
@@ -161,14 +190,73 @@ fn html_contains_dashboard_sections() {
     assert!(html.contains("AWS access key") || html.contains("aws"));
     assert!(html.contains("sev-filters") || html.contains("data-sev"));
     assert!(html.contains("lab.example"));
+    // route table columns from RouteRecord
+    assert!(html.contains("Source") || html.contains("content-type") || html.contains("crawl"));
+    // XSS escape in report output
+    let mut evil = sample_report();
+    evil.findings[0].title = "<script>alert(1)</script>".into();
+    let h2 = html::to_string(&evil);
+    assert!(!h2.contains("<script>alert(1)</script>"));
+    assert!(h2.contains("&lt;script&gt;") || h2.contains("&lt;script"));
 }
 
 #[test]
 fn sarif_is_valid_shape() {
     let s = sarif::to_string(&sample_report()).unwrap();
     let v: serde_json::Value = serde_json::from_str(&s).unwrap();
-    assert!(v.get("runs").is_some() || v.get("$schema").is_some() || v.get("version").is_some());
-    assert!(s.contains("secrets:aws-key") || s.contains("aws-key") || s.contains("AWS"));
+    assert_eq!(v["version"], "2.1.0");
+    assert!(v.get("runs").is_some());
+    let driver = &v["runs"][0]["tool"]["driver"];
+    let uri = driver["informationUri"].as_str().unwrap_or("");
+    assert!(
+        uri.contains("floris-xlx/weeping-angel") || uri.contains("weeping-angel"),
+        "informationUri={uri}"
+    );
+    // stable rule id form module/id
+    assert!(s.contains("secrets/aws-key") || s.contains("aws-key"));
+    // inventory route-discovered should not appear in security SARIF
+    assert!(
+        !s.contains("route-discovered"),
+        "SARIF should exclude inventory findings"
+    );
+    // fingerprints present
+    assert!(s.contains("partialFingerprints") || s.contains("primaryLocationLineHash"));
+}
+
+#[test]
+fn format_parity_shared_fixture() {
+    let report = sample_report();
+    let js = json::to_string(&report).unwrap();
+    let html = html::to_string(&report);
+    let sarif_s = sarif::to_string(&report).unwrap();
+    let man = manifest::from_report(&report);
+    let oas = openapi_gen::from_report(&report);
+
+    // identity
+    for s in [&js, &html, &sarif_s] {
+        assert!(s.contains("lab.example") || s.contains("weeping-angel"));
+    }
+    assert_eq!(man.target, "https://lab.example/");
+    assert!(!man.routes.is_empty());
+    assert!(
+        man.routes.iter().any(|r| r.status == Some(200)),
+        "manifest must use RouteRecord status, not free-text"
+    );
+    assert!(
+        man.routes.iter().any(|r| r.content_type.is_some()),
+        "manifest content_type from RouteRecord"
+    );
+    assert_eq!(oas["openapi"], "3.0.3");
+
+    // severity badges in html match stats
+    assert!(html.contains("critical 1") || html.contains("critical"));
+    assert!(html.contains("AWS access key") || html.contains("aws"));
+    // finding id visible
+    assert!(html.contains("aws-key") || html.contains("missing-csp"));
+    // remediation
+    assert!(html.contains("Rotate") || html.contains("Fix:"));
+    // executive summary
+    assert!(html.contains("Executive summary") || html.contains("executive"));
 }
 
 #[test]

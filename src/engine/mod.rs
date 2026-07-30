@@ -18,8 +18,8 @@ use crate::checks::{self, CheckKind, ScanContext};
 use crate::config::Profile;
 use crate::discovery::{self, DiscoveredAsset};
 use crate::finding::{
-    Finding, ModuleSummary, PhaseTiming, ScanReport, ScanStats, SourceCount, StatusCount,
-    SurfaceInventory, TimingSummary, Severity,
+    Finding, ModuleSummary, PhaseTiming, RouteRecord, ScanReport, ScanStats, SourceCount,
+    StatusCount, SurfaceInventory, TimingSummary, Severity,
 };
 use crate::http::{ClientConfig, HttpClient};
 use crate::templates;
@@ -851,6 +851,7 @@ pub async fn run_scan(
         .map(|f| f.title.clone())
         .collect::<Vec<_>>();
     let module_results = build_module_summaries(&opts.modules, &findings);
+    let routes = build_route_records(&assets, &findings);
 
     Ok(ScanReport {
         tool: "weeping-angel".into(),
@@ -861,6 +862,7 @@ pub async fn run_scan(
         profile: opts.profile.as_str().to_string(),
         modules: opts.modules,
         discovered_urls,
+        routes,
         findings,
         stats,
         image_harvest,
@@ -878,6 +880,64 @@ pub async fn run_scan(
             },
         },
     })
+}
+
+fn build_route_records(assets: &[DiscoveredAsset], findings: &[Finding]) -> Vec<RouteRecord> {
+    let mut routes: Vec<RouteRecord> = assets
+        .iter()
+        .map(|a| {
+            let mut r = RouteRecord::from_asset(a);
+            r.tags = classify_route_tags(&r.url, findings);
+            r
+        })
+        .collect();
+    routes.sort_by(|a, b| a.url.cmp(&b.url).then(a.source.cmp(&b.source)));
+    routes.dedup_by(|a, b| a.url == b.url && a.source == b.source);
+    routes
+}
+
+fn classify_route_tags(url: &str, findings: &[Finding]) -> Vec<String> {
+    let mut tags = Vec::new();
+    let path = Url::parse(url)
+        .map(|u| u.path().to_ascii_lowercase())
+        .unwrap_or_default();
+    if path.contains("login") || path.contains("signin") || path.contains("sign-in") {
+        tags.push("login".into());
+    }
+    if path.contains("signup")
+        || path.contains("sign-up")
+        || path.contains("register")
+        || path.contains("sign_up")
+    {
+        tags.push("signup".into());
+    }
+    if path.contains("admin") || path.contains("dashboard") {
+        tags.push("admin".into());
+    }
+    if path.contains("/api") || path.contains("graphql") {
+        tags.push("api".into());
+    }
+    if path.contains("firebase") || path.contains("firestore") {
+        tags.push("firebase".into());
+    }
+    if path.contains("/assets/images/")
+        || path.contains("/static/images/")
+        || path.ends_with(".png")
+        || path.ends_with(".jpg")
+        || path.ends_with(".webp")
+        || path.ends_with(".svg")
+    {
+        tags.push("image-asset".into());
+    }
+    for f in findings {
+        if f.url == url && f.module == "firebase" {
+            tags.push("firebase-finding".into());
+            break;
+        }
+    }
+    tags.sort();
+    tags.dedup();
+    tags
 }
 
 fn build_surface(assets: &[DiscoveredAsset]) -> SurfaceInventory {

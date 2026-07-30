@@ -164,3 +164,65 @@ impl Check for ExposuresCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn detects_exposed_env_and_git() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/.env".into(),
+            snapshot(
+                "https://example.com/.env",
+                200,
+                &[("content-type", "text/plain")],
+                "API_SECRET=super\nDATABASE_URL=postgres://x\n",
+            ),
+        );
+        responses.insert(
+            "https://example.com/.git/HEAD".into(),
+            snapshot(
+                "https://example.com/.git/HEAD",
+                200,
+                &[("content-type", "text/plain")],
+                "ref: refs/heads/main\n",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = ExposuresCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "exposed-env"));
+        assert!(findings.iter().any(|f| f.id == "exposed-git"));
+        assert!(findings.iter().any(|f| f.severity == Severity::Critical));
+    }
+
+    #[tokio::test]
+    async fn detects_phpinfo_and_stack_trace() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/phpinfo.php".into(),
+            snapshot(
+                "https://example.com/phpinfo.php",
+                200,
+                &[("content-type", "text/html")],
+                "<title>phpinfo()</title>PHP Version 8.2",
+            ),
+        );
+        responses.insert(
+            "https://example.com/err".into(),
+            snapshot(
+                "https://example.com/err",
+                200,
+                &[("content-type", "text/plain")],
+                "Traceback (most recent call last):\n  File \"app.py\"",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = ExposuresCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "phpinfo"));
+        assert!(findings.iter().any(|f| f.id == "stack-trace"));
+    }
+}

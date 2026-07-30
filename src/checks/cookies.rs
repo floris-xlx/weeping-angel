@@ -92,3 +92,60 @@ impl Check for CookiesCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn flags_session_cookie_missing_flags_on_https() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[
+                    ("content-type", "text/html"),
+                    ("set-cookie", "session=abc; Path=/"),
+                ],
+                "<html></html>",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = CookiesCheck.run(&ctx).await.unwrap();
+        let ids: Vec<_> = findings.iter().map(|f| f.id.as_str()).collect();
+        assert!(ids.contains(&"cookie-missing-httponly"), "ids={ids:?}");
+        assert!(ids.contains(&"cookie-missing-secure"), "ids={ids:?}");
+        assert!(ids.contains(&"cookie-missing-samesite"), "ids={ids:?}");
+    }
+
+    #[tokio::test]
+    async fn accepts_hardened_session_cookie() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[
+                    ("content-type", "text/html"),
+                    (
+                        "set-cookie",
+                        "session=abc; Path=/; HttpOnly; Secure; SameSite=Lax",
+                    ),
+                ],
+                "<html></html>",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = CookiesCheck.run(&ctx).await.unwrap();
+        assert!(
+            findings.is_empty(),
+            "unexpected={:?}",
+            findings.iter().map(|f| &f.id).collect::<Vec<_>>()
+        );
+    }
+}

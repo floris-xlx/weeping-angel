@@ -297,3 +297,41 @@ impl Check for RateLimitsCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn detects_rate_limit_headers_and_429() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/api/limited".into(),
+            snapshot(
+                "https://example.com/api/limited",
+                200,
+                &[
+                    ("content-type", "application/json"),
+                    ("x-ratelimit-limit", "60"),
+                    ("x-ratelimit-remaining", "59"),
+                ],
+                r#"{"ok":true}"#,
+            ),
+        );
+        responses.insert(
+            "https://example.com/api/burst".into(),
+            snapshot(
+                "https://example.com/api/burst",
+                429,
+                &[("retry-after", "30")],
+                "slow down",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = RateLimitsCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "rate-limit-headers"));
+        assert!(findings.iter().any(|f| f.id == "http-429"));
+    }
+}

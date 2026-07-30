@@ -1,14 +1,11 @@
-use crate::finding::{ScanReport, Severity};
+use crate::finding::ScanReport;
+use crate::report::{executive_summary, findings_for_display};
 
 pub fn to_string(report: &ScanReport) -> String {
     let mut finding_rows = String::new();
-    let mut findings = report.findings.clone();
-    findings.sort_by(|a, b| b.severity.cmp(&a.severity));
+    let findings = findings_for_display(report);
 
     for f in &findings {
-        if f.id == "route-discovered" {
-            continue;
-        }
         let evidence = f
             .evidence
             .iter()
@@ -34,11 +31,12 @@ pub fn to_string(report: &ScanReport) -> String {
             r#"<tr class="sev-{sev}" data-sev="{sev}" data-module="{module}">
 <td><span class="badge {sev}">{sev}</span></td>
 <td>{module}</td>
-<td><strong>{title}</strong>{cwe}<div class="desc">{desc}</div>{rem}{evidence}</td>
+<td><code class="fid">{id}</code> <strong>{title}</strong>{cwe}<div class="desc">{desc}</div>{rem}{evidence}</td>
 <td><a href="{url}">{url}</a></td>
 </tr>"#,
             sev = f.severity.as_str(),
             module = escape(&f.module),
+            id = escape(&f.id),
             title = escape(&f.title),
             cwe = cwe,
             desc = escape(&f.description),
@@ -99,19 +97,38 @@ pub fn to_string(report: &ScanReport) -> String {
         })
         .collect();
 
-    let route_rows: String = report
-        .findings
-        .iter()
-        .filter(|f| f.id == "route-discovered")
-        .take(500)
-        .map(|f| {
-            format!(
-                "<tr><td><a href=\"{u}\">{u}</a></td><td>{}</td></tr>",
-                escape(&f.description),
-                u = escape(&f.url),
-            )
-        })
-        .collect();
+    let route_rows: String = if !report.routes.is_empty() {
+        report
+            .routes
+            .iter()
+            .take(500)
+            .map(|r| {
+                format!(
+                    "<tr><td><a href=\"{u}\">{u}</a></td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                    escape(&r.source),
+                    r.status
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| "—".into()),
+                    escape(r.content_type.as_deref().unwrap_or("—")),
+                    u = escape(&r.url),
+                )
+            })
+            .collect()
+    } else {
+        report
+            .findings
+            .iter()
+            .filter(|f| f.id == "route-discovered")
+            .take(500)
+            .map(|f| {
+                format!(
+                    "<tr><td><a href=\"{u}\">{u}</a></td><td colspan=\"3\">{}</td></tr>",
+                    escape(&f.description),
+                    u = escape(&f.url),
+                )
+            })
+            .collect()
+    };
 
     let tech_list: String = report
         .tech_stack
@@ -155,6 +172,7 @@ a {{ color: var(--accent); word-break: break-all; }}
 .ev {{ margin-top: .25rem; font-size: .8rem; color: var(--muted); }}
 .ev code {{ color: #feca57; }}
 .cwe {{ color: #feca57; font-size: .8rem; }}
+.fid {{ color: var(--muted); font-size: .75rem; margin-right: .35rem; }}
 .chip {{ display: inline-block; background: #1a2433; border: 1px solid var(--border); border-radius: 999px; padding: .15rem .55rem; margin: .15rem; font-size: .8rem; }}
 .chip b {{ color: var(--accent); }}
 .filters {{ display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }}
@@ -164,11 +182,12 @@ a {{ color: var(--accent); word-break: break-all; }}
 @media (max-width: 900px) {{ .grid {{ grid-template-columns: 1fr; }} }}
 ul.tech {{ margin: 0; padding-left: 1.1rem; color: var(--muted); }}
 .hidden {{ display: none !important; }}
+footer {{ color: var(--muted); font-size: .8rem; padding: 1rem 1.5rem 2rem; text-align: center; }}
 </style>
 </head>
 <body>
 <header>
-  <h1>weeping-angel</h1>
+  <h1>weeping-angel <span style="font-weight:400;color:var(--muted);font-size:.85rem">v{version}</span></h1>
   <div class="meta">
     <span><strong>Target</strong> {target}</span>
     <span><strong>Profile</strong> {profile}</span>
@@ -188,7 +207,7 @@ ul.tech {{ margin: 0; padding-left: 1.1rem; color: var(--muted); }}
 <main>
 <section>
   <h2>Executive summary</h2>
-  <p class="desc">Wall time {wall:.1}s · effective ~{eff_rps:.1} req/s · surface routes {surface_n} · modules {mod_n}</p>
+  <p class="desc">{exec_summary}</p>
   <div>{source_chips}</div>
   <div style="margin-top:.5rem">{status_chips}</div>
 </section>
@@ -221,9 +240,10 @@ ul.tech {{ margin: 0; padding-left: 1.1rem; color: var(--muted); }}
 </section>
 <section>
   <h2>Routes (sample)</h2>
-  <table><thead><tr><th>URL</th><th>Notes</th></tr></thead><tbody>{route_rows}</tbody></table>
+  <table><thead><tr><th>URL</th><th>Source</th><th>Status</th><th>Content-Type</th></tr></thead><tbody>{route_rows}</tbody></table>
 </section>
 </main>
+<footer>weeping-angel v{version} · generated {generated} · {surface_n} surface routes · {mod_n} modules</footer>
 <script>
 (function(){{
   const buttons = document.querySelectorAll('#sev-filters button');
@@ -243,6 +263,8 @@ ul.tech {{ margin: 0; padding-left: 1.1rem; color: var(--muted); }}
 </html>"#,
         target = escape(&report.target),
         profile = escape(&report.profile),
+        version = escape(&report.version),
+        generated = escape(&report.finished_at.to_rfc3339()),
         wall = report.timing.wall_seconds,
         requests = report.stats.requests,
         urls = report.stats.urls_discovered,
@@ -252,8 +274,8 @@ ul.tech {{ margin: 0; padding-left: 1.1rem; color: var(--muted); }}
         m = report.stats.by_severity.medium,
         l = report.stats.by_severity.low,
         i = report.stats.by_severity.info,
-        eff_rps = report.timing.effective_rps.unwrap_or(0.0),
-        surface_n = report.surface.total_routes,
+        exec_summary = escape(&executive_summary(report)),
+        surface_n = report.surface.total_routes.max(report.routes.len()),
         mod_n = report.module_results.len(),
         source_chips = source_chips,
         status_chips = status_chips,
@@ -274,9 +296,4 @@ fn escape(s: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
-}
-
-#[allow(dead_code)]
-fn _sev_class(s: Severity) -> &'static str {
-    s.as_str()
 }

@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use crate::finding::{ScanReport, Severity};
+use crate::finding::ScanReport;
+use crate::report::{executive_summary, findings_for_display};
 use crate::style;
 
 pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize) {
@@ -154,21 +155,15 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
         }
     }
 
-    // Findings (non-route)
+    style::eprint_line(&style::section_title(width, "summary"));
+    style::eprint_line(&format!("  {}", style::dim(&executive_summary(report))));
+
+    // Findings (non-inventory)
     style::eprint_line(&style::section_title(width, "findings"));
-    let mut findings = report.findings.clone();
-    findings.sort_by(|a, b| b.severity.cmp(&a.severity).then(a.module.cmp(&b.module)));
+    let findings = findings_for_display(report);
 
     let mut shown = 0usize;
     for f in &findings {
-        if f.severity == Severity::Info
-            && (f.id == "route-discovered"
-                || f.id == "image-head-ok"
-                || f.id == "image-asset"
-                || f.id.starts_with("image-"))
-        {
-            continue;
-        }
         shown += 1;
         let badge = style::severity_badge(f.severity);
         let module = style::cyan(&format!("[{}]", f.module));
@@ -207,32 +202,41 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
         }
     }
     if shown == 0 {
-        style::eprint_line(&format!("  {}", style::dim("(no non-info findings)")));
+        style::eprint_line(&format!("  {}", style::dim("(no security findings)")));
     }
 
-    // Routes grouped by source
-    let routes: Vec<_> = report
-        .findings
-        .iter()
-        .filter(|f| f.id == "route-discovered")
-        .collect();
-    if !routes.is_empty() {
+    // Routes from structured inventory
+    let route_count = if !report.routes.is_empty() {
+        report.routes.len()
+    } else {
+        report
+            .findings
+            .iter()
+            .filter(|f| f.id == "route-discovered")
+            .count()
+    };
+    if route_count > 0 {
         style::eprint_line(&style::section_title(
             width,
-            &format!("discovered routes ({})", routes.len()),
+            &format!("discovered routes ({route_count})"),
         ));
         let mut by_src: BTreeMap<String, Vec<&str>> = BTreeMap::new();
-        for r in &routes {
-            // description has "via {source}"
-            let src = r
-                .description
-                .split("via ")
-                .nth(1)
-                .and_then(|s| s.split('.').next())
-                .unwrap_or("other")
-                .trim()
-                .to_string();
-            by_src.entry(src).or_default().push(r.url.as_str());
+        if !report.routes.is_empty() {
+            for r in &report.routes {
+                let src = if r.source.is_empty() {
+                    "other".into()
+                } else {
+                    r.source.clone()
+                };
+                by_src.entry(src).or_default().push(r.url.as_str());
+            }
+        } else {
+            for f in report.findings.iter().filter(|f| f.id == "route-discovered") {
+                by_src
+                    .entry("discovery".into())
+                    .or_default()
+                    .push(f.url.as_str());
+            }
         }
         let mut printed = 0usize;
         for (src, urls) in &by_src {
@@ -257,13 +261,13 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
                 break;
             }
         }
-        if routes.len() > printed {
+        if route_count > printed {
             style::eprint_line(&format!(
                 "  {} {}",
                 style::dim("…"),
                 style::dim(&format!(
                     "and {} more (raise --max-terminal-routes or see JSON)",
-                    routes.len() - printed
+                    route_count - printed
                 ))
             ));
         }

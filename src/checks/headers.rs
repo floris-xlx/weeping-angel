@@ -143,3 +143,97 @@ impl Check for HeadersCheck {
         Ok(findings)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checks::test_util::{context_with_responses, snapshot};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn flags_missing_security_headers_on_html() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[("content-type", "text/html")],
+                "<html><body>hi</body></html>",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = HeadersCheck.run(&ctx).await.unwrap();
+        let ids: Vec<_> = findings.iter().map(|f| f.id.as_str()).collect();
+        assert!(
+            ids.iter().any(|id| id.contains("content-security-policy")),
+            "ids={ids:?}"
+        );
+        assert!(
+            ids.iter().any(|id| id.contains("x-content-type-options")),
+            "ids={ids:?}"
+        );
+        // HSTS skipped for non-https — seed is https so HSTS should fire
+        assert!(
+            ids.iter().any(|id| id.contains("strict-transport-security")),
+            "ids={ids:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn flags_unsafe_csp() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[
+                    ("content-type", "text/html"),
+                    (
+                        "content-security-policy",
+                        "default-src 'self' 'unsafe-inline'",
+                    ),
+                    ("x-content-type-options", "nosniff"),
+                    ("strict-transport-security", "max-age=31536000"),
+                    ("x-frame-options", "DENY"),
+                    ("referrer-policy", "no-referrer"),
+                    ("permissions-policy", "geolocation=()"),
+                ],
+                "<html></html>",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = HeadersCheck.run(&ctx).await.unwrap();
+        assert!(
+            findings.iter().any(|f| f.id == "csp-unsafe"),
+            "findings={:?}",
+            findings.iter().map(|f| &f.id).collect::<Vec<_>>()
+        );
+    }
+
+    #[tokio::test]
+    async fn flags_invalid_xcto() {
+        let mut responses = HashMap::new();
+        responses.insert(
+            "https://example.com/".into(),
+            snapshot(
+                "https://example.com/",
+                200,
+                &[
+                    ("content-type", "text/html"),
+                    ("x-content-type-options", "sniff"),
+                    ("content-security-policy", "default-src 'self'"),
+                    ("strict-transport-security", "max-age=1"),
+                    ("x-frame-options", "DENY"),
+                    ("referrer-policy", "no-referrer"),
+                    ("permissions-policy", "geolocation=()"),
+                ],
+                "<html></html>",
+            ),
+        );
+        let ctx = context_with_responses(responses);
+        let findings = HeadersCheck.run(&ctx).await.unwrap();
+        assert!(findings.iter().any(|f| f.id == "xcto-invalid"));
+    }
+}

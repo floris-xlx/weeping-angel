@@ -5,12 +5,12 @@ pub mod openapi_gen;
 pub mod sarif;
 pub mod terminal;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
 use crate::discovery;
-use crate::finding::ScanReport;
+use crate::finding::{is_inventory_finding, Finding, ScanReport, Severity};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
@@ -37,10 +37,58 @@ impl Format {
                 "manifest" | "surface" => Some(Self::Manifest),
                 "openapi" | "oas" | "swagger" => Some(Self::OpenApi),
                 "images" | "image" | "image-manifest" | "img" => Some(Self::Images),
-                _ => None,
+                "" => None,
+                other => {
+                    eprintln!("weeping-angel: warning: unknown report format `{other}` (ignored)");
+                    None
+                }
             })
             .collect()
     }
+
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Terminal => "",
+            Self::Json => "json",
+            Self::Sarif => "sarif.json",
+            Self::Html => "html",
+            Self::Manifest => "manifest.json",
+            Self::OpenApi => "openapi.json",
+            Self::Images => "images.json",
+        }
+    }
+}
+
+/// Findings shown in human-facing reports (HTML/terminal): drop inventory noise.
+pub fn findings_for_display(report: &ScanReport) -> Vec<&Finding> {
+    let mut out: Vec<&Finding> = report
+        .findings
+        .iter()
+        .filter(|f| !is_inventory_finding(f))
+        .collect();
+    sort_findings(&mut out);
+    out
+}
+
+/// Findings suitable for SARIF / security tooling (exclude pure inventory).
+pub fn security_findings(report: &ScanReport) -> Vec<&Finding> {
+    let mut out: Vec<&Finding> = report
+        .findings
+        .iter()
+        .filter(|f| !is_inventory_finding(f))
+        .collect();
+    sort_findings(&mut out);
+    out
+}
+
+pub fn sort_findings(findings: &mut [&Finding]) {
+    findings.sort_by(|a, b| {
+        b.severity
+            .cmp(&a.severity)
+            .then(a.module.cmp(&b.module))
+            .then(a.id.cmp(&b.id))
+            .then(a.url.cmp(&b.url))
+    });
 }
 
 pub fn write_reports(
@@ -54,60 +102,24 @@ pub fn write_reports(
         match fmt {
             Format::Terminal => terminal::print_report(report, max_terminal_routes, report_width),
             Format::Json => {
-                let s = json::to_string(report)?;
-                if let Some(path) = output {
-                    let p = with_ext(path, "json");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &json::to_string(report)?)?;
             }
             Format::Sarif => {
-                let s = sarif::to_string(report)?;
-                if let Some(path) = output {
-                    let p = with_ext(path, "sarif.json");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &sarif::to_string(report)?)?;
             }
             Format::Html => {
-                let s = html::to_string(report);
-                if let Some(path) = output {
-                    let p = with_ext(path, "html");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &html::to_string(report))?;
             }
             Format::Manifest => {
-                let s = manifest::to_string(report)?;
-                if let Some(path) = output {
-                    let p = with_suffix_ext(path, "manifest.json");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &manifest::to_string(report)?)?;
             }
             Format::OpenApi => {
-                let s = openapi_gen::to_string(report)?;
-                if let Some(path) = output {
-                    let p = with_suffix_ext(path, "openapi.json");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &openapi_gen::to_string(report)?)?;
             }
             Format::Images => {
                 let s = if let Some(h) = &report.image_harvest {
                     discovery::image_harvest::to_string(h)?
                 } else {
-                    // empty shell so callers always get a file
                     let empty = crate::discovery::image_harvest::ImageHarvestManifest {
                         tool: report.tool.clone(),
                         version: report.version.clone(),
@@ -117,20 +129,29 @@ pub fn write_reports(
                     };
                     crate::discovery::image_harvest::to_string(&empty)?
                 };
-                if let Some(path) = output {
-                    let p = with_suffix_ext(path, "images.json");
-                    std::fs::write(&p, s)?;
-                    eprintln!("wrote {}", p.display());
-                } else {
-                    println!("{s}");
-                }
+                write_or_print(output, fmt.extension(), &s)?;
             }
         }
     }
     Ok(())
 }
 
-fn with_suffix_ext(path: &Path, suffix: &str) -> std::path::PathBuf {
+fn write_or_print(output: Option<&Path>, ext: &str, content: &str) -> Result<()> {
+    if let Some(path) = output {
+        let p = if ext.contains('.') {
+            with_suffix_ext(path, ext)
+        } else {
+            with_ext(path, ext)
+        };
+        std::fs::write(&p, content)?;
+        eprintln!("wrote {}", p.display());
+    } else {
+        println!("{content}");
+    }
+    Ok(())
+}
+
+fn with_suffix_ext(path: &Path, suffix: &str) -> PathBuf {
     if path.extension().is_none() {
         let mut p = path.to_path_buf();
         p.set_extension(suffix);
@@ -143,12 +164,11 @@ fn with_suffix_ext(path: &Path, suffix: &str) -> std::path::PathBuf {
     if let Some(parent) = path.parent() {
         parent.join(format!("{stem}.{suffix}"))
     } else {
-        std::path::PathBuf::from(format!("{stem}.{suffix}"))
+        PathBuf::from(format!("{stem}.{suffix}"))
     }
 }
 
-fn with_ext(path: &Path, ext: &str) -> std::path::PathBuf {
-    // if user gave report.json and format json, keep; else append
+fn with_ext(path: &Path, ext: &str) -> PathBuf {
     if path.extension().is_some() && ext == "json" {
         return path.to_path_buf();
     }
@@ -159,7 +179,6 @@ fn with_ext(path: &Path, ext: &str) -> std::path::PathBuf {
     if path.extension().is_none() {
         p.set_extension(ext);
     } else if ext != "json" {
-        // report.json -> report.sarif.json style via file_stem
         let stem = path
             .file_stem()
             .and_then(|s| s.to_str())
@@ -167,7 +186,30 @@ fn with_ext(path: &Path, ext: &str) -> std::path::PathBuf {
         if let Some(parent) = path.parent() {
             return parent.join(format!("{stem}.{ext}"));
         }
-        return std::path::PathBuf::from(format!("{stem}.{ext}"));
+        return PathBuf::from(format!("{stem}.{ext}"));
     }
     p
+}
+
+/// Shared executive summary line for HTML/terminal.
+pub fn executive_summary(report: &ScanReport) -> String {
+    let top = findings_for_display(report)
+        .into_iter()
+        .filter(|f| f.severity >= Severity::Medium)
+        .take(3)
+        .map(|f| format!("{} ({})", f.title, f.severity.as_str()))
+        .collect::<Vec<_>>();
+    let top_s = if top.is_empty() {
+        "no medium+ findings".into()
+    } else {
+        top.join("; ")
+    };
+    format!(
+        "Wall {:.1}s · ~{:.1} req/s · {} routes · {} modules · top: {}",
+        report.timing.wall_seconds,
+        report.timing.effective_rps.unwrap_or(0.0),
+        report.surface.total_routes.max(report.routes.len()),
+        report.module_results.len(),
+        top_s
+    )
 }

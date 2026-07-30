@@ -15,6 +15,10 @@ pub mod style;
 pub mod target;
 pub mod templates;
 
+/// Local vulnerable lab (axum). Enable with `--features demo`.
+#[cfg(feature = "demo")]
+pub mod lab;
+
 use std::collections::HashSet;
 use std::time::Duration;
 

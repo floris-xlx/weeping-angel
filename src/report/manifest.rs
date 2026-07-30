@@ -85,6 +85,8 @@ pub struct ManifestStats {
     pub route_count: usize,
     pub finding_count: usize,
     pub auth_surfaces: usize,
+    #[serde(default)]
+    pub by_severity: crate::finding::SeverityCounts,
 }
 
 pub fn from_report(report: &ScanReport) -> SurfaceManifest {
@@ -164,45 +166,44 @@ pub fn from_report(report: &ScanReport) -> SurfaceManifest {
         }
     }
 
-    // Index discovery findings for status/source
-    let mut route_meta: std::collections::HashMap<String, (Option<u16>, Option<String>)> =
-        std::collections::HashMap::new();
-    for f in &report.findings {
-        if f.module == "discovery" && f.id == "route-discovered" {
-            let status = f
-                .description
-                .split("HTTP status ")
-                .nth(1)
-                .and_then(|s| s.trim_end_matches('.').parse().ok());
-            let source = f
-                .title
-                .strip_prefix("Discovered route (")
-                .and_then(|s| s.strip_suffix(')'))
-                .map(|s| s.to_string());
-            route_meta.insert(f.url.clone(), (status, source));
-        }
-    }
-
+    // Prefer structured RouteRecord; fall back to discovered_urls only if empty.
     let mut routes: Vec<ManifestRoute> = Vec::new();
-    for u in &report.discovered_urls {
-        let path = Url::parse(u)
-            .map(|p| p.path().to_string())
-            .unwrap_or_else(|_| u.clone());
-        let (status, source) = route_meta.get(u).cloned().unwrap_or((None, None));
-        let tags = classify_tags(u, &report.findings);
-        let auth = guess_auth(u, &report.findings);
-        let rate_limit = guess_rate(u, &report.findings);
-        routes.push(ManifestRoute {
-            url: u.clone(),
-            path,
-            method: "GET".into(),
-            status,
-            source,
-            content_type: None,
-            auth,
-            rate_limit,
-            tags,
-        });
+    if !report.routes.is_empty() {
+        for r in &report.routes {
+            let mut tags = r.tags.clone();
+            if tags.is_empty() {
+                tags = classify_tags(&r.url, &report.findings);
+            }
+            routes.push(ManifestRoute {
+                url: r.url.clone(),
+                path: r.path.clone(),
+                method: r.method.clone(),
+                status: r.status,
+                source: Some(r.source.clone()).filter(|s| !s.is_empty()),
+                content_type: r.content_type.clone(),
+                auth: guess_auth(&r.url, &report.findings),
+                rate_limit: guess_rate(&r.url, &report.findings),
+                tags,
+            });
+        }
+    } else {
+        for u in &report.discovered_urls {
+            let path = Url::parse(u)
+                .map(|p| p.path().to_string())
+                .unwrap_or_else(|_| u.clone());
+            let tags = classify_tags(u, &report.findings);
+            routes.push(ManifestRoute {
+                url: u.clone(),
+                path,
+                method: "GET".into(),
+                status: None,
+                source: None,
+                content_type: None,
+                auth: guess_auth(u, &report.findings),
+                rate_limit: guess_rate(u, &report.findings),
+                tags,
+            });
+        }
     }
 
     SurfaceManifest {
@@ -214,6 +215,7 @@ pub fn from_report(report: &ScanReport) -> SurfaceManifest {
             route_count: routes.len(),
             finding_count: report.findings.len(),
             auth_surfaces: auth_surfaces.len(),
+            by_severity: report.stats.by_severity.clone(),
         },
         routes,
         auth_surfaces,

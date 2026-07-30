@@ -1,4 +1,4 @@
-//! End-to-end scan against the in-process lab demo app.
+//! End-to-end scan against the shared lab demo app (`weeping_angel::lab`).
 
 use std::time::Duration;
 
@@ -10,7 +10,7 @@ use weeping_angel::http::ClientConfig;
 
 #[tokio::test]
 async fn scan_lab_demo_finds_core_issues() {
-    let app = weeping_angel_demo_router();
+    let app = weeping_angel::lab::router();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await
         .expect("bind");
@@ -18,7 +18,6 @@ async fn scan_lab_demo_finds_core_issues() {
     tokio::spawn(async move {
         axum::serve(listener, app).await.ok();
     });
-    // tiny settle
     tokio::time::sleep(Duration::from_millis(50)).await;
 
     let base = format!("http://{addr}/");
@@ -70,6 +69,16 @@ async fn scan_lab_demo_finds_core_issues() {
         report.stats.urls_discovered
     );
 
+    // Structured routes (RouteRecord) should mirror discovery
+    assert!(
+        !report.routes.is_empty(),
+        "expected structured route inventory"
+    );
+    assert!(
+        report.routes.iter().any(|r| !r.source.is_empty()),
+        "routes should carry discovery source"
+    );
+
     let ids: Vec<_> = report.findings.iter().map(|f| f.id.as_str()).collect();
     let modules: Vec<_> = report.findings.iter().map(|f| f.module.as_str()).collect();
 
@@ -99,7 +108,6 @@ async fn scan_lab_demo_finds_core_issues() {
         "expected XSS probe hit on /search, modules={modules:?} ids={ids:?}"
     );
 
-    // auth-compare or auth-surface should notice admin / api
     assert!(
         report.findings.iter().any(|f| {
             f.module == "auth-compare"
@@ -151,6 +159,11 @@ async fn scan_lab_demo_finds_core_issues() {
     let manifest = weeping_angel::report::manifest::from_report(&report);
     assert!(manifest.routes.len() > 2);
     assert!(manifest.firebase.detected, "manifest should mark firebase");
+    // content_type should be filled from RouteRecord when available
+    assert!(
+        manifest.routes.iter().any(|r| r.status.is_some()),
+        "manifest routes should carry status from RouteRecord"
+    );
 
     let oas = weeping_angel::report::openapi_gen::from_report(&report);
     assert_eq!(oas["openapi"], "3.0.3");
@@ -190,7 +203,6 @@ async fn scan_lab_demo_finds_core_issues() {
         "expected HEAD and/or OPTIONS probe records"
     );
 
-    // Wide report fields from the engine rewrite
     assert!(
         !report.phases.is_empty(),
         "expected phase timings on deep scan"
@@ -211,193 +223,13 @@ async fn scan_lab_demo_finds_core_issues() {
     assert!(js.contains("\"phases\""));
     assert!(js.contains("\"timing\""));
     assert!(js.contains("\"surface\""));
-}
+    assert!(js.contains("\"routes\""));
 
-/// Re-export demo router without requiring binary link tricks.
-fn weeping_angel_demo_router() -> axum::Router {
-    // Inline minimal duplicate of demo routes used for tests is heavy —
-    // instead include the demo module paths via shared factory.
-    demo_lab::router()
-}
-
-mod demo_lab {
-    use axum::extract::{Query, Request};
-    use axum::http::{header, StatusCode};
-    use axum::response::{Html, IntoResponse, Redirect, Response};
-    use axum::routing::get;
-    use axum::Router;
-    use serde::Deserialize;
-
-    pub fn router() -> Router {
-        Router::new()
-            .route("/", get(home))
-            .route("/spa", get(spa))
-            .route("/assets/app.js", get(app_js))
-            .route(
-                "/assets/images/home/dashboardpic.png",
-                get(dashboard_pic),
-            )
-            .route("/assets/images/home/hero.png", get(dashboard_pic))
-            .route("/login", get(login))
-            .route("/signup", get(signup))
-            .route("/admin", get(admin))
-            .route("/search", get(search))
-            .route("/redirect", get(redir))
-            .route("/file", get(file))
-            .route("/.env", get(|| async { "API_SECRET=x\nDATABASE_URL=postgres://a:b@h/db\n" }))
-            .route("/.git/HEAD", get(|| async { "ref: refs/heads/main\n" }))
-            .route("/api/config", get(api_config))
-            .route("/api/v1/users", get(api_users))
-            .route("/api/v1/me", get(api_me))
-            .route("/api/limited", get(api_limited))
-            .route("/openapi.json", get(openapi))
-            .route("/robots.txt", get(|| async { "User-agent: *\nDisallow:\n" }))
-            .route("/sitemap.xml", get(sitemap))
-    }
-
-    async fn home() -> impl IntoResponse {
-        (
-            [
-                (header::SET_COOKIE, "session=guest; Path=/"),
-                (header::SERVER, "lab"),
-                (header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"),
-            ],
-            Html(
-                r#"<!DOCTYPE html><html><body>
-                <a href="/login">L</a><a href="/admin">A</a><a href="/spa">S</a>
-                <a href="/search?q=hi">Search</a>
-                <img src="/assets/images/home/dashboardpic.png" alt="dash"/>
-                <script src="/assets/app.js"></script>
-                <script>const STRIPE_KEY="sk_live_51DemoPlantedSecretKey000000";
-                const firebaseConfig={apiKey:"AIzaSyA-demoKeyNotReal0123456789ABCD",authDomain:"lab.firebaseapp.com",projectId:"weeping-angel-lab"};
-                window.__INITIAL_STATE__={routes:["/api/v1/me","/api/v1/users","/signup"]};
-                // firebase/firestore marker
-                </script>
-                </body></html>"#,
-            ),
-        )
-    }
-
-    async fn dashboard_pic() -> impl IntoResponse {
-        (
-            [(header::CONTENT_TYPE, "image/png")],
-            // minimal PNG header bytes — enough for content-type checks
-            &[0x89u8, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a][..],
-        )
-    }
-
-    async fn spa() -> Html<&'static str> {
-        Html(
-            r#"<script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"paths":["/api/v1/me","/api/internal/debug"]}}}</script>
-            <script src="/assets/app.js"></script>"#,
-        )
-    }
-
-    async fn app_js() -> impl IntoResponse {
-        (
-            [(header::CONTENT_TYPE, "application/javascript")],
-            r#"const routes=["/api/v1/items"]; fetch("/api/v1/me"); const T="ghp_demoPlantedTokenNotReal000000000001";"#,
-        )
-    }
-
-    async fn login() -> Html<&'static str> {
-        Html(r#"<form action="/login"><input type="password" name="password"></form>"#)
-    }
-
-    async fn signup() -> Html<&'static str> {
-        Html(r#"<form action="/signup"><input name="email"><input type="password" name="password"><button>Sign up</button></form>"#)
-    }
-
-    async fn api_limited() -> Response {
-        let mut res = Response::new(r#"{"ok":true}"#.into());
-        *res.status_mut() = StatusCode::OK;
-        res.headers_mut().insert(
-            header::CONTENT_TYPE,
-            header::HeaderValue::from_static("application/json"),
-        );
-        res.headers_mut().insert(
-            header::HeaderName::from_static("x-ratelimit-limit"),
-            header::HeaderValue::from_static("10"),
-        );
-        res
-    }
-
-    fn is_admin(req: &Request) -> bool {
-        req.headers()
-            .get(header::COOKIE)
-            .and_then(|v| v.to_str().ok())
-            .map(|c| c.contains("session=admin-session"))
-            .unwrap_or(false)
-    }
-
-    async fn admin(req: Request) -> Html<&'static str> {
-        let _ = is_admin(&req);
-        Html("<html><body><h1>Admin</h1><p>open admin</p></body></html>")
-    }
-
-    #[derive(Deserialize)]
-    struct Q {
-        q: Option<String>,
-    }
-    async fn search(Query(q): Query<Q>) -> Html<String> {
-        Html(format!("Results for: {}", q.q.unwrap_or_default()))
-    }
-
-    #[derive(Deserialize)]
-    struct R {
-        next: Option<String>,
-    }
-    async fn redir(Query(q): Query<R>) -> Response {
-        Redirect::temporary(q.next.as_deref().unwrap_or("/")).into_response()
-    }
-
-    #[derive(Deserialize)]
-    struct F {
-        file: Option<String>,
-    }
-    async fn file(Query(q): Query<F>) -> Response {
-        let n = q.file.unwrap_or_default();
-        if n.contains("passwd") || n.contains("..") {
-            (StatusCode::OK, "root:x:0:0:root:/root:/bin/bash\n").into_response()
-        } else {
-            (StatusCode::NOT_FOUND, "no").into_response()
-        }
-    }
-
-    async fn api_config() -> impl IntoResponse {
-        (
-            [(header::CONTENT_TYPE, "application/json")],
-            r#"{"aws_key":"AKIAIOSFODNN7EXAMPLE","jwt":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.xxx"}"#,
-        )
-    }
-
-    async fn api_users() -> impl IntoResponse {
-        (
-            StatusCode::OK,
-            [(header::CONTENT_TYPE, "application/json")],
-            r#"{"users":[{"email":"a@lab"}]}"#,
-        )
-    }
-
-    async fn api_me(req: Request) -> Response {
-        if is_admin(&req) {
-            (StatusCode::OK, r#"{"role":"admin"}"#).into_response()
-        } else {
-            (StatusCode::UNAUTHORIZED, "no").into_response()
-        }
-    }
-
-    async fn openapi() -> impl IntoResponse {
-        (
-            [(header::CONTENT_TYPE, "application/json")],
-            r#"{"openapi":"3.0.0","paths":{"/api/v1/me":{},"/api/v1/users":{}}}"#,
-        )
-    }
-
-    async fn sitemap() -> impl IntoResponse {
-        (
-            [(header::CONTENT_TYPE, "application/xml")],
-            r#"<?xml version="1.0"?><urlset><url><loc>/login</loc></url><url><loc>/search?q=x</loc></url></urlset>"#,
-        )
-    }
+    let sarif = weeping_angel::report::sarif::to_string(&report).unwrap();
+    assert!(sarif.contains("floris-xlx/weeping-angel") || sarif.contains("weeping-angel"));
+    // inventory routes should not dominate SARIF results
+    assert!(
+        !sarif.contains("route-discovered") || sarif.matches("ruleId").count() < report.findings.len(),
+        "SARIF should prefer security findings over inventory noise"
+    );
 }
