@@ -55,6 +55,9 @@ async fn scan_lab_demo_finds_core_issues() {
         fail_on: Some(Severity::Medium),
         templates_dir: std::path::PathBuf::from("templates"),
         compare_auth: true,
+        skip_image_options: true,
+        max_terminal_routes: 120,
+        report_width: 100,
     };
 
     let report = run_scan(authz, client_cfg, opts)
@@ -186,7 +189,29 @@ async fn scan_lab_demo_finds_core_issues() {
             .any(|i| i.head.is_some() || i.options.is_some()),
         "expected HEAD and/or OPTIONS probe records"
     );
-    }
+
+    // Wide report fields from the engine rewrite
+    assert!(
+        !report.phases.is_empty(),
+        "expected phase timings on deep scan"
+    );
+    assert!(report.timing.wall_seconds > 0.0);
+    assert!(report.timing.requests >= report.stats.requests.min(1));
+    assert!(!report.module_results.is_empty());
+    assert!(
+        report.surface.total_routes > 0 || !report.discovered_urls.is_empty(),
+        "surface/urls empty"
+    );
+
+    let html = weeping_angel::report::html::to_string(&report);
+    assert!(html.contains("weeping-angel"));
+    assert!(html.contains("Phase") || html.contains("phase") || html.contains("Findings"));
+
+    let js = weeping_angel::report::json::to_string(&report).unwrap();
+    assert!(js.contains("\"phases\""));
+    assert!(js.contains("\"timing\""));
+    assert!(js.contains("\"surface\""));
+}
 
 /// Re-export demo router without requiring binary link tricks.
 fn weeping_angel_demo_router() -> axum::Router {

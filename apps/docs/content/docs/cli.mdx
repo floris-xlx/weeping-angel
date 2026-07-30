@@ -1,0 +1,32 @@
+---
+title: "CLI overview"
+description: "Root command tree"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Authorized web recon and security scanning CLI
+
+## Usage
+
+```bash
+Usage: weeping-angel [OPTIONS] <COMMAND>
+```
+
+## Details
+
+Scan only systems you own or have written permission to test.
+Requires --i-own-this and --allow-host (or --allow-host-from-target).
+
+Targets accept bare hosts (example.com), //host, http://, or https://.
+Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `--verbose` | Increase logging verbosity (-v, -vv) | `—` |
+
+## Subcommands
+
+- [`scan`](/docs/commands/scan) — Run an authorized security scan

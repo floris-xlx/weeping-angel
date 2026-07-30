@@ -63,9 +63,9 @@ pub enum Profile {
 impl Profile {
     pub fn parse(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
-            "recon" => Some(Self::Recon),
-            "standard" => Some(Self::Standard),
-            "deep" => Some(Self::Deep),
+            "recon" | "quick" | "light" => Some(Self::Recon),
+            "standard" | "default" | "normal" => Some(Self::Standard),
+            "deep" | "full" | "aggressive" => Some(Self::Deep),
             _ => None,
         }
     }

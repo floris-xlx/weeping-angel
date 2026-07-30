@@ -1,0 +1,25 @@
+---
+title: "Lab demo"
+description: "Local intentionally weak target"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# Lab demo
+
+```bash
+# terminal 1
+cargo run --example weeping-angel-demo --features demo
+
+# terminal 2
+weeping-angel scan 127.0.0.1:8787 \
+  --i-own-this --allow-host 127.0.0.1 \
+  --profile deep --enable-active \
+  --probe xss,sqli,open-redirect,path-traversal \
+  --cookie "session=admin-session" \
+  --compare-auth --ignore-robots \
+  --fast \
+  -o report-lab --format terminal,json,html
+```
+
+Loopback hosts default to **http** when the scheme is omitted.

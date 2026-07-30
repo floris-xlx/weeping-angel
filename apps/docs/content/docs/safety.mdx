@@ -1,0 +1,20 @@
+---
+title: "Safety & authorization"
+description: "Consent gates and allowlists"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# Safety & authorization
+
+weeping-angel will not scan without explicit ownership consent.
+
+| Control | Flag | Notes |
+|---|---|---|
+| Consent | `--i-own-this` / `--i-own-this=true` | Required. `=false` is rejected loudly |
+| Allowlist | `--allow-host` | Repeatable; CSV ok; supports `*.example.com` and full URLs |
+| From target | `--allow-host-from-target` | Copies hosts from targets (still needs consent) |
+| Active probes | `--enable-active` | Second gate for intrusive checks |
+| Writes | `--allow-write-methods` | Blocks POST/PUT/PATCH/DELETE by default |
+
+Never auto-consent. Config file `i_own_this = true` is allowed only when you intentionally set it.

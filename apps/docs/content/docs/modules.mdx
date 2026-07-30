@@ -1,0 +1,16 @@
+---
+title: "Modules & profiles"
+description: "recon, standard, deep"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# Modules & profiles
+
+| Profile | Modules |
+|---|---|
+| **recon** / quick | discovery, headers, tls, cookies, secrets, exposures, tech, firebase |
+| **standard** | recon + cors, auth-surface, rate-limits, wordlist, templates |
+| **deep** / full | standard + openapi, auth-compare + active probes if `--enable-active` |
+
+Use `--modules` to override (comma or space separated). Active probes: `--probe xss,sqli,open-redirect,path-traversal` with `--enable-active`.

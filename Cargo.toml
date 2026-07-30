@@ -33,6 +33,10 @@ eula = false
 name = "weeping-angel"
 path = "src/main.rs"
 
+[[bin]]
+name = "weeping-angel-docs-export"
+path = "src/bin/weeping-angel-docs-export.rs"
+
 [[example]]
 name = "weeping-angel-demo"
 path = "examples/weeping-angel-demo.rs"

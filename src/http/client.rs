@@ -11,6 +11,7 @@ use url::Url;
 
 use crate::authz::Authorization;
 use crate::http::response::ResponseSnapshot;
+use crate::parse::LogHttp;
 use crate::style;
 
 const DEFAULT_UA: &str = "weeping-angel/0.1 (+authorized-security-scan; polite)";
@@ -25,6 +26,7 @@ pub struct ClientConfig {
     pub extra_headers: Vec<(String, String)>,
     pub cookie: Option<String>,
     pub insecure_tls: bool,
+    pub log_http: LogHttp,
 }
 
 impl ClientConfig {
@@ -33,11 +35,12 @@ impl ClientConfig {
             timeout: Duration::from_secs(15),
             max_redirects: 5,
             max_body_bytes: 2 * 1024 * 1024,
-            concurrency: 10,
-            rps: 5.0,
+            concurrency: 20,
+            rps: 15.0,
             extra_headers: Vec::new(),
             cookie: None,
             insecure_tls: false,
+            log_http: LogHttp::Compact,
         }
     }
 }
@@ -48,13 +51,15 @@ impl Default for ClientConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct HttpClient {
     inner: Client,
     authz: Authorization,
     max_body_bytes: usize,
+    concurrency: usize,
     semaphore: Arc<Semaphore>,
     rate: Arc<RateLimiter>,
-    requests: AtomicU64,
+    requests: Arc<AtomicU64>,
     allow_write: bool,
 }
 
@@ -94,16 +99,23 @@ impl HttpClient {
         let inner = builder.build().context("build HTTP client")?;
         let rps = if cfg.rps <= 0.0 { 1.0 } else { cfg.rps };
         let allow_write = authz.allow_write_methods;
+        style::set_log_http(cfg.log_http);
 
+        let concurrency = cfg.concurrency.max(1);
         Ok(Self {
             inner,
             authz,
             max_body_bytes: cfg.max_body_bytes,
-            semaphore: Arc::new(Semaphore::new(cfg.concurrency.max(1))),
+            concurrency,
+            semaphore: Arc::new(Semaphore::new(concurrency)),
             rate: Arc::new(RateLimiter::new(rps)),
-            requests: AtomicU64::new(0),
+            requests: Arc::new(AtomicU64::new(0)),
             allow_write,
         })
+    }
+
+    pub fn concurrency(&self) -> usize {
+        self.concurrency
     }
 
     pub fn authz(&self) -> &Authorization {

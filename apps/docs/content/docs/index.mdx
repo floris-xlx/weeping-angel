@@ -1,0 +1,34 @@
+---
+title: "weeping-angel"
+description: "Authorized web recon and security scanning CLI"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# weeping-angel
+
+Authorized **web recon + security scanning** CLI (Rust). Discover routes (including SPA/JS surfaces), flag misconfigurations and exposed secrets, map auth, run YAML path templates, compare authenticated vs anonymous access, and optionally fire **gated** active probes.
+
+> **Legal:** Only scan systems you **own** or have written permission to test. The tool refuses to run without `--i-own-this` and a host allowlist.
+
+## Quick start
+
+```bash
+weeping-angel scan example.com \
+  --i-own-this \
+  --allow-host example.com \
+  --profile standard \
+  -o report \
+  --format terminal,json,html
+```
+
+Targets accept bare hosts, `//host`, `http://`, or `https://`. Consent accepts bare `--i-own-this` or `--i-own-this=true|yes|1`.
+
+## Docs map
+
+- [Installation](/docs/installation)
+- [Safety & authorization](/docs/safety)
+- [CLI reference](/docs/cli)
+- [Modules & profiles](/docs/modules)
+- [Report formats](/docs/reports)
+- [Lab demo](/docs/lab-demo)

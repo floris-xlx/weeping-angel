@@ -1,0 +1,32 @@
+---
+title: "Installation"
+description: "Build and install weeping-angel"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# Installation
+
+```bash
+cargo build --release
+# binary: target/release/weeping-angel
+```
+
+Windows:
+
+```powershell
+.\scripts\setup.ps1
+```
+
+Unix:
+
+```bash
+chmod +x scripts/*.sh
+./scripts/setup.sh
+```
+
+Optional lab demo:
+
+```bash
+cargo build --release --example weeping-angel-demo --features demo
+```

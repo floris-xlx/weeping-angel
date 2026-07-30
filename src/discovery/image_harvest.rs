@@ -2,7 +2,10 @@
 //! HEAD existence probes, and build a structured image manifest.
 
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
+use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -425,115 +428,148 @@ pub async fn harvest(
     let mut head_ok_paths = Vec::new();
     let mut head_miss_paths = Vec::new();
     let mut all_paths = Vec::new();
-    let mut probed = 0usize;
 
-    for cand in list {
-        if probed >= max_probes {
-            // still record path without probe if over budget? record unprobed as path-only
-            all_paths.push(cand.url.path().to_string());
-            images.push(HarvestedImage {
-                url: cand.url.as_str().into(),
-                path: cand.url.path().into(),
-                sources: cand.sources.iter().map(|s| s.as_str().to_string()).collect(),
-                exists: false,
-                head: None,
-                options: None,
-                get: None,
-                pattern: image_assets::describe_pattern(cand.url.path()).as_ref().map(Into::into),
-            });
-            continue;
-        }
+    let (to_probe, unprobed): (Vec<_>, Vec<_>) = list
+        .into_iter()
+        .enumerate()
+        .partition(|(i, _)| *i < max_probes);
+    let to_probe: Vec<ImageCandidate> = to_probe.into_iter().map(|(_, c)| c).collect();
+    let unprobed: Vec<ImageCandidate> = unprobed.into_iter().map(|(_, c)| c).collect();
 
+    for cand in &unprobed {
         all_paths.push(cand.url.path().to_string());
-        let sources: Vec<String> = {
-            let mut s: Vec<_> = cand.sources.iter().map(|s| s.as_str().to_string()).collect();
-            s.sort();
-            s.dedup();
-            s
-        };
-        let pattern = image_assets::describe_pattern(cand.url.path())
-            .as_ref()
-            .map(Into::into);
+        images.push(HarvestedImage {
+            url: cand.url.as_str().into(),
+            path: cand.url.path().into(),
+            sources: cand.sources.iter().map(|s| s.as_str().to_string()).collect(),
+            exists: false,
+            head: None,
+            options: None,
+            get: None,
+            pattern: image_assets::describe_pattern(cand.url.path())
+                .as_ref()
+                .map(Into::into),
+        });
+    }
 
-        let mut options_probe = None;
-        if do_options {
-            stats.options_probes += 1;
-            match client
-                .options(&cand.url, Some(&origin), "GET")
-                .await
-            {
-                Ok(resp) => {
-                    let p = MethodProbe::from_response("OPTIONS", &resp);
-                    if p.ok {
-                        stats.options_ok += 1;
+    let options_probes = Arc::new(AtomicUsize::new(0));
+    let options_ok = Arc::new(AtomicUsize::new(0));
+    let head_probes = Arc::new(AtomicUsize::new(0));
+    let concurrency = client.concurrency().max(1);
+    let origin_s = origin.clone();
+
+    let probed_images: Vec<HarvestedImage> = stream::iter(to_probe.into_iter().map(|cand| {
+        let client = client.clone();
+        let origin = origin_s.clone();
+        let options_probes = options_probes.clone();
+        let options_ok = options_ok.clone();
+        let head_probes = head_probes.clone();
+        async move {
+            let sources: Vec<String> = {
+                let mut s: Vec<_> = cand.sources.iter().map(|s| s.as_str().to_string()).collect();
+                s.sort();
+                s.dedup();
+                s
+            };
+            let pattern = image_assets::describe_pattern(cand.url.path())
+                .as_ref()
+                .map(Into::into);
+
+            let mut options_probe = None;
+            if do_options {
+                options_probes.fetch_add(1, Ordering::Relaxed);
+                match client.options(&cand.url, Some(&origin), "GET").await {
+                    Ok(resp) => {
+                        let p = MethodProbe::from_response("OPTIONS", &resp);
+                        if p.ok {
+                            options_ok.fetch_add(1, Ordering::Relaxed);
+                        }
+                        options_probe = Some(p);
                     }
-                    options_probe = Some(p);
-                }
-                Err(e) => {
-                    options_probe = Some(MethodProbe::from_error("OPTIONS", &e.to_string()));
+                    Err(e) => {
+                        options_probe = Some(MethodProbe::from_error("OPTIONS", &e.to_string()));
+                    }
                 }
             }
-        }
 
-        stats.head_probes += 1;
-        probed += 1;
-        let (head_probe, mut exists, need_get) = match client.head(&cand.url).await {
-            Ok(resp) => {
-                let p = MethodProbe::from_response("HEAD", &resp);
-                let ct_img = p
-                    .content_type
-                    .as_deref()
-                    .map(|c| c.to_ascii_lowercase().starts_with("image/"))
-                    .unwrap_or(false);
-                let path_img = image_assets::is_image_path(cand.url.path());
-                let ok = p.ok && (ct_img || path_img || p.status == 200 || (200..300).contains(&p.status));
-                // Some stacks return 405 Method Not Allowed on HEAD for static files
-                let need_get = p.status == 405 || p.status == 501 || p.status == 403 && path_img;
-                (Some(p), ok, need_get)
-            }
-            Err(e) => (Some(MethodProbe::from_error("HEAD", &e.to_string())), false, true),
-        };
-
-        let mut get_probe = None;
-        if need_get && !exists {
-            match client.get(&cand.url).await {
+            head_probes.fetch_add(1, Ordering::Relaxed);
+            let (head_probe, mut exists, need_get) = match client.head(&cand.url).await {
                 Ok(resp) => {
-                    let p = MethodProbe::from_response("GET", &resp);
+                    let p = MethodProbe::from_response("HEAD", &resp);
                     let ct_img = p
                         .content_type
                         .as_deref()
                         .map(|c| c.to_ascii_lowercase().starts_with("image/"))
                         .unwrap_or(false);
-                    if p.ok && (ct_img || image_assets::is_image_path(cand.url.path())) {
-                        exists = true;
-                    }
-                    get_probe = Some(p);
+                    let path_img = image_assets::is_image_path(cand.url.path());
+                    let ok = p.ok
+                        && (ct_img
+                            || path_img
+                            || p.status == 200
+                            || (200..300).contains(&p.status));
+                    let need_get =
+                        p.status == 405 || p.status == 501 || (p.status == 403 && path_img);
+                    (Some(p), ok, need_get)
                 }
-                Err(e) => {
-                    get_probe = Some(MethodProbe::from_error("GET", &e.to_string()));
+                Err(e) => (
+                    Some(MethodProbe::from_error("HEAD", &e.to_string())),
+                    false,
+                    true,
+                ),
+            };
+
+            let mut get_probe = None;
+            if need_get && !exists {
+                match client.get(&cand.url).await {
+                    Ok(resp) => {
+                        let p = MethodProbe::from_response("GET", &resp);
+                        let ct_img = p
+                            .content_type
+                            .as_deref()
+                            .map(|c| c.to_ascii_lowercase().starts_with("image/"))
+                            .unwrap_or(false);
+                        if p.ok && (ct_img || image_assets::is_image_path(cand.url.path())) {
+                            exists = true;
+                        }
+                        get_probe = Some(p);
+                    }
+                    Err(e) => {
+                        get_probe = Some(MethodProbe::from_error("GET", &e.to_string()));
+                    }
                 }
             }
-        }
 
-        if exists {
+            HarvestedImage {
+                url: cand.url.as_str().into(),
+                path: cand.url.path().into(),
+                sources,
+                exists,
+                head: head_probe,
+                options: options_probe,
+                get: get_probe,
+                pattern,
+            }
+        }
+    }))
+    .buffer_unordered(concurrency)
+    .collect()
+    .await;
+
+    stats.options_probes = options_probes.load(Ordering::Relaxed);
+    stats.options_ok = options_ok.load(Ordering::Relaxed);
+    stats.head_probes = head_probes.load(Ordering::Relaxed);
+
+    for img in probed_images {
+        all_paths.push(img.path.clone());
+        if img.exists {
             stats.head_ok += 1;
             stats.exists_total += 1;
-            head_ok_paths.push(cand.url.path().to_string());
+            head_ok_paths.push(img.path.clone());
         } else {
             stats.head_miss += 1;
-            head_miss_paths.push(cand.url.path().to_string());
+            head_miss_paths.push(img.path.clone());
         }
-
-        images.push(HarvestedImage {
-            url: cand.url.as_str().into(),
-            path: cand.url.path().into(),
-            sources,
-            exists,
-            head: head_probe,
-            options: options_probe,
-            get: get_probe,
-            pattern,
-        });
+        images.push(img);
     }
 
     all_paths.sort();

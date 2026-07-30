@@ -1,0 +1,530 @@
+{
+  "generated_by": "weeping-angel-docs-export",
+  "version": "0.1.2",
+  "command_path": [],
+  "command": {
+    "name": "weeping-angel",
+    "display_name": "weeping-angel",
+    "usage": "Usage: weeping-angel [OPTIONS] <COMMAND>",
+    "about": "Authorized web recon and security scanning CLI",
+    "long_about": "Scan only systems you own or have written permission to test.\nRequires --i-own-this and --allow-host (or --allow-host-from-target).\n\nTargets accept bare hosts (example.com), //host, http://, or https://.\nConsent: --i-own-this or --i-own-this=true|yes|1 (value requires =).",
+    "after_help": null,
+    "aliases": [],
+    "visible_aliases": [],
+    "arguments": [
+      {
+        "id": "verbose",
+        "kind": "option",
+        "display": "--verbose",
+        "short": "-v",
+        "long": "--verbose",
+        "help": "Increase logging verbosity (-v, -vv)",
+        "long_help": null,
+        "required": false,
+        "global": true,
+        "repeatable": true,
+        "positional_index": null,
+        "default_values": [],
+        "possible_values": []
+      }
+    ],
+    "subcommands": [
+      {
+        "name": "scan",
+        "display_name": "weeping-angel scan",
+        "usage": "Usage: weeping-angel scan [OPTIONS] [TARGETS]...",
+        "about": "Run an authorized security scan",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [],
+        "visible_aliases": [],
+        "arguments": [
+          {
+            "id": "targets",
+            "kind": "positional",
+            "display": "<TARGETS>",
+            "short": null,
+            "long": null,
+            "help": "Target host(s) or URL(s): example.com, //host/path, http(s)://…",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": true,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "i_own_this",
+            "kind": "option",
+            "display": "--i-own-this <BOOL>",
+            "short": null,
+            "long": "--i-own-this",
+            "help": "Ownership / authorization consent (required). Use bare flag or =true|yes|1",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "allow_hosts",
+            "kind": "option",
+            "display": "--allow-host <HOST>",
+            "short": null,
+            "long": "--allow-host",
+            "help": "Allowlisted host (repeatable; CSV ok). Supports *.example.com and full URLs",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": true,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "allow_host_from_target",
+            "kind": "option",
+            "display": "--allow-host-from-target",
+            "short": null,
+            "long": "--allow-host-from-target",
+            "help": "Add each target's host to the allowlist (still requires --i-own-this)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "prefer_http",
+            "kind": "option",
+            "display": "--prefer-http",
+            "short": null,
+            "long": "--prefer-http",
+            "help": "When scheme is omitted, prefer http instead of smart https/http default",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "config",
+            "kind": "option",
+            "display": "--config <CONFIG>",
+            "short": "-c",
+            "long": "--config",
+            "help": "Optional TOML config file",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "profile",
+            "kind": "option",
+            "display": "--profile <PROFILE>",
+            "short": null,
+            "long": "--profile",
+            "help": "Scan profile: recon | standard | deep (aliases: quick, full)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "standard"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "modules",
+            "kind": "option",
+            "display": "--modules <MODULES>",
+            "short": null,
+            "long": "--modules",
+            "help": "Comma/space-separated modules (overrides profile defaults when set)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "enable_active",
+            "kind": "option",
+            "display": "--enable-active <BOOL>",
+            "short": null,
+            "long": "--enable-active",
+            "help": "Enable active (intrusive) probes — second safety gate",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "probe",
+            "kind": "option",
+            "display": "--probe <LIST>",
+            "short": null,
+            "long": "--probe",
+            "help": "Active probes: xss,sqli,open-redirect,path-traversal (requires --enable-active)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "allow_write_methods",
+            "kind": "option",
+            "display": "--allow-write-methods <BOOL>",
+            "short": null,
+            "long": "--allow-write-methods",
+            "help": "Allow POST/PUT/PATCH/DELETE (default: GET/HEAD only)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "depth",
+            "kind": "option",
+            "display": "--depth <DEPTH>",
+            "short": null,
+            "long": "--depth",
+            "help": "Crawl depth",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "2"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "max_urls",
+            "kind": "option",
+            "display": "--max-urls <MAX_URLS>",
+            "short": null,
+            "long": "--max-urls",
+            "help": "Maximum URLs to retain/fetch",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "300"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "concurrency",
+            "kind": "option",
+            "display": "--concurrency <CONCURRENCY>",
+            "short": null,
+            "long": "--concurrency",
+            "help": "Concurrent in-flight requests",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "20"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "rps",
+            "kind": "option",
+            "display": "--rps <RPS>",
+            "short": null,
+            "long": "--rps",
+            "help": "Requests per second (global)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "15"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "fast",
+            "kind": "option",
+            "display": "--fast",
+            "short": null,
+            "long": "--fast",
+            "help": "Speed preset: higher rps/concurrency, summary HTTP log, skip image OPTIONS",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "ignore_robots",
+            "kind": "option",
+            "display": "--ignore-robots <BOOL>",
+            "short": null,
+            "long": "--ignore-robots",
+            "help": "Ignore robots.txt Disallow (authorized pentest mode)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "wordlist",
+            "kind": "option",
+            "display": "--wordlist <WORDLIST>",
+            "short": null,
+            "long": "--wordlist",
+            "help": "Path to path wordlist",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "wordlists/common-paths.txt"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "cookies",
+            "kind": "option",
+            "display": "--cookie <COOKIE>",
+            "short": null,
+            "long": "--cookie",
+            "help": "Extra Cookie header (repeatable; values merged)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": true,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "headers",
+            "kind": "option",
+            "display": "--header <NAME: VALUE>",
+            "short": null,
+            "long": "--header",
+            "help": "Extra header Name: Value or Name=Value (repeatable)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": true,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "timeout",
+            "kind": "option",
+            "display": "--timeout <TIMEOUT>",
+            "short": null,
+            "long": "--timeout",
+            "help": "Request timeout seconds",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "15"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "insecure",
+            "kind": "option",
+            "display": "--insecure <BOOL>",
+            "short": null,
+            "long": "--insecure",
+            "help": "Accept invalid TLS certificates (lab only)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "output",
+            "kind": "option",
+            "display": "--output <OUTPUT>",
+            "short": "-o",
+            "long": "--output",
+            "help": "Output path prefix/file for json/sarif/html",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "format",
+            "kind": "option",
+            "display": "--format <FORMAT>",
+            "short": null,
+            "long": "--format",
+            "help": "Formats: terminal,json,sarif,html,manifest,openapi,images (comma-separated)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "terminal"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "fail_on",
+            "kind": "option",
+            "display": "--fail-on <FAIL_ON>",
+            "short": null,
+            "long": "--fail-on",
+            "help": "Exit 1 when findings at or above this severity: low|medium|high|critical",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "medium"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "templates_dir",
+            "kind": "option",
+            "display": "--templates-dir <TEMPLATES_DIR>",
+            "short": null,
+            "long": "--templates-dir",
+            "help": "Directory of YAML path templates (Nuclei-lite). Default: templates/",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "templates"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "compare_auth",
+            "kind": "option",
+            "display": "--compare-auth <BOOL>",
+            "short": null,
+            "long": "--compare-auth",
+            "help": "Compare authenticated (--cookie/--header) vs anonymous requests",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "log_http",
+            "kind": "option",
+            "display": "--log-http <MODE>",
+            "short": null,
+            "long": "--log-http",
+            "help": "Live HTTP log density: full | compact | summary | off",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "max_terminal_routes",
+            "kind": "option",
+            "display": "--max-terminal-routes <MAX_TERMINAL_ROUTES>",
+            "short": null,
+            "long": "--max-terminal-routes",
+            "help": "Max discovered routes printed in terminal report",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "120"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "report_width",
+            "kind": "option",
+            "display": "--report-width <REPORT_WIDTH>",
+            "short": null,
+            "long": "--report-width",
+            "help": "Terminal report width (0 = auto-detect)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "0"
+            ],
+            "possible_values": []
+          }
+        ],
+        "subcommands": []
+      }
+    ]
+  }
+}

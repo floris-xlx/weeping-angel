@@ -43,10 +43,16 @@ impl Format {
     }
 }
 
-pub fn write_reports(report: &ScanReport, formats: &[Format], output: Option<&Path>) -> Result<()> {
+pub fn write_reports(
+    report: &ScanReport,
+    formats: &[Format],
+    output: Option<&Path>,
+    max_terminal_routes: usize,
+    report_width: usize,
+) -> Result<()> {
     for fmt in formats {
         match fmt {
-            Format::Terminal => terminal::print_report(report),
+            Format::Terminal => terminal::print_report(report, max_terminal_routes, report_width),
             Format::Json => {
                 let s = json::to_string(report)?;
                 if let Some(path) = output {

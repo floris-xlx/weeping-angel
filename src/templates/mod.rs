@@ -148,8 +148,8 @@ pub async fn run_templates(
     templates: &[Template],
     max_paths: usize,
 ) -> Result<Vec<Finding>> {
-    let mut findings = Vec::new();
-    let mut tried = 0usize;
+    use futures::stream::{self, StreamExt};
+
     let origin = {
         let mut u = seed.clone();
         u.set_path("/");
@@ -158,12 +158,13 @@ pub async fn run_templates(
         u
     };
 
-    for t in templates {
+    // Flatten (template_idx, path) jobs up to max_paths
+    let mut jobs: Vec<(usize, String, Url)> = Vec::new();
+    'outer: for (ti, t) in templates.iter().enumerate() {
         for path in &t.paths {
-            if tried >= max_paths {
-                break;
+            if jobs.len() >= max_paths {
+                break 'outer;
             }
-            tried += 1;
             let mut url = origin.clone();
             let p = if path.starts_with('/') {
                 path.clone()
@@ -171,35 +172,50 @@ pub async fn run_templates(
                 format!("/{path}")
             };
             url.set_path(&p);
-            let resp = match client.get(&url).await {
-                Ok(r) => r,
-                Err(_) => continue,
-            };
-            if t.matches(resp.status.as_u16(), &resp.body) {
-                let mut b = Finding::builder("templates", &t.id)
-                    .title(&t.name)
-                    .severity(t.severity_enum())
-                    .url(url.as_str())
-                    .description(if t.description.is_empty() {
-                        format!("Template `{}` matched.", t.id)
-                    } else {
-                        t.description.clone()
-                    });
-                if let Some(r) = &t.remediation {
-                    b = b.remediation(r);
-                }
-                if let Some(c) = &t.cwe {
-                    b = b.cwe(c);
-                }
-                b = b.evidence(Evidence::new(
-                    "body",
-                    resp.body.chars().take(160).collect::<String>(),
-                ));
-                findings.push(b.build());
-            }
+            jobs.push((ti, path.clone(), url));
         }
     }
-    let _ = WORD_SPLIT; // silence if unused in some builds
+
+    let concurrency = client.concurrency().max(1);
+    let results = stream::iter(jobs.into_iter().map(|(ti, _path, url)| {
+        let client = client.clone();
+        async move {
+            let resp = client.get(&url).await.ok();
+            (ti, url, resp)
+        }
+    }))
+    .buffer_unordered(concurrency)
+    .collect::<Vec<_>>()
+    .await;
+
+    let mut findings = Vec::new();
+    for (ti, url, resp) in results {
+        let Some(resp) = resp else { continue };
+        let t = &templates[ti];
+        if t.matches(resp.status.as_u16(), &resp.body) {
+            let mut b = Finding::builder("templates", &t.id)
+                .title(&t.name)
+                .severity(t.severity_enum())
+                .url(url.as_str())
+                .description(if t.description.is_empty() {
+                    format!("Template `{}` matched.", t.id)
+                } else {
+                    t.description.clone()
+                });
+            if let Some(r) = &t.remediation {
+                b = b.remediation(r);
+            }
+            if let Some(c) = &t.cwe {
+                b = b.cwe(c);
+            }
+            b = b.evidence(Evidence::new(
+                "body",
+                resp.body.chars().take(160).collect::<String>(),
+            ));
+            findings.push(b.build());
+        }
+    }
+    let _ = WORD_SPLIT;
     Ok(findings)
 }
 

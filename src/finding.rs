@@ -176,6 +176,70 @@ pub struct ScanReport {
     /// Full image path harvest (HEAD + OPTIONS preflight + sources).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_harvest: Option<crate::discovery::image_harvest::ImageHarvestManifest>,
+    /// Per-phase wall timings (seconds).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub phases: Vec<PhaseTiming>,
+    /// Module run summaries.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub module_results: Vec<ModuleSummary>,
+    /// Aggregated attack surface inventory.
+    #[serde(default)]
+    pub surface: SurfaceInventory,
+    /// Fingerprinted tech tokens.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tech_stack: Vec<String>,
+    /// Wall-clock + request accounting.
+    #[serde(default)]
+    pub timing: TimingSummary,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PhaseTiming {
+    pub name: String,
+    pub seconds: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ModuleSummary {
+    pub id: String,
+    pub ran: bool,
+    pub findings: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SurfaceInventory {
+    #[serde(default)]
+    pub routes_by_source: Vec<SourceCount>,
+    #[serde(default)]
+    pub status_histogram: Vec<StatusCount>,
+    #[serde(default)]
+    pub content_types: Vec<SourceCount>,
+    #[serde(default)]
+    pub total_routes: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SourceCount {
+    pub name: String,
+    pub count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StatusCount {
+    pub status: u16,
+    pub count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TimingSummary {
+    pub wall_seconds: f64,
+    pub requests: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_rps: Option<f64>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

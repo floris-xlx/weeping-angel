@@ -1,0 +1,49 @@
+---
+title: "weeping-angel scan"
+description: "Run an authorized security scan"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Run an authorized security scan
+
+## Usage
+
+```bash
+Usage: weeping-angel scan [OPTIONS] [TARGETS]...
+```
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `<TARGETS>` | Target host(s) or URL(s): example.com, //host/path, http(s)://… | `—` |
+| `--i-own-this <BOOL>` | Ownership / authorization consent (required). Use bare flag or =true\|yes\|1 | `—` |
+| `--allow-host <HOST>` | Allowlisted host (repeatable; CSV ok). Supports *.example.com and full URLs | `—` |
+| `--allow-host-from-target` | Add each target's host to the allowlist (still requires --i-own-this) | `—` |
+| `--prefer-http` | When scheme is omitted, prefer http instead of smart https/http default | `—` |
+| `--config <CONFIG>` | Optional TOML config file | `—` |
+| `--profile <PROFILE>` | Scan profile: recon \| standard \| deep (aliases: quick, full) | `standard` |
+| `--modules <MODULES>` | Comma/space-separated modules (overrides profile defaults when set) | `—` |
+| `--enable-active <BOOL>` | Enable active (intrusive) probes — second safety gate | `—` |
+| `--probe <LIST>` | Active probes: xss,sqli,open-redirect,path-traversal (requires --enable-active) | `—` |
+| `--allow-write-methods <BOOL>` | Allow POST/PUT/PATCH/DELETE (default: GET/HEAD only) | `—` |
+| `--depth <DEPTH>` | Crawl depth | `2` |
+| `--max-urls <MAX_URLS>` | Maximum URLs to retain/fetch | `300` |
+| `--concurrency <CONCURRENCY>` | Concurrent in-flight requests | `20` |
+| `--rps <RPS>` | Requests per second (global) | `15` |
+| `--fast` | Speed preset: higher rps/concurrency, summary HTTP log, skip image OPTIONS | `—` |
+| `--ignore-robots <BOOL>` | Ignore robots.txt Disallow (authorized pentest mode) | `—` |
+| `--wordlist <WORDLIST>` | Path to path wordlist | `wordlists/common-paths.txt` |
+| `--cookie <COOKIE>` | Extra Cookie header (repeatable; values merged) | `—` |
+| `--header <NAME: VALUE>` | Extra header Name: Value or Name=Value (repeatable) | `—` |
+| `--timeout <TIMEOUT>` | Request timeout seconds | `15` |
+| `--insecure <BOOL>` | Accept invalid TLS certificates (lab only) | `—` |
+| `--output <OUTPUT>` | Output path prefix/file for json/sarif/html | `—` |
+| `--format <FORMAT>` | Formats: terminal,json,sarif,html,manifest,openapi,images (comma-separated) | `terminal` |
+| `--fail-on <FAIL_ON>` | Exit 1 when findings at or above this severity: low\|medium\|high\|critical | `medium` |
+| `--templates-dir <TEMPLATES_DIR>` | Directory of YAML path templates (Nuclei-lite). Default: templates/ | `templates` |
+| `--compare-auth <BOOL>` | Compare authenticated (--cookie/--header) vs anonymous requests | `—` |
+| `--log-http <MODE>` | Live HTTP log density: full \| compact \| summary \| off | `—` |
+| `--max-terminal-routes <MAX_TERMINAL_ROUTES>` | Max discovered routes printed in terminal report | `120` |
+| `--report-width <REPORT_WIDTH>` | Terminal report width (0 = auto-detect) | `0` |

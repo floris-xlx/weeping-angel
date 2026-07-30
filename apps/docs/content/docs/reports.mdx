@@ -1,0 +1,25 @@
+---
+title: "Report formats"
+description: "terminal, json, html, sarif, manifest, openapi, images"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+# Report formats
+
+```bash
+weeping-angel scan 127.0.0.1:8787 --i-own-this --allow-host 127.0.0.1 \
+  -o report --format terminal,json,html,manifest,openapi,images
+```
+
+| Format | Output | Contents |
+|---|---|---|
+| terminal | stderr | Wide multi-section colored report |
+| json | `*.json` | Full findings + phases + surface inventory |
+| html | `*.html` | Dashboard with filters |
+| sarif | `*.sarif.json` | SARIF 2.1 for CI |
+| manifest | `*.manifest.json` | Route inventory |
+| openapi | `*.openapi.json` | Synthesized OpenAPI 3 |
+| images | `*.images.json` | Image harvest HEAD/OPTIONS |
+
+Terminal width: `--report-width`, route cap: `--max-terminal-routes`.

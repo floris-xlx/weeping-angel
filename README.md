@@ -35,13 +35,27 @@ cargo build --release --example weeping-angel-demo --features demo
 ## Scan a target you control
 
 ```bash
-cargo run --bin weeping-angel -- scan https://app.example.com \
+# Bare host (defaults to https://), or http(s):// / //host
+cargo run --bin weeping-angel -- scan app.example.com \
   --i-own-this \
   --allow-host app.example.com \
   --profile standard \
   -o report \
   --format terminal,json,sarif,html
 ```
+
+Consent accepts bare `--i-own-this` **or** `--i-own-this=true|yes|1` (value requires `=`).  
+`--allow-host` accepts CSV, wildcards (`*.example.com`), and full URLs.  
+Optional: `--allow-host-from-target`, `--fast` (higher rps/concurrency), `--log-http full|compact|summary|off`.
+
+### Docs site
+
+```bash
+pnpm --dir apps/docs install
+pnpm --dir apps/docs dev
+```
+
+Auto-generated from clap via `weeping-angel-docs-export` (see `apps/docs/README.md`).
 
 ### Lab demo (local, intentionally weak)
 

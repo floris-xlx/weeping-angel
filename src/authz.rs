@@ -194,4 +194,26 @@ mod tests {
         assert!(authz.url_in_scope(&Url::parse("https://example.com").unwrap()));
         assert!(!authz.url_in_scope(&Url::parse("https://evil.com").unwrap()));
     }
+
+    #[test]
+    fn ensure_host_allowed_errors_list_allowed() {
+        let authz = Authorization::new(true, ["a.com".into(), "b.com".into()], false, false);
+        let err = authz.ensure_host_allowed("c.com").unwrap_err();
+        match err {
+            AuthzError::HostNotAllowed { host, allowed } => {
+                assert_eq!(host, "c.com");
+                assert!(allowed.contains("a.com"));
+                assert!(allowed.contains("b.com"));
+            }
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+
+    #[test]
+    fn nested_subdomain_wildcard() {
+        let authz = Authorization::new(true, ["*.cdn.example.com".into()], false, false);
+        assert!(authz.url_in_scope(&Url::parse("https://img.cdn.example.com").unwrap()));
+        assert!(authz.url_in_scope(&Url::parse("https://cdn.example.com").unwrap()));
+        assert!(!authz.url_in_scope(&Url::parse("https://example.com").unwrap()));
+    }
 }

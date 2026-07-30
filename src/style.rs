@@ -4,11 +4,81 @@
 //! (unless `FORCE_COLOR` / `CLICOLOR_FORCE` is set).
 
 use std::io::{self, IsTerminal, Write};
+use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::OnceLock;
 
 use crate::finding::Severity;
+use crate::parse::LogHttp;
 
 static COLOR: OnceLock<bool> = OnceLock::new();
+/// 0=full 1=compact 2=summary 3=off
+static LOG_HTTP: AtomicU8 = AtomicU8::new(0);
+static REQ_LOG_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+pub fn set_log_http(mode: LogHttp) {
+    let v = match mode {
+        LogHttp::Full => 0,
+        LogHttp::Compact => 1,
+        LogHttp::Summary => 2,
+        LogHttp::Off => 3,
+    };
+    LOG_HTTP.store(v, Ordering::Relaxed);
+    REQ_LOG_COUNTER.store(0, Ordering::Relaxed);
+}
+
+pub fn log_http_mode() -> LogHttp {
+    match LOG_HTTP.load(Ordering::Relaxed) {
+        1 => LogHttp::Compact,
+        2 => LogHttp::Summary,
+        3 => LogHttp::Off,
+        _ => LogHttp::Full,
+    }
+}
+
+pub fn terminal_width(override_w: usize) -> usize {
+    if override_w > 0 {
+        return override_w.clamp(60, 240);
+    }
+    if let Some(cols) = std::env::var("COLUMNS")
+        .ok()
+        .and_then(|s| s.parse::<usize>().ok())
+    {
+        return cols.clamp(60, 240);
+    }
+    // Sensible default for modern terminals
+    100
+}
+
+pub fn rule(width: usize, ch: char) -> String {
+    let n = width.min(120).max(40);
+    let line: String = std::iter::repeat(ch).take(n).collect();
+    magenta(&line)
+}
+
+pub fn section_title(_width: usize, title: &str) -> String {
+    let bar = dim("──");
+    format!("{bar} {} {bar}", phase(title))
+}
+
+pub fn truncate_url(url: &str, max: usize) -> String {
+    if url.chars().count() <= max {
+        return url.to_string();
+    }
+    let mut out: String = url.chars().take(max.saturating_sub(1)).collect();
+    out.push('…');
+    out
+}
+
+fn elapsed_paint(ms: u128) -> String {
+    let s = format_ms(ms);
+    if ms >= 2000 {
+        bright_red(&s)
+    } else if ms >= 800 {
+        bright_yellow(&s)
+    } else {
+        dim(&s)
+    }
+}
 
 /// Enable virtual terminal processing on Windows and cache color preference.
 pub fn init() {
@@ -234,32 +304,61 @@ pub fn log_request_ok(
     body_len: usize,
     final_url: Option<&str>,
 ) {
-    let arrow = dim("→");
-    let back = dim("←");
-    let n_s = dim(&format!("#{n}"));
+    match log_http_mode() {
+        LogHttp::Off => return,
+        LogHttp::Summary => {
+            let c = REQ_LOG_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+            if c % 25 != 0 && !(500..=599).contains(&status) {
+                return;
+            }
+        }
+        LogHttp::Compact | LogHttp::Full => {}
+    }
+
     let meth = http_method(method);
     let st = http_status(status);
-    let time = dim(&format_ms(elapsed_ms));
+    let time = elapsed_paint(elapsed_ms);
     let size = dim(&format_bytes(body_len));
-    let mut line = format!("{arrow} {n_s} {meth} {url}");
-    eprint_line(&line);
-    line = format!("  {back} {st}  {time}  {size}");
-    if let Some(fu) = final_url {
-        if fu != url {
-            line.push_str(&format!("  {} {}", dim("redir→"), dim(fu)));
+    let n_s = dim(&format!("#{n}"));
+    let url_s = match log_http_mode() {
+        LogHttp::Full => bright_blue(url),
+        _ => bright_blue(&truncate_url(url, 72)),
+    };
+
+    if log_http_mode() == LogHttp::Full {
+        let arrow = dim("→");
+        let back = dim("←");
+        eprint_line(&format!("{arrow} {n_s} {meth} {url_s}"));
+        let mut line = format!("  {back} {st}  {time}  {size}");
+        if let Some(fu) = final_url {
+            if fu != url {
+                line.push_str(&format!("  {} {}", dim("redir→"), dim(&truncate_url(fu, 48))));
+            }
         }
+        eprint_line(&line);
+    } else {
+        let mut line = format!("{} {n_s} {meth} {st} {time} {size} {url_s}", dim("→"));
+        if let Some(fu) = final_url {
+            if fu != url {
+                line.push_str(&format!(" {}", dim("↪")));
+            }
+        }
+        eprint_line(&line);
     }
-    eprint_line(&line);
 }
 
 /// Live request line after a failed HTTP exchange.
 pub fn log_request_err(n: u64, method: &str, url: &str, elapsed_ms: u128, error: &str) {
+    if log_http_mode() == LogHttp::Off {
+        // Always surface errors even in off? Plan said progress only — still show errors.
+    }
     let arrow = dim("→");
     let bad = err("✗");
     let n_s = dim(&format!("#{n}"));
     let meth = http_method(method);
-    let time = dim(&format_ms(elapsed_ms));
-    eprint_line(&format!("{arrow} {n_s} {meth} {url}"));
+    let time = elapsed_paint(elapsed_ms);
+    let url_s = bright_blue(&truncate_url(url, 72));
+    eprint_line(&format!("{arrow} {n_s} {meth} {url_s}"));
     eprint_line(&format!("  {bad} {}  {time}  {}", err("ERR"), err(error)));
 }
 
@@ -267,4 +366,21 @@ pub fn log_request_err(n: u64, method: &str, url: &str, elapsed_ms: u128, error:
 pub fn log_progress(msg: &str) {
     let tag = brand("[weeping-angel]");
     eprint_line(&format!("{tag} {}", phase(msg)));
+}
+
+/// Heat-bar for severity counts.
+pub fn severity_heat(crit: usize, high: usize, med: usize, low: usize, info: usize) -> String {
+    format!(
+        "{}{} {}{} {}{} {}{} {}{}",
+        severity_badge(Severity::Critical),
+        bold(&crit.to_string()),
+        severity_badge(Severity::High),
+        bold(&high.to_string()),
+        severity_badge(Severity::Medium),
+        bold(&med.to_string()),
+        severity_badge(Severity::Low),
+        bold(&low.to_string()),
+        severity_badge(Severity::Info),
+        bold(&info.to_string()),
+    )
 }

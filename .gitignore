@@ -3,6 +3,12 @@
 /report.*
 /weeping-angel.toml
 
+# docs app
+apps/docs/node_modules/
+apps/docs/.next/
+apps/docs/.source/
+apps/docs/out/
+
 # xbp secrets (local only - never commit)
 .env
 .env.local

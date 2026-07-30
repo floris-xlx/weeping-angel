@@ -351,6 +351,11 @@ mod tests {
             ],
             stats: ScanStats::default(),
             image_harvest: None,
+            phases: vec![],
+            module_results: vec![],
+            surface: Default::default(),
+            tech_stack: vec![],
+            timing: Default::default(),
         };
         let doc = from_report(&report);
         assert_eq!(doc["openapi"], "3.0.3");

@@ -7,6 +7,7 @@ use std::time::Instant;
 
 use anyhow::Result;
 use chrono::Utc;
+use futures::stream::{self, StreamExt};
 use tracing::{info, warn};
 use url::Url;
 
@@ -16,7 +17,10 @@ use crate::authz::Authorization;
 use crate::checks::{self, CheckKind, ScanContext};
 use crate::config::Profile;
 use crate::discovery::{self, DiscoveredAsset};
-use crate::finding::{Finding, ScanReport, ScanStats, Severity};
+use crate::finding::{
+    Finding, ModuleSummary, PhaseTiming, ScanReport, ScanStats, SourceCount, StatusCount,
+    SurfaceInventory, TimingSummary, Severity,
+};
 use crate::http::{ClientConfig, HttpClient};
 use crate::templates;
 
@@ -33,6 +37,10 @@ pub struct ScanOptions {
     pub fail_on: Option<Severity>,
     pub templates_dir: PathBuf,
     pub compare_auth: bool,
+    /// Skip OPTIONS during image harvest (faster; used by --fast).
+    pub skip_image_options: bool,
+    pub max_terminal_routes: usize,
+    pub report_width: usize,
 }
 
 pub async fn run_scan(
@@ -68,10 +76,12 @@ pub async fn run_scan(
         "starting authorized scan"
     );
     let phase_t0 = Instant::now();
+    let mut phases: Vec<PhaseTiming> = Vec::new();
     progress(&format!(
-        "scan start target={} profile={} (progress lines mean it is working; default ~5 req/s)",
+        "scan start target={} profile={} (concurrency={}, progress on stderr)",
         seed,
-        opts.profile.as_str()
+        opts.profile.as_str(),
+        client.concurrency()
     ));
 
     let mut discovered: HashSet<String> = HashSet::new();
@@ -86,6 +96,7 @@ pub async fn run_scan(
     }
 
     if module_enabled(&opts.modules, "discovery") {
+        let t_phase = Instant::now();
         progress("phase: robots.txt / sitemaps");
         for t in &opts.targets {
             match discovery::robots::fetch_robots(&client, t).await {
@@ -111,152 +122,186 @@ pub async fn run_scan(
                 Err(e) => warn!("robots.txt: {e}"),
             }
         }
+        phases.push(PhaseTiming {
+            name: "robots_sitemap".into(),
+            seconds: t_phase.elapsed().as_secs_f64(),
+            detail: Some(format!("queue={}", queue.len())),
+        });
     }
 
+    let t_crawl = Instant::now();
     progress(&format!(
-        "phase: crawl (queue={}, depth≤{}, requests so far={})",
+        "phase: crawl (queue={}, depth≤{}, batch={}, requests so far={})",
         queue.len(),
         opts.depth,
+        client.concurrency(),
         client.request_count()
     ));
     let mut crawl_done = 0usize;
-    while let Some((url, depth)) = queue.pop_front() {
-        if robots_blocked(&robots_disallow, url.path()) {
+    let batch_n = client.concurrency().max(1);
+    while !queue.is_empty() {
+        let mut batch: Vec<(Url, u32)> = Vec::with_capacity(batch_n);
+        while batch.len() < batch_n {
+            let Some((url, depth)) = queue.pop_front() else {
+                break;
+            };
+            if robots_blocked(&robots_disallow, url.path()) {
+                continue;
+            }
+            batch.push((url, depth));
+        }
+        if batch.is_empty() {
             continue;
         }
 
-        match client.get(&url).await {
-            Ok(resp) => {
-                crawl_done += 1;
-                if crawl_done == 1 || crawl_done % 10 == 0 {
-                    progress(&format!(
-                        "  crawl {crawl_done} fetched (queue left {}, reqs={})",
-                        queue.len(),
-                        client.request_count()
-                    ));
-                }
-                let key = resp.final_url.as_str().to_string();
-                assets.push(DiscoveredAsset {
-                    url: resp.final_url.clone(),
-                    status: resp.status.as_u16(),
-                    content_type: resp.content_type.clone(),
-                    source: "crawl".into(),
-                });
-
-                if module_enabled(&opts.modules, "discovery") && depth < opts.depth {
-                    if resp.is_html() {
-                        let links = discovery::crawl::extract_links(&resp.final_url, &resp.body);
-                        for link in links {
-                            try_enqueue(
-                                &authz,
-                                &mut discovered,
-                                &mut queue,
-                                link,
-                                depth + 1,
-                                opts.max_urls,
-                            );
-                        }
-                        // Hosted images: img/srcset/meta/CSS (feeds pattern enumeration)
-                        let images =
-                            discovery::image_assets::extract_from_html(&resp.final_url, &resp.body);
-                        for img in images {
-                            try_enqueue(
-                                &authz,
-                                &mut discovered,
-                                &mut queue,
-                                img,
-                                depth + 1,
-                                opts.max_urls,
-                            );
-                        }
-                        // SPA shells: __NEXT_DATA__, initial state, client routers
-                        let spa_urls =
-                            discovery::spa::extract_from_html(&resp.final_url, &resp.body);
-                        for ep in spa_urls {
-                            try_enqueue(
-                                &authz,
-                                &mut discovered,
-                                &mut queue,
-                                ep,
-                                depth + 1,
-                                opts.max_urls,
-                            );
-                        }
-                        let scripts =
-                            discovery::js_endpoints::script_srcs(&resp.final_url, &resp.body);
-                        for script_url in scripts {
-                            if !authz.url_in_scope(&script_url) {
-                                continue;
-                            }
-                            if let Ok(js_resp) = client.get(&script_url).await {
-                                let endpoints = discovery::js_endpoints::extract_endpoints(
-                                    &script_url,
-                                    &js_resp.body,
-                                );
-                                for ep in endpoints {
-                                    try_enqueue(
-                                        &authz,
-                                        &mut discovered,
-                                        &mut queue,
-                                        ep,
-                                        depth + 1,
-                                        opts.max_urls,
-                                    );
-                                }
-                                let spa_js = discovery::spa::extract_from_js(
-                                    &script_url,
-                                    &js_resp.body,
-                                );
-                                for ep in spa_js {
-                                    try_enqueue(
-                                        &authz,
-                                        &mut discovered,
-                                        &mut queue,
-                                        ep,
-                                        depth + 1,
-                                        opts.max_urls,
-                                    );
-                                }
-                                // Image path strings inside JS bundles (not filtered as noise)
-                                let js_images = discovery::image_assets::extract_from_js(
-                                    &script_url,
-                                    &js_resp.body,
-                                );
-                                for img in js_images {
-                                    try_enqueue(
-                                        &authz,
-                                        &mut discovered,
-                                        &mut queue,
-                                        img,
-                                        depth + 1,
-                                        opts.max_urls,
-                                    );
-                                }
-                                response_cache.insert(script_url.as_str().to_string(), js_resp);
-                            }
-                        }
-                    } else if discovery::image_assets::is_image_url(&resp.final_url)
-                        || discovery::image_assets::is_image_path(resp.final_url.path())
-                    {
-                        // Hitting an image seed still allows pattern expansion later
-                    }
-                }
-
-                response_cache.insert(key, resp);
+        let fetches = stream::iter(batch.into_iter().map(|(url, depth)| {
+            let client = client.clone();
+            async move {
+                let res = client.get(&url).await;
+                (url, depth, res)
             }
-            Err(e) => warn!("fetch {url}: {e}"),
+        }))
+        .buffer_unordered(batch_n)
+        .collect::<Vec<_>>()
+        .await;
+
+        for (url, depth, res) in fetches {
+            match res {
+                Ok(resp) => {
+                    crawl_done += 1;
+                    if crawl_done == 1 || crawl_done % 10 == 0 {
+                        progress(&format!(
+                            "  crawl {crawl_done} fetched (queue left {}, reqs={})",
+                            queue.len(),
+                            client.request_count()
+                        ));
+                    }
+                    let key = resp.final_url.as_str().to_string();
+                    assets.push(DiscoveredAsset {
+                        url: resp.final_url.clone(),
+                        status: resp.status.as_u16(),
+                        content_type: resp.content_type.clone(),
+                        source: "crawl".into(),
+                    });
+
+                    if module_enabled(&opts.modules, "discovery") && depth < opts.depth {
+                        if resp.is_html() {
+                            let links =
+                                discovery::crawl::extract_links(&resp.final_url, &resp.body);
+                            for link in links {
+                                try_enqueue(
+                                    &authz,
+                                    &mut discovered,
+                                    &mut queue,
+                                    link,
+                                    depth + 1,
+                                    opts.max_urls,
+                                );
+                            }
+                            let images = discovery::image_assets::extract_from_html(
+                                &resp.final_url,
+                                &resp.body,
+                            );
+                            for img in images {
+                                try_enqueue(
+                                    &authz,
+                                    &mut discovered,
+                                    &mut queue,
+                                    img,
+                                    depth + 1,
+                                    opts.max_urls,
+                                );
+                            }
+                            let spa_urls =
+                                discovery::spa::extract_from_html(&resp.final_url, &resp.body);
+                            for ep in spa_urls {
+                                try_enqueue(
+                                    &authz,
+                                    &mut discovered,
+                                    &mut queue,
+                                    ep,
+                                    depth + 1,
+                                    opts.max_urls,
+                                );
+                            }
+                            let scripts =
+                                discovery::js_endpoints::script_srcs(&resp.final_url, &resp.body);
+                            for script_url in scripts {
+                                if !authz.url_in_scope(&script_url) {
+                                    continue;
+                                }
+                                if let Ok(js_resp) = client.get(&script_url).await {
+                                    let endpoints = discovery::js_endpoints::extract_endpoints(
+                                        &script_url,
+                                        &js_resp.body,
+                                    );
+                                    for ep in endpoints {
+                                        try_enqueue(
+                                            &authz,
+                                            &mut discovered,
+                                            &mut queue,
+                                            ep,
+                                            depth + 1,
+                                            opts.max_urls,
+                                        );
+                                    }
+                                    let spa_js = discovery::spa::extract_from_js(
+                                        &script_url,
+                                        &js_resp.body,
+                                    );
+                                    for ep in spa_js {
+                                        try_enqueue(
+                                            &authz,
+                                            &mut discovered,
+                                            &mut queue,
+                                            ep,
+                                            depth + 1,
+                                            opts.max_urls,
+                                        );
+                                    }
+                                    let js_images = discovery::image_assets::extract_from_js(
+                                        &script_url,
+                                        &js_resp.body,
+                                    );
+                                    for img in js_images {
+                                        try_enqueue(
+                                            &authz,
+                                            &mut discovered,
+                                            &mut queue,
+                                            img,
+                                            depth + 1,
+                                            opts.max_urls,
+                                        );
+                                    }
+                                    response_cache
+                                        .insert(script_url.as_str().to_string(), js_resp);
+                                }
+                            }
+                        }
+                    }
+
+                    response_cache.insert(key, resp);
+                }
+                Err(e) => warn!("fetch {url}: {e}"),
+            }
         }
     }
+    phases.push(PhaseTiming {
+        name: "crawl".into(),
+        seconds: t_crawl.elapsed().as_secs_f64(),
+        detail: Some(format!("assets={crawl_done}")),
+    });
     progress(&format!(
         "phase: crawl done (assets={}, reqs={}, {:.1}s)",
         assets.len(),
         client.request_count(),
-        phase_t0.elapsed().as_secs_f64()
+        t_crawl.elapsed().as_secs_f64()
     ));
 
     // Full image harvest: collect all img/srcset/CSS/JS paths → OPTIONS preflight → HEAD
     let mut image_harvest: Option<discovery::image_harvest::ImageHarvestManifest> = None;
     if module_enabled(&opts.modules, "discovery") {
+        let t_img = Instant::now();
         progress("phase: image harvest (collect → OPTIONS preflight → HEAD)");
         use discovery::image_harvest::{self, ImageCandidate, ImageSource};
 
@@ -359,12 +404,13 @@ pub async fn run_scan(
         ));
 
         const MAX_IMAGE_PROBES: usize = 160;
+        let do_options = !opts.skip_image_options;
         let harvest = image_harvest::harvest(
             client.as_ref(),
             &seed,
             cand_map.into_values(),
             MAX_IMAGE_PROBES,
-            true, // OPTIONS preflight
+            do_options,
         )
         .await;
 
@@ -407,10 +453,20 @@ pub async fn run_scan(
             harvest.all_paths.len(),
             harvest.stats.exists_total
         ));
+        phases.push(PhaseTiming {
+            name: "image_harvest".into(),
+            seconds: t_img.elapsed().as_secs_f64(),
+            detail: Some(format!(
+                "paths={} exists={}",
+                harvest.all_paths.len(),
+                harvest.stats.exists_total
+            )),
+        });
         image_harvest = Some(harvest);
     }
 
     if module_enabled(&opts.modules, "wordlist") || module_enabled(&opts.modules, "exposures") {
+        let t_wl = Instant::now();
         let origin = origin_of(&seed);
         let paths = discovery::wordlist::load_paths(&opts.wordlist).unwrap_or_default();
         let use_full_wordlist = module_enabled(&opts.modules, "wordlist");
@@ -423,13 +479,9 @@ pub async fn run_scan(
                 .collect()
         };
 
-        let total_paths = paths.len();
-        progress(&format!(
-            "phase: wordlist ({total_paths} paths; this is usually the long quiet stretch)"
-        ));
-        let mut probed = 0usize;
+        let mut to_probe: Vec<Url> = Vec::new();
         for path in paths {
-            if discovered.len() >= opts.max_urls {
+            if discovered.len() + to_probe.len() >= opts.max_urls {
                 break;
             }
             let mut u = origin.clone();
@@ -446,16 +498,38 @@ pub async fn run_scan(
             if discovered.contains(u.as_str()) {
                 continue;
             }
-            match client.get(&u).await {
+            to_probe.push(u);
+        }
+
+        let total_paths = to_probe.len();
+        progress(&format!(
+            "phase: wordlist ({total_paths} paths, parallel batch={})",
+            client.concurrency()
+        ));
+        let batch_n = client.concurrency().max(1);
+        let results = stream::iter(to_probe.into_iter().map(|u| {
+            let client = client.clone();
+            async move {
+                let res = client.get(&u).await;
+                (u, res)
+            }
+        }))
+        .buffer_unordered(batch_n)
+        .collect::<Vec<_>>()
+        .await;
+
+        let mut probed = 0usize;
+        for (u, res) in results {
+            probed += 1;
+            if probed == 1 || probed % 25 == 0 || probed == total_paths {
+                progress(&format!(
+                    "  wordlist {probed}/{total_paths} (hits={}, reqs={})",
+                    assets.iter().filter(|a| a.source == "wordlist").count(),
+                    client.request_count()
+                ));
+            }
+            match res {
                 Ok(resp) => {
-                    probed += 1;
-                    if probed == 1 || probed % 25 == 0 || probed == total_paths {
-                        progress(&format!(
-                            "  wordlist {probed}/{total_paths} (hits={}, reqs={})",
-                            assets.iter().filter(|a| a.source == "wordlist").count(),
-                            client.request_count()
-                        ));
-                    }
                     let status = resp.status.as_u16();
                     if status < 400 || discovery::wordlist::is_interesting_status(status) {
                         discovered.insert(u.as_str().to_string());
@@ -469,13 +543,6 @@ pub async fn run_scan(
                     }
                 }
                 Err(e) => {
-                    probed += 1;
-                    if probed == 1 || probed % 25 == 0 {
-                        progress(&format!(
-                            "  wordlist {probed}/{total_paths} (last error, reqs={})",
-                            client.request_count()
-                        ));
-                    }
                     tracing::debug!("wordlist miss {u}: {e}");
                 }
             }
@@ -484,57 +551,91 @@ pub async fn run_scan(
             "phase: wordlist done (probed={probed}, reqs={})",
             client.request_count()
         ));
+        phases.push(PhaseTiming {
+            name: "wordlist".into(),
+            seconds: t_wl.elapsed().as_secs_f64(),
+            detail: Some(format!("probed={probed}")),
+        });
     }
 
     if module_enabled(&opts.modules, "openapi") || module_enabled(&opts.modules, "discovery") {
+        let t_oa = Instant::now();
         progress("phase: openapi candidates");
-        // Cap path probing from huge OpenAPI docs so a large /openapi.yaml cannot
-        // stall the scan for minutes with near-zero feedback.
         const MAX_OPENAPI_PATH_PROBES: usize = 40;
         let mut openapi_probes = 0usize;
-        for candidate in discovery::openapi::candidate_urls(&seed) {
-            if !authz.url_in_scope(&candidate) {
-                continue;
+        let candidates: Vec<Url> = discovery::openapi::candidate_urls(&seed)
+            .into_iter()
+            .filter(|c| authz.url_in_scope(c))
+            .collect();
+        let batch_n = client.concurrency().max(1);
+        let cand_results = stream::iter(candidates.into_iter().map(|candidate| {
+            let client = client.clone();
+            async move {
+                let res = client.get(&candidate).await;
+                (candidate, res)
             }
+        }))
+        .buffer_unordered(batch_n)
+        .collect::<Vec<_>>()
+        .await;
+
+        let mut path_eps: Vec<Url> = Vec::new();
+        for (candidate, res) in cand_results {
             progress(&format!("  openapi probe {}", candidate.path()));
-            if let Ok(resp) = client.get(&candidate).await {
-                if resp.status.is_success()
-                    && (resp.is_json()
-                        || resp.body.contains("openapi")
-                        || resp.body.contains("swagger"))
-                {
-                    discovered.insert(candidate.as_str().to_string());
+            let Ok(resp) = res else { continue };
+            if resp.status.is_success()
+                && (resp.is_json()
+                    || resp.body.contains("openapi")
+                    || resp.body.contains("swagger"))
+            {
+                discovered.insert(candidate.as_str().to_string());
+                assets.push(DiscoveredAsset {
+                    url: resp.final_url.clone(),
+                    status: resp.status.as_u16(),
+                    content_type: resp.content_type.clone(),
+                    source: "openapi".into(),
+                });
+                let more = discovery::openapi::extract_paths(&seed, &resp.body);
+                let more_len = more.len();
+                if more_len > MAX_OPENAPI_PATH_PROBES {
+                    progress(&format!(
+                        "  openapi extracted {more_len} paths; probing first {MAX_OPENAPI_PATH_PROBES}"
+                    ));
+                }
+                for ep in more.into_iter().take(MAX_OPENAPI_PATH_PROBES) {
+                    if discovered.len() + path_eps.len() >= opts.max_urls {
+                        break;
+                    }
+                    if authz.url_in_scope(&ep) && !discovered.contains(ep.as_str()) {
+                        path_eps.push(ep);
+                    }
+                }
+                response_cache.insert(resp.final_url.as_str().to_string(), resp);
+            }
+        }
+
+        let path_results = stream::iter(path_eps.into_iter().map(|ep| {
+            let client = client.clone();
+            async move {
+                let res = client.get(&ep).await;
+                (ep, res)
+            }
+        }))
+        .buffer_unordered(batch_n)
+        .collect::<Vec<_>>()
+        .await;
+
+        for (ep, res) in path_results {
+            if discovered.insert(ep.as_str().to_string()) {
+                openapi_probes += 1;
+                if let Ok(r2) = res {
                     assets.push(DiscoveredAsset {
-                        url: resp.final_url.clone(),
-                        status: resp.status.as_u16(),
-                        content_type: resp.content_type.clone(),
-                        source: "openapi".into(),
+                        url: r2.final_url.clone(),
+                        status: r2.status.as_u16(),
+                        content_type: r2.content_type.clone(),
+                        source: "openapi-path".into(),
                     });
-                    let more = discovery::openapi::extract_paths(&seed, &resp.body);
-                    let more_len = more.len();
-                    if more_len > MAX_OPENAPI_PATH_PROBES {
-                        progress(&format!(
-                            "  openapi extracted {more_len} paths; probing first {MAX_OPENAPI_PATH_PROBES}"
-                        ));
-                    }
-                    for ep in more.into_iter().take(MAX_OPENAPI_PATH_PROBES) {
-                        if discovered.len() >= opts.max_urls {
-                            break;
-                        }
-                        if authz.url_in_scope(&ep) && discovered.insert(ep.as_str().to_string()) {
-                            openapi_probes += 1;
-                            if let Ok(r2) = client.get(&ep).await {
-                                assets.push(DiscoveredAsset {
-                                    url: r2.final_url.clone(),
-                                    status: r2.status.as_u16(),
-                                    content_type: r2.content_type.clone(),
-                                    source: "openapi-path".into(),
-                                });
-                                response_cache.insert(r2.final_url.as_str().to_string(), r2);
-                            }
-                        }
-                    }
-                    response_cache.insert(resp.final_url.as_str().to_string(), resp);
+                    response_cache.insert(r2.final_url.as_str().to_string(), r2);
                 }
             }
         }
@@ -542,6 +643,11 @@ pub async fn run_scan(
             "phase: openapi done (path probes={openapi_probes}, reqs={})",
             client.request_count()
         ));
+        phases.push(PhaseTiming {
+            name: "openapi".into(),
+            seconds: t_oa.elapsed().as_secs_f64(),
+            detail: Some(format!("path_probes={openapi_probes}")),
+        });
     }
 
     let mut discovered_urls: Vec<String> = discovered.into_iter().collect();
@@ -621,6 +727,7 @@ pub async fn run_scan(
 
     // YAML path templates (Nuclei-lite)
     if module_enabled(&opts.modules, "templates") {
+        let t_tpl = Instant::now();
         progress("phase: templates");
         match templates::load_templates(&opts.templates_dir) {
             Ok(tmpls) => {
@@ -633,8 +740,14 @@ pub async fn run_scan(
             }
             Err(e) => warn!("load templates: {e}"),
         }
+        phases.push(PhaseTiming {
+            name: "templates".into(),
+            seconds: t_tpl.elapsed().as_secs_f64(),
+            detail: None,
+        });
     }
 
+    let t_checks = Instant::now();
     progress("phase: passive checks");
     for check in checks::registry() {
         if !should_run_check(check.as_ref(), &opts, authz.enable_active) {
@@ -650,6 +763,11 @@ pub async fn run_scan(
             Err(e) => warn!("check {}: {e}", check.id()),
         }
     }
+    phases.push(PhaseTiming {
+        name: "checks".into(),
+        seconds: t_checks.elapsed().as_secs_f64(),
+        detail: None,
+    });
 
     // Emit findings for every HEAD-ok image path
     if let Some(ref harvest) = image_harvest {
@@ -717,13 +835,22 @@ pub async fn run_scan(
         requests += a.request_count();
     }
     let stats = ScanStats::from_findings(&findings, requests, discovered_urls.len());
+    let wall = phase_t0.elapsed().as_secs_f64();
     progress(&format!(
         "scan finished in {:.1}s — {} requests, {} urls, {} findings",
-        phase_t0.elapsed().as_secs_f64(),
+        wall,
         requests,
         discovered_urls.len(),
         findings.len()
     ));
+
+    let surface = build_surface(&assets);
+    let tech_stack = findings
+        .iter()
+        .filter(|f| f.module == "tech")
+        .map(|f| f.title.clone())
+        .collect::<Vec<_>>();
+    let module_results = build_module_summaries(&opts.modules, &findings);
 
     Ok(ScanReport {
         tool: "weeping-angel".into(),
@@ -737,11 +864,107 @@ pub async fn run_scan(
         findings,
         stats,
         image_harvest,
+        phases,
+        module_results,
+        surface,
+        tech_stack,
+        timing: TimingSummary {
+            wall_seconds: wall,
+            requests,
+            effective_rps: if wall > 0.0 {
+                Some(requests as f64 / wall)
+            } else {
+                None
+            },
+        },
     })
+}
+
+fn build_surface(assets: &[DiscoveredAsset]) -> SurfaceInventory {
+    let mut by_source: HashMap<String, usize> = HashMap::new();
+    let mut by_status: HashMap<u16, usize> = HashMap::new();
+    let mut by_ct: HashMap<String, usize> = HashMap::new();
+    for a in assets {
+        *by_source.entry(a.source.clone()).or_default() += 1;
+        *by_status.entry(a.status).or_default() += 1;
+        if let Some(ct) = &a.content_type {
+            let short = ct.split(';').next().unwrap_or(ct).trim().to_string();
+            *by_ct.entry(short).or_default() += 1;
+        }
+    }
+    let mut routes_by_source: Vec<SourceCount> = by_source
+        .into_iter()
+        .map(|(name, count)| SourceCount { name, count })
+        .collect();
+    routes_by_source.sort_by(|a, b| b.count.cmp(&a.count).then(a.name.cmp(&b.name)));
+    let mut status_histogram: Vec<StatusCount> = by_status
+        .into_iter()
+        .map(|(status, count)| StatusCount { status, count })
+        .collect();
+    status_histogram.sort_by_key(|s| s.status);
+    let mut content_types: Vec<SourceCount> = by_ct
+        .into_iter()
+        .map(|(name, count)| SourceCount { name, count })
+        .collect();
+    content_types.sort_by(|a, b| b.count.cmp(&a.count));
+    content_types.truncate(20);
+    SurfaceInventory {
+        total_routes: assets.len(),
+        routes_by_source,
+        status_histogram,
+        content_types,
+    }
+}
+
+fn build_module_summaries(modules: &[String], findings: &[Finding]) -> Vec<ModuleSummary> {
+    let mut out = Vec::new();
+    for m in modules {
+        let count = findings.iter().filter(|f| f.module == *m).count();
+        out.push(ModuleSummary {
+            id: m.clone(),
+            ran: true,
+            findings: count,
+            note: None,
+        });
+    }
+    // Also include modules that produced findings but weren't listed
+    let mut seen: HashSet<String> = modules.iter().cloned().collect();
+    for f in findings {
+        if seen.insert(f.module.clone()) {
+            let count = findings.iter().filter(|x| x.module == f.module).count();
+            out.push(ModuleSummary {
+                id: f.module.clone(),
+                ran: true,
+                findings: count,
+                note: Some("emitted findings".into()),
+            });
+        }
+    }
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    out
 }
 
 /// Human-visible progress on stderr (always, not only with -v). Colored + flushed.
 fn progress(msg: &str) {
+    use indicatif::{ProgressBar, ProgressStyle};
+    use std::time::Duration;
+    static BAR: std::sync::OnceLock<Option<ProgressBar>> = std::sync::OnceLock::new();
+    let bar = BAR.get_or_init(|| {
+        if !style::color_enabled() {
+            return None;
+        }
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::with_template("{spinner:.magenta} {wide_msg}")
+                .unwrap_or_else(|_| ProgressStyle::default_spinner()),
+        );
+        pb.enable_steady_tick(Duration::from_millis(80));
+        Some(pb)
+    });
+    if let Some(pb) = bar.as_ref() {
+        pb.set_message(format!("[weeping-angel] {msg}"));
+    }
+    // Always also emit a stable log line so non-spinner captures stay useful.
     style::log_progress(msg);
     info!("{msg}");
 }
