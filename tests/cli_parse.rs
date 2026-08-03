@@ -20,6 +20,33 @@ fn parse_err(args: &[&str]) -> String {
 fn scan(args: &[&str]) -> weeping_angel::cli::ScanArgs {
     match parse(args).command {
         Commands::Scan(s) => s,
+        other => panic!("expected Scan command, got {other:?}"),
+    }
+}
+
+#[test]
+fn scan_diff_parses_base_head() {
+    let cli = parse(&[
+        "scan-diff",
+        "--repo",
+        ".",
+        "-o",
+        "out-diff",
+        "--base",
+        "main",
+        "--head",
+        "HEAD",
+        "--fail-on",
+        "high",
+    ]);
+    match cli.command {
+        Commands::ScanDiff(d) => {
+            assert_eq!(d.base.as_deref(), Some("main"));
+            assert_eq!(d.head, "HEAD");
+            assert!(!d.working_tree);
+            assert_eq!(d.fail_on, "high");
+        }
+        other => panic!("expected ScanDiff, got {other:?}"),
     }
 }
 
@@ -258,4 +285,109 @@ fn multi_target_positionals() {
         "b.com",
     ]);
     assert_eq!(s.targets.len(), 2);
+}
+
+#[test]
+fn workbench_compare_parses() {
+    let cli = parse(&[
+        "workbench",
+        "compare",
+        "--before",
+        "scan-a",
+        "--after",
+        "scan-b",
+        "--out",
+        "delta.json",
+    ]);
+    match cli.command {
+        Commands::Workbench(w) => match w.command {
+            weeping_angel::cli::WorkbenchCommand::Compare {
+                before,
+                after,
+                out,
+            } => {
+                assert_eq!(before, std::path::PathBuf::from("scan-a"));
+                assert_eq!(after, std::path::PathBuf::from("scan-b"));
+                assert_eq!(out.unwrap(), std::path::PathBuf::from("delta.json"));
+            }
+            other => panic!("expected Compare, got {other:?}"),
+        },
+        other => panic!("expected Workbench, got {other:?}"),
+    }
+}
+
+#[test]
+fn workbench_generate_patches_parses() {
+    let cli = parse(&[
+        "workbench",
+        "generate-patches",
+        "--scan-dir",
+        "out",
+        "--source-root",
+        ".",
+    ]);
+    match cli.command {
+        Commands::Workbench(w) => match w.command {
+            weeping_angel::cli::WorkbenchCommand::GeneratePatches {
+                scan_dir,
+                source_root,
+            } => {
+                assert_eq!(scan_dir, std::path::PathBuf::from("out"));
+                assert_eq!(source_root, std::path::PathBuf::from("."));
+            }
+            other => panic!("expected GeneratePatches, got {other:?}"),
+        },
+        other => panic!("expected Workbench, got {other:?}"),
+    }
+}
+
+#[test]
+fn workbench_apply_and_verify_parse() {
+    let cli = parse(&[
+        "workbench",
+        "apply-patch",
+        "--source-root",
+        "src",
+        "--patch",
+        "fix.patch",
+    ]);
+    match cli.command {
+        Commands::Workbench(w) => match w.command {
+            weeping_angel::cli::WorkbenchCommand::ApplyPatch {
+                source_root,
+                patch,
+            } => {
+                assert_eq!(source_root, std::path::PathBuf::from("src"));
+                assert_eq!(patch, std::path::PathBuf::from("fix.patch"));
+            }
+            other => panic!("expected ApplyPatch, got {other:?}"),
+        },
+        other => panic!("expected Workbench, got {other:?}"),
+    }
+
+    let cli = parse(&[
+        "workbench",
+        "verify",
+        "--source-root",
+        "src",
+        "--path",
+        "a.py",
+        "--rule-id",
+        "command-injection.shell-true",
+    ]);
+    match cli.command {
+        Commands::Workbench(w) => match w.command {
+            weeping_angel::cli::WorkbenchCommand::Verify {
+                source_root,
+                path,
+                rule_id,
+            } => {
+                assert_eq!(source_root, std::path::PathBuf::from("src"));
+                assert_eq!(path, "a.py");
+                assert_eq!(rule_id, "command-injection.shell-true");
+            }
+            other => panic!("expected Verify, got {other:?}"),
+        },
+        other => panic!("expected Workbench, got {other:?}"),
+    }
 }

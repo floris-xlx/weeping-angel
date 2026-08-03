@@ -8,11 +8,12 @@ use crate::parse::{self, LogHttp};
 #[command(
     name = "weeping-angel",
     version,
-    about = "Authorized web recon and security scanning CLI",
-    long_about = "Scan only systems you own or have written permission to test.\n\
-Requires --i-own-this and --allow-host (or --allow-host-from-target).\n\n\
+    about = "Authorized dual-domain security toolchain (web recon + code analysis)",
+    long_about = "Authorized security toolchain: live web recon/DAST and algorithmic code scans.\n\n\
+Web scans require --i-own-this and --allow-host (or --allow-host-from-target).\n\
 Targets accept bare hosts (example.com), //host, http://, or https://.\n\
-Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =)."
+Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\n\
+Code/diff scans produce Codex Security–compatible sealed bundles."
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -25,8 +26,147 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Run an authorized security scan
+    /// Run an authorized live web security scan
     Scan(ScanArgs),
+
+    /// Validate, fingerprint, seal, and project report.md for a scan bundle
+    Finalize(FinalizeArgs),
+
+    /// Algorithmic code SAST (full tree or scoped path) → sealed contract
+    #[command(name = "scan-code")]
+    ScanCode(ScanCodeArgs),
+
+    /// Algorithmic code SAST on a Git change-set (PR/commit/working-tree)
+    #[command(name = "scan-diff")]
+    ScanDiff(ScanDiffArgs),
+
+    /// Local SQLite workbench: register / list sealed scans
+    Workbench(WorkbenchArgs),
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct WorkbenchArgs {
+    #[command(subcommand)]
+    pub command: WorkbenchCommand,
+
+    /// Override workbench SQLite path (default: ~/.weeping-angel/workbench.sqlite3)
+    #[arg(long, global = true)]
+    pub db: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum WorkbenchCommand {
+    /// Index a sealed scan directory
+    Register {
+        /// Path to sealed scan_dir (has findings.json + scan-manifest.json)
+        #[arg(long = "scan-dir")]
+        scan_dir: PathBuf,
+    },
+    /// List recent registered scans
+    List {
+        #[arg(long, default_value_t = 20)]
+        limit: usize,
+    },
+    /// Show one registered scan by id
+    Show {
+        scan_id: String,
+    },
+    /// Compare two sealed scans by primary fingerprint (introduced / resolved / persistent)
+    Compare {
+        /// Earlier scan directory
+        #[arg(long)]
+        before: PathBuf,
+        /// Later scan directory
+        #[arg(long)]
+        after: PathBuf,
+        /// Optional path to write compare JSON (default: after/compare.json)
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Generate algorithmic remediation patches for findings in a sealed scan
+    #[command(name = "generate-patches")]
+    GeneratePatches {
+        /// Sealed scan directory (reads findings.json; writes remediation/)
+        #[arg(long = "scan-dir")]
+        scan_dir: PathBuf,
+        /// Source tree root (paths in findings are relative to this)
+        #[arg(long = "source-root")]
+        source_root: PathBuf,
+    },
+    /// Apply a generated unified-diff patch under source-root
+    #[command(name = "apply-patch")]
+    ApplyPatch {
+        /// Source tree root
+        #[arg(long = "source-root")]
+        source_root: PathBuf,
+        /// Path to fix.patch (from generate-patches)
+        #[arg(long)]
+        patch: PathBuf,
+    },
+    /// Re-scan one file and confirm a rule_id no longer matches
+    Verify {
+        /// Source tree root
+        #[arg(long = "source-root")]
+        source_root: PathBuf,
+        /// Path relative to source-root
+        #[arg(long)]
+        path: String,
+        /// Engine rule id (e.g. command-injection.shell-true)
+        #[arg(long = "rule-id")]
+        rule_id: String,
+    },
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct FinalizeArgs {
+    /// Scan directory containing scan-manifest.json, findings.json, coverage.json
+    #[arg(long = "scan-dir", value_name = "DIR")]
+    pub scan_dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct ScanCodeArgs {
+    /// Repository or directory root to inventory
+    pub path: PathBuf,
+
+    /// Output scan directory (created if missing)
+    #[arg(long = "scan-dir", short = 'o', value_name = "DIR")]
+    pub scan_dir: PathBuf,
+
+    /// Optional path scope under the root (default: entire tree)
+    #[arg(long)]
+    pub scope: Option<String>,
+
+    /// Exit 1 when findings at or above this severity: low|medium|high|critical (default: low)
+    #[arg(long, default_value = "low")]
+    pub fail_on: String,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct ScanDiffArgs {
+    /// Git repository root (defaults to cwd)
+    #[arg(long, default_value = ".")]
+    pub repo: PathBuf,
+
+    /// Output scan directory (created if missing)
+    #[arg(long = "scan-dir", short = 'o', value_name = "DIR")]
+    pub scan_dir: PathBuf,
+
+    /// Base revision (e.g. main, origin/main, commit SHA). Omit for working-tree mode.
+    #[arg(long)]
+    pub base: Option<String>,
+
+    /// Head revision (default HEAD). Used with --base for PR/branch/commit ranges.
+    #[arg(long, default_value = "HEAD")]
+    pub head: String,
+
+    /// Scan staged+unstaged+untracked changes vs base (default HEAD) instead of a revision range
+    #[arg(long)]
+    pub working_tree: bool,
+
+    /// Exit 1 when findings at or above this severity: low|medium|high|critical (default: medium)
+    #[arg(long, default_value = "medium")]
+    pub fail_on: String,
 }
 
 #[derive(Debug, Clone, Parser)]

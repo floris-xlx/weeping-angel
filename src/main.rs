@@ -1,7 +1,10 @@
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
 use weeping_angel::cli::{Cli, Commands};
-use weeping_angel::run_scan_command;
+use weeping_angel::{
+    run_finalize_command, run_scan_code_command, run_scan_diff_command, run_scan_command,
+    run_workbench_command,
+};
 use weeping_angel::style;
 
 #[tokio::main]
@@ -25,6 +28,34 @@ async fn main() {
 
     let code: i32 = match cli.command {
         Commands::Scan(args) => match run_scan_command(args).await {
+            Ok(code) => code,
+            Err(e) => {
+                style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                2
+            }
+        },
+        Commands::Finalize(args) => match run_finalize_command(args) {
+            Ok(code) => code,
+            Err(e) => {
+                style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                2
+            }
+        },
+        Commands::ScanCode(args) => match run_scan_code_command(args) {
+            Ok(code) => code,
+            Err(e) => {
+                style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                2
+            }
+        },
+        Commands::ScanDiff(args) => match run_scan_diff_command(args) {
+            Ok(code) => code,
+            Err(e) => {
+                style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                2
+            }
+        },
+        Commands::Workbench(args) => match run_workbench_command(args) {
             Ok(code) => code,
             Err(e) => {
                 style::eprint_line(&format!("{} {e:#}", style::err("error:")));

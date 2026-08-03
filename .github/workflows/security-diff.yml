@@ -1,0 +1,89 @@
+# Algorithmic code security gate on pull requests (no LLM).
+# Fails when findings at or above --fail-on are present in the PR diff.
+
+name: security-diff
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      fail_on:
+        description: "Fail when findings at or above this severity"
+        required: false
+        default: "medium"
+
+permissions:
+  contents: read
+
+jobs:
+  scan-diff:
+    name: weeping-angel scan-diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build weeping-angel
+        run: cargo build --release --bin weeping-angel
+
+      - name: Resolve base / head
+        id: revs
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+            echo "head=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=HEAD~1" >> "$GITHUB_OUTPUT"
+            echo "head=HEAD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run algorithmic diff scan
+        id: scan
+        shell: bash
+        run: |
+          FAIL_ON="${{ github.event.inputs.fail_on }}"
+          FAIL_ON="${FAIL_ON:-medium}"
+          set +e
+          ./target/release/weeping-angel scan-diff \
+            --repo . \
+            --base "${{ steps.revs.outputs.base }}" \
+            --head "${{ steps.revs.outputs.head }}" \
+            --fail-on "$FAIL_ON" \
+            -o "${{ runner.temp }}/wa-scan"
+          code=$?
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          if [ -f "${{ runner.temp }}/wa-scan/report.md" ]; then
+            echo "### weeping-angel scan-diff" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Exit code: \`$code\` (1 = findings ≥ fail-on)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            head -n 80 "${{ runner.temp }}/wa-scan/report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$code"
+
+      - name: Upload sealed scan bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weeping-angel-scan-diff
+          path: ${{ runner.temp }}/wa-scan
+          if-no-files-found: ignore
+
+      - name: Upload SARIF (GitHub code scanning)
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ runner.temp }}/wa-scan/findings.sarif.json
+          category: weeping-angel-scan-diff
