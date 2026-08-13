@@ -55,17 +55,22 @@ fn headers_colon_eq_and_errors() {
         "Authorization: Bearer tok".into(),
         "X-Custom=val".into(),
         "  X-Trim :  spaced  ".into(),
+        "X-Space secret".into(),
     ])
     .unwrap();
-    assert_eq!(h.len(), 3);
+    assert_eq!(h.len(), 4);
     assert_eq!(h[0].0, "Authorization");
     assert_eq!(h[0].1, "Bearer tok");
     assert_eq!(h[1].0, "X-Custom");
+    assert_eq!(h[1].1, "val");
     assert_eq!(h[2].0, "X-Trim");
     assert_eq!(h[2].1, "spaced");
+    assert_eq!(h[3].0, "X-Space");
+    assert_eq!(h[3].1, "secret");
 
     assert!(parse_header_lines(&["nocolonoreq".into()]).is_err());
     assert!(parse_header_lines(&[": no-name".into()]).is_err());
+    assert!(parse_header_lines(&["=no-name".into()]).is_err());
 }
 
 #[test]

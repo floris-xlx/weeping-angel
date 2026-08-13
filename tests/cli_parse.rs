@@ -198,6 +198,50 @@ fn multiple_cookies_merge() {
 }
 
 #[test]
+fn cookie_key_value_space_and_equals() {
+    let s = scan(&[
+        "scan",
+        "z.com",
+        "--i-own-this",
+        "--allow-host",
+        "z.com",
+        "--cookie",
+        "session",
+        "admin",
+        "--cookie",
+        "role=ops",
+    ]);
+    assert_eq!(s.cookie_header().as_deref(), Some("session=admin; role=ops"));
+}
+
+#[test]
+fn header_key_equals_value_and_two_args() {
+    let s = scan(&[
+        "scan",
+        "z.com",
+        "--i-own-this",
+        "--allow-host",
+        "z.com",
+        "--header",
+        "X-A=1",
+        "--header",
+        "X-B",
+        "two",
+        "--header",
+        "X-C: three",
+    ]);
+    let parsed = weeping_angel::cli::parse_header_lines(&s.headers).unwrap();
+    assert_eq!(
+        parsed,
+        vec![
+            ("X-A".into(), "1".into()),
+            ("X-B".into(), "two".into()),
+            ("X-C".into(), "three".into()),
+        ]
+    );
+}
+
+#[test]
 fn headers_repeatable() {
     let s = scan(&[
         "scan",
@@ -251,8 +295,57 @@ fn format_and_fail_on_and_profile() {
 
 #[test]
 fn verbose_global_count() {
-    let cli = parse(&["-vv", "scan", "z.com", "--i-own-this", "--allow-host", "z.com"]);
+    let cli = parse(&[
+        "--verbose",
+        "--verbose",
+        "scan",
+        "z.com",
+        "--i-own-this",
+        "--allow-host",
+        "z.com",
+    ]);
     assert_eq!(cli.verbose, 2);
+}
+
+#[test]
+fn version_flags_display_package_version() {
+    use clap::error::ErrorKind;
+    for args in [vec!["-v"], vec!["-V"], vec!["--version"]] {
+        let err = Cli::try_parse_from(std::iter::once("weeping-angel").chain(args.iter().copied()))
+            .expect_err("version flags should print version");
+        assert_eq!(err.kind(), ErrorKind::DisplayVersion, "args={args:?}");
+        let rendered = err.to_string();
+        assert!(
+            rendered.contains(env!("CARGO_PKG_VERSION")),
+            "args={args:?} rendered={rendered}"
+        );
+        assert!(
+            rendered.contains("weeping-angel"),
+            "args={args:?} rendered={rendered}"
+        );
+    }
+}
+
+#[test]
+fn version_subcommand_parses() {
+    let cli = parse(&["version"]);
+    match cli.command {
+        Commands::Version => {}
+        other => panic!("expected Version, got {other:?}"),
+    }
+}
+
+#[test]
+fn scan_alias_s_parses() {
+    let s = scan(&["s", "example.com", "--i-own-this", "--allow-host", "example.com"]);
+    assert_eq!(s.targets, vec!["example.com"]);
+}
+
+#[test]
+fn no_args_requests_help() {
+    use clap::error::ErrorKind;
+    let err = Cli::try_parse_from(["weeping-angel"]).expect_err("empty argv should show help");
+    assert_eq!(err.kind(), ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);
 }
 
 #[test]

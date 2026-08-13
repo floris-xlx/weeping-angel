@@ -1,47 +1,107 @@
 use std::path::PathBuf;
 
+use clap::builder::styling::{AnsiColor, Effects, Styles};
 use clap::{Parser, Subcommand, ValueEnum};
 
 use crate::parse::{self, LogHttp};
 
+const CLAP_STYLES: Styles = Styles::styled()
+    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
+    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
+    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
+    .placeholder(AnsiColor::Cyan.on_default())
+    .error(AnsiColor::Red.on_default().effects(Effects::BOLD))
+    .valid(AnsiColor::Green.on_default().effects(Effects::BOLD))
+    .invalid(AnsiColor::Yellow.on_default().effects(Effects::BOLD));
+
+const AFTER_HELP: &str = "\
+Examples:
+  weeping-angel -v
+  weeping-angel --version
+  weeping-angel version
+  weeping-angel scan example.com --i-own-this --allow-host example.com
+  weeping-angel scan-code . -o out/code --fail-on high
+  weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD
+  weeping-angel workbench list
+
+Web scans require --i-own-this and --allow-host (or --allow-host-from-target).
+Increase engine logs with --verbose (repeat: --verbose --verbose).
+";
+
+/// Multi-line version string used by `-v` / `--version` / `version`.
+pub const VERSION_LINE: &str = concat!(
+    env!("CARGO_PKG_NAME"),
+    " ",
+    env!("CARGO_PKG_VERSION"),
+    "\n",
+    env!("CARGO_PKG_DESCRIPTION")
+);
+
 #[derive(Debug, Parser)]
 #[command(
     name = "weeping-angel",
-    version,
+    version = VERSION_LINE,
     about = "Authorized dual-domain security toolchain (web recon + code analysis)",
     long_about = "Authorized security toolchain: live web recon/DAST and algorithmic code scans.\n\n\
 Web scans require --i-own-this and --allow-host (or --allow-host-from-target).\n\
 Targets accept bare hosts (example.com), //host, http://, or https://.\n\
 Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\n\
-Code/diff scans produce Codex Security–compatible sealed bundles."
+Code/diff scans produce Codex Security–compatible sealed bundles.",
+    after_help = AFTER_HELP,
+    arg_required_else_help = true,
+    propagate_version = true,
+    disable_version_flag = true,
+    styles = CLAP_STYLES,
+    help_template = "\
+{before-help}{about-with-newline}
+{usage-heading} {usage}
+
+{all-args}{after-help}",
+    next_line_help = false,
 )]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 
-    /// Increase logging verbosity (-v, -vv)
-    #[arg(short, long, action = clap::ArgAction::Count, global = true)]
+    /// Print version (-v, -V, --version)
+    #[arg(
+        short = 'v',
+        short_alias = 'V',
+        long = "version",
+        action = clap::ArgAction::Version,
+        global = true
+    )]
+    version: (),
+
+    /// Increase logging verbosity (repeatable)
+    #[arg(long, action = clap::ArgAction::Count, global = true)]
     pub verbose: u8,
 }
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Run an authorized live web security scan
+    #[command(visible_alias = "s")]
     Scan(ScanArgs),
 
     /// Validate, fingerprint, seal, and project report.md for a scan bundle
+    #[command(visible_alias = "seal")]
     Finalize(FinalizeArgs),
 
     /// Algorithmic code SAST (full tree or scoped path) → sealed contract
-    #[command(name = "scan-code")]
+    #[command(name = "scan-code", visible_alias = "code")]
     ScanCode(ScanCodeArgs),
 
     /// Algorithmic code SAST on a Git change-set (PR/commit/working-tree)
-    #[command(name = "scan-diff")]
+    #[command(name = "scan-diff", visible_alias = "diff")]
     ScanDiff(ScanDiffArgs),
 
     /// Local SQLite workbench: register / list sealed scans
+    #[command(visible_alias = "wb")]
     Workbench(WorkbenchArgs),
+
+    /// Print version and package description
+    Version,
 }
 
 #[derive(Debug, Clone, Parser)]
@@ -176,6 +236,7 @@ pub struct ScanArgs {
 
     /// Ownership / authorization consent (required). Use bare flag or =true|yes|1
     #[arg(
+        help_heading = "Safety",
         long = "i-own-this",
         num_args = 0..=1,
         default_missing_value = "true",
@@ -186,31 +247,37 @@ pub struct ScanArgs {
     pub i_own_this: Option<bool>,
 
     /// Allowlisted host (repeatable; CSV ok). Supports *.example.com and full URLs
-    #[arg(long = "allow-host", value_name = "HOST", action = clap::ArgAction::Append)]
+    #[arg(
+        help_heading = "Safety",
+        long = "allow-host",
+        value_name = "HOST",
+        action = clap::ArgAction::Append
+    )]
     pub allow_hosts: Vec<String>,
 
     /// Add each target's host to the allowlist (still requires --i-own-this)
-    #[arg(long = "allow-host-from-target")]
+    #[arg(help_heading = "Safety", long = "allow-host-from-target")]
     pub allow_host_from_target: bool,
 
     /// When scheme is omitted, prefer http instead of smart https/http default
-    #[arg(long = "prefer-http")]
+    #[arg(help_heading = "Request", long = "prefer-http")]
     pub prefer_http: bool,
 
     /// Optional TOML config file
-    #[arg(long, short = 'c')]
+    #[arg(help_heading = "Scan", long, short = 'c')]
     pub config: Option<PathBuf>,
 
     /// Scan profile: recon | standard | deep (aliases: quick, full)
-    #[arg(long, default_value = "standard")]
+    #[arg(help_heading = "Scan", long, default_value = "standard")]
     pub profile: String,
 
     /// Comma/space-separated modules (overrides profile defaults when set)
-    #[arg(long)]
+    #[arg(help_heading = "Scan", long)]
     pub modules: Option<String>,
 
     /// Enable active (intrusive) probes — second safety gate
     #[arg(
+        help_heading = "Safety",
         long,
         num_args = 0..=1,
         default_missing_value = "true",
@@ -221,11 +288,12 @@ pub struct ScanArgs {
     pub enable_active: Option<bool>,
 
     /// Active probes: xss,sqli,open-redirect,path-traversal (requires --enable-active)
-    #[arg(long, value_name = "LIST")]
+    #[arg(help_heading = "Safety", long, value_name = "LIST")]
     pub probe: Option<String>,
 
     /// Allow POST/PUT/PATCH/DELETE (default: GET/HEAD only)
     #[arg(
+        help_heading = "Safety",
         long,
         num_args = 0..=1,
         default_missing_value = "true",
@@ -236,27 +304,28 @@ pub struct ScanArgs {
     pub allow_write_methods: Option<bool>,
 
     /// Crawl depth
-    #[arg(long, default_value_t = 2)]
+    #[arg(help_heading = "Scan", long, default_value_t = 2)]
     pub depth: u32,
 
     /// Maximum URLs to retain/fetch
-    #[arg(long, default_value_t = 300)]
+    #[arg(help_heading = "Scan", long, default_value_t = 300)]
     pub max_urls: usize,
 
     /// Concurrent in-flight requests
-    #[arg(long, default_value_t = 20)]
+    #[arg(help_heading = "Request", long, default_value_t = 20)]
     pub concurrency: usize,
 
     /// Requests per second (global)
-    #[arg(long, default_value_t = 15.0)]
+    #[arg(help_heading = "Request", long, default_value_t = 15.0)]
     pub rps: f64,
 
     /// Speed preset: higher rps/concurrency, summary HTTP log, skip image OPTIONS
-    #[arg(long)]
+    #[arg(help_heading = "Request", long)]
     pub fast: bool,
 
     /// Ignore robots.txt Disallow (authorized pentest mode)
     #[arg(
+        help_heading = "Safety",
         long,
         num_args = 0..=1,
         default_missing_value = "true",
@@ -267,23 +336,36 @@ pub struct ScanArgs {
     pub ignore_robots: Option<bool>,
 
     /// Path to path wordlist
-    #[arg(long, default_value = "wordlists/common-paths.txt")]
+    #[arg(help_heading = "Scan", long, default_value = "wordlists/common-paths.txt")]
     pub wordlist: PathBuf,
 
-    /// Extra Cookie header (repeatable; values merged)
-    #[arg(long = "cookie", value_name = "COOKIE", action = clap::ArgAction::Append)]
+    /// Extra Cookie (`name=value` or `name value`; repeatable; values merged)
+    #[arg(
+        help_heading = "Request",
+        long = "cookie",
+        value_name = "COOKIE",
+        num_args = 1..=2,
+        action = clap::ArgAction::Append
+    )]
     pub cookies: Vec<String>,
 
-    /// Extra header Name: Value or Name=Value (repeatable)
-    #[arg(long = "header", value_name = "Name: Value", action = clap::ArgAction::Append)]
+    /// Extra header: `Name: Value`, `Name=Value`, or `Name Value` (repeatable)
+    #[arg(
+        help_heading = "Request",
+        long = "header",
+        value_name = "HEADER",
+        num_args = 1..=2,
+        action = clap::ArgAction::Append
+    )]
     pub headers: Vec<String>,
 
     /// Request timeout seconds
-    #[arg(long, default_value_t = 15)]
+    #[arg(help_heading = "Request", long, default_value_t = 15)]
     pub timeout: u64,
 
     /// Accept invalid TLS certificates (lab only)
     #[arg(
+        help_heading = "Request",
         long,
         num_args = 0..=1,
         default_missing_value = "true",
@@ -294,23 +376,24 @@ pub struct ScanArgs {
     pub insecure: Option<bool>,
 
     /// Output path prefix/file for json/sarif/html
-    #[arg(long, short = 'o')]
+    #[arg(help_heading = "Output", long, short = 'o')]
     pub output: Option<PathBuf>,
 
     /// Formats: terminal,json,sarif,html,manifest,openapi,images (comma-separated)
-    #[arg(long, default_value = "terminal")]
+    #[arg(help_heading = "Output", long, default_value = "terminal")]
     pub format: String,
 
     /// Exit 1 when findings at or above this severity: low|medium|high|critical
-    #[arg(long, default_value = "medium")]
+    #[arg(help_heading = "Output", long, default_value = "medium")]
     pub fail_on: String,
 
     /// Directory of YAML path templates (Nuclei-lite). Default: templates/
-    #[arg(long, default_value = "templates")]
+    #[arg(help_heading = "Scan", long, default_value = "templates")]
     pub templates_dir: PathBuf,
 
     /// Compare authenticated (--cookie/--header) vs anonymous requests
     #[arg(
+        help_heading = "Scan",
         long,
         num_args = 0..=1,
         default_missing_value = "true",
@@ -321,15 +404,15 @@ pub struct ScanArgs {
     pub compare_auth: Option<bool>,
 
     /// Live HTTP log density: full | compact | summary | off
-    #[arg(long = "log-http", value_name = "MODE")]
+    #[arg(help_heading = "Output", long = "log-http", value_name = "MODE")]
     pub log_http: Option<String>,
 
     /// Max discovered routes printed in terminal report
-    #[arg(long, default_value_t = 120)]
+    #[arg(help_heading = "Output", long, default_value_t = 120)]
     pub max_terminal_routes: usize,
 
     /// Terminal report width (0 = auto-detect)
-    #[arg(long, default_value_t = 0)]
+    #[arg(help_heading = "Output", long, default_value_t = 0)]
     pub report_width: usize,
 }
 
@@ -359,11 +442,7 @@ impl ScanArgs {
     }
 
     pub fn cookie_header(&self) -> Option<String> {
-        if self.cookies.is_empty() {
-            None
-        } else {
-            Some(self.cookies.join("; "))
-        }
+        parse::cookie_header_from_args(&self.cookies)
     }
 
     pub fn log_http_mode(&self) -> LogHttp {

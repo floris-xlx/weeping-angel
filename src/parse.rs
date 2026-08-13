@@ -52,29 +52,106 @@ pub fn expand_list_args(values: &[String]) -> Vec<String> {
         .collect()
 }
 
-/// Parse `Name: Value` or `Name=Value` header lines.
+/// True when a token already looks like `Name=Value` or `Name: Value`.
+pub fn looks_like_kv(s: &str) -> bool {
+    let s = s.trim();
+    if s.is_empty() {
+        return false;
+    }
+    split_kv(s).is_some()
+}
+
+/// Split `Name=Value`, `Name: Value`, or `Name Value` into (name, value).
+pub fn split_kv(s: &str) -> Option<(&str, &str)> {
+    let s = s.trim();
+    if s.is_empty() {
+        return None;
+    }
+    let (k, v) = if let Some((k, v)) = s.split_once('=') {
+        (k, v)
+    } else if let Some((k, v)) = s.split_once(':') {
+        (k, v)
+    } else if let Some((k, v)) = s.split_once(char::is_whitespace) {
+        (k, v)
+    } else {
+        return None;
+    };
+    let k = k.trim();
+    let v = v.trim();
+    if k.is_empty() {
+        return None;
+    }
+    Some((k, v))
+}
+
+/// Pair a bare key with the following token (`Name` + `Value` → `Name=Value`).
+/// Tokens that already contain `=` or `:` are left intact.
+pub fn coalesce_kv_tokens(raw: &[String]) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < raw.len() {
+        let cur = raw[i].trim();
+        if cur.is_empty() {
+            i += 1;
+            continue;
+        }
+        if looks_like_kv(cur) {
+            out.push(cur.to_string());
+            i += 1;
+            continue;
+        }
+        if i + 1 < raw.len() {
+            let nxt = raw[i + 1].trim();
+            if !nxt.is_empty() && !looks_like_kv(nxt) {
+                out.push(format!("{cur}={nxt}"));
+                i += 2;
+                continue;
+            }
+        }
+        out.push(cur.to_string());
+        i += 1;
+    }
+    out
+}
+
+/// Parse `Name: Value`, `Name=Value`, or `Name Value` header lines.
+/// Adjacent bare tokens (`Name`, `Value`) are paired as `Name=Value`.
 pub fn parse_header_lines(lines: &[String]) -> Result<Vec<(String, String)>> {
     let mut out = Vec::new();
-    for line in lines {
+    for line in coalesce_kv_tokens(lines) {
         let line = line.trim();
         if line.is_empty() {
             continue;
         }
-        let (k, v) = if let Some((k, v)) = line.split_once(':') {
-            (k, v)
-        } else if let Some((k, v)) = line.split_once('=') {
-            (k, v)
-        } else {
-            bail!("invalid --header (expected 'Name: Value' or 'Name=Value'): {line}");
+        let Some((k, v)) = split_kv(line) else {
+            bail!(
+                "invalid --header (expected 'Name: Value', 'Name=Value', or 'Name Value'): {line}"
+            );
         };
-        let k = k.trim();
-        let v = v.trim();
-        if k.is_empty() {
-            bail!("invalid --header: empty name in '{line}'");
-        }
         out.push((k.to_string(), v.to_string()));
     }
     Ok(out)
+}
+
+/// Normalize cookie CLI tokens to `name=value` pairs, then join with `; `.
+pub fn cookie_header_from_args(raw: &[String]) -> Option<String> {
+    let parts: Vec<String> = coalesce_kv_tokens(raw)
+        .into_iter()
+        .filter_map(|tok| {
+            if let Some((k, v)) = split_kv(&tok) {
+                Some(format!("{k}={v}"))
+            } else if tok.contains('=') {
+                Some(tok)
+            } else {
+                Some(tok)
+            }
+        })
+        .collect();
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("; "))
+    }
 }
 
 /// Normalize allow-host entries: extract host from URL, expand CSV, lower-case.
@@ -217,12 +294,34 @@ mod tests {
         let h = parse_header_lines(&[
             "Authorization: Bearer x".into(),
             "X-Test=1".into(),
+            "X-Space secret".into(),
         ])
         .unwrap();
         assert_eq!(h[0].0, "Authorization");
         assert_eq!(h[0].1, "Bearer x");
         assert_eq!(h[1].0, "X-Test");
         assert_eq!(h[1].1, "1");
+        assert_eq!(h[2].0, "X-Space");
+        assert_eq!(h[2].1, "secret");
+    }
+
+    #[test]
+    fn header_pairs_adjacent_tokens() {
+        let h = parse_header_lines(&["X-Api-Key".into(), "secret".into(), "X-B=2".into()]).unwrap();
+        assert_eq!(h, vec![("X-Api-Key".into(), "secret".into()), ("X-B".into(), "2".into())]);
+    }
+
+    #[test]
+    fn cookie_space_and_equals() {
+        assert_eq!(
+            cookie_header_from_args(&["session=admin".into()]).as_deref(),
+            Some("session=admin")
+        );
+        assert_eq!(
+            cookie_header_from_args(&["session".into(), "admin".into(), "role=ops".into()])
+                .as_deref(),
+            Some("session=admin; role=ops")
+        );
     }
 
     #[test]

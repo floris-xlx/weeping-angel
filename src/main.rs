@@ -13,7 +13,7 @@ async fn main() {
     let cli: Cli = Cli::parse();
 
     // Default: keep tracing quieter so live request/ANSI lines stay readable.
-    // Use -v / -vv or RUST_LOG for engine debug noise.
+    // Use --verbose / --verbose --verbose or RUST_LOG for engine debug noise.
     let filter: String = match cli.verbose {
         0 => "weeping_angel=warn".to_string(),
         1 => "weeping_angel=info".to_string(),
@@ -62,6 +62,10 @@ async fn main() {
                 2
             }
         },
+        Commands::Version => {
+            println!("{}", weeping_angel::cli::VERSION_LINE);
+            0
+        }
     };
 
     std::process::exit(code);
