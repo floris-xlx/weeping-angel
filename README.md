@@ -1,6 +1,6 @@
 # weeping-angel
 
-current version: `0.1.2`
+current version: `0.1.3`
 Authorized **web recon + security scanning** CLI (Rust). Discover routes (including SPA/JS surfaces), flag misconfigurations and exposed secrets, map auth, run YAML path templates, compare authenticated vs anonymous access, and optionally fire **gated** active probes.
 
 > **Legal:** Only scan systems you **own** or have **written permission** to test. The tool refuses to run without `--i-own-this` and a host allowlist.
