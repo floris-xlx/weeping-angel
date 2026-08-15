@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use clap::builder::styling::{AnsiColor, Effects, Styles};
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 
 use crate::parse::{self, LogHttp};
 
@@ -19,11 +20,13 @@ Examples:
   weeping-angel -v
   weeping-angel --version
   weeping-angel version
+  weeping-angel completions powershell
   weeping-angel scan example.com --i-own-this --allow-host example.com
   weeping-angel scan-code . -o out/code --fail-on high
   weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD
   weeping-angel workbench list
 
+Version flags work without a subcommand: -v, -V, --version.
 Web scans require --i-own-this and --allow-host (or --allow-host-from-target).
 Increase engine logs with --verbose (repeat: --verbose --verbose).
 ";
@@ -63,18 +66,19 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 
-    /// Print version (-v, -V, --version)
+    /// Print version (-v, -V, --version). Works without a subcommand.
     #[arg(
         short = 'v',
         short_alias = 'V',
         long = "version",
         action = clap::ArgAction::Version,
-        global = true
+        global = true,
+        help_heading = "Meta"
     )]
     version: (),
 
     /// Increase logging verbosity (repeatable)
-    #[arg(long, action = clap::ArgAction::Count, global = true)]
+    #[arg(long, action = clap::ArgAction::Count, global = true, help_heading = "Meta")]
     pub verbose: u8,
 }
 
@@ -102,6 +106,40 @@ pub enum Commands {
 
     /// Print version and package description
     Version,
+
+    /// Write shell completions to stdout
+    Completions {
+        /// Target shell
+        #[arg(value_enum)]
+        shell: Shell,
+    },
+}
+
+impl Cli {
+    /// Build the clap `Command` used by the binary and completion generator.
+    pub fn clap_command() -> clap::Command {
+        Self::command()
+    }
+
+    /// True when argv is only a version request (`-v` / `-V` / `--version` / `version`).
+    pub fn argv_is_version_only(args: impl IntoIterator<Item = impl AsRef<str>>) -> bool {
+        let mut saw_version = false;
+        for arg in args {
+            let a = arg.as_ref();
+            if a == "--" {
+                break;
+            }
+            if matches!(a, "-v" | "-V" | "--version" | "version") {
+                saw_version = true;
+                continue;
+            }
+            if a.starts_with('-') {
+                continue;
+            }
+            return false;
+        }
+        saw_version
+    }
 }
 
 #[derive(Debug, Clone, Parser)]

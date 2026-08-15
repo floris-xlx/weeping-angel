@@ -1,6 +1,6 @@
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
-use weeping_angel::cli::{Cli, Commands};
+use weeping_angel::cli::{Cli, Commands, VERSION_LINE};
 use weeping_angel::{
     run_finalize_command, run_scan_code_command, run_scan_diff_command, run_scan_command,
     run_workbench_command,
@@ -10,6 +10,13 @@ use weeping_angel::style;
 #[tokio::main]
 async fn main() {
     style::init();
+
+    let raw: Vec<String> = std::env::args().skip(1).collect();
+    if Cli::argv_is_version_only(&raw) {
+        println!("{VERSION_LINE}");
+        std::process::exit(0);
+    }
+
     let cli: Cli = Cli::parse();
 
     // Default: keep tracing quieter so live request/ANSI lines stay readable.
@@ -63,7 +70,17 @@ async fn main() {
             }
         },
         Commands::Version => {
-            println!("{}", weeping_angel::cli::VERSION_LINE);
+            println!("{VERSION_LINE}");
+            0
+        }
+        Commands::Completions { shell } => {
+            let mut cmd = Cli::clap_command();
+            clap_complete::generate(
+                shell,
+                &mut cmd,
+                "weeping-angel",
+                &mut std::io::stdout(),
+            );
             0
         }
     };

@@ -336,6 +336,28 @@ fn version_subcommand_parses() {
 }
 
 #[test]
+fn argv_is_version_only_accepts_common_flags() {
+    assert!(Cli::argv_is_version_only(["-v"]));
+    assert!(Cli::argv_is_version_only(["-V"]));
+    assert!(Cli::argv_is_version_only(["--version"]));
+    assert!(Cli::argv_is_version_only(["version"]));
+    assert!(Cli::argv_is_version_only(["--verbose", "-v"]));
+    assert!(!Cli::argv_is_version_only(["scan", "-v"]));
+    assert!(!Cli::argv_is_version_only(std::iter::empty::<&str>()));
+}
+
+#[test]
+fn completions_subcommand_parses_powershell() {
+    let cli = parse(&["completions", "powershell"]);
+    match cli.command {
+        Commands::Completions { shell } => {
+            assert_eq!(shell.to_string(), "powershell");
+        }
+        other => panic!("expected Completions, got {other:?}"),
+    }
+}
+
+#[test]
 fn scan_alias_s_parses() {
     let s = scan(&["s", "example.com", "--i-own-this", "--allow-host", "example.com"]);
     assert_eq!(s.targets, vec!["example.com"]);
