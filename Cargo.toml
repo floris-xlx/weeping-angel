@@ -29,6 +29,21 @@ path-guid = "DAA53BD2-B2CE-4B13-A9A7-61C7F515C785"
 license = false
 eula = false
 
+[package.metadata.packager]
+before-packaging-command = "cargo build --release --bin weeping-angel"
+product-name = "weeping-angel"
+identifier = "dev.floris.weeping-angel"
+out-dir = "target/packager"
+binaries = [{ path = "weeping-angel", main = true }]
+
+[package.metadata.packager.deb]
+section = "utils"
+priority = "optional"
+
+[package.metadata.packager.wix]
+languages = [{ identifier = "en-US" }]
+
+
 [[bin]]
 name = "weeping-angel"
 path = "src/main.rs"

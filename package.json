@@ -1,0 +1,18 @@
+{
+  "name": "weeping-angel",
+  "private": true,
+  "version": "0.1.3",
+  "packageManager": "pnpm@11.8.0",
+  "description": "Authorized web recon and security scanning CLI",
+  "scripts": {
+    "installer": "cargo packager --release",
+    "installer:deb": "cargo packager --release --formats deb",
+    "installer:rpm": "cargo packager --release --formats rpm",
+    "installer:appimage": "cargo packager --release --formats appimage",
+    "installer:pacman": "cargo packager --release --formats pacman",
+    "installer:msi": "cargo packager --release --formats wix",
+    "installer:nsis": "cargo packager --release --formats nsis",
+    "installer:dmg": "cargo packager --release --formats dmg",
+    "installer:app": "cargo packager --release --formats app"
+  }
+}

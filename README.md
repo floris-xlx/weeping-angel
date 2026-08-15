@@ -21,6 +21,24 @@ chmod +x scripts/*.sh
 ./scripts/demo-scan.sh
 ```
 
+## Installers (deb, msi, …)
+
+Requires [`cargo-packager`](https://github.com/crabnebula-dev/cargo-packager) (`cargo install cargo-packager`).
+
+```bash
+pnpm run installer:deb
+pnpm run installer:msi
+pnpm run installer:nsis
+pnpm run installer:rpm
+pnpm run installer:appimage
+pnpm run installer:pacman
+pnpm run installer:dmg
+pnpm run installer:app
+pnpm run installer          # all formats cargo-packager can build on this host
+```
+
+Artifacts land in `target/packager/`.
+
 ## Manual install
 
 ```bash
