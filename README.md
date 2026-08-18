@@ -53,9 +53,25 @@ cargo build --release --example weeping-angel-demo --features demo
 ## Tests
 
 ```bash
-# unit + integration + e2e (shared lab router requires demo feature)
-cargo test --features demo
+# scanner + assurance workspace + e2e (lab router requires demo)
+cargo test --workspace --features demo
 ```
+
+Assurance contract tests: `sdd_assurance_runtime_target` (ACT-001…015). The pre-spine baseline suite is superseded / ignored.
+
+## Assurance runtime (library)
+
+Weeping Angel is also an **inwardly extensible** assurance compiler: capabilities + observations in, control-test results out. Findings stay security-only. Collectors advertise evidence types, not frameworks. There is **no** `assurance` CLI yet.
+
+```text
+AssuranceEngine::builder().collector(…).framework(target).assess(scope)
+```
+
+Workspace crates: `weeping-angel-assurance-ir` → `framework` / `evidence` → `collector`; `ir` + `evidence` → `control-test`; facade `weeping-angel-assurance` composes them. Profile catalogs (ISO/GDPR/SOC 2/…) are compile stubs in this slice.
+
+- Decision: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](docs/adr/0001-inwardly-extensible-assurance-runtime.md)
+- Contract: [`docs/contracts/assurance-runtime.md`](docs/contracts/assurance-runtime.md)
+- Spec: [`docs/sdd/assurance-runtime-spine.md`](docs/sdd/assurance-runtime-spine.md)
 
 ## Scan a target you control
 
@@ -279,9 +295,11 @@ fail_on = "medium"
 ## Development
 
 ```bash
-cargo test
+cargo test --workspace --features demo
 cargo run --bin weeping-angel -- --help
 ```
+
+Scanner package stays at the repo root. Assurance crates live under `crates/`. Do not add `iso_27001` / `gdpr` / `soc2` fields to `SemanticFinding`.
 
 ## Disclaimer
 

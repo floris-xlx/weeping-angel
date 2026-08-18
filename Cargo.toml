@@ -1,3 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/weeping-angel-assurance-ir",
+    "crates/weeping-angel-framework",
+    "crates/weeping-angel-evidence",
+    "crates/weeping-angel-collector",
+    "crates/weeping-angel-control-test",
+    "crates/weeping-angel-assurance",
+]
+
 [package]
 repository = "https://github.com/floris-xlx/weeping-angel"
 homepage = "https://github.com/floris-xlx/weeping-angel"
@@ -166,6 +177,12 @@ features = [
 axum = "0.8"
 tempfile = "3"
 tower = "0.5"
+weeping-angel-assurance = { path = "crates/weeping-angel-assurance" }
+weeping-angel-assurance-ir = { path = "crates/weeping-angel-assurance-ir" }
+weeping-angel-collector = { path = "crates/weeping-angel-collector" }
+weeping-angel-control-test = { path = "crates/weeping-angel-control-test" }
+weeping-angel-evidence = { path = "crates/weeping-angel-evidence" }
+weeping-angel-framework = { path = "crates/weeping-angel-framework" }
 
 [dev-dependencies.tower-http]
 version = "0.6"
@@ -184,3 +201,11 @@ required-features = ["demo"]
 name = "e2e_recon"
 path = "tests/e2e_recon.rs"
 required-features = ["demo"]
+
+[[test]]
+name = "sdd_assurance_runtime_baseline"
+path = "tests/sdd/assurance_runtime.baseline.rs"
+
+[[test]]
+name = "sdd_assurance_runtime_target"
+path = "tests/sdd/assurance_runtime.target.rs"

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-28T15:35:30.434428100+00:00",
+  "updated_at": "2026-08-18T12:12:00.562824300+00:00",
   "steps": {
     "dist:global": {
       "samples": [
@@ -11,9 +11,17 @@
           "meta": {
             "tag": "weeping-angel-0.1.2"
           }
+        },
+        {
+          "at": "2026-08-18T12:11:59.912160800+00:00",
+          "ms": 1999,
+          "ok": true,
+          "meta": {
+            "tag": "weeping-angel-0.2.0"
+          }
         }
       ],
-      "ema_ms": 1233
+      "ema_ms": 1463
     },
     "dist:host": {
       "samples": [
@@ -24,9 +32,17 @@
           "meta": {
             "tag": "weeping-angel-0.1.2"
           }
+        },
+        {
+          "at": "2026-08-18T12:11:57.910930600+00:00",
+          "ms": 59302,
+          "ok": true,
+          "meta": {
+            "tag": "weeping-angel-0.2.0"
+          }
         }
       ],
-      "ema_ms": 27606
+      "ema_ms": 37115
     }
   }
 }

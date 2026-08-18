@@ -1,0 +1,18 @@
+[package]
+name = "weeping-angel-control-test"
+version = "0.2.0"
+edition = "2024"
+description = "Offline, provider-blind control-test evaluation"
+license = "MIT"
+publish = false
+
+[features]
+default = []
+demo = []
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+weeping-angel-assurance-ir = { path = "../weeping-angel-assurance-ir" }
+weeping-angel-evidence = { path = "../weeping-angel-evidence" }

@@ -1,0 +1,475 @@
+scope_kind = "service"
+scope_label = "weeping-angel"
+scope_slug = "service-weeping-angel"
+version = "0.2.0"
+tag_name = "weeping-angel-0.2.0"
+xbp_version = "10.69.7"
+branch_name = "releases/weeping-angel-0.2.0"
+cloudflare_evidence = []
+status = "Failed"
+created_at = "2026-08-18T12:10:49.666648800Z"
+updated_at = "2026-08-18T12:12:34.958054Z"
+
+[baseline]
+source = "release-ledger"
+reference = "weeping-angel-0.1.2"
+tag = "weeping-angel-0.1.2"
+
+[selection]
+changed_files = [
+    ".github/workflows/ci.yml",
+    ".github/workflows/security-diff.yml",
+    ".gitignore",
+    ".xbp/issues/effort.json",
+    ".xbp/issues/ledger.json",
+    ".xbp/issues/path-index.json",
+    ".xbp/issues/snapshots.jsonl",
+    ".xbp/releases/service-weeping-angel/service-weeping-angel-0.1.2.toml",
+    ".xbp/releases/service-weeping-angel/service-weeping-angel-0.1.3.toml",
+    ".xbp/timings/release-steps.json",
+    ".xbp/xbp.toml",
+    "Cargo.lock",
+    "Cargo.toml",
+    "README.md",
+    "apps/docs/README.md",
+    "apps/docs/bun.lock",
+    "apps/docs/content/docs/cli.mdx",
+    "apps/docs/content/docs/commands/completions.mdx",
+    "apps/docs/content/docs/commands/depcheck.mdx",
+    "apps/docs/content/docs/commands/finalize.mdx",
+    "apps/docs/content/docs/commands/meta.json",
+    "apps/docs/content/docs/commands/scan-code.mdx",
+    "apps/docs/content/docs/commands/scan-diff.mdx",
+    "apps/docs/content/docs/commands/scan.mdx",
+    "apps/docs/content/docs/commands/version.mdx",
+    "apps/docs/content/docs/commands/workbench.mdx",
+    "apps/docs/content/docs/dependency-confusion.mdx",
+    "apps/docs/content/docs/index.mdx",
+    "apps/docs/content/docs/installation.mdx",
+    "apps/docs/content/docs/lab-demo.mdx",
+    "apps/docs/content/docs/meta.json",
+    "apps/docs/content/docs/modules.mdx",
+    "apps/docs/content/docs/reports.mdx",
+    "apps/docs/content/docs/safety.mdx",
+    "apps/docs/generated/cli-root-reference.json",
+    "apps/docs/next-env.d.ts",
+    "apps/docs/next.config.mjs",
+    "apps/docs/package.json",
+    "apps/docs/postcss.config.mjs",
+    "apps/docs/scripts/generate-cli-reference.mjs",
+    "apps/docs/scripts/generate-docs.mjs",
+    "apps/docs/source.config.ts",
+    "apps/docs/src/app/api/search/route.ts",
+    "apps/docs/src/app/docs/[[...slug]]/page.tsx",
+    "apps/docs/src/app/docs/layout.tsx",
+    "apps/docs/src/app/global.css",
+    "apps/docs/src/app/layout.tsx",
+    "apps/docs/src/app/page.tsx",
+    "apps/docs/src/components/provider.tsx",
+    "apps/docs/src/lib/layout.shared.tsx",
+    "apps/docs/src/lib/site.ts",
+    "apps/docs/src/lib/source.ts",
+    "apps/docs/src/mdx-components.tsx",
+    "apps/docs/tsconfig.json",
+    "codex-security/.app.json",
+    "codex-security/.mcp.json",
+    "codex-security/OWNERS",
+    "codex-security/examples/completed-scan/coverage.json",
+    "codex-security/examples/completed-scan/findings.json",
+    "codex-security/examples/completed-scan/scan-manifest.json",
+    "codex-security/mcp/mcp-app.html.br",
+    "codex-security/mcp/server.mjs",
+    "codex-security/mcp/server.mjs.br.part-000",
+    "codex-security/mcp/server.mjs.br.part-001",
+    "codex-security/preflight/capability-profiles.toml",
+    "codex-security/references/config-preflight.md",
+    "codex-security/references/final-report.md",
+    "codex-security/references/finding-detail-fields.md",
+    "codex-security/references/sarif-adapter.md",
+    "codex-security/references/scan-artifacts.md",
+    "codex-security/references/scan-contract.md",
+    "codex-security/references/security-guidance.md",
+    "codex-security/references/shared-hard-rules.md",
+    "codex-security/references/static-finding-assessment.md",
+    "codex-security/schemas/coverage.schema.json",
+    "codex-security/schemas/findings.schema.json",
+    "codex-security/schemas/scan-manifest.schema.json",
+    "codex-security/scripts/__pycache__/deep_scan_config.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/deep_scan_workbench.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/filesystem_identity.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/finalize_scan_contract.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/finding_preview.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/report_projection.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_cli.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_constants.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_feedback.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_native_indexes.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_progress.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_remediation.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_scan_history.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_scan_start.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_schema.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_source_excerpt.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_target.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_target_state.cpython-312.pyc",
+    "codex-security/scripts/__pycache__/workbench_validation.cpython-312.pyc",
+    "codex-security/scripts/config_preflight.py",
+    "codex-security/scripts/deep_scan_config.py",
+    "codex-security/scripts/deep_scan_workbench.py",
+    "codex-security/scripts/filesystem_identity.py",
+    "codex-security/scripts/finalize_scan_contract.py",
+    "codex-security/scripts/finding_preview.py",
+    "codex-security/scripts/generate_rank_input.py",
+    "codex-security/scripts/normalize_candidates.py",
+    "codex-security/scripts/rank_preview.py",
+    "codex-security/scripts/report_projection.py",
+    "codex-security/scripts/resolve_security_md.py",
+    "codex-security/scripts/snapshot_sqlite.py",
+    "codex-security/scripts/validate_report_format.py",
+    "codex-security/scripts/validate_scan_contract.py",
+    "codex-security/scripts/validate_tracking_source.py",
+    "codex-security/scripts/windows_scan_local_files.py",
+    "codex-security/scripts/workbench/__init__.py",
+    "codex-security/scripts/workbench/__pycache__/__init__.cpython-312.pyc",
+    "codex-security/scripts/workbench/__pycache__/handoff.cpython-312.pyc",
+    "codex-security/scripts/workbench/handoff.py",
+    "codex-security/scripts/workbench_cli.py",
+    "codex-security/scripts/workbench_constants.py",
+    "codex-security/scripts/workbench_db.py",
+    "codex-security/scripts/workbench_feedback.py",
+    "codex-security/scripts/workbench_native_indexes.py",
+    "codex-security/scripts/workbench_progress.py",
+    "codex-security/scripts/workbench_remediation.py",
+    "codex-security/scripts/workbench_scan_history.py",
+    "codex-security/scripts/workbench_scan_start.py",
+    "codex-security/scripts/workbench_schema.py",
+    "codex-security/scripts/workbench_source_excerpt.py",
+    "codex-security/scripts/workbench_target.py",
+    "codex-security/scripts/workbench_target_state.py",
+    "codex-security/scripts/workbench_validation.py",
+    "codex-security/skills/attack-path-analysis/SKILL.md",
+    "codex-security/skills/attack-path-analysis/agents/openai.yaml",
+    "codex-security/skills/attack-path-analysis/references/attack-path-facts.md",
+    "codex-security/skills/attack-path-analysis/references/severity-policy.md",
+    "codex-security/skills/deep-security-scan/SKILL.md",
+    "codex-security/skills/deep-security-scan/agents/openai.yaml",
+    "codex-security/skills/define-security-policy/SKILL.md",
+    "codex-security/skills/define-security-policy/agents/openai.yaml",
+    "codex-security/skills/finding-discovery/SKILL.md",
+    "codex-security/skills/finding-discovery/agents/openai.yaml",
+    "codex-security/skills/fix-finding/SKILL.md",
+    "codex-security/skills/fix-finding/agents/openai.yaml",
+    "codex-security/skills/propose-security-hardening/SKILL.md",
+    "codex-security/skills/propose-security-hardening/agents/openai.yaml",
+    "codex-security/skills/propose-security-hardening/references/proposal-format.md",
+    "codex-security/skills/security-diff-scan/SKILL.md",
+    "codex-security/skills/security-diff-scan/agents/openai.yaml",
+    "codex-security/skills/security-scan/SKILL.md",
+    "codex-security/skills/security-scan/agents/openai.yaml",
+    "codex-security/skills/security-scan/references/repository-wide-scan.md",
+    "codex-security/skills/security-scan/references/scan-artifacts-and-ledger.md",
+    "codex-security/skills/threat-model/SKILL.md",
+    "codex-security/skills/threat-model/agents/openai.yaml",
+    "codex-security/skills/threat-model/references/threat-model-guidance.md",
+    "codex-security/skills/track-findings/SKILL.md",
+    "codex-security/skills/track-findings/agents/openai.yaml",
+    "codex-security/skills/track-findings/references/github-security-advisories.md",
+    "codex-security/skills/track-findings/references/jira.md",
+    "codex-security/skills/triage-finding/SKILL.md",
+    "codex-security/skills/triage-finding/agents/openai.yaml",
+    "codex-security/skills/triage-finding/references/github-rest-intake.md",
+    "codex-security/skills/triage-finding/references/ticket-intake.md",
+    "codex-security/skills/triage-finding/references/triage-result-contract.md",
+    "codex-security/skills/validation/SKILL.md",
+    "codex-security/skills/validation/agents/openai.yaml",
+    "codex-security/skills/validation/references/validation-guidance.md",
+    "codex-security/skills/vulnerability-writeup/SKILL.md",
+    "codex-security/skills/vulnerability-writeup/agents/openai.yaml",
+    "codex-security/skills/vulnerability-writeup/references/report-format.md",
+    "examples/weeping-angel-demo.rs",
+    "node_modules/.package-map.json",
+    "node_modules/.pnpm-workspace-state-v1.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "schemas/codex-security/coverage.schema.json",
+    "schemas/codex-security/findings.schema.json",
+    "schemas/codex-security/scan-manifest.schema.json",
+    "src/authz.rs",
+    "src/bin/weeping-angel-docs-export.rs",
+    "src/checks/auth_surface.rs",
+    "src/checks/cookies.rs",
+    "src/checks/exposures.rs",
+    "src/checks/firebase.rs",
+    "src/checks/headers.rs",
+    "src/checks/mod.rs",
+    "src/checks/rate_limits.rs",
+    "src/checks/tech.rs",
+    "src/checks/tls.rs",
+    "src/cli.rs",
+    "src/config.rs",
+    "src/contract/fingerprint.rs",
+    "src/contract/ledger.rs",
+    "src/contract/mod.rs",
+    "src/contract/paths.rs",
+    "src/contract/report_md.rs",
+    "src/contract/sarif.rs",
+    "src/contract/severity_policy.rs",
+    "src/contract/types.rs",
+    "src/depcheck/convert.rs",
+    "src/depcheck/depsdev.rs",
+    "src/depcheck/detect.rs",
+    "src/depcheck/discover.rs",
+    "src/depcheck/email_check.rs",
+    "src/depcheck/filter.rs",
+    "src/depcheck/hardening.rs",
+    "src/depcheck/inspect.rs",
+    "src/depcheck/mod.rs",
+    "src/depcheck/parsers/go.rs",
+    "src/depcheck/parsers/java.rs",
+    "src/depcheck/parsers/mod.rs",
+    "src/depcheck/parsers/npm.rs",
+    "src/depcheck/parsers/nuget.rs",
+    "src/depcheck/parsers/php.rs",
+    "src/depcheck/parsers/python.rs",
+    "src/depcheck/parsers/ruby.rs",
+    "src/depcheck/parsers/rust.rs",
+    "src/depcheck/registry.rs",
+    "src/depcheck/remote_hunt.rs",
+    "src/depcheck/report.rs",
+    "src/depcheck/types.rs",
+    "src/depcheck/web.rs",
+    "src/depcheck/web_index.html",
+    "src/discovery/crawl.rs",
+    "src/discovery/image_assets.rs",
+    "src/discovery/image_harvest.rs",
+    "src/discovery/mod.rs",
+    "src/docs_export.rs",
+    "src/engine/mod.rs",
+    "src/engines/authz_routes.rs",
+    "src/engines/cmd_injection.rs",
+    "src/engines/code_scan.rs",
+    "src/engines/depcheck_engine.rs",
+    "src/engines/git_diff.rs",
+    "src/engines/mod.rs",
+    "src/engines/path_traversal.rs",
+    "src/engines/secrets_code.rs",
+    "src/engines/security_md.rs",
+    "src/engines/sql_injection.rs",
+    "src/engines/ssrf.rs",
+    "src/engines/taint_lite.rs",
+    "src/engines/web_adapt.rs",
+    "src/engines/xss_template.rs",
+    "src/finding.rs",
+    "src/http/client.rs",
+    "src/lab.rs",
+    "src/lib.rs",
+    "src/main.rs",
+    "src/parse.rs",
+    "src/report/html.rs",
+    "src/report/manifest.rs",
+    "src/report/mod.rs",
+    "src/report/openapi_gen.rs",
+    "src/report/sarif.rs",
+    "src/report/terminal.rs",
+    "src/style.rs",
+    "src/target.rs",
+    "src/templates/mod.rs",
+    "src/workbench/compare.rs",
+    "src/workbench/mod.rs",
+    "src/workbench/remediation.rs",
+    "tests/authz_cli.rs",
+    "tests/authz_scope.rs",
+    "tests/cli_parse.rs",
+    "tests/code_engines.rs",
+    "tests/contract_spine.rs",
+    "tests/depcheck_engine.rs",
+    "tests/depcheck_parsers.rs",
+    "tests/discovery_unit.rs",
+    "tests/docs_export_cli.rs",
+    "tests/e2e_demo.rs",
+    "tests/e2e_recon.rs",
+    "tests/exit_and_config.rs",
+    "tests/fixtures/code-toy/src/app.py",
+    "tests/fixtures/completed-scan/coverage.json",
+    "tests/fixtures/completed-scan/findings.json",
+    "tests/fixtures/completed-scan/scan-manifest.json",
+    "tests/fixtures/depcheck/Cargo.toml",
+    "tests/fixtures/depcheck/composer.json",
+    "tests/fixtures/depcheck/go.mod",
+    "tests/fixtures/depcheck/package.json",
+    "tests/fixtures/depcheck/packages.config",
+    "tests/fixtures/depcheck/pom.xml",
+    "tests/fixtures/depcheck/requirements.txt",
+    "tests/parse_helpers.rs",
+    "tests/report_formats.rs",
+    "tests/style_and_log.rs",
+    "tests/target_matrix.rs",
+    "wordlists/common-paths.txt",
+]
+
+[[selection.version_targets]]
+path = "README.md"
+
+[[selection.version_targets]]
+path = "package.json"
+
+[[selection.version_targets]]
+path = "Cargo.toml"
+
+[[selection.version_targets]]
+path = "Cargo.lock"
+
+[[selection.version_targets]]
+path = ".xbp/xbp.toml"
+
+[[selection.publish_targets]]
+kind = "crates"
+manifest_path = "Cargo.toml"
+package_name = "weeping-angel"
+
+[steps.cargo_dist_build]
+status = "Completed"
+started_at = "2026-08-18T12:10:58.605445400Z"
+completed_at = "2026-08-18T12:12:00.561101500Z"
+
+[steps.cargo_dist_build.details]
+modes_run = [
+    "host",
+    "global",
+]
+announcement_github_body = """
+## Install weeping-angel 0.2.0
+
+### Install prebuilt binaries via shell script
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-installer.sh | sh
+```
+
+### Install prebuilt binaries via powershell script
+
+```sh
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-installer.ps1 | iex"
+```
+
+### Install prebuilt binaries via Homebrew
+
+```sh
+brew install weeping-angel
+```
+
+## Download weeping-angel 0.2.0
+
+|  File  | Platform | Checksum |
+|--------|----------|----------|
+| [weeping-angel-x86_64-pc-windows-msvc.zip](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-x86_64-pc-windows-msvc.zip.sha256) |
+| [weeping-angel-x86_64-pc-windows-msvc.msi](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-x86_64-pc-windows-msvc.msi) | x64 Windows | [checksum](https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-x86_64-pc-windows-msvc.msi.sha256) |"""
+
+[[steps.cargo_dist_build.details.install_methods]]
+package_name = "weeping-angel"
+title = "Install prebuilt binaries via powershell script"
+command = 'powershell -ExecutionPolicy Bypass -c "irm https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-installer.ps1 | iex"'
+
+[[steps.cargo_dist_build.details.install_methods]]
+package_name = "weeping-angel"
+title = "Install prebuilt binaries via shell script"
+command = "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/floris-xlx/weeping-angel/releases/download/weeping-angel-0.2.0/weeping-angel-installer.sh | sh"
+
+[steps.cargo_dist_build.details.timings_ms]
+global = 1999
+host = 59302
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "sha256.sum"
+path = "target/distrib/sha256.sum"
+kind = "checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "source.tar.gz"
+path = "target/distrib/source.tar.gz"
+kind = "source-tarball"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "source.tar.gz.sha256"
+path = "target/distrib/source.tar.gz.sha256"
+kind = "checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-installer.ps1"
+path = "target/distrib/weeping-angel-installer.ps1"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-installer.sh"
+path = "target/distrib/weeping-angel-installer.sh"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.msi"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.msi"
+kind = "installer"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.msi.sha256"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.msi.sha256"
+kind = "checksum"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.zip"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.zip"
+kind = "artifact"
+
+[[steps.cargo_dist_build.details.artifacts]]
+name = "weeping-angel-x86_64-pc-windows-msvc.zip.sha256"
+path = "target/distrib/weeping-angel-x86_64-pc-windows-msvc.zip.sha256"
+kind = "checksum"
+
+[steps.github_release]
+status = "Completed"
+started_at = "2026-08-18T12:10:57.930425Z"
+completed_at = "2026-08-18T12:10:58.591868300Z"
+
+[steps.github_release.details]
+release_id = 372317752
+release_url = "https://github.com/floris-xlx/weeping-angel/releases/tag/weeping-angel-0.2.0"
+
+[steps.push_tag]
+status = "Completed"
+started_at = "2026-08-18T12:10:53.728229100Z"
+completed_at = "2026-08-18T12:10:57.457303700Z"
+
+[steps.push_tag.details]
+tag_name = "weeping-angel-0.2.0"
+branch_name = "releases/weeping-angel-0.2.0"
+
+[steps.sync_version]
+status = "Completed"
+started_at = "2026-08-18T12:10:49.831564300Z"
+completed_at = "2026-08-18T12:10:49.950034Z"
+
+[steps.sync_version.details]
+updated_paths = [
+    "README.md",
+    "package.json",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".xbp/xbp.toml",
+]
+
+[steps.upload_dist_assets]
+status = "Failed"
+started_at = "2026-08-18T12:12:00.563467700Z"
+completed_at = "2026-08-18T12:12:34.958054Z"
+last_error = 'Release `weeping-angel-0.2.0` exists, but uploading cargo-dist asset `weeping-angel-x86_64-pc-windows-msvc.zip` from `C:\Users\floris\Documents\GitHub\weeping-angel\target\distrib\weeping-angel-x86_64-pc-windows-msvc.zip` failed: Failed to upload GitHub release asset weeping-angel-x86_64-pc-windows-msvc.zip: error sending request for url (https://uploads.github.com/repos/floris-xlx/weeping-angel/releases/372317752/assets?name=weeping-angel-x86_64-pc-windows-msvc.zip)'
+
+[steps.upload_dist_assets.details]
+uploaded_assets = [
+    "sha256.sum",
+    "source.tar.gz",
+    "source.tar.gz.sha256",
+    "weeping-angel-installer.ps1",
+    "weeping-angel-installer.sh",
+    "weeping-angel-x86_64-pc-windows-msvc.msi",
+    "weeping-angel-x86_64-pc-windows-msvc.msi.sha256",
+]
+failed_asset = "weeping-angel-x86_64-pc-windows-msvc.zip"
