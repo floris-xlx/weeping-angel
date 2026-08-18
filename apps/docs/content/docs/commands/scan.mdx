@@ -1,11 +1,11 @@
 ---
 title: "weeping-angel scan"
-description: "Run an authorized security scan"
+description: "Run an authorized live web security scan"
 ---
 
 {/* Generated from clap export by scripts/generate-docs.mjs */}
 
-> Run an authorized security scan
+> Run an authorized live web security scan
 
 ## Usage
 
@@ -35,8 +35,8 @@ Usage: weeping-angel scan [OPTIONS] [TARGETS]...
 | `--fast` | Speed preset: higher rps/concurrency, summary HTTP log, skip image OPTIONS | `—` |
 | `--ignore-robots <BOOL>` | Ignore robots.txt Disallow (authorized pentest mode) | `—` |
 | `--wordlist <WORDLIST>` | Path to path wordlist | `wordlists/common-paths.txt` |
-| `--cookie <COOKIE>` | Extra Cookie header (repeatable; values merged) | `—` |
-| `--header <NAME: VALUE>` | Extra header Name: Value or Name=Value (repeatable) | `—` |
+| `--cookie <COOKIE>` | Extra Cookie (`name=value` or `name value`; repeatable; values merged) | `—` |
+| `--header <HEADER>` | Extra header: `Name: Value`, `Name=Value`, or `Name Value` (repeatable) | `—` |
 | `--timeout <TIMEOUT>` | Request timeout seconds | `15` |
 | `--insecure <BOOL>` | Accept invalid TLS certificates (lab only) | `—` |
 | `--output <OUTPUT>` | Output path prefix/file for json/sarif/html | `—` |

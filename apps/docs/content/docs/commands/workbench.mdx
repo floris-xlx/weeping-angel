@@ -1,0 +1,30 @@
+---
+title: "weeping-angel workbench"
+description: "Local SQLite workbench: register / list sealed scans"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Local SQLite workbench: register / list sealed scans
+
+## Usage
+
+```bash
+Usage: weeping-angel workbench [OPTIONS] <COMMAND>
+```
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `--db <DB>` | Override workbench SQLite path (default: ~/.weeping-angel/workbench.sqlite3) | `—` |
+
+## Subcommands
+
+- [`register`](/docs/commands/register) — Index a sealed scan directory
+- [`list`](/docs/commands/list) — List recent registered scans
+- [`show`](/docs/commands/show) — Show one registered scan by id
+- [`compare`](/docs/commands/compare) — Compare two sealed scans by primary fingerprint (introduced / resolved / persistent)
+- [`generate-patches`](/docs/commands/generate-patches) — Generate algorithmic remediation patches for findings in a sealed scan
+- [`apply-patch`](/docs/commands/apply-patch) — Apply a generated unified-diff patch under source-root
+- [`verify`](/docs/commands/verify) — Re-scan one file and confirm a rule_id no longer matches

@@ -1,0 +1,23 @@
+---
+title: "weeping-angel scan-code"
+description: "Algorithmic code SAST (full tree or scoped path) → sealed contract"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Algorithmic code SAST (full tree or scoped path) → sealed contract
+
+## Usage
+
+```bash
+Usage: weeping-angel scan-code [OPTIONS] --scan-dir <DIR> <PATH>
+```
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `<PATH>` | Repository or directory root to inventory | `—` |
+| `--scan-dir <DIR>` | Output scan directory (created if missing) | `—` |
+| `--scope <SCOPE>` | Optional path scope under the root (default: entire tree) | `—` |
+| `--fail-on <FAIL_ON>` | Exit 1 when findings at or above this severity: low\|medium\|high\|critical (default: low) | `low` |

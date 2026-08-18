@@ -1,0 +1,25 @@
+---
+title: "weeping-angel scan-diff"
+description: "Algorithmic code SAST on a Git change-set (PR/commit/working-tree)"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Algorithmic code SAST on a Git change-set (PR/commit/working-tree)
+
+## Usage
+
+```bash
+Usage: weeping-angel scan-diff [OPTIONS] --scan-dir <DIR>
+```
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `--repo <REPO>` | Git repository root (defaults to cwd) | `.` |
+| `--scan-dir <DIR>` | Output scan directory (created if missing) | `—` |
+| `--base <BASE>` | Base revision (e.g. main, origin/main, commit SHA). Omit for working-tree mode | `—` |
+| `--head <HEAD>` | Head revision (default HEAD). Used with --base for PR/branch/commit ranges | `HEAD` |
+| `--working-tree` | Scan staged+unstaged+untracked changes vs base (default HEAD) instead of a revision range | `—` |
+| `--fail-on <FAIL_ON>` | Exit 1 when findings at or above this severity: low\|medium\|high\|critical (default: medium) | `medium` |
