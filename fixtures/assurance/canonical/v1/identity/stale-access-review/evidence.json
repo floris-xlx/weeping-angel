@@ -1,0 +1,22 @@
+{
+  "fixture": "stale-access-review",
+  "collectedAt": "2026-08-16T12:00:00Z",
+  "intent": "access-review reviewed_at outside freshness window",
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "account_kind": "user" }
+    },
+    {
+      "type": "evidence.identity.access-review",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "reviewed_at": "2026-07-01T00:00:00Z", "result": "approved" }
+    }
+  ]
+}

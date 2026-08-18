@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ApplicabilityRule, ControlId, ControlTestId, EvidenceRequirementId, ExtensionMap,
-    SubjectSelector, ASSURANCE_IR_SCHEMA,
+    ASSURANCE_IR_SCHEMA, ApplicabilityRule, ControlId, ControlTestId, EvidenceRequirementId,
+    ExtensionMap, SubjectSelector,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

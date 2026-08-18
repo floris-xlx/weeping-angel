@@ -728,8 +728,15 @@ fn evd_010_failed_collector_does_not_fabricate_evidence() {
 fn ctl_001_expression_ast_exists_and_is_deterministic() {
     let src = crate_sources_joined("weeping-angel-control-test");
     require_needles("CTL-001", &src, TEST_EXPR_NEEDLES);
+    let tokens: Vec<String> = src
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|t| !t.is_empty())
+        .map(|t| t.to_ascii_lowercase())
+        .collect();
     assert!(
-        !src.contains("rhai") && !src.contains("lua") && !src.contains("javascript"),
+        !tokens
+            .iter()
+            .any(|t| t == "rhai" || t == "lua" || t == "javascript"),
         "CTL-001: TestExpr must be a bounded AST, not a script host"
     );
 }

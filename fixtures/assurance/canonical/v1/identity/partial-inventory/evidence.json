@@ -1,0 +1,18 @@
+{
+  "fixture": "partial-inventory",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "non-authoritative partial identity inventory",
+  "authoritative": false,
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "account_kind": "user", "unique_key": "user:alice", "authoritative": "false" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "mfa_enabled": "true" }
+    }
+  ]
+}

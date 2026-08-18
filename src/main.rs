@@ -1,6 +1,6 @@
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
-use weeping_angel::cli::{Cli, Commands, VERSION_LINE};
+use weeping_angel::cli::{AssuranceCommand, Cli, Commands, VERSION_LINE};
 use weeping_angel::style;
 use weeping_angel::{
     run_depcheck_command, run_finalize_command, run_scan_code_command, run_scan_command,
@@ -70,10 +70,21 @@ async fn main() {
                 2
             }
         },
-        Commands::Assurance(_) => {
-            println!("This is a readiness assessment and is not certification.");
-            0
-        }
+        Commands::Assurance(args) => match args.command {
+            AssuranceCommand::Catalog(catalog) => {
+                match weeping_angel::assurance_catalog::run(catalog) {
+                    Ok(code) => code,
+                    Err(e) => {
+                        style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                        2
+                    }
+                }
+            }
+            _ => {
+                println!("This is a readiness assessment and is not certification.");
+                0
+            }
+        },
         Commands::Depcheck(args) => match run_depcheck_command(args).await {
             Ok(code) => code,
             Err(e) => {

@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{EvidenceRequirementId, EvidenceType, SubjectSelector, ASSURANCE_IR_SCHEMA};
+use crate::{ASSURANCE_IR_SCHEMA, EvidenceRequirementId, EvidenceType, SubjectSelector};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]

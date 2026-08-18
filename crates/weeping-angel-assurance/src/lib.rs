@@ -12,9 +12,9 @@ use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use thiserror::Error;
 use weeping_angel_assurance_ir::{
-    AssessmentId, AssetId, Control, ControlId, EvidenceRequirement,
-    EvidenceRequirementId, EvidenceType, FrameworkId, Mapping, MappingCompleteness,
-    MappingDirection, Requirement, RequirementId,
+    AssessmentId, AssetId, Control, ControlId, EvidenceRequirement, EvidenceRequirementId,
+    EvidenceType, FrameworkId, Mapping, MappingCompleteness, MappingDirection, Requirement,
+    RequirementId,
 };
 use weeping_angel_collector::{CollectorError, CollectorScope, EvidenceCollector};
 use weeping_angel_control_test::{
@@ -270,6 +270,13 @@ fn evaluate_compiled(
             }
             for brk in &test.break_on {
                 builder = builder.break_on(brk.clone());
+            }
+            if let Some(expr) = test
+                .expr
+                .as_ref()
+                .and_then(|raw| serde_json::from_value(raw.clone()).ok())
+            {
+                builder = builder.expr(expr);
             }
             evaluate(&builder.build(), set, ctx)
         })

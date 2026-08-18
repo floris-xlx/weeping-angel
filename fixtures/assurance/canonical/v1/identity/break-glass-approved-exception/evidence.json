@@ -1,0 +1,33 @@
+{
+  "fixture": "break-glass-approved-exception",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "break-glass privileged identity lacks MFA; approved unexpired exception",
+  "exception": {
+    "id": "exc:break-glass",
+    "status": "approved",
+    "controlId": "control.identity.break-glass-access",
+    "subjects": ["user:break-glass"]
+  },
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:break-glass",
+      "facts": { "subject_id": "user:break-glass", "account_kind": "break-glass" }
+    },
+    {
+      "type": "evidence.identity.privileged-membership",
+      "subject_id": "user:break-glass",
+      "facts": { "subject_id": "user:break-glass", "privileged": "true" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:break-glass",
+      "facts": { "subject_id": "user:break-glass", "mfa_enabled": "false" }
+    }
+  ]
+}

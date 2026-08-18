@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{ControlId, ExceptionId, PrincipalRef};
+use crate::{ControlId, ExceptionId, PrincipalRef, SubjectSelector};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -28,6 +28,9 @@ pub struct Exception {
     pub approved_by: Option<PrincipalRef>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<DateTime<Utc>>,
+    /// Subject binding. Empty does **not** mean the entire inventory.
+    #[serde(default)]
+    pub subjects: Vec<SubjectSelector>,
 }
 
 impl Exception {
@@ -39,6 +42,7 @@ impl Exception {
             status: ExceptionStatus::Proposed,
             approved_by: None,
             expires_at: None,
+            subjects: Vec::new(),
         }
     }
 }

@@ -82,7 +82,7 @@ Every envelope traces to a `CollectionRun`. Artifacts are digest-addressed (`Evi
 
 `TestExpr` is a closed AST (exists/missing/compare/count/freshness/coverage/boolean combinators/`ManualReview`). No JS/Lua/Python/shell/Rhai/WASM.
 
-Facts are still stored as strings on `EvidenceObservation` (ACT digest compatibility). The evaluator parses them into `EvidenceValue` (`Integer(2)` not a bare `"2"`). Selectors name evidence type + subject + field + freshness — never a collector id.
+Facts are typed `EvidenceValue` on `EvidenceObservation` ([ADR 0003](0003-typed-evidence-canonical-serialization.md)). String `with_fact` remains for collector compatibility and historical digest-stable JSON strings. The evaluator compares stored types (`Integer(2)` is not the string `"2"`). Selectors name evidence type + subject + field + freshness — never a collector id.
 
 `Effectiveness` is specific: `Effective` | `Ineffective` | `PartiallyEffective` | `NotApplicable` | `NotTested` | `InsufficientEvidence` | `StaleEvidence` | `ManualReviewRequired` | `ExceptionApproved` | `Inconclusive`. Missing/stale/manual-without-attestation still cannot be `Effective`.
 
@@ -117,7 +117,7 @@ Reports and the CLI must say this is a **readiness assessment, not certification
 
 `AssessmentRun` is an immutable snapshot record. `compare(previous, next)` detects at least: control became effective/ineffective, stale evidence, plus reserved fields for subject/requirement/exception deltas.
 
-CLI family (clap): `weeping-angel assurance {framework,collect,evidence,assess,result,compare,soa}`. The binary currently prints the non-certification banner (exit 0). The execution path is the library facade (`AssuranceEngine::assess`) plus `project_readiness` / `project_soa` / `compare`.
+CLI family (clap): `weeping-angel assurance {framework,collect,evidence,assess,result,compare,soa}` in this slice. Catalog validate/stats/inspect later landed under [ADR 0003](0003-canonical-assurance-catalog-v1.md). Non-catalog arms still print the non-certification banner (exit 0); their execution path is the library facade (`AssuranceEngine::assess`) plus `project_readiness` / `project_soa` / `compare`.
 
 ### 8. Dual-suite stays mandatory
 
@@ -176,13 +176,16 @@ ACT-001…015 and COL-001…006 remain the spine contract.
 - Certification-ready formal SoA / ISO 27007 audit product.
 - PostgreSQL / remote object-storage ledger backends.
 - HTML reports and dashboards.
-- Full CLI dispatch for every `assurance` subcommand (library assess is the MVP execution path).
+- Full CLI dispatch for every non-catalog `assurance` subcommand (library assess is the MVP execution path). Catalog dispatch is ADR 0003.
 - Concurrent Compliance IR redesign (`AssessmentDefinition` as an IR document, richer `SubjectSelector` ownership).
+- Versioned canonical catalog outside the ISO pack (landed as [ADR 0003](0003-canonical-assurance-catalog-v1.md)).
 
 ## Related
 
 - Spec SSOT: [`docs/sdd/iso-27001-automated-assurance-mvp.md`](../sdd/iso-27001-automated-assurance-mvp.md)
 - Spine SDD: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
 - ADR 0001: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
+- Canonical catalog (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
+- Typed evidence (accepted; supersedes string-only facts): [`docs/adr/0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
 - Concurrent IR (do not own): [`docs/sdd/xylex/weeping-angel-assurance-ir/`](../sdd/xylex/weeping-angel-assurance-ir/)

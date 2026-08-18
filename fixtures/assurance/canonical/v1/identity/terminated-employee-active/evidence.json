@@ -1,0 +1,27 @@
+{
+  "fixture": "terminated-employee-active",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "lifecycle-event=left but account remains active",
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:lea",
+      "facts": { "subject_id": "user:lea", "account_kind": "user" }
+    },
+    {
+      "type": "evidence.identity.lifecycle-event",
+      "subject_id": "user:lea",
+      "facts": { "subject_id": "user:lea", "event": "left", "occurred_at": "2026-08-01T00:00:00Z" }
+    },
+    {
+      "type": "evidence.identity.account-status",
+      "subject_id": "user:lea",
+      "facts": { "subject_id": "user:lea", "status": "active" }
+    }
+  ]
+}

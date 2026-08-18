@@ -48,14 +48,15 @@ CLI `weeping-angel assurance {…}` was deferred from this slice. It landed with
 
 ### Crate graph (as built)
 
-Workspace: root package `weeping-angel` (scanner, bins, tests) + six members under `crates/`.
+Workspace: root package `weeping-angel` (scanner, bins, tests) + assurance members under `crates/`. This slice shipped six; the canonical catalog crate is a later seventh member ([ADR 0003](0003-canonical-assurance-catalog-v1.md)).
 
 ```text
 weeping-angel-assurance-ir
-        ├── weeping-angel-framework          (IR only; no network/SDK)
+        ├── weeping-angel-framework          (IR only; no network/SDK, no catalog)
+        ├── weeping-angel-canonical-catalog  (IR + toml/fs; later ADR 0003)
         └── weeping-angel-evidence
                 └── weeping-angel-collector  (evidence + IR identity types;
-                                              no framework crate, no ISO/GDPR/SOC2 packages)
+                                              no framework crate, no catalog, no ISO/GDPR/SOC2 packages)
 
 weeping-angel-assurance-ir + weeping-angel-evidence
         └── weeping-angel-control-test       (offline)
@@ -69,8 +70,9 @@ weeping-angel-framework
 
 Forbidden edges, enforced by `ACT-003` / `ACT-013`:
 
-- framework ↛ collector, control-test, reqwest, AWS/GitHub/Cloudflare SDKs
-- collector ↛ framework / ISO / GDPR / SOC2 / NIS2 / DORA crates
+- framework ↛ collector, control-test, catalog, reqwest, AWS/GitHub/Cloudflare SDKs
+- collector ↛ framework / catalog / ISO / GDPR / SOC2 / NIS2 / DORA crates
+- canonical-catalog ↛ framework / collector / control-test / evidence / network
 - control-test ↛ collector / network clients
 - IR ↛ any upper crate
 
@@ -118,18 +120,20 @@ Forbidden edges, enforced by `ACT-003` / `ACT-013`:
 
 ## Deferred (not this decision)
 
-ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA, and the `assurance` clap family landed as **ADR 0002**. Still deferred:
+ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA, and the `assurance` clap family landed as **ADR 0002**. Offline canonical catalog infrastructure (`catalog/canonical/v1`, `weeping-angel-canonical-catalog`, `assurance catalog`) landed as **ADR 0003**. Still deferred:
 
 - Production packs for ISO 27701 / GDPR / SOC 2 / NIS2 / DORA.
 - Additional hosted collectors (AWS, Cloudflare, …).
 - Persistent multi-backend orchestrator beyond SQLite.
 - Auditor UX / ISO 27007 program product.
-- Full CLI dispatch for every `assurance` subcommand.
+- Full CLI dispatch for non-catalog `assurance` subcommands.
+- Remapping ISO pack IDs onto `control.*` catalog IDs.
 
 ## Related
 
 - Spec SSOT: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
 - Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
 - ISO 27001 vertical (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
+- Canonical catalog infrastructure (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - Scan contract (security-only): [`codex-security/references/scan-contract.md`](../../codex-security/references/scan-contract.md)
 - Athena analogue: `athena-query` `Statement` / `CompileTarget` / `compile` / `CapabilityViolation` (pattern only; no crate dependency)

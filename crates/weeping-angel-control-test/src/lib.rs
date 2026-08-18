@@ -1,19 +1,27 @@
 //! Offline control-test runtime. Provider-blind. Zero network I/O.
 //!
 //! Runtime is provider_blind: decisions never key on collector_id.
+//! Comparisons consume enum EvidenceValue (Integer, Bool, String, …) from
+//! weeping-angel-evidence. Incompatible types fail closed with a
+//! `type mismatch` rationale.
 
 pub mod expr;
+pub mod population;
 
 use std::collections::BTreeMap;
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use weeping_angel_assurance_ir::{ControlId, ControlTestId, canonical_digest};
+use weeping_angel_assurance_ir::{ControlId, ControlTestId, Exception, canonical_digest};
 use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType};
 
 pub use expr::{
     CountPredicate, EvidenceSelector, EvidenceValue, SubjectSelector, TestExpr, ValueExpr,
+};
+pub use population::{
+    CoverageMode, EvidenceIndex, Population, PopulationCompleteness, PopulationEvaluation,
+    build_index, index_envelopes,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -58,6 +66,10 @@ pub struct AssessmentContext {
 #[serde(rename_all = "camelCase")]
 pub struct EvidenceSet {
     envelopes: BTreeMap<String, EvidenceEnvelope>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    exceptions: Vec<Exception>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    explicit_population: Option<Population>,
 }
 
 impl EvidenceSet {
@@ -68,6 +80,22 @@ impl EvidenceSet {
     pub fn insert(&mut self, envelope: EvidenceEnvelope) {
         self.envelopes
             .insert(envelope.digest().to_string(), envelope);
+    }
+
+    pub fn insert_exception(&mut self, exception: Exception) {
+        self.exceptions.push(exception);
+    }
+
+    pub fn set_population(&mut self, population: Population) {
+        self.explicit_population = Some(population);
+    }
+
+    pub fn exceptions(&self) -> &[Exception] {
+        &self.exceptions
+    }
+
+    pub fn explicit_population(&self) -> Option<&Population> {
+        self.explicit_population.as_ref()
     }
 
     pub fn len(&self) -> usize {
@@ -157,54 +185,74 @@ include!("run.inc");
 struct NodeOut {
     effectiveness: Effectiveness,
     rationale: String,
+    population: Option<PopulationEvaluation>,
+}
+
+fn node(effectiveness: Effectiveness, rationale: impl Into<String>) -> NodeOut {
+    NodeOut {
+        effectiveness,
+        rationale: rationale.into(),
+        population: None,
+    }
+}
+
+fn attach_population(out: population::PopulationOutcome, refs: &mut Vec<String>) -> NodeOut {
+    refs.extend(out.refs.iter().cloned());
+    NodeOut {
+        effectiveness: out.effectiveness,
+        rationale: out.rationale,
+        population: Some(out.population),
+    }
 }
 
 fn eval_node(
     expr: &TestExpr,
     envelopes: &[&EvidenceEnvelope],
+    evidence: &EvidenceSet,
+    index: &EvidenceIndex<'_>,
     context: &AssessmentContext,
     refs: &mut Vec<String>,
     missing: &mut Vec<String>,
 ) -> NodeOut {
     match expr {
-        TestExpr::ManualReview => NodeOut {
-            effectiveness: Effectiveness::ManualReviewRequired,
-            rationale: "expression requires manual review".into(),
-        },
+        TestExpr::ManualReview => node(
+            Effectiveness::ManualReviewRequired,
+            "expression requires manual review",
+        ),
         TestExpr::Exists(sel) => match first_selector(envelopes, sel) {
             None => {
                 missing.push(sel.evidence_type.to_string());
-                NodeOut {
-                    effectiveness: Effectiveness::InsufficientEvidence,
-                    rationale: format!("missing {}", sel.evidence_type),
-                }
+                node(
+                    Effectiveness::InsufficientEvidence,
+                    format!("missing {}", sel.evidence_type),
+                )
             }
             Some(env) if is_stale(env, context) => {
                 refs.push(env.digest().to_string());
-                NodeOut {
-                    effectiveness: Effectiveness::StaleEvidence,
-                    rationale: format!("stale {}", sel.evidence_type),
-                }
+                node(
+                    Effectiveness::StaleEvidence,
+                    format!("stale {}", sel.evidence_type),
+                )
             }
             Some(env) => {
                 refs.push(env.digest().to_string());
-                NodeOut {
-                    effectiveness: Effectiveness::Effective,
-                    rationale: format!("exists {}", sel.evidence_type),
-                }
+                node(
+                    Effectiveness::Effective,
+                    format!("exists {}", sel.evidence_type),
+                )
             }
         },
         TestExpr::Missing(sel) => match first_selector(envelopes, sel) {
-            None => NodeOut {
-                effectiveness: Effectiveness::Effective,
-                rationale: format!("missing as required: {}", sel.evidence_type),
-            },
+            None => node(
+                Effectiveness::Effective,
+                format!("missing as required: {}", sel.evidence_type),
+            ),
             Some(env) => {
                 refs.push(env.digest().to_string());
-                NodeOut {
-                    effectiveness: Effectiveness::Ineffective,
-                    rationale: format!("unexpected {}", sel.evidence_type),
-                }
+                node(
+                    Effectiveness::Ineffective,
+                    format!("unexpected {}", sel.evidence_type),
+                )
             }
         },
         TestExpr::Gte(ValueExpr::Field(sel), expected) => {
@@ -225,13 +273,22 @@ fn eval_node(
         TestExpr::Neq(ValueExpr::Field(sel), expected) => {
             compare_eq(envelopes, context, sel, expected, false, refs, missing)
         }
+        TestExpr::Contains(ValueExpr::Field(sel), expected) => {
+            compare_contains(envelopes, context, sel, expected, true, refs, missing)
+        }
+        TestExpr::NotContains(ValueExpr::Field(sel), expected) => {
+            compare_contains(envelopes, context, sel, expected, false, refs, missing)
+        }
+        TestExpr::In(ValueExpr::Field(sel), expected) => {
+            compare_in(envelopes, context, sel, expected, refs, missing)
+        }
         TestExpr::FreshWithin { selector, duration } => match first_selector(envelopes, selector) {
             None => {
                 missing.push(selector.evidence_type.to_string());
-                NodeOut {
-                    effectiveness: Effectiveness::InsufficientEvidence,
-                    rationale: format!("missing {}", selector.evidence_type),
-                }
+                node(
+                    Effectiveness::InsufficientEvidence,
+                    format!("missing {}", selector.evidence_type),
+                )
             }
             Some(env) => {
                 refs.push(env.digest().to_string());
@@ -241,96 +298,185 @@ fn eval_node(
                     .to_std()
                     .unwrap_or(Duration::MAX);
                 if age > *duration {
-                    NodeOut {
-                        effectiveness: Effectiveness::StaleEvidence,
-                        rationale: format!(
-                            "{} older than freshness window",
-                            selector.evidence_type
-                        ),
-                    }
+                    node(
+                        Effectiveness::StaleEvidence,
+                        format!("{} older than freshness window", selector.evidence_type),
+                    )
                 } else {
-                    NodeOut {
-                        effectiveness: Effectiveness::Effective,
-                        rationale: format!("{} is fresh", selector.evidence_type),
-                    }
+                    node(
+                        Effectiveness::Effective,
+                        format!("{} is fresh", selector.evidence_type),
+                    )
                 }
             }
         },
+        TestExpr::Count {
+            selector,
+            predicate,
+        } => {
+            let (effectiveness, rationale, counted_refs) =
+                population::evaluate_count(selector, predicate, index, context);
+            refs.extend(counted_refs);
+            node(effectiveness, rationale)
+        }
+        TestExpr::CountWhere {
+            selector,
+            evidence: evidence_sel,
+            predicate,
+        } => attach_population(
+            population::evaluate_count_where(
+                selector,
+                evidence_sel,
+                predicate,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
         TestExpr::CoverageAtLeast {
             selector,
-            evidence,
+            evidence: evidence_sel,
             percentage,
-        } => {
-            let _ = (selector, evidence, percentage);
-            NodeOut {
-                effectiveness: Effectiveness::PartiallyEffective,
-                rationale: "subject coverage remains partial unless the threshold is met".into(),
-            }
-        }
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                Some(percentage),
+                CoverageMode::AtLeast,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
+        TestExpr::CoverageExactly {
+            selector,
+            evidence: evidence_sel,
+            percentage,
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                Some(percentage),
+                CoverageMode::Exactly,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
+        TestExpr::AllSubjects {
+            selector,
+            evidence: evidence_sel,
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                Some("100"),
+                CoverageMode::All,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
+        TestExpr::AnySubject {
+            selector,
+            evidence: evidence_sel,
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                None,
+                CoverageMode::Any,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
+        TestExpr::NoneSubjects {
+            selector,
+            evidence: evidence_sel,
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                None,
+                CoverageMode::None,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
+        TestExpr::MissingSubjects {
+            selector,
+            evidence: evidence_sel,
+        } => attach_population(
+            population::evaluate_coverage(
+                selector,
+                evidence_sel,
+                None,
+                CoverageMode::Missing,
+                evidence,
+                index,
+                context,
+            ),
+            refs,
+        ),
         TestExpr::All(nodes) => {
             let mut worst = Effectiveness::Effective;
             let mut notes = Vec::new();
-            for node in nodes {
-                let out = eval_node(node, envelopes, context, refs, missing);
+            for child in nodes {
+                let out = eval_node(child, envelopes, evidence, index, context, refs, missing);
                 notes.push(out.rationale);
                 worst = worse(worst, out.effectiveness);
             }
-            NodeOut {
-                effectiveness: worst,
-                rationale: notes.join("; "),
-            }
+            node(worst, notes.join("; "))
         }
         TestExpr::Any(nodes) => {
             let mut best = Effectiveness::InsufficientEvidence;
             let mut notes = Vec::new();
-            for node in nodes {
-                let out = eval_node(node, envelopes, context, refs, missing);
+            for child in nodes {
+                let out = eval_node(child, envelopes, evidence, index, context, refs, missing);
                 notes.push(out.rationale.clone());
                 if rank(out.effectiveness) < rank(best) {
                     best = out.effectiveness;
                 }
             }
-            NodeOut {
-                effectiveness: best,
-                rationale: notes.join("; "),
-            }
+            node(best, notes.join("; "))
         }
         TestExpr::None(nodes) => {
             let any = eval_node(
                 &TestExpr::Any(nodes.clone()),
                 envelopes,
+                evidence,
+                index,
                 context,
                 refs,
                 missing,
             );
             if any.effectiveness == Effectiveness::Effective {
-                NodeOut {
-                    effectiveness: Effectiveness::Ineffective,
-                    rationale: "none-of matched".into(),
-                }
+                node(Effectiveness::Ineffective, "none-of matched")
             } else {
-                NodeOut {
-                    effectiveness: Effectiveness::Effective,
-                    rationale: "none-of held".into(),
-                }
+                node(Effectiveness::Effective, "none-of held")
             }
         }
         TestExpr::Not(inner) => {
-            let out = eval_node(inner, envelopes, context, refs, missing);
+            let out = eval_node(inner, envelopes, evidence, index, context, refs, missing);
             let flipped = match out.effectiveness {
                 Effectiveness::Effective => Effectiveness::Ineffective,
                 Effectiveness::Ineffective => Effectiveness::Effective,
                 other => other,
             };
-            NodeOut {
-                effectiveness: flipped,
-                rationale: format!("not ({})", out.rationale),
-            }
+            node(flipped, format!("not ({})", out.rationale))
         }
-        other => NodeOut {
-            effectiveness: Effectiveness::NotTested,
-            rationale: format!("unsupported expression arm: {other:?}"),
-        },
+        other => node(
+            Effectiveness::NotTested,
+            format!("unsupported expression arm: {other:?}"),
+        ),
     }
 }
 
@@ -353,60 +499,42 @@ fn compare_numeric(
 ) -> NodeOut {
     let Some(env) = first_selector(envelopes, sel) else {
         missing.push(sel.evidence_type.to_string());
-        return NodeOut {
-            effectiveness: Effectiveness::InsufficientEvidence,
-            rationale: format!("missing {}", sel.evidence_type),
-        };
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing {}", sel.evidence_type),
+        );
     };
     refs.push(env.digest().to_string());
     if is_stale(env, context) {
-        return NodeOut {
-            effectiveness: Effectiveness::StaleEvidence,
-            rationale: format!("stale {}", sel.evidence_type),
-        };
+        return node(
+            Effectiveness::StaleEvidence,
+            format!("stale {}", sel.evidence_type),
+        );
     }
     let field = sel.field.as_deref().unwrap_or("value");
-    let Some(raw) = env.observation().fact(field) else {
-        return NodeOut {
-            effectiveness: Effectiveness::InsufficientEvidence,
-            rationale: format!("missing field {field}"),
-        };
+    let Some(have) = env.observation().fact_value(field) else {
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing field {field}"),
+        );
     };
-    let have = EvidenceValue::parse_fact(raw);
-    let left = match have.as_integer() {
-        Ok(v) => v,
-        Err(err) => {
-            return NodeOut {
-                effectiveness: Effectiveness::Ineffective,
-                rationale: err,
-            };
-        }
-    };
-    let right = match expected.as_integer() {
-        Ok(v) => v,
-        Err(err) => {
-            return NodeOut {
-                effectiveness: Effectiveness::Ineffective,
-                rationale: err,
-            };
-        }
+    let order = match have.cmp_numeric(expected) {
+        Ok(order) => order,
+        Err(err) => return node(Effectiveness::Ineffective, err),
     };
     let ok = match cmp {
-        Cmp::Gt => left > right,
-        Cmp::Gte => left >= right,
-        Cmp::Lt => left < right,
-        Cmp::Lte => left <= right,
+        Cmp::Gt => order.is_gt(),
+        Cmp::Gte => order.is_ge(),
+        Cmp::Lt => order.is_lt(),
+        Cmp::Lte => order.is_le(),
     };
     if ok {
-        NodeOut {
-            effectiveness: Effectiveness::Effective,
-            rationale: format!("{field} {left} meets threshold {right}"),
-        }
+        node(Effectiveness::Effective, format!("{field} meets threshold"))
     } else {
-        NodeOut {
-            effectiveness: Effectiveness::Ineffective,
-            rationale: format!("{field} is {left}; policy requires threshold {right}"),
-        }
+        node(
+            Effectiveness::Ineffective,
+            format!("{field} does not meet threshold"),
+        )
     }
 }
 
@@ -421,33 +549,133 @@ fn compare_eq(
 ) -> NodeOut {
     let Some(env) = first_selector(envelopes, sel) else {
         missing.push(sel.evidence_type.to_string());
-        return NodeOut {
-            effectiveness: Effectiveness::InsufficientEvidence,
-            rationale: format!("missing {}", sel.evidence_type),
-        };
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing {}", sel.evidence_type),
+        );
     };
     refs.push(env.digest().to_string());
     if is_stale(env, context) {
-        return NodeOut {
-            effectiveness: Effectiveness::StaleEvidence,
-            rationale: format!("stale {}", sel.evidence_type),
-        };
+        return node(
+            Effectiveness::StaleEvidence,
+            format!("stale {}", sel.evidence_type),
+        );
     }
     let field = sel.field.as_deref().unwrap_or("value");
-    let raw = env.observation().fact(field).unwrap_or("");
-    let have = EvidenceValue::parse_fact(raw);
-    let equal = have == *expected
-        || matches!((&have, expected), (EvidenceValue::String(a), EvidenceValue::String(b)) if a == b)
-        || matches!((&have, expected), (EvidenceValue::Integer(a), EvidenceValue::Integer(b)) if a == b);
+    let Some(have) = env.observation().fact_value(field) else {
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing field {field}"),
+        );
+    };
+    let equal = match have.typed_eq(expected) {
+        Ok(equal) => equal,
+        Err(err) => return node(Effectiveness::Ineffective, err),
+    };
     let ok = if want_eq { equal } else { !equal };
-    NodeOut {
-        effectiveness: if ok {
+    node(
+        if ok {
             Effectiveness::Effective
         } else {
             Effectiveness::Ineffective
         },
-        rationale: format!("field {field} compared"),
+        format!("field {field} compared"),
+    )
+}
+
+fn compare_contains(
+    envelopes: &[&EvidenceEnvelope],
+    context: &AssessmentContext,
+    sel: &EvidenceSelector,
+    expected: &EvidenceValue,
+    want_contains: bool,
+    refs: &mut Vec<String>,
+    missing: &mut Vec<String>,
+) -> NodeOut {
+    let Some(env) = first_selector(envelopes, sel) else {
+        missing.push(sel.evidence_type.to_string());
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing {}", sel.evidence_type),
+        );
+    };
+    refs.push(env.digest().to_string());
+    if is_stale(env, context) {
+        return node(
+            Effectiveness::StaleEvidence,
+            format!("stale {}", sel.evidence_type),
+        );
     }
+    let field = sel.field.as_deref().unwrap_or("value");
+    let Some(have) = env.observation().fact_value(field) else {
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing field {field}"),
+        );
+    };
+    let contains = match have.list_contains(expected) {
+        Ok(contains) => contains,
+        Err(err) => return node(Effectiveness::Ineffective, err),
+    };
+    let ok = if want_contains { contains } else { !contains };
+    node(
+        if ok {
+            Effectiveness::Effective
+        } else {
+            Effectiveness::Ineffective
+        },
+        format!("field {field} compared"),
+    )
+}
+
+fn compare_in(
+    envelopes: &[&EvidenceEnvelope],
+    context: &AssessmentContext,
+    sel: &EvidenceSelector,
+    expected: &[EvidenceValue],
+    refs: &mut Vec<String>,
+    missing: &mut Vec<String>,
+) -> NodeOut {
+    let Some(env) = first_selector(envelopes, sel) else {
+        missing.push(sel.evidence_type.to_string());
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing {}", sel.evidence_type),
+        );
+    };
+    refs.push(env.digest().to_string());
+    if is_stale(env, context) {
+        return node(
+            Effectiveness::StaleEvidence,
+            format!("stale {}", sel.evidence_type),
+        );
+    }
+    let field = sel.field.as_deref().unwrap_or("value");
+    let Some(have) = env.observation().fact_value(field) else {
+        return node(
+            Effectiveness::InsufficientEvidence,
+            format!("missing field {field}"),
+        );
+    };
+    let mut matched = false;
+    for candidate in expected {
+        match have.typed_eq(candidate) {
+            Ok(true) => {
+                matched = true;
+                break;
+            }
+            Ok(false) => {}
+            Err(err) => return node(Effectiveness::Ineffective, err),
+        }
+    }
+    node(
+        if matched {
+            Effectiveness::Effective
+        } else {
+            Effectiveness::Ineffective
+        },
+        format!("field {field} compared"),
+    )
 }
 
 fn worse(a: Effectiveness, b: Effectiveness) -> Effectiveness {

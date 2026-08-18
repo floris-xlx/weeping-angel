@@ -1,0 +1,239 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.identity.unique-user-identities"
+title = "Unique user identities"
+description = "Each person is represented by a unique identity record in the authoritative inventory."
+objective = "Prevent shared or duplicated human identities from collapsing accountability."
+domains = ["accessControl", "personnelSecurity"]
+evidence = ["evidence.identity.inventory"]
+tests = ["test.identity.unique-user-identities"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.mfa"
+title = "Multi-factor authentication"
+description = "In-scope user identities authenticate with more than one factor."
+objective = "Require multi-factor authentication for the user population."
+domains = ["authentication"]
+evidence = ["evidence.identity.inventory", "evidence.identity.mfa-status"]
+tests = ["test.identity.mfa-enabled"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.privileged-mfa"
+title = "Privileged multi-factor authentication"
+description = "Every privileged identity has multi-factor authentication enabled."
+objective = "Require MFA on the privileged population, not merely that some MFA fact exists."
+domains = ["authentication", "authorization"]
+evidence = ["evidence.identity.privileged-membership", "evidence.identity.mfa-status"]
+tests = ["test.identity.privileged-mfa-enabled"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.strong-authentication-policy"
+title = "Strong authentication policy"
+description = "Authentication methods in use match an attested strong-authentication policy."
+objective = "Combine observed authentication-state facts with a policy attestation."
+domains = ["authentication", "governance"]
+evidence = ["evidence.identity.authentication-state"]
+tests = ["test.identity.strong-authentication-policy"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.privileged-inventory"
+title = "Privileged identity inventory"
+description = "Privileged identities are enumerated from inventory and membership observations."
+objective = "Maintain a complete privileged-identity inventory."
+domains = ["authorization", "accessControl"]
+evidence = ["evidence.identity.inventory", "evidence.identity.privileged-membership"]
+tests = ["test.identity.privileged-inventory-complete"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.least-privilege"
+title = "Least privilege"
+description = "Assigned roles stay within the minimum needed for the subject's function."
+objective = "Limit standing access using role and privileged membership facts plus review."
+domains = ["authorization", "accessControl"]
+evidence = ["evidence.identity.role-membership", "evidence.identity.privileged-membership"]
+tests = ["test.identity.least-privilege"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.privileged-access-minimization"
+title = "Privileged-access minimization"
+description = "Privileged membership is no broader than required."
+objective = "Minimize the privileged population using membership facts and review."
+domains = ["authorization"]
+evidence = ["evidence.identity.privileged-membership", "evidence.identity.role-membership"]
+tests = ["test.identity.privileged-access-minimized"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.access-approval"
+title = "Access approval"
+description = "Access grants are authorized through a recorded approval act."
+objective = "Do not treat a single technical grant as sufficient authorization."
+domains = ["authorization", "accessControl"]
+evidence = ["evidence.identity.lifecycle-event"]
+tests = ["test.identity.access-approval-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.periodic-access-review"
+title = "Periodic access review"
+description = "In-scope identities have a current access review observation."
+objective = "Recertify access on a defined cadence; quality of the review remains a governance act."
+domains = ["authorization", "accessControl"]
+evidence = ["evidence.identity.access-review"]
+tests = ["test.identity.access-review-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.inactive-account-lifecycle"
+title = "Inactive account lifecycle"
+description = "Inactive identities are disabled or removed from privileged standing."
+objective = "Close unused accounts, especially privileged ones that remain active."
+domains = ["accessControl", "personnelSecurity"]
+evidence = ["evidence.identity.account-status", "evidence.identity.last-active"]
+tests = ["test.identity.no-inactive-privileged-accounts"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.terminated-user-removal"
+title = "Terminated-user removal"
+description = "Identities marked terminated or left no longer remain active."
+objective = "Remove access when employment or engagement ends."
+domains = ["personnelSecurity", "accessControl"]
+evidence = ["evidence.identity.account-status", "evidence.identity.lifecycle-event"]
+tests = ["test.identity.no-terminated-active-accounts"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.joiner-mover-leaver"
+title = "Joiner mover leaver lifecycle"
+description = "Join, move, and leave events are recorded against account and role state."
+objective = "Trace identity lifecycle events; HR completeness remains hybrid."
+domains = ["personnelSecurity", "accessControl"]
+evidence = [
+    "evidence.identity.lifecycle-event",
+    "evidence.identity.account-status",
+    "evidence.identity.role-membership",
+]
+tests = ["test.identity.jml-events-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.service-account-inventory"
+title = "Service-account inventory"
+description = "Non-human identities are inventoried as service accounts."
+objective = "Know every service account in scope."
+domains = ["accessControl"]
+evidence = ["evidence.identity.service-account", "evidence.identity.inventory"]
+tests = ["test.identity.service-accounts-inventoried"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.service-account-ownership"
+title = "Service-account ownership"
+description = "Every service account has an assigned owner identity."
+objective = "Ensure accountable human ownership of service accounts."
+domains = ["accessControl"]
+evidence = ["evidence.identity.service-account", "evidence.identity.account-owner"]
+tests = ["test.identity.all-service-accounts-have-owner"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.service-account-credential-governance"
+title = "Service-account credential governance"
+description = "Service-account credentials are rotated and non-interactive where required."
+objective = "Govern service credentials without collecting secret material."
+domains = ["authentication", "accessControl"]
+evidence = ["evidence.identity.service-account"]
+tests = ["test.identity.service-account-credentials-governed"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.break-glass-access"
+title = "Emergency break-glass access"
+description = "Emergency privileged identities are inventoried, time-boxed, and excepted explicitly."
+objective = "Govern break-glass accounts instead of silently treating them as healthy."
+domains = ["authorization", "accessControl"]
+evidence = ["evidence.identity.privileged-membership", "evidence.identity.account-status"]
+tests = ["test.identity.break-glass-governed"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.shared-account-restriction"
+title = "Shared-account restriction"
+description = "Shared identities are restricted or governed; ungoverned shared accounts fail."
+objective = "Prevent ungoverned shared logins."
+domains = ["accessControl", "authentication"]
+evidence = ["evidence.identity.inventory", "evidence.identity.account-status"]
+tests = ["test.identity.no-ungoverned-shared-accounts"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.credential-management"
+title = "Authentication credential management"
+description = "Observed authentication methods and credential age are governed."
+objective = "Manage authentication credentials as facts, never as recovered secrets."
+domains = ["authentication"]
+evidence = ["evidence.identity.authentication-state"]
+tests = ["test.identity.credentials-managed"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.privileged-role-change-monitoring"
+title = "Privileged-role changes monitored"
+description = "Changes to privileged membership are recorded as lifecycle events."
+objective = "Detect privileged-role changes."
+domains = ["authorization", "loggingMonitoring"]
+evidence = ["evidence.identity.privileged-membership", "evidence.identity.lifecycle-event"]
+tests = ["test.identity.privileged-role-changes-monitored"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.external-guest-access"
+title = "External guest access"
+description = "Guest or external identities are approved before remaining active."
+objective = "Block unapproved external access."
+domains = ["accessControl", "authorization"]
+evidence = ["evidence.identity.external-access", "evidence.identity.account-status"]
+tests = ["test.identity.no-unapproved-guest-access"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.stale-privileged-membership"
+title = "Stale privileged membership"
+description = "Privileged membership that is inactive or unreviewed is treated as stale."
+objective = "Remove stale privileged standing."
+domains = ["authorization", "accessControl"]
+evidence = [
+    "evidence.identity.privileged-membership",
+    "evidence.identity.last-active",
+    "evidence.identity.access-review",
+]
+tests = ["test.identity.no-stale-privileged-membership"]
+automation = "automated"
+
+[[control]]
+id = "control.identity.access-revocation-timeliness"
+title = "Access revocation timeliness"
+description = "Leave or revoke events are followed by a non-active account status."
+objective = "Revoke access promptly after a leave or revoke event."
+domains = ["personnelSecurity", "accessControl"]
+evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+tests = ["test.identity.revocation-timely"]
+automation = "hybrid"
+
+[[control]]
+id = "control.identity.segregation-of-duties"
+title = "Segregation of duties"
+description = "Conflicting-role matrices are attested; the catalog does not invent an org-specific pair."
+objective = "Require an attested segregation-of-duties review rather than a hardcoded role pair."
+domains = ["authorization", "governance"]
+evidence = ["evidence.identity.role-membership"]
+tests = ["test.identity.sod-review"]
+automation = "manual"

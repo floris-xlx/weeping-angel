@@ -1,0 +1,10 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.source.protected-branch"
+title = "Protected default branch"
+objective = "Prevent unaudited changes to the protected branch."
+narrative = "The default branch rejects force-push and unreviewed merges."
+domains = ["secureDevelopment"]
+evidence = ["evidence.source.protected-branch"]
+tests = ["test.source.protected-branch"]

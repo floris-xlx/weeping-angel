@@ -9,17 +9,16 @@ use std::path::PathBuf;
 use serde_json::json;
 use weeping_angel_assurance_ir::crosswalk::ComplianceGraph;
 use weeping_angel_assurance_ir::{
-    ApplicabilityRule, AssessmentDefinition, AssessmentScope, Asset, AssetId, AssetKind,
-    CanonicalizationVersion, Control, ControlDomain, ControlId, ControlImplementation,
+    ASSURANCE_IR_SCHEMA, ApplicabilityRule, AssessmentDefinition, AssessmentScope, Asset, AssetId,
+    AssetKind, CanonicalizationVersion, Control, ControlDomain, ControlId, ControlImplementation,
     ControlImplementationId, ControlTestId, EvidenceCardinality, EvidenceCollectionKind,
-    EvidenceCriticality, EvidenceRequirement,
-    EvidenceRequirementId, EvidenceType, Exception, ExceptionId, ExtensionMap,
-    FrameworkId, FrameworkRef, FrameworkVersion, IdError, Identity, IdentityId, IdentityKind,
-    ImplementationStatus, Mapping, MappingCompleteness, MappingConfidence, MappingDirection,
-    MappingId, MappingProvenance, MappingRelation, MappingSource, MappingVersionConstraint,
-    PlannedControlTest, PlannedTestKind, PrincipalRef, ProcessingActivity, ProcessingActivityId,
-    Requirement, RequirementId, RequirementKind, Risk, RiskId, SubjectKind,
-    SubjectSelector, ValidateIr, Vendor, VendorId, ASSURANCE_IR_SCHEMA, canonical_digest,
+    EvidenceCriticality, EvidenceRequirement, EvidenceRequirementId, EvidenceType, Exception,
+    ExceptionId, ExtensionMap, FrameworkId, FrameworkRef, FrameworkVersion, IdError, Identity,
+    IdentityId, IdentityKind, ImplementationStatus, Mapping, MappingCompleteness,
+    MappingConfidence, MappingDirection, MappingId, MappingProvenance, MappingRelation,
+    MappingSource, MappingVersionConstraint, PlannedControlTest, PlannedTestKind, PrincipalRef,
+    ProcessingActivity, ProcessingActivityId, Requirement, RequirementId, RequirementKind, Risk,
+    RiskId, SubjectKind, SubjectSelector, ValidateIr, Vendor, VendorId, canonical_digest,
     typed_canonical_digest,
 };
 
@@ -163,7 +162,10 @@ fn ir_006_partial_mapping_never_becomes_equivalence() {
         MappingDirection::Forward,
         MappingCompleteness::Partial,
     );
-    assert!(!graph.equivalent(&a, &c), "IR-006: no transitive equivalence");
+    assert!(
+        !graph.equivalent(&a, &c),
+        "IR-006: no transitive equivalence"
+    );
 }
 
 #[test]
@@ -201,13 +203,14 @@ fn ir_008_control_implementation_is_not_control_definition() {
     assert_eq!(impln.control_id().as_str(), "control.access.mfa");
     assert_eq!(impln.status(), ImplementationStatus::Implemented);
     let _ = (
-        Asset::new(AssetId::new("asset:org:root"), AssetKind::Organization, "Org"),
+        Asset::new(
+            AssetId::new("asset:org:root"),
+            AssetKind::Organization,
+            "Org",
+        ),
         Identity::new(IdentityId::new("identity:alice"), IdentityKind::User),
         Vendor::new(VendorId::new("vendor:acme"), "Acme"),
-        ProcessingActivity::new(
-            ProcessingActivityId::new("ropa:payroll"),
-            "Payroll",
-        ),
+        ProcessingActivity::new(ProcessingActivityId::new("ropa:payroll"), "Payroll"),
         MappingId::new("map.req.control"),
         MappingConfidence::High,
         MappingRelation::Satisfies,
@@ -233,7 +236,10 @@ fn ir_010_applicability_round_trips_deterministically() {
     let bytes = serde_json::to_vec(&rule).unwrap();
     let again: ApplicabilityRule = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(rule, again);
-    assert_eq!(canonical_digest(&rule).unwrap(), canonical_digest(&again).unwrap());
+    assert_eq!(
+        canonical_digest(&rule).unwrap(),
+        canonical_digest(&again).unwrap()
+    );
 }
 
 #[test]
@@ -247,7 +253,11 @@ fn ir_011_subject_selectors_are_provider_neutral() {
     let json = serde_json::to_value(&selector).unwrap();
     assert!(json.get("kind").is_some());
     let src = ir_sources();
-    for forbidden in ["GithubRepositorySelector", "AwsIamRoleSelector", "CloudflareZoneSelector"] {
+    for forbidden in [
+        "GithubRepositorySelector",
+        "AwsIamRoleSelector",
+        "CloudflareZoneSelector",
+    ] {
         assert!(
             !src.contains(forbidden),
             "IR-011: IR must not define {forbidden}"
@@ -343,9 +353,7 @@ fn ir_018_assessment_scope_is_deterministic() {
     });
     let mut b = a.clone();
     assert_eq!(canonical_digest(&a).unwrap(), canonical_digest(&b).unwrap());
-    b.subjects[0]
-        .ids
-        .insert("org:other".into());
+    b.subjects[0].ids.insert("org:other".into());
     assert_ne!(canonical_digest(&a).unwrap(), canonical_digest(&b).unwrap());
 }
 
@@ -362,9 +370,7 @@ fn ir_019_risk_references_must_resolve() {
         )
         .with_risk(RiskId::new("risk:missing")),
     );
-    assessment
-        .validate()
-        .expect_err("IR-019: dangling risk");
+    assessment.validate().expect_err("IR-019: dangling risk");
 }
 
 #[test]
@@ -464,20 +470,15 @@ fn ir_025_framework_catalogs_compile_without_extending_control() {
 #[test]
 fn ir_golden_fixtures_round_trip() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/assurance-ir/v1");
-    let control: Control = serde_json::from_str(
-        &std::fs::read_to_string(dir.join("control.json")).unwrap(),
-    )
-    .unwrap();
+    let control: Control =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("control.json")).unwrap()).unwrap();
     assert_eq!(control.id().as_str(), "control.access.mfa");
-    let requirement: Requirement = serde_json::from_str(
-        &std::fs::read_to_string(dir.join("requirement.json")).unwrap(),
-    )
-    .unwrap();
+    let requirement: Requirement =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("requirement.json")).unwrap())
+            .unwrap();
     assert_eq!(requirement.framework().id().as_str(), "iso-27001");
-    let mapping: Mapping = serde_json::from_str(
-        &std::fs::read_to_string(dir.join("mapping.json")).unwrap(),
-    )
-    .unwrap();
+    let mapping: Mapping =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("mapping.json")).unwrap()).unwrap();
     assert_eq!(mapping.completeness(), MappingCompleteness::Partial);
     let impln: ControlImplementation = serde_json::from_str(
         &std::fs::read_to_string(dir.join("control-implementation.json")).unwrap(),
@@ -496,10 +497,9 @@ fn ir_golden_fixtures_round_trip() {
     )
     .unwrap();
     assert_eq!(activity.id.as_str(), "ropa:payroll");
-    let assessment: AssessmentDefinition = serde_json::from_str(
-        &std::fs::read_to_string(dir.join("assessment.json")).unwrap(),
-    )
-    .unwrap();
+    let assessment: AssessmentDefinition =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("assessment.json")).unwrap())
+            .unwrap();
     assessment.validate().unwrap();
     assert_eq!(
         serde_json::from_str::<serde_json::Value>(
@@ -512,10 +512,9 @@ fn ir_golden_fixtures_round_trip() {
 
 #[test]
 fn dual_suite_is_registered() {
-    let toml = std::fs::read_to_string(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"),
-    )
-    .unwrap();
+    let toml =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"))
+            .unwrap();
     assert!(toml.contains("sdd_compliance_ir_target"));
 }
 

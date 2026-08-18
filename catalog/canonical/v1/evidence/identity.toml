@@ -1,0 +1,85 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.identity.inventory"
+title = "Identity inventory fact"
+evidence_type = "identity.inventory"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.authentication-state"
+title = "Authentication-state fact"
+evidence_type = "identity.authentication-state"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.mfa-status"
+title = "MFA status fact"
+evidence_type = "identity.mfa-status"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.privileged-membership"
+title = "Privileged membership fact"
+evidence_type = "identity.privileged-membership"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.role-membership"
+title = "Role membership fact"
+evidence_type = "identity.role-membership"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.last-active"
+title = "Last-active fact"
+evidence_type = "identity.last-active"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.account-status"
+title = "Account status fact"
+evidence_type = "identity.account-status"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.account-owner"
+title = "Account owner fact"
+evidence_type = "identity.account-owner"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.access-review"
+title = "Access review fact"
+evidence_type = "identity.access-review"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.lifecycle-event"
+title = "Lifecycle event fact"
+evidence_type = "identity.lifecycle-event"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.service-account"
+title = "Service-account fact"
+evidence_type = "identity.service-account"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.identity.external-access"
+title = "External access fact"
+evidence_type = "identity.external-access"
+collection = "automated"
+criticality = "required"

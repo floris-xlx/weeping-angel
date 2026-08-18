@@ -1,0 +1,32 @@
+{
+  "fixture": "inactive-admin-active",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "inactive privileged identity still account-status=active",
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "account_kind": "user" }
+    },
+    {
+      "type": "evidence.identity.privileged-membership",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "privileged": "true" }
+    },
+    {
+      "type": "evidence.identity.last-active",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "inactive": "true", "last_active_at": "2025-01-01T00:00:00Z" }
+    },
+    {
+      "type": "evidence.identity.account-status",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "status": "active" }
+    }
+  ]
+}

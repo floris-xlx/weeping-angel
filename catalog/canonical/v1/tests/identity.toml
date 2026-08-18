@@ -1,0 +1,305 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.identity.unique-user-identities"
+control = "control.identity.unique-user-identities"
+kind = "automated"
+required_evidence = ["evidence.identity.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.identity.inventory"
+field = "unique_key"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.identity.mfa-enabled"
+control = "control.identity.mfa"
+kind = "automated"
+required_evidence = ["evidence.identity.inventory", "evidence.identity.mfa-status"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.mfa-status"
+field = "mfa_enabled"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.identity.privileged-mfa-enabled"
+control = "control.identity.privileged-mfa"
+kind = "automated"
+required_evidence = ["evidence.identity.privileged-membership", "evidence.identity.mfa-status"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.mfa-status"
+field = "mfa_enabled"
+
+[[test.subjects]]
+kind = "privilegedIdentity"
+
+[[test]]
+id = "test.identity.strong-authentication-policy"
+control = "control.identity.strong-authentication-policy"
+kind = "hybrid"
+required_evidence = ["evidence.identity.authentication-state"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.privileged-inventory-complete"
+control = "control.identity.privileged-inventory"
+kind = "automated"
+required_evidence = ["evidence.identity.inventory", "evidence.identity.privileged-membership"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.identity.privileged-membership"
+field = "privileged"
+
+[[test.subjects]]
+kind = "privilegedIdentity"
+
+[[test]]
+id = "test.identity.least-privilege"
+control = "control.identity.least-privilege"
+kind = "hybrid"
+required_evidence = ["evidence.identity.role-membership", "evidence.identity.privileged-membership"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.privileged-access-minimized"
+control = "control.identity.privileged-access-minimization"
+kind = "hybrid"
+required_evidence = ["evidence.identity.privileged-membership", "evidence.identity.role-membership"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.access-approval-recorded"
+control = "control.identity.access-approval"
+kind = "hybrid"
+required_evidence = ["evidence.identity.lifecycle-event"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.access-review-current"
+control = "control.identity.periodic-access-review"
+kind = "hybrid"
+required_evidence = ["evidence.identity.access-review"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.access-review"
+field = "reviewed_at"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.identity.no-inactive-privileged-accounts"
+control = "control.identity.inactive-account-lifecycle"
+kind = "automated"
+required_evidence = ["evidence.identity.account-status", "evidence.identity.last-active"]
+break_on = []
+
+[test.expression]
+op = "none-subjects"
+evidence = "evidence.identity.last-active"
+field = "inactive"
+
+[[test.subjects]]
+kind = "privilegedIdentity"
+
+[[test]]
+id = "test.identity.no-terminated-active-accounts"
+control = "control.identity.terminated-user-removal"
+kind = "automated"
+required_evidence = ["evidence.identity.account-status", "evidence.identity.lifecycle-event"]
+break_on = []
+
+[test.expression]
+op = "none-subjects"
+evidence = "evidence.identity.account-status"
+field = "status"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.identity.jml-events-recorded"
+control = "control.identity.joiner-mover-leaver"
+kind = "hybrid"
+required_evidence = [
+    "evidence.identity.lifecycle-event",
+    "evidence.identity.account-status",
+    "evidence.identity.role-membership",
+]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.service-accounts-inventoried"
+control = "control.identity.service-account-inventory"
+kind = "automated"
+required_evidence = ["evidence.identity.service-account", "evidence.identity.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.identity.service-account"
+field = "is_service_account"
+
+[[test.subjects]]
+kind = "serviceAccount"
+
+[[test]]
+id = "test.identity.all-service-accounts-have-owner"
+control = "control.identity.service-account-ownership"
+kind = "automated"
+required_evidence = ["evidence.identity.service-account", "evidence.identity.account-owner"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.account-owner"
+field = "owner_assigned"
+
+[[test.subjects]]
+kind = "serviceAccount"
+
+[[test]]
+id = "test.identity.service-account-credentials-governed"
+control = "control.identity.service-account-credential-governance"
+kind = "hybrid"
+required_evidence = ["evidence.identity.service-account"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.break-glass-governed"
+control = "control.identity.break-glass-access"
+kind = "hybrid"
+required_evidence = ["evidence.identity.privileged-membership", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.no-ungoverned-shared-accounts"
+control = "control.identity.shared-account-restriction"
+kind = "automated"
+required_evidence = ["evidence.identity.inventory", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "none-subjects"
+evidence = "evidence.identity.inventory"
+field = "account_kind"
+
+[[test.subjects]]
+kind = "identity"
+
+[[test]]
+id = "test.identity.credentials-managed"
+control = "control.identity.credential-management"
+kind = "hybrid"
+required_evidence = ["evidence.identity.authentication-state"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.privileged-role-changes-monitored"
+control = "control.identity.privileged-role-change-monitoring"
+kind = "hybrid"
+required_evidence = ["evidence.identity.privileged-membership", "evidence.identity.lifecycle-event"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.no-unapproved-guest-access"
+control = "control.identity.external-guest-access"
+kind = "automated"
+required_evidence = ["evidence.identity.external-access", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.external-access"
+field = "approved"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.identity.no-stale-privileged-membership"
+control = "control.identity.stale-privileged-membership"
+kind = "automated"
+required_evidence = [
+    "evidence.identity.privileged-membership",
+    "evidence.identity.last-active",
+    "evidence.identity.access-review",
+]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.identity.access-review"
+field = "reviewed_at"
+
+[[test.subjects]]
+kind = "privilegedIdentity"
+
+[[test]]
+id = "test.identity.revocation-timely"
+control = "control.identity.access-revocation-timeliness"
+kind = "hybrid"
+required_evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.identity.sod-review"
+control = "control.identity.segregation-of-duties"
+kind = "manual"
+required_evidence = ["evidence.identity.role-membership"]
+break_on = []
+
+[test.expression]
+op = "manual-review"

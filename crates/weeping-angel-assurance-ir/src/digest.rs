@@ -38,9 +38,7 @@ pub fn typed_canonical_digest<T: Serialize>(
 ) -> Result<String, CanonicalDigestError> {
     let bytes = serde_json::to_vec(value)?;
     let mut hasher = Sha256::new();
-    hasher.update(
-        format!("wa:assurance-ir:{ASSURANCE_IR_SCHEMA}:{type_name}:").as_bytes(),
-    );
+    hasher.update(format!("wa:assurance-ir:{ASSURANCE_IR_SCHEMA}:{type_name}:").as_bytes());
     hasher.update(&bytes);
     Ok(hex::encode(hasher.finalize()))
 }

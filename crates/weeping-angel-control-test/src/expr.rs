@@ -5,57 +5,49 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 
 use weeping_angel_assurance_ir::EvidenceType;
+use weeping_angel_assurance_ir::{SelectorScope, SubjectKind};
 
-/// Typed evidence values. Avoid untyped JSON everywhere.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum EvidenceValue {
-    Null,
-    Boolean(bool),
-    Integer(i64),
-    Decimal(String),
-    String(String),
-    Timestamp(String),
-    Duration(String),
-    StringSet(Vec<String>),
-    Identifier(String),
-}
+/// Re-export of the single stored value model. Control-test does not define a second enum.
+pub use weeping_angel_evidence::EvidenceValue;
 
-impl EvidenceValue {
-    pub fn parse_fact(raw: &str) -> Self {
-        let trimmed = raw.trim();
-        if trimmed.eq_ignore_ascii_case("true") {
-            return Self::Boolean(true);
-        }
-        if trimmed.eq_ignore_ascii_case("false") {
-            return Self::Boolean(false);
-        }
-        if let Ok(i) = trimmed.parse::<i64>() {
-            return Self::Integer(i);
-        }
-        if trimmed.parse::<f64>().is_ok() {
-            return Self::Decimal(trimmed.to_string());
-        }
-        Self::String(raw.to_string())
-    }
-
-    pub fn as_integer(&self) -> Result<i64, String> {
-        match self {
-            Self::Integer(v) => Ok(*v),
-            Self::String(s) => s
-                .parse()
-                .map_err(|_| format!("type mismatch: expected Integer, got {s}")),
-            other => Err(format!("type mismatch: expected Integer, got {other:?}")),
-        }
-    }
-}
-
-/// Provider-neutral subject selector. No collector id.
+/// Adapter over `weeping_angel_assurance_ir::SubjectSelector` (IR SSOT).
+/// Legacy `{ kind, id }` JSON folds `id` into `ids`. Not a third selector type.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubjectSelector {
     pub kind: Option<String>,
     pub id: Option<String>,
+}
+
+impl SubjectSelector {
+    pub fn to_ir(&self) -> weeping_angel_assurance_ir::SubjectSelector {
+        self.clone().into()
+    }
+}
+
+impl From<SubjectSelector> for weeping_angel_assurance_ir::SubjectSelector {
+    fn from(thin: SubjectSelector) -> Self {
+        let kind = thin
+            .kind
+            .as_deref()
+            .and_then(SubjectKind::parse_name)
+            .unwrap_or_default();
+        let mut ids = std::collections::BTreeSet::new();
+        if let Some(id) = thin.id {
+            ids.insert(id);
+        }
+        let scope = if ids.is_empty() {
+            SelectorScope::All
+        } else {
+            SelectorScope::AnyOf
+        };
+        weeping_angel_assurance_ir::SubjectSelector {
+            kind,
+            ids,
+            tags: Default::default(),
+            scope,
+        }
+    }
 }
 
 /// Provider-neutral evidence selector. No collector id.
@@ -113,6 +105,32 @@ pub enum TestExpr {
         selector: SubjectSelector,
         evidence: EvidenceSelector,
         percentage: String,
+    },
+    CoverageExactly {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
+        percentage: String,
+    },
+    CountWhere {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
+        predicate: CountPredicate,
+    },
+    AllSubjects {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
+    },
+    AnySubject {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
+    },
+    NoneSubjects {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
+    },
+    MissingSubjects {
+        selector: SubjectSelector,
+        evidence: EvidenceSelector,
     },
     All(Vec<TestExpr>),
     Any(Vec<TestExpr>),

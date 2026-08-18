@@ -2656,6 +2656,7 @@ dependencies = [
  "walkdir",
  "weeping-angel-assurance",
  "weeping-angel-assurance-ir",
+ "weeping-angel-canonical-catalog",
  "weeping-angel-collector",
  "weeping-angel-control-test",
  "weeping-angel-evidence",
@@ -2689,6 +2690,19 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror",
+]
+
+[[package]]
+name = "weeping-angel-canonical-catalog"
+version = "0.2.0"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+ "toml",
+ "weeping-angel-assurance-ir",
 ]
 
 [[package]]

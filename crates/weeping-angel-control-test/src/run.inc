@@ -20,6 +20,7 @@ pub fn evaluate(
         duration: None,
         status: None,
         reason: None,
+        population: None,
     };
 
     if let Some(broken) = first_matching(&envelopes, &test.break_on) {
@@ -34,7 +35,8 @@ pub fn evaluate(
     }
 
     if let Some(expr) = &test.expr {
-        return run_expr(test, expr, &envelopes, evidence, context);
+        let index = build_index(evidence);
+        return run_expr(test, expr, &envelopes, evidence, &index, context);
     }
 
     if test.kind == ControlTestKind::Manual {
@@ -90,11 +92,20 @@ fn run_expr(
     expr: &TestExpr,
     envelopes: &[&EvidenceEnvelope],
     evidence: &EvidenceSet,
+    index: &EvidenceIndex<'_>,
     context: &AssessmentContext,
 ) -> ControlTestResult {
     let mut refs = Vec::new();
     let mut missing = Vec::new();
-    let outcome = eval_node(expr, envelopes, context, &mut refs, &mut missing);
+    let outcome = eval_node(
+        expr,
+        envelopes,
+        evidence,
+        index,
+        context,
+        &mut refs,
+        &mut missing,
+    );
     let result = ControlTestResult {
         test_id: test.id.clone(),
         control_id: test.control_id.clone(),
@@ -108,6 +119,7 @@ fn run_expr(
         duration: None,
         status: None,
         reason: None,
+        population: outcome.population,
     };
     finalize(result, evidence, &refs, &missing)
 }

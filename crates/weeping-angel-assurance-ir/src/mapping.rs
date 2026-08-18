@@ -3,9 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    ControlId, FrameworkVersion, MappingId, RequirementId, ASSURANCE_IR_SCHEMA,
-};
+use crate::{ASSURANCE_IR_SCHEMA, ControlId, FrameworkVersion, MappingId, RequirementId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -136,7 +134,10 @@ pub struct Mapping {
     confidence: MappingConfidence,
     #[serde(default, skip_serializing_if = "is_default_provenance")]
     provenance: MappingProvenance,
-    #[serde(default, skip_serializing_if = "MappingVersionConstraint::is_unconstrained")]
+    #[serde(
+        default,
+        skip_serializing_if = "MappingVersionConstraint::is_unconstrained"
+    )]
     valid_for: MappingVersionConstraint,
 }
 

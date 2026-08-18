@@ -1,0 +1,14 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[catalog]
+id = "canonical"
+version = "1"
+
+[files]
+controls = ["controls/fixture.example.toml", "controls/identity.toml"]
+evidence = ["evidence/fixture.example.toml", "evidence/identity.toml"]
+tests = ["tests/fixture.example.toml", "tests/identity.toml"]
+
+[digest]
+algorithm = "sha256"
+canonicalization = "canon/v1"

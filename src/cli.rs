@@ -155,6 +155,34 @@ pub enum AssuranceCommand {
     Compare(AssuranceCompareArgs),
     /// Statement of Applicability projection
     Soa(AssuranceSoaArgs),
+    /// Offline canonical assurance catalog
+    Catalog(AssuranceCatalogArgs),
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceCatalogArgs {
+    #[command(subcommand)]
+    pub command: AssuranceCatalogCommand,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum AssuranceCatalogCommand {
+    /// Validate a canonical catalog tree
+    Validate {
+        #[arg(default_value = "catalog/canonical/v1")]
+        path: PathBuf,
+    },
+    /// Print catalog statistics and digest
+    Stats {
+        #[arg(default_value = "catalog/canonical/v1")]
+        path: PathBuf,
+    },
+    /// Inspect one control and its linked evidence/tests
+    Inspect {
+        control_id: String,
+        #[arg(default_value = "catalog/canonical/v1")]
+        path: PathBuf,
+    },
 }
 
 #[derive(Debug, Clone, clap::Args)]

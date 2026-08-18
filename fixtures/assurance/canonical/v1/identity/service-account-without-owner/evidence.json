@@ -1,0 +1,27 @@
+{
+  "fixture": "service-account-without-owner",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "service account with owner_assigned=false",
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "sa:orphan",
+      "facts": { "subject_id": "sa:orphan", "account_kind": "service" }
+    },
+    {
+      "type": "evidence.identity.service-account",
+      "subject_id": "sa:orphan",
+      "facts": { "subject_id": "sa:orphan", "is_service_account": "true" }
+    },
+    {
+      "type": "evidence.identity.account-owner",
+      "subject_id": "sa:orphan",
+      "facts": { "subject_id": "sa:orphan", "owner_assigned": "false", "owner_subject_id": "" }
+    }
+  ]
+}

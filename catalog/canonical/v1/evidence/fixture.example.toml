@@ -1,0 +1,8 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.source.protected-branch"
+title = "Protected-branch observation"
+evidence_type = "source.branch.protection"
+collection = "automated"
+criticality = "required"

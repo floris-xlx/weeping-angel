@@ -1,0 +1,20 @@
+[package]
+name = "weeping-angel-canonical-catalog"
+version = "0.2.0"
+edition = "2024"
+description = "Offline canonical assurance catalog loader, validator, and digest"
+license = "MIT"
+publish = false
+
+[features]
+default = []
+demo = []
+
+[dependencies]
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"
+toml = "0.8"
+weeping-angel-assurance-ir = { path = "../weeping-angel-assurance-ir" }

@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{AssetId, ASSURANCE_IR_SCHEMA};
+use crate::{ASSURANCE_IR_SCHEMA, AssetId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +20,8 @@ pub enum AssetKind {
     Network,
     Dataset,
     Endpoint,
+    Branch,
+    Deployment,
     Other,
 }
 

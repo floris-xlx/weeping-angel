@@ -1,6 +1,7 @@
 //! Immutable evidence envelopes. Observations are facts, never compliance claims.
 
 pub mod ledger;
+pub mod value;
 
 use std::collections::BTreeMap;
 
@@ -10,6 +11,9 @@ use thiserror::Error;
 use weeping_angel_assurance_ir::{AssetId, canonical_digest};
 
 pub use ledger::{EvidenceLedger, LedgerError};
+pub use value::{
+    DecimalText, EVIDENCE_VALUE_SCHEMA, EVIDENCE_VALUE_TAG, EvidenceValue, EvidenceValueError,
+};
 pub use weeping_angel_assurance_ir::EvidenceType;
 
 const CREDENTIAL_KEYS: &[&str] = &[
@@ -33,6 +37,8 @@ pub enum EvidenceError {
     ComplianceClaim { narrative: String },
     #[error("credential material in evidence payload: {key}")]
     CredentialInPayload { key: String },
+    #[error("reserved object key in evidence payload: {key}")]
+    ReservedObjectKey { key: String },
     #[error("digest failed: {0}")]
     Digest(String),
 }
@@ -41,7 +47,7 @@ pub enum EvidenceError {
 #[serde(rename_all = "camelCase")]
 pub struct EvidenceObservation {
     evidence_type: EvidenceType,
-    facts: BTreeMap<String, String>,
+    facts: BTreeMap<String, EvidenceValue>,
     narrative: String,
 }
 
@@ -55,7 +61,15 @@ impl EvidenceObservation {
     }
 
     pub fn with_fact(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        self.facts.insert(key.into(), value.into());
+        self.facts
+            .insert(key.into(), EvidenceValue::String(value.into()));
+        self
+    }
+
+    pub fn with_value(mut self, key: impl Into<String>, value: EvidenceValue) -> Self {
+        // Handoff: EvidenceValue::Bool(true), EvidenceValue::Integer(365),
+        // EvidenceValue::StringList(vec!["owner".into(), "admin".into()]).
+        self.facts.insert(key.into(), value);
         self
     }
 
@@ -73,10 +87,14 @@ impl EvidenceObservation {
     }
 
     pub fn fact(&self, key: &str) -> Option<&str> {
-        self.facts.get(key).map(String::as_str)
+        self.facts.get(key).and_then(EvidenceValue::as_str)
     }
 
-    pub fn facts(&self) -> &BTreeMap<String, String> {
+    pub fn fact_value(&self, key: &str) -> Option<&EvidenceValue> {
+        self.facts.get(key)
+    }
+
+    pub fn facts(&self) -> &BTreeMap<String, EvidenceValue> {
         &self.facts
     }
 }
@@ -308,10 +326,27 @@ fn reject_compliance_claim(narrative: &str) -> Result<(), EvidenceError> {
 }
 
 fn reject_credentials(obs: &EvidenceObservation) -> Result<(), EvidenceError> {
-    for key in obs.facts.keys() {
-        let folded = key.to_ascii_lowercase().replace('-', "_");
-        if CREDENTIAL_KEYS.contains(&folded.as_str()) {
-            return Err(EvidenceError::CredentialInPayload { key: key.clone() });
+    for (key, value) in &obs.facts {
+        reject_value_keys(key, value)?;
+    }
+    Ok(())
+}
+
+fn reject_value_keys(key: &str, value: &EvidenceValue) -> Result<(), EvidenceError> {
+    if key == EVIDENCE_VALUE_TAG {
+        return Err(EvidenceError::ReservedObjectKey {
+            key: key.to_string(),
+        });
+    }
+    let folded = key.to_ascii_lowercase().replace('-', "_");
+    if CREDENTIAL_KEYS.contains(&folded.as_str()) {
+        return Err(EvidenceError::CredentialInPayload {
+            key: key.to_string(),
+        });
+    }
+    if let EvidenceValue::Object(nested) = value {
+        for (child_key, child) in nested {
+            reject_value_keys(child_key, child)?;
         }
     }
     Ok(())

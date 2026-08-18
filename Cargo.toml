@@ -7,6 +7,7 @@ members = [
     "crates/weeping-angel-collector",
     "crates/weeping-angel-control-test",
     "crates/weeping-angel-assurance",
+    "crates/weeping-angel-canonical-catalog",
 ]
 
 [package]
@@ -95,6 +96,7 @@ thiserror = "2"
 toml = "0.8"
 tracing = "0.1"
 walkdir = "2"
+weeping-angel-canonical-catalog = { path = "crates/weeping-angel-canonical-catalog" }
 
 [dependencies.quick-xml]
 version = "0.41.0"
@@ -221,3 +223,35 @@ path = "tests/sdd/iso27001_assurance.target.rs"
 [[test]]
 name = "sdd_compliance_ir_target"
 path = "tests/sdd/compliance_ir.target.rs"
+
+[[test]]
+name = "sdd_population_runtime_baseline"
+path = "tests/sdd/population_runtime.baseline.rs"
+
+[[test]]
+name = "sdd_population_runtime_target"
+path = "tests/sdd/population_runtime.target.rs"
+
+[[test]]
+name = "sdd_typed_evidence_baseline"
+path = "tests/sdd/typed_evidence.baseline.rs"
+
+[[test]]
+name = "sdd_typed_evidence_target"
+path = "tests/sdd/typed_evidence.target.rs"
+
+[[test]]
+name = "sdd_iam_catalog_baseline"
+path = "tests/sdd/iam_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_iam_catalog_target"
+path = "tests/sdd/iam_catalog.target.rs"
+
+[[test]]
+name = "sdd_canonical_assurance_catalog_baseline"
+path = "tests/sdd/canonical_assurance_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_canonical_assurance_catalog_target"
+path = "tests/sdd/canonical_assurance_catalog.target.rs"

@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ControlId, ControlTestId, EvidenceRequirementId, EvidenceType, FreshnessRequirement,
-    SubjectSelector, ASSURANCE_IR_SCHEMA,
+    ASSURANCE_IR_SCHEMA, ControlId, ControlTestId, EvidenceRequirementId, EvidenceType,
+    FreshnessRequirement, SubjectSelector,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

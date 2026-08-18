@@ -109,6 +109,9 @@ pub struct CompiledTest {
     pub kind: PlannedTestKind,
     pub required: Vec<EvidenceType>,
     pub break_on: Vec<EvidenceType>,
+    /// Optional bounded test expression (JSON `TestExpr`). Side-table until packs ship bodies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expr: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -374,6 +377,7 @@ fn construct_test_plan(
                 kind: t.kind,
                 required: t.required_evidence.clone(),
                 break_on: t.break_on.clone(),
+                expr: None,
             })
             .collect());
     }
@@ -388,6 +392,7 @@ fn construct_test_plan(
             kind: PlannedTestKind::Automated,
             required: vec![ev.evidence_type().clone()],
             break_on: vec![EvidenceType::new("exposed_without_auth")],
+            expr: None,
         })
         .collect();
     Ok(tests)

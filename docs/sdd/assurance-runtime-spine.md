@@ -2,12 +2,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** (Phases 0–8 spine). ISO 27001 vertical: ADR 0002 / [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md) |
+| Status | **Implemented** (Phases 0–8 spine). ISO 27001 vertical: ADR 0002 / [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md). Canonical catalog infrastructure: ADR 0003 / [`canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) (seventh crate; not part of Phases 0–8). |
 | Slice | Phases **0–8** (key checkpoint) |
 | Dual-suite | Baseline characterized pre-spine HEAD → Target RED → implement → Target GREEN → **baseline superseded** |
 | ADR | Accepted [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Head | Workspace: root scanner `weeping-angel` + six assurance crates under `crates/`. ISO pack + `assurance` clap family: ADR 0002. |
+| Head | Workspace: root scanner `weeping-angel` + assurance crates under `crates/` (six from this slice; `weeping-angel-canonical-catalog` is ADR 0003). ISO pack + `assurance` clap family: ADR 0002. |
 | Analog | Athena query/compiler: `Statement` IR → `CompileTarget` + capabilities → fail-closed `compile` → dialect adapters internally |
 
 This document is the durable SDD for the assurance spine. Phases 0–8 landed as six workspace crates. Later phases must not invent a Vanta-style pile of framework-specific checks. Machine contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md).
@@ -232,7 +232,7 @@ Pipeline (fixed order):
 
 Immutable **`EvidenceEnvelope`**:
 
-- payload: `EvidenceObservation` (typed evidence kind + observed facts)
+- payload: `EvidenceObservation` (typed evidence kind + observed facts; facts are `EvidenceValue` / `evidence-value/v1`, [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md))
 - provenance (collector id, collected_at, scope, asset)
 - integrity digest over canonical payload+provenance
 - once sealed, bytes are append-only; mutation is a new envelope

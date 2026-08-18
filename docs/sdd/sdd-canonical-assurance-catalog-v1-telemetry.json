@@ -1,0 +1,805 @@
+{
+  "telemetry_run_id": "sdd-5334381c09f2",
+  "run_id": "sdd-5334381c09f2",
+  "workflow": "spec-driven-development",
+  "objective_fp": "5334381c09f2f3db",
+  "reason": "pre_finalize",
+  "report_path": "docs/sdd/sdd-canonical-assurance-catalog-v1.md",
+  "verify_ok": true,
+  "supersede_kind": "skip",
+  "agents_ok": 8,
+  "agents_fail": 0,
+  "agents_total": 8,
+  "tokens_used_sum": 7885884,
+  "duration_ms_sum": 7132492,
+  "event_count": 29,
+  "max_iters": 3,
+  "no_delta": false,
+  "dry_run": false,
+  "budget": {
+    "remaining": 40,
+    "spent": 8,
+    "total": 48
+  },
+  "gates": {
+    "baseline_green": true,
+    "baseline_superseded": true,
+    "dry_run": false,
+    "no_delta": false,
+    "target_green": true,
+    "target_red": true
+  },
+  "events": [
+    {
+      "agents_fail": 0,
+      "agents_ok": 0,
+      "agents_total": 0,
+      "budget": { "remaining": 48, "spent": 0, "total": 48 },
+      "detail": {
+        "await_user": false,
+        "dry_run": false,
+        "max_iters": 3,
+        "objective_fp": "5334381c09f2f3db",
+        "root": "."
+      },
+      "duration_ms_sum": 0,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "run_start",
+      "phase": "Scope",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 1,
+      "tokens_used_sum": 0,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "agent_id": "01a0168f-ef6d-7ef0-931e-726485af6bd2",
+        "duration_ms": 792363,
+        "label": "sdd-scope",
+        "success": true,
+        "tokens_used": 293294
+      },
+      "duration_ms_sum": 792363,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Scope",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 2,
+      "tokens_used_sum": 293294,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "baseline_path": "tests/sdd/canonical_assurance_catalog.baseline.rs",
+        "report_dir": "docs/sdd",
+        "root": ".",
+        "target_path": "tests/sdd/canonical_assurance_catalog.target.rs",
+        "test_command": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target"
+      },
+      "duration_ms_sum": 792363,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase",
+      "phase": "Scope",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 3,
+      "tokens_used_sum": 293294,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 792363,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Spec",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 4,
+      "tokens_used_sum": 293294,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "agent_id": "01a0169c-17a6-7fa1-b498-b790198d81ae",
+        "duration_ms": 1299069,
+        "label": "sdd-spec",
+        "success": true,
+        "tokens_used": 1058547
+      },
+      "duration_ms_sum": 2091432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Spec",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 5,
+      "tokens_used_sum": 1351841,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "adr_needed": true,
+        "spec_path": "docs/sdd/canonical-assurance-catalog-v1.md",
+        "title": "Canonical Assurance Catalog v1 infrastructure"
+      },
+      "duration_ms_sum": 2091432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Spec",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 6,
+      "tokens_used_sum": 1351841,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2091432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 7,
+      "tokens_used_sum": 1351841,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "agent_id": "01a016af-f906-7660-b861-d997217d7219",
+        "duration_ms": 952351,
+        "label": "sdd-baseline-green",
+        "success": true,
+        "tokens_used": 997989
+      },
+      "duration_ms_sum": 3043783,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 8,
+      "tokens_used_sum": 2349830,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target",
+        "passed": true
+      },
+      "duration_ms_sum": 3043783,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "gate",
+      "phase": "baseline_green",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 9,
+      "tokens_used_sum": 2349830,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "command": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target",
+        "ok": true,
+        "test_files": [
+          "tests/sdd/canonical_assurance_catalog.baseline.rs",
+          "tests/sdd/canonical_assurance_catalog.target.rs"
+        ]
+      },
+      "duration_ms_sum": 3043783,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 10,
+      "tokens_used_sum": 2349830,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 3043783,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "TargetRed",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 11,
+      "tokens_used_sum": 2349830,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "agent_id": "01a016be-8b62-7f82-a325-a62951c6e486",
+        "duration_ms": 823612,
+        "label": "sdd-target-red",
+        "success": true,
+        "tokens_used": 552296
+      },
+      "duration_ms_sum": 3867395,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "TargetRed",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 12,
+      "tokens_used_sum": 2902126,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target -- --test-threads=1",
+        "passed": true
+      },
+      "duration_ms_sum": 3867395,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_red",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 13,
+      "tokens_used_sum": 2902126,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "command": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target -- --test-threads=1",
+        "ok": true,
+        "test_files": ["tests/sdd/canonical_assurance_catalog.target.rs"]
+      },
+      "duration_ms_sum": 3867395,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "TargetRed",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 14,
+      "tokens_used_sum": 2902126,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 3867395,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Implement",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 15,
+      "tokens_used_sum": 2902126,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "agent_id": "01a016cb-2ec1-7f02-8937-2d12521dbc74",
+        "duration_ms": 2244550,
+        "label": "sdd-implement",
+        "success": true,
+        "tokens_used": 3553892
+      },
+      "duration_ms_sum": 6111945,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Implement",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 16,
+      "tokens_used_sum": 6456018,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "baseline_status": "pass",
+        "files_changed": [
+          "Cargo.toml",
+          "Cargo.lock",
+          "src/cli.rs",
+          "src/lib.rs",
+          "src/main.rs",
+          "src/assurance_catalog.rs",
+          "crates/weeping-angel-canonical-catalog/Cargo.toml",
+          "crates/weeping-angel-canonical-catalog/src/lib.rs",
+          "catalog/canonical/v1/manifest.toml",
+          "catalog/canonical/v1/controls/fixture.example.toml",
+          "catalog/canonical/v1/evidence/fixture.example.toml",
+          "catalog/canonical/v1/tests/fixture.example.toml",
+          "docs/sdd/canonical-assurance-catalog-v1.md",
+          "docs/adr/0003-canonical-assurance-catalog-v1.md",
+          "docs/contracts/assurance-runtime.md",
+          "tests/sdd/canonical_assurance_catalog.baseline.rs"
+        ],
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 6111945,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Implement",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 17,
+      "tokens_used_sum": 6456018,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": { "adr_needed": true },
+      "duration_ms_sum": 6111945,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "DocsAdr",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 18,
+      "tokens_used_sum": 6456018,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "agent_id": "01a016ed-8abb-7fa0-9de8-18ec27581a92",
+        "duration_ms": 854747,
+        "label": "sdd-docs-adr",
+        "success": true,
+        "tokens_used": 1067895
+      },
+      "duration_ms_sum": 6966692,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "DocsAdr",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 19,
+      "tokens_used_sum": 7523913,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "adr_paths": ["docs/adr/0003-canonical-assurance-catalog-v1.md"],
+        "docs_updated": [
+          "docs/adr/0003-canonical-assurance-catalog-v1.md",
+          "docs/sdd/canonical-assurance-catalog-v1.md",
+          "docs/contracts/assurance-runtime.md",
+          "README.md",
+          "frameworks/README.md",
+          "docs/adr/0001-inwardly-extensible-assurance-runtime.md",
+          "docs/adr/0002-iso-27001-assurance-vertical.md",
+          "docs/sdd/assurance-runtime-spine.md",
+          "docs/sdd/xylex/weeping-angel-assurance-ir/supersession/banner-list.md"
+        ]
+      },
+      "duration_ms_sum": 6966692,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "DocsAdr",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 20,
+      "tokens_used_sum": 7523913,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": { "max_iters": 3 },
+      "duration_ms_sum": 6966692,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Iterate",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 21,
+      "tokens_used_sum": 7523913,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --workspace --features demo --test sdd_canonical_assurance_catalog_baseline --test sdd_canonical_assurance_catalog_target\n\nbaseline: test result: ok. 8 passed; 0 failed; 6 ignored (superseded by sdd_canonical_assurance_catalog_target)\n  ignored: catalog_canonical_v1_tree_does_not_exist, no_canonical_catalog_crate_or_workspace_member, no_canonical_catalog_api_in_product_rust, assurance_command_lists_only_current_family, assurance_catalog_cli_does_not_parse, main_assurance_arm_is_not_certification_stub\n  passed: dual_suite_is_registered, ir_ids_remain_permissive..., ir_invalid_namespace_is_never_returned, iso_metadata_owns_thin_canonical_stubs, stub_catalog_loads_iso_pack..., framework/collector/ir crate-graph checks\n\ntarget: test result: ok. 22 passed; 0 failed; 0 ignored\n  CAT-001..016 plus extra_unlisted_section_files, path_escape, malformed_catalog_ids, shipped_catalog_is_minimal_and_regime_free, loader_reads_manifest_file_list..., ir_schema_and_iso_pack_ids_are_not_remapped",
+        "passed": true
+      },
+      "duration_ms_sum": 6966692,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_green",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 22,
+      "tokens_used_sum": 7523913,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "baseline_status": "pass",
+        "iters_used": 0,
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 6966692,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Iterate",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 23,
+      "tokens_used_sum": 7523913,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "agent_id": "01a016fa-aad7-7122-ba97-d367b4b75ec3",
+        "duration_ms": 74651,
+        "label": "sdd-baseline-post-check",
+        "success": true,
+        "tokens_used": 182267
+      },
+      "duration_ms_sum": 7041343,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Iterate",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 24,
+      "tokens_used_sum": 7706180,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 7041343,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Supersede",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 25,
+      "tokens_used_sum": 7706180,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "agent_id": "01a016fb-d92a-7260-a36d-a6e47f39f393",
+        "duration_ms": 91149,
+        "label": "sdd-supersede",
+        "success": true,
+        "tokens_used": 179704
+      },
+      "duration_ms_sum": 7132492,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Supersede",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 26,
+      "tokens_used_sum": 7885884,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "evidence": "skip: Skip-supersede catalog baseline absence asserts; keep dual-suite registration and IR/ISO/crate-graph checks.",
+        "passed": true
+      },
+      "duration_ms_sum": 7132492,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "baseline_superseded",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 27,
+      "tokens_used_sum": 7885884,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "action": "Skip-supersede catalog baseline absence asserts; keep dual-suite registration and IR/ISO/crate-graph checks.",
+        "additive_baseline": false,
+        "baseline_not_green": true,
+        "baseline_retired": true,
+        "super_ok": true,
+        "supersede_kind": "skip",
+        "target_still_green": true
+      },
+      "duration_ms_sum": 7132492,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Supersede",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 28,
+      "tokens_used_sum": 7885884,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 7132492,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Finalize",
+      "run_id": "sdd-5334381c09f2",
+      "seq": 29,
+      "tokens_used_sum": 7885884,
+      "workflow": "spec-driven-development"
+    }
+  ]
+}

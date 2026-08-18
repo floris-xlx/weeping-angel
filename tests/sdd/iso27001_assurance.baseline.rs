@@ -5,7 +5,7 @@
 //! Kept for rollback narrative. Do not delete. Tests are ignored because the workspace
 //! now contains the pack / ledger / DSL / collectors / readiness / SoA / CLI vertical.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -390,8 +390,8 @@ fn evidence_envelope_is_observation_provenance_digest_with_string_facts() {
     let obs = EvidenceObservation::new(EvidenceType::new("branch_protection"))
         .with_fact("enabled", "true")
         .with_narrative("repository in-scope has branch_protection enabled");
-    let facts: &BTreeMap<String, String> = obs.facts();
-    assert_eq!(facts.get("enabled").map(String::as_str), Some("true"));
+    let facts = obs.facts();
+    assert_eq!(facts.get("enabled").and_then(|v| v.as_str()), Some("true"));
     assert_eq!(obs.fact("enabled"), Some("true"));
 
     let env = EvidenceEnvelope::seal(obs, fresh_provenance("repo:in-scope")).unwrap();

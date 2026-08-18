@@ -6,6 +6,10 @@ Decisions:
 
 - Spine: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md)
 - ISO vertical: [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md)
+- Canonical catalog: [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md)
+- Typed evidence: [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md)
+- Population / coverage: [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md)
+- IAM catalog family: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md)
 
 Public composition root is `weeping-angel-assurance`. Callers select a profile + capabilities; they do not import per-regime adapters.
 
@@ -19,9 +23,12 @@ Allowed language: `ready`, `effective`, `ineffective`, `insufficient evidence`, 
 | --- | --- |
 | IR schema | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) |
 | Evidence schema | `evidence/v1` (`EVIDENCE_SCHEMA`) |
+| Evidence value encoding | `evidence-value/v1` (`EVIDENCE_VALUE_SCHEMA`) — hybrid JSON inside observation facts |
 | Framework pack schema | `weeping-angel/framework-pack/v1` (`FRAMEWORK_PACK_SCHEMA`) |
+| Canonical catalog schema | `weeping-angel/canonical-catalog/v1` (`CATALOG_SCHEMA`) |
 | JSON | serde `camelCase` on public documents |
 | Digests | SHA-256 hex of `serde_json` bytes (struct field order; `BTreeMap`/`BTreeSet` for maps/sets) |
+| Catalog digest | Display `wa:canonical-catalog:weeping-angel/canonical-catalog/v1:` + SHA-256 hex of parsed documents (`DIGEST_PREFIX` + IR `canonical_digest`; prefix not mixed into the hash) |
 
 Every IR document (`Control`, `Requirement`, `Mapping`, `EvidenceRequirement`, `PlannedControlTest`) carries `schemaVersion`. Compile rejects any other version. `Assessment` remains a **framework-crate** in-memory document compiled by `compile_framework` (not an IR type). Concurrent IR work may later introduce `AssessmentDefinition`; consume it by rebase, do not fork.
 
@@ -31,7 +38,11 @@ Newtypes, stable string form, no random v4 in persisted identity:
 
 `FrameworkId`, `FrameworkVersion`, `RequirementId`, `ControlId`, `ControlImplementationId`, `ControlTestId`, `AssetId`, `IdentityId`, `VendorId`, `ProcessingActivityId`, `EvidenceRequirementId`, `RiskId`, `ExceptionId`, `AssessmentId`, `AuditProgramId`, `EvidenceType`.
 
-`EvidenceType` names a **fact kind**. Canonical names used by this vertical include `source.branch.protection`, `source.branch.required_reviews`, `source.codeowners.present`, `security_finding`, `manual_attestation`. It is not a framework name and must not be prefixed `github.*` / `iso27001.*` unless the provider or regime is genuinely part of the fact.
+`EvidenceType` names a **fact kind**. Canonical names used by this vertical include `source.branch.protection`, `source.branch.required_reviews`, `source.codeowners.present`, `security_finding`, `manual_attestation`, and the IAM family `evidence.identity.*` (`inventory`, `authentication-state`, `mfa-status`, `privileged-membership`, `role-membership`, `last-active`, `account-status`, `account-owner`, `access-review`, `lifecycle-event`, `service-account`, `external-access`). It is not a framework name and must not be prefixed `github.*` / `iso27001.*` unless the provider or regime is genuinely part of the fact.
+
+`SubjectKind` (IR SSOT): `organization`, `asset`, `repository`, `service`, `identity`, `user`, `privilegedIdentity`, `device`, `vendor`, `dataset`, `processingActivity`, `branch`, `application`, `database`, `cloudAccount`, `cloudResource`, `serviceAccount`, `endpoint`, `dataStore`, `network`, `deployment`.
+
+`IdentityKind` includes `serviceAccount`. `AssetKind` includes `branch` and `deployment`. `Exception.subjects` is `Vec<SubjectSelector>` (default empty — **not** the entire inventory).
 
 ## Normative relationship
 
@@ -70,6 +81,28 @@ Rules:
 - `stub_catalog(profile)` still returns `[]`. The ISO facade loads the pack via `load_framework_pack("iso-27001", "2022")` and `assessment_from_pack`.
 
 Content modes: `StructuralOnly` | `LicensedContent` | `UserSuppliedContent`.
+
+## Canonical catalog
+
+Versioned, offline, framework-neutral and provider-neutral library:
+
+```text
+catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
+```
+
+- Schema: `weeping-angel/canonical-catalog/v1` (`CATALOG_SCHEMA`)
+- Loader: `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest,stats,control}` (`load` always validates)
+- Default path: `catalog/canonical/v1`. Manifest `[files]` lists participating TOML; extra section `*.toml` and path escape fail closed. `[digest]` in the fixture is documentary.
+- Catalog IDs: `control.*` / `evidence.*` / `test.*` (IR newtypes stay permissive)
+- Provider/framework segments (`github`, `iso27001`, …) fail closed at the catalog boundary
+- Digest display: `wa:canonical-catalog:weeping-angel/canonical-catalog/v1:<hex>` over parsed documents, not raw bytes
+- Infrastructure ships fixture IDs `control.source.protected-branch` / `evidence.source.protected-branch` / `test.source.protected-branch`. Domain files are added via the manifest without changing the loader.
+- IAM family (Prompt 04): 23 `control.identity.*` controls, 12 `evidence.identity.*` fact types, 23 `test.identity.*` tests in `catalog/canonical/v1/{controls,evidence,tests}/identity.toml`. Tests are population predicates (`coverage-at-least` / `all-subjects` / `none-subjects`), not existence of one envelope. Access-approval, SoD, and periodic review stay hybrid/manual. ISO pack `access.*` ids are **not** remapped here.
+- Fixtures: `fixtures/assurance/canonical/v1/identity/` (`healthy-org`, `privileged-without-mfa`, `inactive-admin-active`, `terminated-employee-active`, `service-account-without-owner`, `partial-inventory`, `stale-access-review`, `break-glass-approved-exception`).
+- No Entra / Okta / Google Workspace collector. GitHub still emits `source.*` only.
+- Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind.
+
+See [`docs/sdd/canonical-assurance-catalog-v1.md`](../sdd/canonical-assurance-catalog-v1.md), [`docs/sdd/iam-canonical-assurance-catalog.md`](../sdd/iam-canonical-assurance-catalog.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), and [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md).
 
 ## Compile
 
@@ -130,9 +163,31 @@ artifactRef?, collectionRunId, contentDigest, sensitivity, scope, supersedes?
 
 `provenance = { collectorId, collectedAt, scope, asset }`.
 
-Payload facts MUST NOT use credential keys (`authorization`, `token`, `cookie`, `password`, `api_key`, `apikey`, `secret`, `access_token`, `refresh_token`, `private_key`).
+Payload facts MUST NOT use credential keys (`authorization`, `token`, `cookie`, `password`, `api_key`, `apikey`, `secret`, `access_token`, `refresh_token`, `private_key`), including nested `Object` keys. Nested objects MUST NOT use the reserved key `$evidenceValue`.
 
-Facts remain `BTreeMap<String, String>` on the observation (digest-stable). The control-test evaluator parses them into `EvidenceValue` (`Null`, `Boolean`, `Integer`, `Decimal`, `String`, `Timestamp`, `Duration`, `StringSet`, `Identifier`).
+Facts are `BTreeMap<String, EvidenceValue>` (`evidence-value/v1` hybrid JSON). One type in `weeping-angel-evidence`; control-test re-exports it. No `f64`. No stored `Null`.
+
+| Variant | Canonical JSON | Identity notes |
+| --- | --- | --- |
+| `String` | JSON string | `"true"` / `"01"` / `"1.0"` stay strings |
+| `Bool` | JSON boolean | `true` ≠ `"true"` |
+| `Integer` | JSON number, no fraction | `i64` only |
+| `StringList` | JSON array of strings | order is identity; `[]` valid |
+| `Object` | JSON object | `BTreeMap` key order; `{}` valid |
+| `Decimal` | `{"$evidenceValue":"decimal","value":"<text>"}` | lexical (`1.0` ≠ `1.00`) |
+| `Timestamp` | `{"$evidenceValue":"timestamp","value":"<rfc3339>"}` | UTC `YYYY-MM-DDTHH:MM:SS.sssZ` |
+| `DurationSeconds` | `{"$evidenceValue":"durationSeconds","value":<u64>}` | number, not string |
+
+`with_fact(key, string)` stores `String` (collector compatibility; historical string envelopes keep the same digest). `with_value` is the typed constructor. `fact()` returns `&str` only for `String`; evaluators use `fact_value()`.
+
+```text
+branch_protected   = Bool(true)
+required_reviewers = Integer(2)
+retention_days     = Integer(365)
+privileged_roles   = StringList(["owner", "admin"])
+```
+
+The evaluator compares stored types (`typed_eq` / `cmp_numeric` / `list_contains`) and fails closed on a `type mismatch`. It does not reparse `"01"` / `"1.0"` / `"true"`. Integer↔Decimal numeric compare is exact decimal-string scale-align, never IEEE-754. Same semantic facts + provenance ⇒ same `canonical_digest` regardless of map insertion order. See [`docs/sdd/typed-evidence.md`](../sdd/typed-evidence.md) and [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md).
 
 ### Ledger
 
@@ -216,11 +271,26 @@ Zero network I/O. Signature has no provider / collector id. `EvidenceSet` is pro
 | Manual test without `manual_attestation` | `insufficientEvidence` / `manualReviewRequired` (cannot auto-pass) |
 | Type mismatch on a field predicate | fail-closed (not `effective`) |
 
-Bounded `TestExpr` (not a script host): `Exists`, `Missing`, `Eq`/`Neq`/`Gt`/`Gte`/`Lt`/`Lte`, `Contains`/`NotContains`, `In`, `Count`, `FreshWithin`, `CoverageAtLeast`, `All`/`Any`/`None`/`Not`, `ManualReview`.
+Bounded `TestExpr` (not a script host): `Exists`, `Missing`, `Eq`/`Neq`/`Gt`/`Gte`/`Lt`/`Lte`, `Contains`/`NotContains`, `In`, `Count`, `CountWhere`, `FreshWithin`, `CoverageAtLeast`, `CoverageExactly`, `AllSubjects`, `AnySubject`, `NoneSubjects`, `MissingSubjects`, `All`/`Any`/`None`/`Not`, `ManualReview`.
 
-`EvidenceSelector = { evidenceType, subjectSelector, field, freshness }`. No collector id in test definitions.
+`CoverageAtLeast` is **not** a placeholder. Population arms resolve a deterministic `Population { selector, subjectIds, authoritative, observedAt, completeness }` (`authoritative` \| `partial` \| `unknown`). Resolution: explicit `EvidenceSet` population → closed selector `ids` → identity / `inventory.subject` + `inventory.complete` → else inferred observations (**Unknown**). Unknown completeness cannot yield strong all-subject `Effective`. Partial completeness on those arms is `insufficientEvidence`.
 
-`ControlTestResult = { testId, controlId, effectiveness, rationale, evidenceRefs, missingEvidence, evaluatedAt, testVersion, inputDigest, duration? }`. Wall-clock `duration` is not part of semantic identity. Same test + evidence snapshot + evaluation context → same semantic result.
+Coverage arithmetic (excepted subjects leave the denominator):
+
+- `evaluated` = `passing + failing`
+- `coverage` = `evaluated / P` when `P > 0` and completeness is not `unknown`; otherwise omitted
+- pessimistic = `passing / P`; optimistic = `(passing + missing + stale) / P`
+- `percentage` is a percent in `[0, 100]` (`"95"` / `"95%"`). `"0.95"` is 0.95%, not 95%.
+
+`CoverageAtLeast(t)`: unknown → `inconclusive`; optimistic `< t` → `ineffective`; pessimistic `< t ≤` optimistic → `insufficientEvidence`; stale as the deciding defect → `staleEvidence`; pessimistic `≥ t` → `effective` (residual failures allowed only when `t < 1`). Authoritative empty population is `insufficientEvidence`, never `effective`.
+
+Results may include nested `population` (`PopulationEvaluation`): `population`, `evaluated`, `passing`, `failing`, `missing`, `coverage?`, `failingSubjects`, `missingSubjects`, `staleSubjects`, `exceptedSubjects`, `technicalSubjects`. Missing evidence, explicit fail, stale evidence, and technical failure stay distinct.
+
+Evaluation indexes envelopes by `(evidenceType, subject)` (`EvidenceIndex`). Latest / `supersedes` wins; digest-identical duplicates count once.
+
+`EvidenceSelector = { evidenceType, subjectSelector, field, freshness }`. No collector id in test definitions. Control-test `subjectSelector` JSON `{ kind, id }` folds `id` into IR `ids`.
+
+`ControlTestResult = { testId, controlId, effectiveness, rationale, evidenceRefs, missingEvidence, evaluatedAt, testVersion, inputDigest, duration?, population? }`. Wall-clock `duration` is not part of semantic identity. Same test + evidence snapshot + evaluation context → same semantic result. `CompiledTest.expr` is an optional JSON `TestExpr`; `evaluate_compiled` attaches it.
 
 Tests are **canonical** (`test.source.required-review`), never `iso27001.a.x.y.github.*`.
 
@@ -276,9 +346,10 @@ weeping-angel assurance assess --framework iso-27001 [--scope .] [--github-repo 
 weeping-angel assurance result show
 weeping-angel assurance compare
 weeping-angel assurance soa
+weeping-angel assurance catalog validate|stats|inspect <control-id> [path]
 ```
 
-The binary currently prints the non-certification banner and exits 0. Library `assess` / `project_readiness` / `project_soa` / `compare` are the execution path.
+`assurance catalog` is dispatched (parser in `src/cli.rs`, execution in `src/assurance_catalog.rs`). Other `assurance` subcommands still print the non-certification banner and exit 0; library `assess` / `project_readiness` / `project_soa` / `compare` remain the execution path for those.
 
 ## Crate graph
 
@@ -287,13 +358,14 @@ See ADR 0001. Public composition root is `weeping-angel-assurance`. Do not take 
 Hard negatives (Phase 53 / ACT-003 / ACT-013):
 
 ```text
-assurance-ir     ↛ HTTP / provider / storage / framework adapter logic
-framework        ↛ GitHub / AWS / Cloudflare SDKs, collector, control-test
-collector        ↛ framework / ISO / GDPR / SOC2 packages; never declares compliance
-evidence         ↛ control effectiveness
-control-test     ↛ network I/O / collector
-scanner types    ↛ ISO / GDPR / SOC statuses
-assurance        = composition authority
+assurance-ir        ↛ HTTP / provider / storage / framework adapter logic
+framework           ↛ GitHub / AWS / Cloudflare SDKs, collector, control-test, canonical-catalog
+collector           ↛ framework / catalog / ISO / GDPR / SOC2 packages; never declares compliance
+canonical-catalog   ↛ framework / collector / control-test / evidence / network
+evidence            ↛ control effectiveness
+control-test        ↛ network I/O / collector
+scanner types       ↛ ISO / GDPR / SOC statuses
+assurance           = composition authority
 ```
 
 ## Tests
@@ -304,7 +376,15 @@ assurance        = composition authority
 | Spine baseline (historical) | `sdd_assurance_runtime_baseline` | superseded / ignored |
 | ISO target (normative) | `sdd_iso27001_assurance_target` | GREEN — ISO-001…010, EVD-001…010, CTL-001…012, GH-001…012 + MVP assess |
 | ISO baseline (historical) | `sdd_iso27001_assurance_baseline` | superseded / ignored |
+| Catalog target (normative) | `sdd_canonical_assurance_catalog_target` | GREEN — CAT-001…016 |
+| Catalog baseline (historical) | `sdd_canonical_assurance_catalog_baseline` | absence asserts superseded / ignored |
+| Typed evidence target (normative) | `sdd_typed_evidence_target` | GREEN — digest order, nested objects, typed compare, type-mismatch, credentials, codec, string-fixture compat, ledger |
+| Typed evidence baseline (historical) | `sdd_typed_evidence_baseline` | superseded / ignored |
+| Population target (normative) | `sdd_population_runtime_target` | GREEN — goldens 1–10, real `CoverageAtLeast`, index fixtures |
+| Population baseline (historical) | `sdd_population_runtime_baseline` | placeholder characterization superseded / ignored |
+| IAM catalog target (normative) | `sdd_iam_catalog_target` | GREEN — IAM-001…016 (`control.identity.*`, population fixtures) |
+| IAM catalog baseline (historical) | `sdd_iam_catalog_baseline` | absence characterization superseded / ignored |
 
 `cargo test --workspace --features demo` must keep scanner tests green.
 
-Focused crate checks: `cargo test -p weeping-angel-framework`, `-p weeping-angel-evidence`, `-p weeping-angel-collector`, `-p weeping-angel-control-test`, `-p weeping-angel-assurance`.
+Focused crate checks: `cargo test -p weeping-angel-framework`, `-p weeping-angel-evidence`, `-p weeping-angel-collector`, `-p weeping-angel-control-test`, `-p weeping-angel-assurance`, `-p weeping-angel-canonical-catalog`.

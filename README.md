@@ -57,7 +57,7 @@ cargo build --release --example weeping-angel-demo --features demo
 cargo test --workspace --features demo
 ```
 
-Assurance contract tests: `sdd_assurance_runtime_target` (ACT-001…015) and `sdd_iso27001_assurance_target` (ISO/EVD/CTL/GH). Both baseline suites are superseded / ignored.
+Assurance contract tests: `sdd_assurance_runtime_target` (ACT-001…015), `sdd_iso27001_assurance_target` (ISO/EVD/CTL/GH), `sdd_canonical_assurance_catalog_target` (CAT-001…016), `sdd_typed_evidence_target` (typed facts + `evidence-value/v1`), `sdd_population_runtime_target`, and `sdd_iam_catalog_target` (IAM-001…016). Matching baseline suites are superseded / ignored.
 
 ## Assurance runtime (ISO 27001 readiness)
 
@@ -67,21 +67,25 @@ Weeping Angel is also an **inwardly extensible** assurance compiler: capabilitie
 AssuranceEngine::builder().collector(…).framework(target).assess(scope)
 ```
 
-ISO 27001:2022 ships as a versioned structural pack (`frameworks/iso-27001/2022`). Canonical controls (`source.branch-protection`, …) are mapped from ISO refs; GitHub / local / manual / scanner evidence never writes framework status.
+ISO 27001:2022 ships as a versioned structural pack (`frameworks/iso-27001/2022`). Pack-local stubs (`source.branch-protection`, `access.mfa.privileged`, …) still live in that pack until remap. The reusable library is the offline canonical catalog (`catalog/canonical/v1`, schema `weeping-angel/canonical-catalog/v1`, IDs `control.*` / `evidence.*` / `test.*`). The first domain family is IAM (`control.identity.*` / `evidence.identity.*` / `test.identity.*`) — provider-neutral population tests, not Entra/Okta/GitHub checks. Observation facts are typed `EvidenceValue` (`evidence-value/v1`); `with_fact` remains string-compatible. GitHub / local / manual / scanner evidence never writes framework status.
 
 ```bash
 weeping-angel assurance assess --framework iso-27001 --scope .
 weeping-angel assurance framework validate frameworks/iso-27001/2022
+weeping-angel assurance catalog validate
+weeping-angel assurance catalog stats
+weeping-angel assurance catalog inspect control.source.protected-branch
+weeping-angel assurance catalog inspect control.identity.mfa
 weeping-angel assurance soa
 ```
 
-The clap family is `assurance {framework,collect,evidence,assess,result,compare,soa}`. The binary currently prints the non-certification banner; library `assess` / `project_readiness` / `project_soa` / `compare` is the execution path.
+The clap family is `assurance {framework,collect,evidence,assess,result,compare,soa,catalog}`. `assurance catalog` is dispatched (validate / stats / inspect). Other `assurance` subcommands print the non-certification banner; library `assess` / `project_readiness` / `project_soa` / `compare` is their execution path.
 
-Workspace crates: `weeping-angel-assurance-ir` → `framework` / `evidence` → `collector`; `ir` + `evidence` → `control-test`; facade `weeping-angel-assurance` composes them.
+Workspace crates: `weeping-angel-assurance-ir` → `framework` / `evidence` → `collector`; `ir` + `evidence` → `control-test`; `ir` → `canonical-catalog` (offline); facade `weeping-angel-assurance` composes the runtime. Framework and collector do not depend on the catalog crate.
 
-- Decisions: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](docs/adr/0001-inwardly-extensible-assurance-runtime.md), [`docs/adr/0002-iso-27001-assurance-vertical.md`](docs/adr/0002-iso-27001-assurance-vertical.md)
+- Decisions: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](docs/adr/0001-inwardly-extensible-assurance-runtime.md), [`docs/adr/0002-iso-27001-assurance-vertical.md`](docs/adr/0002-iso-27001-assurance-vertical.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](docs/adr/0003-canonical-assurance-catalog-v1.md), [`docs/adr/0003-typed-evidence-canonical-serialization.md`](docs/adr/0003-typed-evidence-canonical-serialization.md), [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](docs/adr/0003-subject-population-runtime-and-coverage-semantics.md), [`docs/adr/0003-iam-canonical-assurance-catalog.md`](docs/adr/0003-iam-canonical-assurance-catalog.md)
 - Contract: [`docs/contracts/assurance-runtime.md`](docs/contracts/assurance-runtime.md)
-- Specs: [`docs/sdd/assurance-runtime-spine.md`](docs/sdd/assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](docs/sdd/iso-27001-automated-assurance-mvp.md)
+- Specs: [`docs/sdd/assurance-runtime-spine.md`](docs/sdd/assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](docs/sdd/iso-27001-automated-assurance-mvp.md), [`docs/sdd/canonical-assurance-catalog-v1.md`](docs/sdd/canonical-assurance-catalog-v1.md), [`docs/sdd/typed-evidence.md`](docs/sdd/typed-evidence.md), [`docs/sdd/population-runtime.md`](docs/sdd/population-runtime.md), [`docs/sdd/iam-canonical-assurance-catalog.md`](docs/sdd/iam-canonical-assurance-catalog.md)
 - Packs: [`frameworks/README.md`](frameworks/README.md)
 
 ## Scan a target you control

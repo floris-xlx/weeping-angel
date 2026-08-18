@@ -1,0 +1,62 @@
+{
+  "fixture": "healthy-org",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "account_kind": "user", "unique_key": "user:alice" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "mfa_enabled": "true" }
+    },
+    {
+      "type": "evidence.identity.privileged-membership",
+      "subject_id": "user:alice",
+      "facts": { "subject_id": "user:alice", "privileged": "false", "roles": "user" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:bob",
+      "facts": { "subject_id": "user:bob", "account_kind": "user", "unique_key": "user:bob" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:bob",
+      "facts": { "subject_id": "user:bob", "mfa_enabled": "true" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "account_kind": "user", "unique_key": "user:admin" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "mfa_enabled": "true" }
+    },
+    {
+      "type": "evidence.identity.privileged-membership",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "privileged": "true", "roles": "admin" }
+    },
+    {
+      "type": "evidence.identity.service-account",
+      "subject_id": "sa:deploy",
+      "facts": { "subject_id": "sa:deploy", "is_service_account": "true" }
+    },
+    {
+      "type": "evidence.identity.account-owner",
+      "subject_id": "sa:deploy",
+      "facts": { "subject_id": "sa:deploy", "owner_assigned": "true", "owner_subject_id": "user:alice" }
+    }
+  ]
+}

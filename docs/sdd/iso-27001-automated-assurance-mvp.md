@@ -6,6 +6,7 @@
 | Program | First real ISO 27001 assurance vertical |
 | Dual-suite | Target GREEN (`sdd_iso27001_assurance_target`); baseline superseded (`sdd_iso27001_assurance_baseline`) |
 | ADR | Accepted [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md) |
+| Later fact model | [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md) supersedes string-only observation facts; ISO envelope/ledger invariants stay |
 | Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md), ADR 0001 |
 | Concurrent IR | Separate program. This vertical **does not own** canonical Compliance IR. |
 | Repository | `floris-xlx/weeping-angel` |
@@ -137,7 +138,7 @@ Forbidden edges already enforced by ACT-003 / ACT-013:
 
 ### 3.4 Evidence
 
-`EvidenceEnvelope` is `{ observation, provenance, digest }`. Observation facts are `BTreeMap<String, String>`. Provenance is `{ collectorId, collectedAt, scope, asset }`.
+`EvidenceEnvelope` is `{ observation, provenance, digest }`. Observation facts **on this planning SHA** are `BTreeMap<String, String>`. Provenance is `{ collectorId, collectedAt, scope, asset }`. (Later: [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md) stores `BTreeMap<String, EvidenceValue>`; string `with_fact` remains.)
 
 There is **no** persistent ledger, **no** artifact store, **no** collection-run identity, **no** `supersedes` / `validFrom` / `validUntil` / sensitivity / typed values.
 

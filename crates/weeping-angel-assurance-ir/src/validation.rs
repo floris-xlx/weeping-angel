@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use thiserror::Error;
 
 use crate::{
+    ASSURANCE_IR_SCHEMA, AssessmentDefinition,
     extension::{extension_key_is_well_formed, extensions_override_canonical},
-    AssessmentDefinition, ASSURANCE_IR_SCHEMA,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
@@ -70,7 +70,11 @@ impl ValidateIr for AssessmentDefinition {
             }
         }
 
-        let risk_ids: BTreeSet<_> = self.risks.iter().map(|r| r.id.as_str().to_string()).collect();
+        let risk_ids: BTreeSet<_> = self
+            .risks
+            .iter()
+            .map(|r| r.id.as_str().to_string())
+            .collect();
         let exception_ids: BTreeSet<_> = self
             .exceptions
             .iter()

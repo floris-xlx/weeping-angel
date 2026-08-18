@@ -32,7 +32,7 @@ pub use assessment::{
 pub use asset::{Asset, AssetKind};
 pub use control::{Control, ControlDomain, ControlExpectation};
 pub use digest::{
-    canonical_digest, typed_canonical_digest, CanonicalDigestError, CanonicalizationVersion,
+    CanonicalDigestError, CanonicalizationVersion, canonical_digest, typed_canonical_digest,
 };
 pub use evidence::{
     EvidenceCardinality, EvidenceCollectionKind, EvidenceCriticality, EvidenceRequirement,
@@ -42,10 +42,10 @@ pub use exception::{Exception, ExceptionStatus};
 pub use extension::ExtensionMap;
 pub use framework::{ExternalRequirementRef, FrameworkRef};
 pub use id::{
-    validate_stable_id, AssessmentId, AssetId, AuditProgramId, ControlId, ControlImplementationId,
-    ControlTestId, EvidenceRequirementId, EvidenceType, ExceptionId, FrameworkId, FrameworkVersion,
-    IdError, IdentityId, MappingId, ProcessingActivityId, RequirementId, RiskId, StableId, VendorId,
-    MAX_ID_LEN,
+    AssessmentId, AssetId, AuditProgramId, ControlId, ControlImplementationId, ControlTestId,
+    EvidenceRequirementId, EvidenceType, ExceptionId, FrameworkId, FrameworkVersion, IdError,
+    IdentityId, MAX_ID_LEN, MappingId, ProcessingActivityId, RequirementId, RiskId, StableId,
+    VendorId, validate_stable_id,
 };
 pub use identity::{Identity, IdentityKind};
 pub use implementation::{ControlImplementation, ImplementationStatus, PrincipalRef};
@@ -58,7 +58,7 @@ pub use requirement::{Requirement, RequirementKind};
 pub use risk::{Risk, RiskStatus};
 pub use subject::{SelectorScope, SubjectKind, SubjectSelector};
 pub use test::{PlannedControlTest, PlannedTestKind, TestEvaluationRef, TestFailureSeverity};
-pub use validation::{validate_assessment_ir, IrValidationError, ValidateIr};
+pub use validation::{IrValidationError, ValidateIr, validate_assessment_ir};
 pub use vendor::Vendor;
 
 /// Explicit schema version on every serialized IR document.

@@ -1,0 +1,27 @@
+{
+  "fixture": "privileged-without-mfa",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "intent": "one privileged user has mfa_enabled=false",
+  "evidence": [
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "org:healthy",
+      "facts": { "population_id": "org:healthy", "authoritative": "true", "account_kind": "organization" }
+    },
+    {
+      "type": "evidence.identity.inventory",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "account_kind": "user", "unique_key": "user:admin" }
+    },
+    {
+      "type": "evidence.identity.privileged-membership",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "privileged": "true", "roles": "admin" }
+    },
+    {
+      "type": "evidence.identity.mfa-status",
+      "subject_id": "user:admin",
+      "facts": { "subject_id": "user:admin", "mfa_enabled": "false" }
+    }
+  ]
+}

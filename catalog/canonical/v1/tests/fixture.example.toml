@@ -1,0 +1,12 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.source.protected-branch"
+control = "control.source.protected-branch"
+kind = "automated"
+required_evidence = ["evidence.source.protected-branch"]
+break_on = []
+
+[test.expression]
+op = "exists"
+evidence = "evidence.source.protected-branch"

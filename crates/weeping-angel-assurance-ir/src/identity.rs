@@ -9,6 +9,7 @@ use crate::IdentityId;
 pub enum IdentityKind {
     User,
     Service,
+    ServiceAccount,
     Team,
     Role,
     Other,

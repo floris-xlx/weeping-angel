@@ -1,6 +1,8 @@
 # Weeping Angel framework packs
 
-Versioned, deterministic, network-free catalogs.
+Versioned, deterministic, network-free **regime** packs (requirements + mappings).
+
+They are **not** the reusable control library. Canonical controls, evidence, and tests live in `catalog/canonical/v1` (`weeping-angel/canonical-catalog/v1`; see [`docs/sdd/canonical-assurance-catalog-v1.md`](../docs/sdd/canonical-assurance-catalog-v1.md)). The IAM family (`control.identity.*`) is catalog content ([`docs/sdd/iam-canonical-assurance-catalog.md`](../docs/sdd/iam-canonical-assurance-catalog.md)); packs still map ISO onto pack-local stubs such as `source.branch-protection` and `access.mfa.privileged` until Prompt 12 remaps.
 
 Schema: `weeping-angel/framework-pack/v1`
 
@@ -24,6 +26,7 @@ Validate:
 
 ```bash
 weeping-angel assurance framework validate frameworks/iso-27001/2022
+weeping-angel assurance catalog validate
 ```
 
 Shipped: `iso-27001/2022` (StructuralOnly ISO 27001 readiness pack) and
