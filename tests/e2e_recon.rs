@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use weeping_angel::authz::Authorization;
 use weeping_angel::config::Profile;
-use weeping_angel::engine::{run_scan, ScanOptions};
+use weeping_angel::engine::{ScanOptions, run_scan};
 use weeping_angel::finding::Severity;
 use weeping_angel::http::ClientConfig;
 use weeping_angel::parse::LogHttp;

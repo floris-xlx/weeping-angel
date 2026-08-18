@@ -2,7 +2,7 @@
 name = "weeping-angel-evidence"
 version = "0.2.0"
 edition = "2024"
-description = "Immutable evidence envelopes and observations for Weeping Angel assurance"
+description = "Immutable evidence envelopes, artifacts, and ledger for Weeping Angel assurance"
 license = "MIT"
 publish = false
 
@@ -12,7 +12,10 @@ demo = []
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+hex = "0.4"
+rusqlite = { version = "0.32", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 thiserror = "2"
 weeping-angel-assurance-ir = { path = "../weeping-angel-assurance-ir" }

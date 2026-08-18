@@ -5,9 +5,9 @@ use std::path::PathBuf;
 
 use tempfile::tempdir;
 use weeping_angel::contract::{
-    derive_fingerprint, finalize_scan, finding_id_from_fingerprint, occurrence_id_from,
-    ensure_scan_layout, paths, write_no_findings_bundle, FindingsDocument, ManifestDocument,
-    CoverageDocument,
+    CoverageDocument, FindingsDocument, ManifestDocument, derive_fingerprint, ensure_scan_layout,
+    finalize_scan, finding_id_from_fingerprint, occurrence_id_from, paths,
+    write_no_findings_bundle,
 };
 
 #[test]
@@ -91,5 +91,10 @@ fn no_findings_bundle_seals() {
         serde_json::from_str(&fs::read_to_string(scan_dir.join(paths::COVERAGE_FILE)).unwrap())
             .unwrap();
     assert_eq!(coverage.completeness, "complete");
-    assert!(coverage.surfaces.iter().any(|s| s.disposition == "no_issue_found"));
+    assert!(
+        coverage
+            .surfaces
+            .iter()
+            .any(|s| s.disposition == "no_issue_found")
+    );
 }

@@ -1,9 +1,9 @@
 //! Authorization / scope unit coverage beyond authz_cli.
 
+use url::Url;
 use weeping_angel::authz::{Authorization, AuthzError};
 use weeping_angel::parse::normalize_allow_hosts;
 use weeping_angel::target::{NormalizeOptions, normalize_targets};
-use url::Url;
 
 #[test]
 fn accepts_multiple_targets_same_allowlist() {
@@ -14,10 +14,7 @@ fn accepts_multiple_targets_same_allowlist() {
         false,
     );
     let urls = authz
-        .validate_targets(&[
-            "https://example.com/a".into(),
-            "https://lab.test/".into(),
-        ])
+        .validate_targets(&["https://example.com/a".into(), "https://lab.test/".into()])
         .unwrap();
     assert_eq!(urls.len(), 2);
 }
@@ -26,10 +23,7 @@ fn accepts_multiple_targets_same_allowlist() {
 fn rejects_mixed_out_of_scope() {
     let authz = Authorization::new(true, ["example.com".into()], false, false);
     let err = authz
-        .validate_targets(&[
-            "https://example.com/".into(),
-            "https://evil.com/".into(),
-        ])
+        .validate_targets(&["https://example.com/".into(), "https://evil.com/".into()])
         .unwrap_err();
     assert!(matches!(err, AuthzError::HostNotAllowed { .. }));
 }
@@ -48,9 +42,11 @@ fn wildcard_suffix_and_dot_prefix() {
 #[test]
 fn host_normalization_case_and_trailing_dot() {
     let authz = Authorization::new(true, ["Example.COM.".into()], false, false);
-    assert!(authz
-        .validate_targets(&["https://example.com/".into()])
-        .is_ok());
+    assert!(
+        authz
+            .validate_targets(&["https://example.com/".into()])
+            .is_ok()
+    );
 }
 
 #[test]
@@ -102,11 +98,14 @@ fn bare_host_pipeline_normalize_then_authz() {
 
 #[test]
 fn empty_allow_host_entries_filtered() {
-    let authz = Authorization::new(true, ["".into(), "  ".into(), "ok.com".into()], false, false);
+    let authz = Authorization::new(
+        true,
+        ["".into(), "  ".into(), "ok.com".into()],
+        false,
+        false,
+    );
     assert!(authz.validate_targets(&["https://ok.com/".into()]).is_ok());
-    assert!(authz
-        .validate_targets(&["https://no.com/".into()])
-        .is_err());
+    assert!(authz.validate_targets(&["https://no.com/".into()]).is_err());
 }
 
 #[test]

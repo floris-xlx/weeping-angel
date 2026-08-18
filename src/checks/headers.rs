@@ -55,7 +55,9 @@ impl Check for HeadersCheck {
         let samples: Vec<_> = ctx
             .responses
             .values()
-            .filter(|r| r.status.is_success() && (r.is_html() || r.url.path() == "/" || r.url == ctx.seed))
+            .filter(|r| {
+                r.status.is_success() && (r.is_html() || r.url.path() == "/" || r.url == ctx.seed)
+            })
             .take(5)
             .collect();
 
@@ -175,7 +177,8 @@ mod tests {
         );
         // HSTS skipped for non-https — seed is https so HSTS should fire
         assert!(
-            ids.iter().any(|id| id.contains("strict-transport-security")),
+            ids.iter()
+                .any(|id| id.contains("strict-transport-security")),
             "ids={ids:?}"
         );
     }

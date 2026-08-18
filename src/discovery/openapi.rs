@@ -31,9 +31,7 @@ pub fn extract_paths(seed: &Url, body: &str) -> Vec<Url> {
         let path = &cap[1];
         if path.contains('{') {
             // skip templated for GET discovery or strip
-            let simplified = Regex::new(r"\{[^}]+\}")
-                .unwrap()
-                .replace_all(path, "1");
+            let simplified = Regex::new(r"\{[^}]+\}").unwrap().replace_all(path, "1");
             if let Ok(u) = seed.join(&simplified) {
                 out.push(u);
             }

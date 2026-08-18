@@ -11,8 +11,20 @@ use crate::finding::{Evidence, Finding, Severity};
 pub struct AuthCompareCheck;
 
 const SENSITIVE_HINTS: &[&str] = &[
-    "admin", "user", "users", "account", "me", "private", "internal", "dashboard", "manage",
-    "settings", "billing", "secret", "token", "config",
+    "admin",
+    "user",
+    "users",
+    "account",
+    "me",
+    "private",
+    "internal",
+    "dashboard",
+    "manage",
+    "settings",
+    "billing",
+    "secret",
+    "token",
+    "config",
 ];
 
 #[async_trait]

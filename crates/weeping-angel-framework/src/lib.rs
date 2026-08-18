@@ -1,13 +1,21 @@
 //! Framework compile: profile + capabilities → CompiledFramework.
 //!
-//! Pure. No network I/O. Profile catalogs for Phases 9–17 are dispatch stubs.
+//! Pure. No network I/O. ISO 27001:2022 loads a versioned framework pack.
+
+pub mod pack;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use weeping_angel_assurance_ir::{
-    canonical_digest, AssessmentId, Control, ControlId, ControlTestId, EvidenceRequirement,
-    EvidenceType, FrameworkVersion, Mapping, PlannedControlTest, PlannedTestKind, Requirement,
-    ASSURANCE_IR_SCHEMA,
+    ASSURANCE_IR_SCHEMA, AssessmentId, Control, ControlId, ControlTestId, EvidenceRequirement,
+    EvidenceType, FrameworkVersion, PlannedTestKind, Requirement, ValidateIr, canonical_digest,
+};
+
+pub use weeping_angel_assurance_ir::{Assessment, AssessmentDefinition, AssessmentRequests};
+
+pub use pack::{
+    FrameworkContentProvider, FrameworkPackDigest, LoadedPack, assessment_from_pack,
+    load_framework_pack, load_framework_pack_from, validate_framework_pack,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,30 +94,6 @@ pub struct FrameworkTarget {
     pub context: FrameworkContext,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct AssessmentRequests {
-    pub statement_of_applicability: bool,
-    pub control_applicability: bool,
-    pub privacy_processing: bool,
-    pub risk_treatment: bool,
-    pub manual_attestation: bool,
-    pub sampling: bool,
-    pub audit_program: bool,
-    pub nonconformities: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Assessment {
-    pub id: AssessmentId,
-    pub schema_version: String,
-    pub requirements: Vec<Requirement>,
-    pub controls: Vec<Control>,
-    pub mappings: Vec<Mapping>,
-    pub evidence_requirements: Vec<EvidenceRequirement>,
-    pub tests: Vec<PlannedControlTest>,
-    pub requests: AssessmentRequests,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CompileValidation {
@@ -152,6 +136,10 @@ pub enum FrameworkCompileError {
     Schema { message: String },
     #[error("digest mismatch: expected {expected}, got {actual}")]
     DigestMismatch { expected: String, actual: String },
+    #[error("unknown pack: {message}")]
+    UnknownPack { message: String },
+    #[error("unknown requirement: {id}")]
+    UnknownRequirement { id: String },
 }
 
 const PIPELINE_STAGES: &[&str] = &[
@@ -172,6 +160,11 @@ pub fn compile_framework(
     let mut stages = Vec::new();
 
     let normalized = normalize(assessment, target)?;
+    normalized
+        .validate()
+        .map_err(|e| FrameworkCompileError::Schema {
+            message: e.to_string(),
+        })?;
     stages.push(PIPELINE_STAGES[0].to_string());
 
     let applicable_requirements = resolve_applicability(&normalized, target)?;
@@ -246,15 +239,20 @@ fn normalize(
     }
     let _ = target;
     let mut out = assessment.clone();
+    if target.profile == FrameworkProfile::Iso27001 && target.version.as_str() == "2022" {
+        match pack::load_framework_pack("iso-27001", "2022") {
+            Ok(loaded) => pack::merge_pack(&mut out, &loaded),
+            Err(pack::PackError::UnknownPack(_)) => {}
+            Err(err) => return Err(err.into()),
+        }
+    }
     out.requirements
         .sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
     out.controls
         .sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
     out.mappings.sort_by(|a, b| {
-        (a.from_requirement().as_str(), a.to_control().as_str()).cmp(&(
-            b.from_requirement().as_str(),
-            b.to_control().as_str(),
-        ))
+        (a.from_requirement().as_str(), a.to_control().as_str())
+            .cmp(&(b.from_requirement().as_str(), b.to_control().as_str()))
     });
     out.evidence_requirements
         .sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
@@ -267,7 +265,12 @@ fn resolve_applicability(
     target: &FrameworkTarget,
 ) -> Result<Vec<Requirement>, FrameworkCompileError> {
     let _ = target;
-    Ok(assessment.requirements.clone())
+    Ok(assessment
+        .requirements
+        .iter()
+        .filter(|req| req.applicability().statically_applicable() != Some(false))
+        .cloned()
+        .collect())
 }
 
 fn validate_capabilities(
@@ -302,11 +305,7 @@ fn validate_capabilities(
             cap.supports_manual_attestation,
             "supports_manual_attestation",
         ),
-        (
-            req.sampling,
-            cap.supports_sampling,
-            "supports_sampling",
-        ),
+        (req.sampling, cap.supports_sampling, "supports_sampling"),
         (
             req.audit_program,
             cap.supports_audit_program,
@@ -414,9 +413,14 @@ struct Projection {
     _selector: String,
 }
 
-/// Profile dispatch stub. Full ISO/GDPR/SOC2/NIS2/DORA catalogs are Phases 9–14.
-pub fn stub_catalog(_profile: FrameworkProfile) -> Vec<Requirement> {
-    Vec::new()
+/// Profile catalog. ISO 27001:2022 is loaded from the versioned pack.
+pub fn stub_catalog(profile: FrameworkProfile) -> Vec<Requirement> {
+    match profile {
+        FrameworkProfile::Iso27001 => pack::load_framework_pack("iso-27001", "2022")
+            .map(|p| p.requirements)
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    }
 }
 
 #[derive(Serialize)]

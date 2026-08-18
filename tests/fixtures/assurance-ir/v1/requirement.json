@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "req.iso27001.2022.a-5-15",
+  "frameworkId": "iso-27001",
+  "frameworkVersion": "2022",
+  "title": "Access control",
+  "description": "Limit access to information."
+}

@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -49,10 +49,7 @@ pub fn load_findings(scan_dir: &Path) -> Result<(String, Vec<FindingLite>)> {
             .unwrap_or("unknown")
             .to_string()
     } else {
-        findings["scanId"]
-            .as_str()
-            .unwrap_or("unknown")
-            .to_string()
+        findings["scanId"].as_str().unwrap_or("unknown").to_string()
     };
 
     let mut out = Vec::new();

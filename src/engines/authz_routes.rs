@@ -7,10 +7,8 @@ use crate::engines::EngineHit;
 
 /// Route registration that looks like a privileged action without nearby auth middleware names.
 static ROUTE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r#"(?i)(app|router|api)\.(post|put|patch|delete)\s*\(\s*['"`]([^'"`]+)['"`]"#,
-    )
-    .unwrap()
+    Regex::new(r#"(?i)(app|router|api)\.(post|put|patch|delete)\s*\(\s*['"`]([^'"`]+)['"`]"#)
+        .unwrap()
 });
 
 static DJANGO_URL: Lazy<Regex> = Lazy::new(|| {
@@ -19,10 +17,7 @@ static DJANGO_URL: Lazy<Regex> = Lazy::new(|| {
 });
 
 static NEXT_ROUTE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r#"(?i)export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)\s*\("#,
-    )
-    .unwrap()
+    Regex::new(r#"(?i)export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)\s*\("#).unwrap()
 });
 
 static AUTH_HINT: Lazy<Regex> = Lazy::new(|| {

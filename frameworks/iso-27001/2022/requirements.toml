@@ -1,0 +1,381 @@
+schema = "weeping-angel/framework-pack/v1"
+
+# Structural ISO 27001:2022 identifiers only. No normative clause text.
+
+[[requirement]]
+id = "iso27001:4.1"
+external = "4.1"
+kind = "management-system"
+title = "Organizational context (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:4.2"
+external = "4.2"
+kind = "management-system"
+title = "Interested parties (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:4.3"
+external = "4.3"
+kind = "management-system"
+title = "Scope of the management system (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:4.4"
+external = "4.4"
+kind = "management-system"
+title = "Management system and processes (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:5.1"
+external = "5.1"
+kind = "management-system"
+title = "Leadership and commitment (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:5.2"
+external = "5.2"
+kind = "management-system"
+title = "Policy (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:5.3"
+external = "5.3"
+kind = "management-system"
+title = "Roles and responsibilities (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:6.1"
+external = "6.1"
+kind = "management-system"
+title = "Risks and opportunities (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:6.2"
+external = "6.2"
+kind = "management-system"
+title = "Objectives (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:6.3"
+external = "6.3"
+kind = "management-system"
+title = "Planning of changes (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:7.2"
+external = "7.2"
+kind = "management-system"
+title = "Competence (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:7.5"
+external = "7.5"
+kind = "management-system"
+title = "Documented information (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:8.1"
+external = "8.1"
+kind = "management-system"
+title = "Operational planning (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:9.1"
+external = "9.1"
+kind = "management-system"
+title = "Monitoring and measurement (structural)"
+parent = ""
+automation = "Hybrid"
+soa = false
+
+[[requirement]]
+id = "iso27001:9.2"
+external = "9.2"
+kind = "management-system"
+title = "Internal audit (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:9.3"
+external = "9.3"
+kind = "management-system"
+title = "Management review (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:10.1"
+external = "10.1"
+kind = "management-system"
+title = "Continual improvement (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:10.2"
+external = "10.2"
+kind = "management-system"
+title = "Nonconformity and corrective action (structural)"
+parent = ""
+automation = "Manual"
+soa = false
+
+[[requirement]]
+id = "iso27001:a.5.1"
+external = "A.5.1"
+kind = "annex-a-reference"
+title = "Policies for information security (reference)"
+parent = "theme:organizational"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.15"
+external = "A.5.15"
+kind = "annex-a-reference"
+title = "Access control (reference)"
+parent = "theme:organizational"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.16"
+external = "A.5.16"
+kind = "annex-a-reference"
+title = "Identity management (reference)"
+parent = "theme:organizational"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.17"
+external = "A.5.17"
+kind = "annex-a-reference"
+title = "Authentication information (reference)"
+parent = "theme:organizational"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.18"
+external = "A.5.18"
+kind = "annex-a-reference"
+title = "Access rights (reference)"
+parent = "theme:organizational"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.19"
+external = "A.5.19"
+kind = "annex-a-reference"
+title = "Supplier relationships (reference)"
+parent = "theme:organizational"
+automation = "Manual"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.23"
+external = "A.5.23"
+kind = "annex-a-reference"
+title = "Information security for use of cloud services (reference)"
+parent = "theme:organizational"
+automation = "ContextDependent"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.24"
+external = "A.5.24"
+kind = "annex-a-reference"
+title = "Information security incident management planning (reference)"
+parent = "theme:organizational"
+automation = "Manual"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.28"
+external = "A.5.28"
+kind = "annex-a-reference"
+title = "Collection of evidence (reference)"
+parent = "theme:organizational"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.9"
+external = "A.5.9"
+kind = "annex-a-reference"
+title = "Inventory of information and other associated assets (reference)"
+parent = "theme:organizational"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.5.7"
+external = "A.5.7"
+kind = "annex-a-reference"
+title = "Threat intelligence (reference)"
+parent = "theme:organizational"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.6.1"
+external = "A.6.1"
+kind = "annex-a-reference"
+title = "Screening (reference)"
+parent = "theme:people"
+automation = "Manual"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.6.5"
+external = "A.6.5"
+kind = "annex-a-reference"
+title = "Responsibilities after termination or change of employment (reference)"
+parent = "theme:people"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.2"
+external = "A.8.2"
+kind = "annex-a-reference"
+title = "Privileged access rights (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.3"
+external = "A.8.3"
+kind = "annex-a-reference"
+title = "Information access restriction (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.5"
+external = "A.8.5"
+kind = "annex-a-reference"
+title = "Secure authentication (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.8"
+external = "A.8.8"
+kind = "annex-a-reference"
+title = "Management of technical vulnerabilities (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.9"
+external = "A.8.9"
+kind = "annex-a-reference"
+title = "Configuration management (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.13"
+external = "A.8.13"
+kind = "annex-a-reference"
+title = "Information backup (reference)"
+parent = "theme:technological"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.15"
+external = "A.8.15"
+kind = "annex-a-reference"
+title = "Logging (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.24"
+external = "A.8.24"
+kind = "annex-a-reference"
+title = "Use of cryptography (reference)"
+parent = "theme:technological"
+automation = "Hybrid"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.25"
+external = "A.8.25"
+kind = "annex-a-reference"
+title = "Secure development life cycle (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.26"
+external = "A.8.26"
+kind = "annex-a-reference"
+title = "Application security requirements (reference)"
+parent = "theme:technological"
+automation = "PartiallyAutomatable"
+soa = true
+
+[[requirement]]
+id = "iso27001:a.8.32"
+external = "A.8.32"
+kind = "annex-a-reference"
+title = "Change management (reference)"
+parent = "theme:technological"
+automation = "Hybrid"
+soa = true

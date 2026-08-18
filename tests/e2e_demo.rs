@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use weeping_angel::authz::Authorization;
 use weeping_angel::config::Profile;
-use weeping_angel::engine::{run_scan, ScanOptions};
+use weeping_angel::engine::{ScanOptions, run_scan};
 use weeping_angel::finding::Severity;
 use weeping_angel::http::ClientConfig;
 
@@ -119,10 +119,9 @@ async fn scan_lab_demo_finds_core_issues() {
     );
 
     assert!(
-        report
-            .findings
-            .iter()
-            .any(|f| f.module == "firebase" || f.id.contains("firebase") || f.id.contains("firestore")),
+        report.findings.iter().any(|f| f.module == "firebase"
+            || f.id.contains("firebase")
+            || f.id.contains("firestore")),
         "expected firebase/firestore findings, ids={ids:?}"
     );
     assert!(
@@ -140,19 +139,17 @@ async fn scan_lab_demo_finds_core_issues() {
         "expected login/signup guard classification, ids={ids:?}"
     );
     assert!(
-        report.discovered_urls.iter().any(|u| u.contains("dashboardpic")
-            || u.contains("/assets/images/")),
+        report
+            .discovered_urls
+            .iter()
+            .any(|u| u.contains("dashboardpic") || u.contains("/assets/images/")),
         "expected image hosting path enumeration, urls={:?}",
         report.discovered_urls
     );
     assert!(
-        report
-            .findings
-            .iter()
-            .any(|f| f.id == "image-asset"
-                || f.id == "image-hosting-pattern"
-                || f.description.contains("image")
-                    && f.module == "discovery"),
+        report.findings.iter().any(|f| f.id == "image-asset"
+            || f.id == "image-hosting-pattern"
+            || f.description.contains("image") && f.module == "discovery"),
         "expected image pattern findings, ids={ids:?}"
     );
 
@@ -167,7 +164,12 @@ async fn scan_lab_demo_finds_core_issues() {
 
     let oas = weeping_angel::report::openapi_gen::from_report(&report);
     assert_eq!(oas["openapi"], "3.0.3");
-    assert!(oas["paths"].as_object().map(|p| !p.is_empty()).unwrap_or(false));
+    assert!(
+        oas["paths"]
+            .as_object()
+            .map(|p| !p.is_empty())
+            .unwrap_or(false)
+    );
 
     let harvest = report
         .image_harvest
@@ -229,7 +231,8 @@ async fn scan_lab_demo_finds_core_issues() {
     assert!(sarif.contains("floris-xlx/weeping-angel") || sarif.contains("weeping-angel"));
     // inventory routes should not dominate SARIF results
     assert!(
-        !sarif.contains("route-discovered") || sarif.matches("ruleId").count() < report.findings.len(),
+        !sarif.contains("route-discovered")
+            || sarif.matches("ruleId").count() < report.findings.len(),
         "SARIF should prefer security findings over inventory noise"
     );
 }

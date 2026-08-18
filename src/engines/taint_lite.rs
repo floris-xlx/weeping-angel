@@ -169,15 +169,17 @@ fn analyze_window_range(lines: &[&str], sink_idx: usize, local_only: bool) -> Ta
             method: method.into(),
             confidence: "high",
             confidence_rationale:
-                "Attacker-source pattern and/or tainted identifiers reach the sink line."
-                    .into(),
+                "Attacker-source pattern and/or tainted identifiers reach the sink line.".into(),
             disposition: "reportable",
         }
     } else if !sources.is_empty() {
         TaintResult {
             verdict: TaintVerdict::NoSourceInWindow,
             sources: sources.into_iter().take(5).collect(),
-            tainted_names: tainted.into_iter().filter(|n| n != "__source_expr__").collect(),
+            tainted_names: tainted
+                .into_iter()
+                .filter(|n| n != "__source_expr__")
+                .collect(),
             method: method.into(),
             confidence: "low",
             confidence_rationale:
@@ -218,8 +220,7 @@ fn analyze_interprocedural_file(lines: &[&str], sink_idx: usize) -> TaintResult 
     let mut reaches = false;
 
     // Calls inside sink function to source_funcs
-    static CALL: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(").unwrap());
+    static CALL: Lazy<Regex> = Lazy::new(|| Regex::new(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(").unwrap());
 
     for line in &lines[start..=end] {
         for caps in CALL.captures_iter(line) {
@@ -424,7 +425,10 @@ fn sink_uses_any(sink: &str, tainted: &HashSet<String>) -> bool {
 }
 
 /// Build validation + attack_path JSON for a hit after taint enrichment.
-pub fn validation_json(hit: &EngineHit, taint: &TaintResult) -> (serde_json::Value, serde_json::Value) {
+pub fn validation_json(
+    hit: &EngineHit,
+    taint: &TaintResult,
+) -> (serde_json::Value, serde_json::Value) {
     let validation = json!({
         "disposition": taint.disposition,
         "method": taint.method,
@@ -499,7 +503,7 @@ pub fn enrich_hits(hits: &mut [EngineHit], file_contents: &HashMap<String, Strin
                 "{} | taint={:?} conf={}",
                 hit.evidence, taint.verdict, taint.confidence
             );
-            // stash JSON in extensions-like way: encode in summary? 
+            // stash JSON in extensions-like way: encode in summary?
             // Use a side channel via EngineHit — add optional fields
             hit.validation_json = Some(v);
             hit.attack_path_json = Some(a);

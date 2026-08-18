@@ -9,13 +9,14 @@ use anyhow::Result;
 use sha2::{Digest, Sha256};
 
 use crate::contract::{
-    combine_candidates, ensure_scan_layout, finalize_scan, normalize_raw_candidate,
+    CoverageDocument, CoverageSurface, FindingsDocument, ManifestDocument, Producer, ScanBody,
+    ScanScope, ScanTarget, SemanticFinding, combine_candidates, ensure_scan_layout, finalize_scan,
+    normalize_raw_candidate,
     paths::{CANDIDATE_LEDGER, IN_SCOPE_FILES},
     sha256_path_inventory, snapshot_digest_v1, target_id_from_display, write_candidate_ledger,
-    write_scan_bundle, CoverageDocument, CoverageSurface, FindingsDocument, ManifestDocument,
-    Producer, ScanBody, ScanScope, ScanTarget, SemanticFinding,
+    write_scan_bundle,
 };
-use crate::engines::{scan_source_file, EngineHit, MAX_ENGINE_FILE_BYTES};
+use crate::engines::{EngineHit, MAX_ENGINE_FILE_BYTES, scan_source_file};
 
 #[derive(Debug, Clone)]
 pub struct CodeScanResult {
@@ -224,17 +225,15 @@ pub fn run_code_scan_with_opts(
                     hits.len(),
                     findings.len()
                 )),
-                artifacts_reviewed: Some(vec![
-                    IN_SCOPE_FILES.into(),
-                    CANDIDATE_LEDGER.into(),
-                ]),
+                artifacts_reviewed: Some(vec![IN_SCOPE_FILES.into(), CANDIDATE_LEDGER.into()]),
                 runtime_status: Some("not-run".into()),
                 validation_mode: Some("static-pattern".into()),
                 context: None,
                 limitations: Some(vec![
                     "Pattern/static engines only; no AI semantic review.".into(),
                     "No full interprocedural taint; confidence often medium.".into(),
-                    "DepCheck registry checks in scan-code are opt-in via WA_DEPCHECK_NETWORK=1.".into(),
+                    "DepCheck registry checks in scan-code are opt-in via WA_DEPCHECK_NETWORK=1."
+                        .into(),
                 ]),
             },
             threat_model: None,
@@ -309,10 +308,22 @@ pub fn run_code_scan_with_opts(
 
 fn engine_surfaces(findings: &[SemanticFinding]) -> Vec<CoverageSurface> {
     let packs = [
-        ("surface_path_traversal", "Path traversal engines", "path-traversal"),
-        ("surface_command_injection", "Command injection engines", "command-injection"),
+        (
+            "surface_path_traversal",
+            "Path traversal engines",
+            "path-traversal",
+        ),
+        (
+            "surface_command_injection",
+            "Command injection engines",
+            "command-injection",
+        ),
         ("surface_secrets", "Secrets-in-code engines", "secrets"),
-        ("surface_sql_injection", "SQL injection engines", "sql-injection"),
+        (
+            "surface_sql_injection",
+            "SQL injection engines",
+            "sql-injection",
+        ),
         ("surface_ssrf", "SSRF engines", "ssrf"),
         ("surface_xss", "XSS / template engines", "xss"),
         (
@@ -419,9 +430,33 @@ pub fn inventory_source_files(root: &Path, scope_prefix: Option<&str>) -> Result
         let ok = is_dep_manifest
             || matches!(
                 ext.as_str(),
-                "rs" | "py" | "js" | "jsx" | "ts" | "tsx" | "go" | "java" | "kt" | "rb" | "php"
-                    | "c" | "cc" | "cpp" | "h" | "hpp" | "cs" | "swift" | "scala" | "sh" | "bash"
-                    | "zsh" | "yaml" | "yml" | "toml" | "json" | "sql" | "env"
+                "rs" | "py"
+                    | "js"
+                    | "jsx"
+                    | "ts"
+                    | "tsx"
+                    | "go"
+                    | "java"
+                    | "kt"
+                    | "rb"
+                    | "php"
+                    | "c"
+                    | "cc"
+                    | "cpp"
+                    | "h"
+                    | "hpp"
+                    | "cs"
+                    | "swift"
+                    | "scala"
+                    | "sh"
+                    | "bash"
+                    | "zsh"
+                    | "yaml"
+                    | "yml"
+                    | "toml"
+                    | "json"
+                    | "sql"
+                    | "env"
             );
         if ok {
             files.push(rel);
@@ -442,5 +477,3 @@ impl UtcLike {
             .unwrap_or_else(|_| "0".into())
     }
 }
-
-

@@ -188,4 +188,4 @@ Full event array: [`sdd-assurance-runtime-spine-telemetry.json`](sdd-assurance-r
 
 ## Summary
 
-Phases 0–8 of the inwardly extensible assurance runtime landed under dual-suite SDD: spec + ADR, baseline GREEN on the scanner-only tree, target RED on missing crates, six-crate workspace implemented until ACT-001..015 + COL-001..006 GREEN, docs/contracts updated, pre-spine baseline skip-superseded (`#[ignore]`; forced `--ignored` is not green). Target remains the only required suite. Catalogs, hosted collectors, and CLI assurance subcommands stay later-phase work.
+Phases 0–8 of the inwardly extensible assurance runtime landed under dual-suite SDD: spec + ADR, baseline GREEN on the scanner-only tree, target RED on missing crates, six-crate workspace implemented until ACT-001..015 + COL-001..006 GREEN, docs/contracts updated, pre-spine baseline skip-superseded (`#[ignore]`; forced `--ignored` is not green). Target remains the only required spine suite. Follow-on ISO 27001 vertical (pack, ledger, TestExpr, GitHub/local/manual collectors, readiness/SoA, clap family) landed as ADR 0002 / `sdd_iso27001_assurance_target`.

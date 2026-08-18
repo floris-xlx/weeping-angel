@@ -33,7 +33,14 @@ pub fn resolve_npm_alias(version_str: &str) -> Option<(String, String)> {
     if name.is_empty() {
         return None;
     }
-    Some((name.to_string(), if ver.is_empty() { "*".into() } else { ver.into() }))
+    Some((
+        name.to_string(),
+        if ver.is_empty() {
+            "*".into()
+        } else {
+            ver.into()
+        },
+    ))
 }
 
 /// Composer platform packages that cannot be confused on Packagist.
@@ -199,8 +206,7 @@ mod tests {
             PackageRef::new("@mycompany/a", "1"),
             PackageRef::new("orphan-internal", "1"),
         ];
-        let (check, secure) =
-            partition_secure_namespaces(pkgs, &["@mycompany/*".into()]);
+        let (check, secure) = partition_secure_namespaces(pkgs, &["@mycompany/*".into()]);
         assert_eq!(secure.len(), 1);
         assert_eq!(check.len(), 1);
         assert_eq!(check[0].name, "orphan-internal");

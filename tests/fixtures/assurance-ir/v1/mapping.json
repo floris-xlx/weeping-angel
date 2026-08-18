@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "fromRequirement": "req.iso27001.2022.a-5-15",
+  "toControl": "control.access.mfa",
+  "direction": "forward",
+  "completeness": "partial",
+  "relation": "PartiallySatisfies",
+  "rationale": "partial mapping; PartiallySatisfies cannot fully satisfy"
+}

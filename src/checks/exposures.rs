@@ -53,19 +53,25 @@ impl Check for ExposuresCheck {
                             .description("Git metadata appears publicly accessible.")
                             .remediation("Deny web access to .git directories.")
                             .cwe("CWE-538")
-                            .evidence(Evidence::new("body", resp.body.chars().take(80).collect::<String>()))
+                            .evidence(Evidence::new(
+                                "body",
+                                resp.body.chars().take(80).collect::<String>(),
+                            ))
                             .build(),
                     );
                 }
 
-                if path.contains("phpinfo") && resp.body.to_ascii_lowercase().contains("php version")
+                if path.contains("phpinfo")
+                    && resp.body.to_ascii_lowercase().contains("php version")
                 {
                     findings.push(
                         Finding::builder(self.id(), "phpinfo")
                             .title("phpinfo() page exposed")
                             .severity(Severity::High)
                             .url(url_str)
-                            .description("phpinfo output can leak paths, modules, and configuration.")
+                            .description(
+                                "phpinfo output can leak paths, modules, and configuration.",
+                            )
                             .remediation("Remove phpinfo scripts from production.")
                             .cwe("CWE-200")
                             .build(),
@@ -79,7 +85,9 @@ impl Check for ExposuresCheck {
                             .severity(Severity::High)
                             .url(url_str)
                             .description("Actuator endpoints may expose env, beans, or heap dumps.")
-                            .remediation("Disable public actuator endpoints or require strong auth.")
+                            .remediation(
+                                "Disable public actuator endpoints or require strong auth.",
+                            )
                             .cwe("CWE-200")
                             .build(),
                     );

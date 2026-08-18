@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "control.access.mfa",
+  "title": "MFA",
+  "description": "Require multi-factor authentication."
+}

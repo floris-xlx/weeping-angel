@@ -1,0 +1,18 @@
+schema = "weeping-angel/assurance-fixture/v1"
+framework = "iso-27001"
+version = "2022"
+
+[organization]
+id = "fixture-org"
+
+[[repository]]
+id = "repo-secure"
+branch_protection = true
+required_reviews = 2
+secret_scanning = true
+
+[[repository]]
+id = "repo-insecure"
+branch_protection = false
+required_reviews = 0
+secret_scanning = false

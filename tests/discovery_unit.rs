@@ -44,7 +44,11 @@ fn wordlist_interesting_status() {
 fn wordlist_loads_repo_file() {
     let paths = wordlist::load_paths(std::path::Path::new("wordlists/common-paths.txt")).unwrap();
     assert!(paths.len() > 20, "len={}", paths.len());
-    assert!(paths.iter().any(|p| p.contains(".env") || p.contains("env")));
+    assert!(
+        paths
+            .iter()
+            .any(|p| p.contains(".env") || p.contains("env"))
+    );
 }
 
 #[test]
@@ -66,7 +70,8 @@ fn spa_next_data_and_js_routes() {
     </script>"#;
     let urls = spa::extract_from_html(&base, html);
     assert!(
-        urls.iter().any(|u| u.path().contains("api") || u.path().contains("dashboard")),
+        urls.iter()
+            .any(|u| u.path().contains("api") || u.path().contains("dashboard")),
         "{urls:?}"
     );
 
@@ -81,7 +86,8 @@ fn js_endpoints_api_paths() {
     let body = r#"fetch("/api/v1/users"); axios.get('https://lab.example/api/v1/me'); const p="/graphql";"#;
     let eps = js_endpoints::extract_endpoints(&base, body);
     assert!(
-        eps.iter().any(|u| u.as_str().contains("api") || u.as_str().contains("graphql")),
+        eps.iter()
+            .any(|u| u.as_str().contains("api") || u.as_str().contains("graphql")),
         "{eps:?}"
     );
 }
@@ -95,7 +101,8 @@ fn image_assets_detects_extensions_and_patterns() {
     assert!(image_assets::is_image_url(
         &Url::parse("https://lab.example/a.jpg").unwrap()
     ));
-    let html = r#"<img src="/assets/images/home/dashboardpic.png"/><img srcset="/a.png 1x, /b.png 2x"/>"#;
+    let html =
+        r#"<img src="/assets/images/home/dashboardpic.png"/><img srcset="/a.png 1x, /b.png 2x"/>"#;
     let imgs = image_assets::extract_from_html(&base, html);
     assert!(!imgs.is_empty(), "{imgs:?}");
 }

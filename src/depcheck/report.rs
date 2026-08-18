@@ -52,12 +52,7 @@ pub fn print_summary(summary: &ScanSummary, quiet: bool) {
         );
         eprintln!();
         for v in &summary.vulnerable {
-            eprintln!(
-                "  {} {} @ {}",
-                style::err("[!]"),
-                v.name,
-                v.version
-            );
+            eprintln!("  {} {} @ {}", style::err("[!]"), v.name, v.version);
         }
         eprintln!();
         eprintln!(
@@ -72,12 +67,8 @@ pub fn print_summary(summary: &ScanSummary, quiet: bool) {
         );
         if summary.ecosystem.as_str() == "npm" {
             eprintln!();
-            eprintln!(
-                "  Note: npm scopes (@org/…) are not always publicly visible."
-            );
-            eprintln!(
-                "  If you already own a scope, pass -s '@org/*' (confused-compatible)."
-            );
+            eprintln!("  Note: npm scopes (@org/…) are not always publicly visible.");
+            eprintln!("  If you already own a scope, pass -s '@org/*' (confused-compatible).");
         }
     } else if summary.errors.is_empty() {
         eprintln!();
@@ -120,7 +111,10 @@ pub fn print_summary(summary: &ScanSummary, quiet: bool) {
                 &intro.commit[..intro.commit.len().min(12)],
                 intro.date
             );
-            eprintln!("      \"{}\" — {} — {}", intro.subject, intro.author, intro.file);
+            eprintln!(
+                "      \"{}\" — {} — {}",
+                intro.subject, intro.author, intro.file
+            );
         }
     }
 

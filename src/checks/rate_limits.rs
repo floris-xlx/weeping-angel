@@ -19,17 +19,8 @@ use crate::finding::{Evidence, Finding, Severity};
 pub struct RateLimitsCheck;
 
 const AUTH_PATH_HINTS: &[&str] = &[
-    "login",
-    "signin",
-    "sign-in",
-    "signup",
-    "sign-up",
-    "register",
-    "auth",
-    "oauth",
-    "token",
-    "password",
-    "session",
+    "login", "signin", "sign-in", "signup", "sign-up", "register", "auth", "oauth", "token",
+    "password", "session",
 ];
 
 const RATE_HEADER_PREFIXES: &[&str] = &[
@@ -129,7 +120,10 @@ impl Check for RateLimitsCheck {
                         .description(format!(
                             "Response advertises rate limiting metadata: {summary}"
                         ))
-                        .evidence(Evidence::new("headers", summary.chars().take(400).collect::<String>()))
+                        .evidence(Evidence::new(
+                            "headers",
+                            summary.chars().take(400).collect::<String>(),
+                        ))
                         .build(),
                 );
             }
@@ -157,7 +151,10 @@ impl Check for RateLimitsCheck {
         // Annotate auth/API routes with no observed rate-limit signal (informational)
         for url in &candidates {
             let key = url.as_str();
-            if routes_with_limits.iter().any(|r| r.starts_with(key) || key.starts_with(r.as_str())) {
+            if routes_with_limits
+                .iter()
+                .any(|r| r.starts_with(key) || key.starts_with(r.as_str()))
+            {
                 continue;
             }
             // Check if any cached response for this exact URL had limits

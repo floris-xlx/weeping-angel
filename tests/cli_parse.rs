@@ -5,10 +5,8 @@ use weeping_angel::cli::{Cli, Commands};
 use weeping_angel::parse::LogHttp;
 
 fn parse(args: &[&str]) -> Cli {
-    Cli::try_parse_from(
-        std::iter::once("weeping-angel").chain(args.iter().copied()),
-    )
-    .unwrap_or_else(|e| panic!("parse failed for {args:?}: {e}"))
+    Cli::try_parse_from(std::iter::once("weeping-angel").chain(args.iter().copied()))
+        .unwrap_or_else(|e| panic!("parse failed for {args:?}: {e}"))
 }
 
 fn parse_err(args: &[&str]) -> String {
@@ -38,7 +36,10 @@ fn depcheck_parses_list_and_threads() {
     ]);
     match cli.command {
         Commands::Depcheck(d) => {
-            assert_eq!(d.target.as_deref(), Some(std::path::Path::new("package.json")));
+            assert_eq!(
+                d.target.as_deref(),
+                Some(std::path::Path::new("package.json"))
+            );
             assert!(d.list);
             assert_eq!(d.threads, 5);
             assert_eq!(d.file_type.as_deref(), Some("package_json"));
@@ -67,7 +68,10 @@ fn depcheck_parses_confused_language_and_secure_namespaces() {
             assert_eq!(d.language.as_deref(), Some("npm"));
             assert_eq!(
                 d.secure_namespaces,
-                vec!["@mycompany/*,@trusted/*".to_string(), "exact-pkg".to_string()]
+                vec![
+                    "@mycompany/*,@trusted/*".to_string(),
+                    "exact-pkg".to_string()
+                ]
             );
             assert!(!d.list);
         }
@@ -222,7 +226,13 @@ fn scan_diff_parses_base_head() {
 
 #[test]
 fn bare_i_own_this_sets_consent() {
-    let s = scan(&["scan", "example.com", "--i-own-this", "--allow-host", "example.com"]);
+    let s = scan(&[
+        "scan",
+        "example.com",
+        "--i-own-this",
+        "--allow-host",
+        "example.com",
+    ]);
     assert!(s.consent());
     assert_eq!(s.targets, vec!["example.com"]);
 }
@@ -244,7 +254,13 @@ fn i_own_this_equals_true_one_on() {
 
 #[test]
 fn i_own_this_equals_false_rejected() {
-    let err = parse_err(&["scan", "a.com", "--i-own-this=false", "--allow-host", "a.com"]);
+    let err = parse_err(&[
+        "scan",
+        "a.com",
+        "--i-own-this=false",
+        "--allow-host",
+        "a.com",
+    ]);
     assert!(
         err.contains("false") || err.contains("consent") || err.contains("i-own-this"),
         "err={err}"
@@ -381,7 +397,10 @@ fn cookie_key_value_space_and_equals() {
         "--cookie",
         "role=ops",
     ]);
-    assert_eq!(s.cookie_header().as_deref(), Some("session=admin; role=ops"));
+    assert_eq!(
+        s.cookie_header().as_deref(),
+        Some("session=admin; role=ops")
+    );
 }
 
 #[test]
@@ -529,7 +548,13 @@ fn completions_subcommand_parses_powershell() {
 
 #[test]
 fn scan_alias_s_parses() {
-    let s = scan(&["s", "example.com", "--i-own-this", "--allow-host", "example.com"]);
+    let s = scan(&[
+        "s",
+        "example.com",
+        "--i-own-this",
+        "--allow-host",
+        "example.com",
+    ]);
     assert_eq!(s.targets, vec!["example.com"]);
 }
 
@@ -537,7 +562,10 @@ fn scan_alias_s_parses() {
 fn no_args_requests_help() {
     use clap::error::ErrorKind;
     let err = Cli::try_parse_from(["weeping-angel"]).expect_err("empty argv should show help");
-    assert_eq!(err.kind(), ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);
+    assert_eq!(
+        err.kind(),
+        ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand
+    );
 }
 
 #[test]
@@ -586,11 +614,7 @@ fn workbench_compare_parses() {
     ]);
     match cli.command {
         Commands::Workbench(w) => match w.command {
-            weeping_angel::cli::WorkbenchCommand::Compare {
-                before,
-                after,
-                out,
-            } => {
+            weeping_angel::cli::WorkbenchCommand::Compare { before, after, out } => {
                 assert_eq!(before, std::path::PathBuf::from("scan-a"));
                 assert_eq!(after, std::path::PathBuf::from("scan-b"));
                 assert_eq!(out.unwrap(), std::path::PathBuf::from("delta.json"));
@@ -638,10 +662,7 @@ fn workbench_apply_and_verify_parse() {
     ]);
     match cli.command {
         Commands::Workbench(w) => match w.command {
-            weeping_angel::cli::WorkbenchCommand::ApplyPatch {
-                source_root,
-                patch,
-            } => {
+            weeping_angel::cli::WorkbenchCommand::ApplyPatch { source_root, patch } => {
                 assert_eq!(source_root, std::path::PathBuf::from("src"));
                 assert_eq!(patch, std::path::PathBuf::from("fix.patch"));
             }

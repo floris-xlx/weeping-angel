@@ -270,10 +270,7 @@ mod tests {
 
     #[test]
     fn split_csv_and_space() {
-        assert_eq!(
-            split_list("a, b;c\td"),
-            vec!["a", "b", "c", "d"]
-        );
+        assert_eq!(split_list("a, b;c\td"), vec!["a", "b", "c", "d"]);
     }
 
     #[test]
@@ -308,7 +305,13 @@ mod tests {
     #[test]
     fn header_pairs_adjacent_tokens() {
         let h = parse_header_lines(&["X-Api-Key".into(), "secret".into(), "X-B=2".into()]).unwrap();
-        assert_eq!(h, vec![("X-Api-Key".into(), "secret".into()), ("X-B".into(), "2".into())]);
+        assert_eq!(
+            h,
+            vec![
+                ("X-Api-Key".into(), "secret".into()),
+                ("X-B".into(), "2".into())
+            ]
+        );
     }
 
     #[test]

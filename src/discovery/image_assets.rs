@@ -118,9 +118,8 @@ const BASENAMES: &[&str] = &[
     "home",
 ];
 
-static CSS_URL_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"(?i)url\(\s*['"]?([^'")\s]+)['"]?\s*\)"#).unwrap()
-});
+static CSS_URL_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"(?i)url\(\s*['"]?([^'")\s]+)['"]?\s*\)"#).unwrap());
 
 static QUOTED_IMAGE_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
@@ -129,8 +128,9 @@ static QUOTED_IMAGE_RE: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 
-static SRCSET_PART_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"(?i)(\S+\.(?:png|jpe?g|webp|gif|svg|avif)(?:\?[^\s,]*)?)"#).unwrap());
+static SRCSET_PART_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"(?i)(\S+\.(?:png|jpe?g|webp|gif|svg|avif)(?:\?[^\s,]*)?)"#).unwrap()
+});
 
 /// Extract image URLs referenced from HTML (img, srcset, meta, link, inline CSS).
 pub fn extract_from_html(base: &Url, html: &str) -> Vec<Url> {
@@ -167,7 +167,9 @@ pub fn extract_from_html(base: &Url, html: &str) -> Vec<Url> {
                     .or_else(|| el.value().attr("name"))
                     .unwrap_or("")
                     .to_ascii_lowercase();
-                if !(prop.contains("image") || prop.contains("thumbnail") || prop == "twitter:image")
+                if !(prop.contains("image")
+                    || prop.contains("thumbnail")
+                    || prop == "twitter:image")
                 {
                     continue;
                 }
@@ -281,13 +283,22 @@ pub fn enumerate_patterns(seed: &Url, observed: &[Url]) -> Vec<Url> {
             if prefix.contains("_next/image") {
                 continue; // query-based; skip blind probe
             }
-            for name in ["logo", "hero", "banner", "dashboard", "dashboardpic", "og-image", "favicon"]
-            {
+            for name in [
+                "logo",
+                "hero",
+                "banner",
+                "dashboard",
+                "dashboardpic",
+                "og-image",
+                "favicon",
+            ] {
                 for ext in ["png", "jpg", "webp", "svg"] {
                     // Prefer sectioned tree for assets/images
                     if prefix.ends_with("images/") || prefix.ends_with("img/") {
                         for section in ["home", "hero", "common", "logo"] {
-                            if let Some(u) = join_path(seed, &format!("{prefix}{section}/{name}.{ext}")) {
+                            if let Some(u) =
+                                join_path(seed, &format!("{prefix}{section}/{name}.{ext}"))
+                            {
                                 push_unique(&mut out, &mut seen, u);
                             }
                             if out.len() >= MAX_ENUMERATED {
@@ -315,11 +326,7 @@ pub fn describe_pattern(path: &str) -> Option<ImagePatternInfo> {
     if !is_image_path(path) {
         return None;
     }
-    let ext = path
-        .rsplit('.')
-        .next()
-        .unwrap_or("")
-        .to_ascii_lowercase();
+    let ext = path.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
     let dir = path_parent(path);
     let file = path.rsplit('/').next().unwrap_or("");
     let stem = file
@@ -396,10 +403,7 @@ fn expand_from_observed(origin_seed: &Url, img: &Url) -> Vec<Url> {
     }
     for suffix in ["@2x", "@3x", "-dark", "-light", "-mobile", "-desktop"] {
         for ext in ["png", "webp"] {
-            if let Some(u) = join_path(
-                origin_seed,
-                &format!("{dir}/{}{suffix}.{ext}", info.stem),
-            ) {
+            if let Some(u) = join_path(origin_seed, &format!("{dir}/{}{suffix}.{ext}", info.stem)) {
                 priority.push(u);
             }
         }
@@ -432,8 +436,18 @@ fn expand_from_observed(origin_seed: &Url, img: &Url) -> Vec<Url> {
 
     // 3) Sibling sections under parent (…/images/{section}/…) — compact set
     const PRIORITY_SECTIONS: &[&str] = &[
-        "home", "hero", "landing", "marketing", "product", "features", "dashboard", "logo",
-        "screenshots", "og", "common", "shared",
+        "home",
+        "hero",
+        "landing",
+        "marketing",
+        "product",
+        "features",
+        "dashboard",
+        "logo",
+        "screenshots",
+        "og",
+        "common",
+        "shared",
     ];
     if !parent.is_empty() {
         for section in PRIORITY_SECTIONS {
@@ -479,9 +493,10 @@ fn expand_from_observed(origin_seed: &Url, img: &Url) -> Vec<Url> {
             if PRIORITY_SECTIONS.contains(section) {
                 continue;
             }
-            if let Some(u) =
-                join_path(origin_seed, &format!("{parent}/{section}/{}.png", info.stem))
-            {
+            if let Some(u) = join_path(
+                origin_seed,
+                &format!("{parent}/{section}/{}.png", info.stem),
+            ) {
                 later.push(u);
             }
         }
@@ -553,8 +568,7 @@ pub fn is_image_path(s: &str) -> bool {
 pub fn is_image_url(u: &Url) -> bool {
     is_image_path(u.path())
         || u.path().contains("/_next/image")
-        || u
-            .query_pairs()
+        || u.query_pairs()
             .any(|(k, v)| k == "url" && is_image_path(&v))
 }
 
@@ -587,8 +601,14 @@ mod tests {
                 .any(|u| u.path() == "/assets/images/home/dashboardpic.png"),
             "{urls:?}"
         );
-        assert!(urls.iter().any(|u| u.path() == "/assets/images/home/hero.png"));
-        assert!(urls.iter().any(|u| u.path() == "/assets/images/home/og.png"));
+        assert!(
+            urls.iter()
+                .any(|u| u.path() == "/assets/images/home/hero.png")
+        );
+        assert!(
+            urls.iter()
+                .any(|u| u.path() == "/assets/images/home/og.png")
+        );
     }
 
     #[test]
@@ -600,7 +620,11 @@ mod tests {
                 .iter()
                 .any(|u| u.path() == "/assets/images/home/dashboardpic.webp"),
             "expected extension swap, sample={:?}",
-            cands.iter().take(12).map(|u| u.path().to_string()).collect::<Vec<_>>()
+            cands
+                .iter()
+                .take(12)
+                .map(|u| u.path().to_string())
+                .collect::<Vec<_>>()
         );
         assert!(
             cands
@@ -622,11 +646,9 @@ mod tests {
                 .collect::<Vec<_>>()
         );
         assert!(
-            cands
-                .iter()
-                .any(|u| u.path().starts_with("/static/images/")
-                    || u.path().starts_with("/images/")
-                    || u.path().starts_with("/img/")),
+            cands.iter().any(|u| u.path().starts_with("/static/images/")
+                || u.path().starts_with("/images/")
+                || u.path().starts_with("/img/")),
             "expected alternate hosting prefixes"
         );
         let info = describe_pattern("/assets/images/home/dashboardpic.png").unwrap();

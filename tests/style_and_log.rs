@@ -6,7 +6,12 @@ use weeping_angel::style;
 
 #[test]
 fn log_http_mode_roundtrip() {
-    for mode in [LogHttp::Full, LogHttp::Compact, LogHttp::Summary, LogHttp::Off] {
+    for mode in [
+        LogHttp::Full,
+        LogHttp::Compact,
+        LogHttp::Summary,
+        LogHttp::Off,
+    ] {
         style::set_log_http(mode);
         assert_eq!(style::log_http_mode(), mode);
     }
@@ -70,7 +75,15 @@ fn log_request_respects_off_mode() {
     style::set_log_http(LogHttp::Off);
     style::log_request_ok(1, "GET", "https://x/", 200, 10, 100, None);
     style::set_log_http(LogHttp::Compact);
-    style::log_request_ok(2, "GET", "https://x/long/path/here", 200, 10, 100, Some("https://x/y"));
+    style::log_request_ok(
+        2,
+        "GET",
+        "https://x/long/path/here",
+        200,
+        10,
+        100,
+        Some("https://x/y"),
+    );
     style::log_request_err(3, "GET", "https://x/", 5, "boom");
     style::log_progress("phase: test");
 }

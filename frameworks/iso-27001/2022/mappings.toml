@@ -1,0 +1,219 @@
+schema = "weeping-angel/framework-pack/v1"
+
+# ISO refs point at canonical controls. Partial never means fully satisfied.
+
+[[mapping]]
+from = "iso27001:a.8.25"
+to = "source.branch-protection"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Branch protection covers only the technical source-integrity slice of secure development."
+
+[[mapping]]
+from = "iso27001:a.8.25"
+to = "source.required-review"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Required reviews are one technical control, not the whole development life cycle."
+
+[[mapping]]
+from = "iso27001:a.8.25"
+to = "source.code-ownership"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Code ownership supports review quality; it does not satisfy process obligations."
+
+[[mapping]]
+from = "iso27001:a.8.26"
+to = "source.security-scanning"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Repository scanning supports application security requirements; it is not equivalent."
+
+[[mapping]]
+from = "iso27001:a.8.8"
+to = "vulnerability.remediation"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Scanner findings and remediation tracking cover only the technical vulnerability slice."
+
+[[mapping]]
+from = "iso27001:a.8.8"
+to = "source.security-scanning"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Enabled scanning is an input to vulnerability management, not the full practice."
+
+[[mapping]]
+from = "iso27001:a.8.5"
+to = "access.mfa.privileged"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Privileged MFA is one authentication factor requirement, not the full control."
+
+[[mapping]]
+from = "iso27001:a.8.2"
+to = "access.mfa.privileged"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "MFA on privileged accounts supports privileged-access management."
+
+[[mapping]]
+from = "iso27001:a.8.2"
+to = "access.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Least-privilege settings are a technical subset of privileged access rights."
+
+[[mapping]]
+from = "iso27001:a.8.3"
+to = "access.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Access restriction is supported by least-privilege evidence."
+
+[[mapping]]
+from = "iso27001:a.5.15"
+to = "access.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Technical access restrictions do not cover policy or recertification."
+
+[[mapping]]
+from = "iso27001:a.5.18"
+to = "access.periodic-review"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Periodic review evidence is necessary but not sufficient for access-rights governance."
+
+[[mapping]]
+from = "iso27001:a.5.16"
+to = "personnel.access-termination"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Offboarding identity revocation supports identity management."
+
+[[mapping]]
+from = "iso27001:a.6.5"
+to = "personnel.access-termination"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Termination access evidence is a slice of people-process obligations."
+
+[[mapping]]
+from = "iso27001:a.5.9"
+to = "asset.inventory"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "An inventory artifact is not proof the inventory is complete or owned."
+
+[[mapping]]
+from = "iso27001:a.5.19"
+to = "supplier.security-assessment"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "A supplier assessment record does not prove ongoing supplier governance."
+
+[[mapping]]
+from = "iso27001:a.5.24"
+to = "incident.response-process"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "A documented process is evidence of existence, not effectiveness."
+
+[[mapping]]
+from = "iso27001:a.8.13"
+to = "backup.recovery-testing"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Backup configuration and a test record do not prove restore capability."
+
+[[mapping]]
+from = "iso27001:a.8.15"
+to = "logging.security-events"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Presence of security-event logging is not proof of review or retention."
+
+[[mapping]]
+from = "iso27001:a.8.24"
+to = "encryption.data-at-rest"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "At-rest encryption configuration is one cryptographic measure."
+
+[[mapping]]
+from = "iso27001:a.8.24"
+to = "encryption.data-in-transit"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "In-transit encryption configuration is one cryptographic measure."
+
+[[mapping]]
+from = "iso27001:a.8.32"
+to = "change.approval"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Change-approval evidence does not cover the full change life cycle."
+
+[[mapping]]
+from = "iso27001:a.8.26"
+to = "security.headers"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Security headers are a narrow application-hardening signal."
+
+[[mapping]]
+from = "iso27001:a.8.24"
+to = "security.tls"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "TLS configuration supports cryptography in transit."
+
+[[mapping]]
+from = "iso27001:a.8.25"
+to = "source.commit-signing"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Commit signing supports source integrity but is not the whole life cycle."
+
+[[mapping]]
+from = "iso27001:5.2"
+to = "incident.response-process"
+direction = "forward"
+completeness = "related"
+relation = "Related"
+rationale = "Policy existence is related to incident process documentation."
+
+[[mapping]]
+from = "iso27001:a.5.1"
+to = "incident.response-process"
+direction = "forward"
+completeness = "related"
+relation = "Related"
+rationale = "Policy references relate to process documentation; they do not satisfy it."

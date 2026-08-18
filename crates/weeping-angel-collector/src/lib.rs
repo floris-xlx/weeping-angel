@@ -1,5 +1,8 @@
 //! Collectors emit observations of declared evidence types. They cannot declare compliance.
 
+pub mod github;
+pub mod local;
+
 use std::collections::BTreeSet;
 
 use chrono::{TimeZone, Utc};
@@ -7,9 +10,12 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use weeping_angel_assurance_ir::AssetId;
 use weeping_angel_evidence::{
-    looks_like_compliance_claim, EvidenceEnvelope, EvidenceError, EvidenceObservation,
-    EvidenceProvenance, EvidenceType,
+    CollectionRun, EvidenceEnvelope, EvidenceError, EvidenceObservation, EvidenceProvenance,
+    EvidenceType, looks_like_compliance_claim,
 };
+
+pub use github::GitHubCollector;
+pub use local::{LocalCollector, ManualEvidence};
 
 /// Fixed collection instant so fixture normalize is deterministic.
 const FIXTURE_COLLECTED_AT: (i32, u32, u32, u32, u32, u32) = (2026, 8, 18, 12, 0, 0);
@@ -24,8 +30,25 @@ pub enum CollectorError {
     UndeclaredEvidenceType { evidence_type: String },
     #[error("asset out of scope: {asset}")]
     OutOfScope { asset: String },
+    #[error("permission denied: {detail}")]
+    PermissionDenied { detail: String },
+    #[error("insufficient evidence: {detail}")]
+    InsufficientEvidence { detail: String },
     #[error("evidence seal failed: {0}")]
     Seal(#[from] EvidenceError),
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CollectorCapabilities {
+    pub incremental: bool,
+    pub pagination: bool,
+    pub historical: bool,
+    pub point_in_time: bool,
+    pub event_driven: bool,
+    pub sensitive_artifacts: bool,
+    pub offline: bool,
+    pub worker_safe: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,6 +57,10 @@ pub struct CollectorDescriptor {
     pub id: String,
     pub version: String,
     pub evidence_types: BTreeSet<EvidenceType>,
+    pub provider_family: String,
+    pub subject_types: BTreeSet<String>,
+    pub capabilities: CollectorCapabilities,
+    pub required_permissions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -62,6 +89,18 @@ impl CollectorScope {
             .collect::<Vec<_>>()
             .join(",")
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct CollectionRequest {
+    pub scope: CollectorScope,
+}
+
+#[derive(Debug, Clone)]
+pub struct CollectionBatch {
+    pub run: CollectionRun,
+    pub envelopes: Vec<EvidenceEnvelope>,
+    pub errors: Vec<String>,
 }
 
 pub trait EvidenceCollector {
@@ -104,6 +143,14 @@ impl EvidenceCollector for FixtureCollector {
             id: self.id.clone(),
             version: self.version.clone(),
             evidence_types: self.evidence_types.clone(),
+            provider_family: "fixture".into(),
+            subject_types: BTreeSet::from(["repository".into()]),
+            capabilities: CollectorCapabilities {
+                offline: true,
+                worker_safe: true,
+                ..CollectorCapabilities::default()
+            },
+            required_permissions: Vec::new(),
         }
     }
 

@@ -26,7 +26,10 @@ fn hits_for_missing_packages_shape() {
         &[("acme-private-crate".into(), "0.1.0".into())],
     );
     assert_eq!(hits.len(), 1);
-    assert_eq!(hits[0].rule_id, "depcheck.confusion.public-registry-missing");
+    assert_eq!(
+        hits[0].rule_id,
+        "depcheck.confusion.public-registry-missing"
+    );
     assert_eq!(hits[0].severity, "high");
     assert!(hits[0].cwe.iter().any(|c| c == "CWE-427"));
     assert!(hits[0].evidence.contains("registry_checked=true"));

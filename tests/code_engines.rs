@@ -4,11 +4,11 @@ use std::fs;
 use std::path::PathBuf;
 
 use tempfile::tempdir;
-use weeping_angel::contract::{paths, FindingsDocument};
+use weeping_angel::contract::{FindingsDocument, paths};
 use weeping_angel::engines::code_scan::run_code_scan;
 use weeping_angel::engines::{
-    authz_routes, cmd_injection, findings_meet_fail_on, path_traversal, secrets_code, sql_injection,
-    ssrf, xss_template,
+    authz_routes, cmd_injection, findings_meet_fail_on, path_traversal, secrets_code,
+    sql_injection, ssrf, xss_template,
 };
 
 #[test]
@@ -44,16 +44,24 @@ fn scan_code_seals_findings_from_toy() {
     assert!(result.finding_count >= 2, "expected multiple findings");
     assert!(result.report_path.exists());
 
-    let findings: FindingsDocument = serde_json::from_str(
-        &fs::read_to_string(scan_dir.join(paths::FINDINGS_FILE)).unwrap(),
-    )
-    .unwrap();
+    let findings: FindingsDocument =
+        serde_json::from_str(&fs::read_to_string(scan_dir.join(paths::FINDINGS_FILE)).unwrap())
+            .unwrap();
     assert!(!findings.findings.is_empty());
-    assert!(findings.findings.iter().all(|f| f.finding_id.starts_with("csf_")));
-    assert!(findings
-        .findings
-        .iter()
-        .any(|f| f.taxonomy.category == "secrets" || f.rule_id.contains("command") || f.rule_id.contains("path")));
+    assert!(
+        findings
+            .findings
+            .iter()
+            .all(|f| f.finding_id.starts_with("csf_"))
+    );
+    assert!(
+        findings
+            .findings
+            .iter()
+            .any(|f| f.taxonomy.category == "secrets"
+                || f.rule_id.contains("command")
+                || f.rule_id.contains("path"))
+    );
 
     let md = fs::read_to_string(scan_dir.join(paths::REPORT_MD)).unwrap();
     assert!(md.contains("## Findings"));

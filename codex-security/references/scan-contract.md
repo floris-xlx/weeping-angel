@@ -20,7 +20,7 @@ Deep-scan SARIF results and CSV rows preserve their existing instance-level pres
 
 This bundle records immutable scan observations. It is not a workflow-state database. Consumers must store mutable annotations, lifecycle decisions, external links, retention policy, and synchronization state separately.
 
-A finding is **not** a compliance result. `findings.json` / `SemanticFinding` / `EngineHit` must not grow framework columns (`iso27001`, `gdpr`, `soc2`, or siblings). Absence of findings (`coverage.completeness == "complete"`) is a security coverage statement, not a control effectiveness result. Assurance projections live in a separate runtime (`docs/contracts/assurance-runtime.md`): `EngineHit` → `SemanticFinding` → `EvidenceObservation` → control-test result.
+A finding is **not** a compliance result. `findings.json` / `SemanticFinding` / `EngineHit` must not grow framework columns (`iso27001`, `gdpr`, `soc2`, or siblings). Absence of findings (`coverage.completeness == "complete"`) is a security coverage statement, not a control effectiveness result. Assurance projections live in a separate runtime ([`docs/contracts/assurance-runtime.md`](../../docs/contracts/assurance-runtime.md), ADR 0002): `EngineHit` → `SemanticFinding` → `EvidenceObservation` → control-test result. Empty scan ≠ Effective control.
 
 Retention is an explicit consumer decision. Producing a completed-scan bundle must not silently copy it into an archive.
 

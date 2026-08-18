@@ -8,8 +8,19 @@ use crate::finding::{Evidence, Finding, Severity};
 pub struct OpenRedirectProbe;
 
 const REDIRECT_PARAMS: &[&str] = &[
-    "url", "next", "redirect", "redirect_uri", "return", "returnUrl", "return_to", "goto", "dest",
-    "destination", "continue", "rurl", "target",
+    "url",
+    "next",
+    "redirect",
+    "redirect_uri",
+    "return",
+    "returnUrl",
+    "return_to",
+    "goto",
+    "dest",
+    "destination",
+    "continue",
+    "rurl",
+    "target",
 ];
 
 #[async_trait]
@@ -39,11 +50,7 @@ impl Check for OpenRedirectProbe {
             let mut param_names: Vec<String> = pairs
                 .iter()
                 .map(|(k, _)| k.clone())
-                .filter(|k| {
-                    REDIRECT_PARAMS
-                        .iter()
-                        .any(|p| k.eq_ignore_ascii_case(p))
-                })
+                .filter(|k| REDIRECT_PARAMS.iter().any(|p| k.eq_ignore_ascii_case(p)))
                 .collect();
 
             if param_names.is_empty() && base.path().to_ascii_lowercase().contains("login") {

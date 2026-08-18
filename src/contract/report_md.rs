@@ -30,10 +30,7 @@ pub fn project_report_md(
         "| Target kind | `{}` |\n",
         escape_cell(&manifest.scan.target.kind)
     ));
-    out.push_str(&format!(
-        "| Mode | `{}` |\n",
-        escape_cell(&coverage.mode)
-    ));
+    out.push_str(&format!("| Mode | `{}` |\n", escape_cell(&coverage.mode)));
     out.push_str(&format!(
         "| Completeness | `{}` |\n",
         escape_cell(&coverage.completeness)
@@ -97,7 +94,10 @@ pub fn project_report_md(
         for (i, f) in findings.findings.iter().enumerate() {
             out.push_str(&format!("### [{}] {}\n\n", i + 1, f.title));
             out.push_str("| Field | Value |\n| --- | --- |\n");
-            out.push_str(&format!("| Severity | {} |\n", escape_cell(&f.severity.level)));
+            out.push_str(&format!(
+                "| Severity | {} |\n",
+                escape_cell(&f.severity.level)
+            ));
             out.push_str(&format!(
                 "| Confidence | {} |\n",
                 escape_cell(&f.confidence.level)
@@ -129,10 +129,7 @@ pub fn project_report_md(
             out.push_str("**Locations**\n\n");
             for loc in &f.locations {
                 let role = loc.role.as_deref().unwrap_or("location");
-                let end = loc
-                    .end_line
-                    .map(|e| format!("-{e}"))
-                    .unwrap_or_default();
+                let end = loc.end_line.map(|e| format!("-{e}")).unwrap_or_default();
                 out.push_str(&format!(
                     "- `{}:{}{}` ({role})\n",
                     loc.path, loc.start_line, end

@@ -1,0 +1,31 @@
+{
+  "id": "assess.ir-golden",
+  "schema_version": "assurance-ir/v1",
+  "requirements": [],
+  "controls": [],
+  "mappings": [],
+  "evidence_requirements": [],
+  "tests": [],
+  "requests": {
+    "statement_of_applicability": false,
+    "control_applicability": false,
+    "privacy_processing": false,
+    "risk_treatment": false,
+    "manual_attestation": false,
+    "sampling": false,
+    "audit_program": false,
+    "nonconformities": false
+  },
+  "implementations": [],
+  "scope": {
+    "organizations": [],
+    "subjects": [],
+    "exclusions": []
+  },
+  "assets": [],
+  "identities": [],
+  "vendors": [],
+  "risks": [],
+  "exceptions": [],
+  "processing_activities": []
+}

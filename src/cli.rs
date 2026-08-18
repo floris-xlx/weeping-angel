@@ -119,6 +119,9 @@ pub enum Commands {
     #[command(visible_alias = "dc")]
     Depcheck(DepcheckArgs),
 
+    /// Automated readiness / assurance (not certification)
+    Assurance(AssuranceArgs),
+
     /// Print version and package description
     Version,
 
@@ -128,6 +131,119 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: Shell,
     },
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceArgs {
+    #[command(subcommand)]
+    pub command: AssuranceCommand,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum AssuranceCommand {
+    /// Framework pack list / validate / show
+    Framework(AssuranceFrameworkArgs),
+    /// Collect evidence
+    Collect(AssuranceCollectArgs),
+    /// List, show, or add evidence
+    Evidence(AssuranceEvidenceArgs),
+    /// Run a readiness assessment
+    Assess(AssuranceAssessArgs),
+    /// Show a stored result
+    Result(AssuranceResultArgs),
+    /// Compare two assessment snapshots
+    Compare(AssuranceCompareArgs),
+    /// Statement of Applicability projection
+    Soa(AssuranceSoaArgs),
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceFrameworkArgs {
+    #[command(subcommand)]
+    pub command: AssuranceFrameworkCommand,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum AssuranceFrameworkCommand {
+    List,
+    Validate {
+        #[arg(default_value = "frameworks/iso-27001/2022")]
+        path: PathBuf,
+    },
+    Show {
+        framework: String,
+    },
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceCollectArgs {
+    #[arg(long)]
+    pub collector: Option<String>,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceEvidenceArgs {
+    #[command(subcommand)]
+    pub command: AssuranceEvidenceCommand,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum AssuranceEvidenceCommand {
+    List,
+    Show {
+        #[arg(default_value = "latest")]
+        id: String,
+    },
+    Add {
+        #[arg(long = "type")]
+        evidence_type: String,
+        #[arg(long)]
+        subject: String,
+        #[arg(long)]
+        file: Option<PathBuf>,
+        #[arg(long = "attested-by")]
+        attested_by: String,
+    },
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceAssessArgs {
+    #[arg(long)]
+    pub framework: String,
+    #[arg(long, default_value = ".")]
+    pub scope: PathBuf,
+    #[arg(long)]
+    pub github_repo: Option<String>,
+    #[arg(long)]
+    pub github_token_env: Option<String>,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceResultArgs {
+    #[command(subcommand)]
+    pub command: AssuranceResultCommand,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum AssuranceResultCommand {
+    Show {
+        #[arg(default_value = "latest")]
+        id: String,
+    },
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceCompareArgs {
+    #[arg(default_value = "previous")]
+    pub before: String,
+    #[arg(default_value = "latest")]
+    pub after: String,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceSoaArgs {
+    #[arg(default_value = "latest")]
+    pub assessment: String,
 }
 
 impl Cli {
@@ -181,9 +297,7 @@ pub enum WorkbenchCommand {
         limit: usize,
     },
     /// Show one registered scan by id
-    Show {
-        scan_id: String,
-    },
+    Show { scan_id: String },
     /// Compare two sealed scans by primary fingerprint (introduced / resolved / persistent)
     Compare {
         /// Earlier scan directory
@@ -256,12 +370,7 @@ pub struct DepcheckArgs {
     pub dependency: Option<String>,
 
     /// Package repository system. Values: npm, pip/pypi, composer, mvn/maven, gradle, rubygems, cargo, go, nuget, all
-    #[arg(
-        long,
-        short = 'l',
-        visible_alias = "provider",
-        value_name = "LANG"
-    )]
+    #[arg(long, short = 'l', visible_alias = "provider", value_name = "LANG")]
     pub language: Option<String>,
 
     /// List packages only (no registry checks)
@@ -534,7 +643,11 @@ pub struct ScanArgs {
     pub ignore_robots: Option<bool>,
 
     /// Path to path wordlist
-    #[arg(help_heading = "Scan", long, default_value = "wordlists/common-paths.txt")]
+    #[arg(
+        help_heading = "Scan",
+        long,
+        default_value = "wordlists/common-paths.txt"
+    )]
     pub wordlist: PathBuf,
 
     /// Extra Cookie (`name=value` or `name value`; repeatable; values merged)

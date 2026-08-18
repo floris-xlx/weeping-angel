@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 
 use super::map_to_vec;
 use crate::depcheck::types::{Ecosystem, PackageRef};

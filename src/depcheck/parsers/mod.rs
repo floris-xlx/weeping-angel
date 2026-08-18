@@ -9,7 +9,7 @@ mod python;
 mod ruby;
 mod rust;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use super::types::{Ecosystem, FileKind, PackageRef};
 

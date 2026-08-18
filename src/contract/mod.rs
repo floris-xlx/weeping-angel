@@ -20,21 +20,21 @@ use sha2::{Digest, Sha256};
 
 use crate::contract::fingerprint::{populate_finding_identities, sha256_bytes, sha256_file};
 use crate::contract::paths::{
-    ARTIFACTS_DIR, CONTEXT_DIR, COVERAGE_FILE, COVERAGE_DIR, DISCOVERY_DIR, FINDINGS_DIR,
+    ARTIFACTS_DIR, CONTEXT_DIR, COVERAGE_DIR, COVERAGE_FILE, DISCOVERY_DIR, FINDINGS_DIR,
     FINDINGS_FILE, MANIFEST_FILE, RECONCILIATION_DIR, REPORT_MD,
 };
 use crate::contract::report_md::project_report_md;
 
 pub use fingerprint::{
-    derive_fingerprint, finding_id_from_fingerprint, occurrence_id_from, sha256_text, stable_id,
-    FINGERPRINT_ALGORITHM,
+    FINGERPRINT_ALGORITHM, derive_fingerprint, finding_id_from_fingerprint, occurrence_id_from,
+    sha256_text, stable_id,
 };
 pub use ledger::{
-    combine_candidates, normalize_raw_candidate, write_candidate_ledger, Candidate,
-    CandidateLocation,
+    Candidate, CandidateLocation, combine_candidates, normalize_raw_candidate,
+    write_candidate_ledger,
 };
 pub use severity_policy::{
-    apply_severity_matrix, Impact, Likelihood, PolicyDecision, SeverityLevel,
+    Impact, Likelihood, PolicyDecision, SeverityLevel, apply_severity_matrix,
 };
 pub use types::*;
 
@@ -172,8 +172,7 @@ pub fn finalize_scan(scan_dir: &Path, producer_version: &str) -> Result<PathBuf>
 
     let report = project_report_md(&manifest, &findings, &coverage);
     let report_path = scan_dir.join(REPORT_MD);
-    fs::write(&report_path, report)
-        .with_context(|| format!("write {}", report_path.display()))?;
+    fs::write(&report_path, report).with_context(|| format!("write {}", report_path.display()))?;
 
     Ok(report_path)
 }

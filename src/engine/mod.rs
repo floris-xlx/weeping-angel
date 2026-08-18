@@ -18,8 +18,8 @@ use crate::checks::{self, CheckKind, ScanContext};
 use crate::config::Profile;
 use crate::discovery::{self, DiscoveredAsset};
 use crate::finding::{
-    Finding, ModuleSummary, PhaseTiming, RouteRecord, ScanReport, ScanStats, SourceCount,
-    StatusCount, SurfaceInventory, TimingSummary, Severity,
+    Finding, ModuleSummary, PhaseTiming, RouteRecord, ScanReport, ScanStats, Severity, SourceCount,
+    StatusCount, SurfaceInventory, TimingSummary,
 };
 use crate::http::{ClientConfig, HttpClient};
 use crate::templates;
@@ -56,9 +56,9 @@ pub async fn run_scan(
         let mut anon_cfg = client_cfg;
         anon_cfg.cookie = None;
         // Drop Authorization-like headers
-        anon_cfg
-            .extra_headers
-            .retain(|(k, _)| !k.eq_ignore_ascii_case("authorization") && !k.eq_ignore_ascii_case("cookie"));
+        anon_cfg.extra_headers.retain(|(k, _)| {
+            !k.eq_ignore_ascii_case("authorization") && !k.eq_ignore_ascii_case("cookie")
+        });
         Some(Arc::new(HttpClient::new(authz.clone(), anon_cfg)?))
     } else {
         None
@@ -245,10 +245,8 @@ pub async fn run_scan(
                                             opts.max_urls,
                                         );
                                     }
-                                    let spa_js = discovery::spa::extract_from_js(
-                                        &script_url,
-                                        &js_resp.body,
-                                    );
+                                    let spa_js =
+                                        discovery::spa::extract_from_js(&script_url, &js_resp.body);
                                     for ep in spa_js {
                                         try_enqueue(
                                             &authz,
@@ -273,8 +271,7 @@ pub async fn run_scan(
                                             opts.max_urls,
                                         );
                                     }
-                                    response_cache
-                                        .insert(script_url.as_str().to_string(), js_resp);
+                                    response_cache.insert(script_url.as_str().to_string(), js_resp);
                                 }
                             }
                         }
@@ -714,7 +711,11 @@ pub async fn run_scan(
                 Finding::builder("discovery", "image-hosting-pattern")
                     .title(format!("Image hosting directory pattern: {dir}"))
                     .severity(Severity::Info)
-                    .url(seed.join(dir.trim_start_matches('/')).unwrap_or(seed.clone()).as_str())
+                    .url(
+                        seed.join(dir.trim_start_matches('/'))
+                            .unwrap_or(seed.clone())
+                            .as_str(),
+                    )
                     .description(format!(
                         "Enumerated static image tree under `{dir}`. \
                          Common layout example: /assets/images/home/dashboardpic.png \
@@ -1029,11 +1030,7 @@ fn progress(msg: &str) {
     info!("{msg}");
 }
 
-fn should_run_check(
-    check: &dyn checks::Check,
-    opts: &ScanOptions,
-    enable_active: bool,
-) -> bool {
+fn should_run_check(check: &dyn checks::Check, opts: &ScanOptions, enable_active: bool) -> bool {
     match check.kind() {
         CheckKind::Passive => module_enabled(&opts.modules, check.id()),
         CheckKind::Active => {

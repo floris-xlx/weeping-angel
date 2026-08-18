@@ -11,13 +11,13 @@ pub mod docs_export;
 pub mod engine;
 pub mod engines;
 pub mod finding;
-pub mod workbench;
 pub mod http;
 pub mod parse;
 pub mod report;
 pub mod style;
 pub mod target;
 pub mod templates;
+pub mod workbench;
 
 /// Local vulnerable lab (axum). Enable with `--features demo`.
 #[cfg(feature = "demo")]
@@ -105,8 +105,7 @@ pub fn run_workbench_command(args: crate::cli::WorkbenchArgs) -> Result<i32> {
             scan_dir,
             source_root,
         } => {
-            let results =
-                crate::workbench::remediation::generate_all(&source_root, &scan_dir)?;
+            let results = crate::workbench::remediation::generate_all(&source_root, &scan_dir)?;
             let generated = results.iter().filter(|r| r.state == "generated").count();
             let failed = results.iter().filter(|r| r.state == "failed").count();
             crate::style::eprint_line(&format!(
@@ -120,10 +119,7 @@ pub fn run_workbench_command(args: crate::cli::WorkbenchArgs) -> Result<i32> {
             println!("{}", serde_json::to_string_pretty(&results)?);
             Ok(if failed > 0 && generated == 0 { 1 } else { 0 })
         }
-        WorkbenchCommand::ApplyPatch {
-            source_root,
-            patch,
-        } => {
+        WorkbenchCommand::ApplyPatch { source_root, patch } => {
             let r = crate::workbench::remediation::apply_patch(&source_root, &patch)?;
             crate::style::eprint_line(&format!(
                 "{} apply-patch {} — {}",
@@ -139,11 +135,8 @@ pub fn run_workbench_command(args: crate::cli::WorkbenchArgs) -> Result<i32> {
             path,
             rule_id,
         } => {
-            let r = crate::workbench::remediation::verify_file_clean(
-                &source_root,
-                &path,
-                &rule_id,
-            )?;
+            let r =
+                crate::workbench::remediation::verify_file_clean(&source_root, &path, &rule_id)?;
             crate::style::eprint_line(&format!(
                 "{} verify {} — {}",
                 crate::style::brand("weeping-angel"),
@@ -171,7 +164,9 @@ pub fn run_finalize_command(args: crate::cli::FinalizeArgs) -> Result<i32> {
     Ok(0)
 }
 
-fn resolve_depcheck_kind(args: &crate::cli::DepcheckArgs) -> Result<Option<crate::depcheck::types::FileKind>> {
+fn resolve_depcheck_kind(
+    args: &crate::cli::DepcheckArgs,
+) -> Result<Option<crate::depcheck::types::FileKind>> {
     use crate::depcheck::types::{Ecosystem, FileKind};
 
     if let Some(s) = args.file_type.as_deref() {
@@ -220,9 +215,7 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
     use crate::depcheck::depsdev::{self, is_nuget_reserved};
     use crate::depcheck::email_check::{self, EmailFindingKind};
     use crate::depcheck::registry::{HttpRegistry, RegistryClient};
-    use crate::depcheck::types::{
-        CheckStatus, Ecosystem, PackageRef, ScanOptions, ScanSummary,
-    };
+    use crate::depcheck::types::{CheckStatus, Ecosystem, PackageRef, ScanOptions, ScanSummary};
     use crate::depcheck::{
         convert, exit_code, list_only, load_path, load_url_body, report, resolve_targets,
         scan_manifest,
@@ -276,13 +269,9 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
             show_link: args.link,
             extra_paths: Vec::new(),
         };
-        let report = crate::depcheck::remote_hunt::hunt_remote(
-            &lines,
-            &hunt,
-            &opts,
-            Arc::clone(&registry),
-        )
-        .await?;
+        let report =
+            crate::depcheck::remote_hunt::hunt_remote(&lines, &hunt, &opts, Arc::clone(&registry))
+                .await?;
         crate::depcheck::remote_hunt::print_hunt_report(&report, &hunt);
         if let Some(path) = &args.output_file {
             let body = report
@@ -321,7 +310,10 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
         }
 
         let mut queue: VecDeque<PackageRef> = VecDeque::new();
-        queue.push_back(PackageRef::new(&root_name, if root_ver.is_empty() { "*" } else { &root_ver }));
+        queue.push_back(PackageRef::new(
+            &root_name,
+            if root_ver.is_empty() { "*" } else { &root_ver },
+        ));
         let mut seen: HashSet<String> = HashSet::new();
         let mut vulnerable = Vec::new();
         let mut safe = Vec::new();
@@ -356,10 +348,7 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
                                 pkg.name
                             );
                         } else {
-                            eprintln!(
-                                "[DEBUG] {}:{} might be taken over !",
-                                pkg.name, pkg.version
-                            );
+                            eprintln!("[DEBUG] {}:{} might be taken over !", pkg.name, pkg.version);
                         }
                     }
                     takeover_lines.push(format!("{}:{}", pkg.name, pkg.version));
@@ -412,7 +401,9 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
             file: format!("dependency:{root_name}"),
             file_kind: eco.default_file_kind(),
             ecosystem: eco,
-            packages: [(root_name.clone(), root_ver.clone())].into_iter().collect(),
+            packages: [(root_name.clone(), root_ver.clone())]
+                .into_iter()
+                .collect(),
             vulnerable,
             safe,
             errors,
@@ -720,8 +711,8 @@ pub fn run_scan_code_command(args: crate::cli::ScanCodeArgs) -> Result<i32> {
 pub fn run_scan_diff_command(args: crate::cli::ScanDiffArgs) -> Result<i32> {
     use std::fs;
 
-    use crate::engines::code_scan::{run_code_scan_with_opts, CodeScanOpts};
-    use crate::engines::git_diff::{find_git_root, inventory_diff, DiffTarget};
+    use crate::engines::code_scan::{CodeScanOpts, run_code_scan_with_opts};
+    use crate::engines::git_diff::{DiffTarget, find_git_root, inventory_diff};
 
     crate::style::init();
     let start = args
@@ -768,8 +759,7 @@ pub fn run_scan_diff_command(args: crate::cli::ScanDiffArgs) -> Result<i32> {
         )),
     };
 
-    let result =
-        run_code_scan_with_opts(&root, &args.scan_dir, opts, env!("CARGO_PKG_VERSION"))?;
+    let result = run_code_scan_with_opts(&root, &args.scan_dir, opts, env!("CARGO_PKG_VERSION"))?;
 
     crate::style::eprint_line(&format!(
         "{} diff scan mode={} files={} hits={} findings={} max={} fail_on={} scan_id={}",
@@ -808,16 +798,14 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         args.allow_write_methods() || file_cfg.authorization.allow_write_methods;
 
     if args.targets.is_empty() {
-        bail!(
-            "provide at least one target (example.com, //host/path, http://…, or https://…)"
-        );
+        bail!("provide at least one target (example.com, //host/path, http://…, or https://…)");
     }
 
     let norm_opts = NormalizeOptions {
         prefer_http: args.prefer_http,
     };
-    let normalized: Vec<String> = normalize_targets(&args.targets, norm_opts)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let normalized: Vec<String> =
+        normalize_targets(&args.targets, norm_opts).map_err(|e| anyhow::anyhow!("{e}"))?;
 
     let mut host_list: Vec<String> = normalize_allow_hosts(
         args.allow_hosts
@@ -848,8 +836,9 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         .profile
         .clone()
         .unwrap_or_else(|| args.profile.clone());
-    let profile: Profile = Profile::parse(&profile_name)
-        .with_context(|| format!("unknown profile: {profile_name} (recon|standard|deep|quick|full)"))?;
+    let profile: Profile = Profile::parse(&profile_name).with_context(|| {
+        format!("unknown profile: {profile_name} (recon|standard|deep|quick|full)")
+    })?;
 
     let modules: Vec<String> = if let Some(m) = &args.modules {
         split_list(m)
@@ -863,11 +852,7 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
             .collect()
     };
 
-    let probes: Vec<String> = args
-        .probe
-        .as_deref()
-        .map(split_list)
-        .unwrap_or_default();
+    let probes: Vec<String> = args.probe.as_deref().map(split_list).unwrap_or_default();
 
     if (!probes.is_empty() || modules.iter().any(|m| m == "active")) && !enable_active {
         bail!("active probes requested but --enable-active was not set (second safety gate)");
@@ -947,11 +932,7 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
         client_cfg.rps,
         client_cfg.concurrency,
         log_http.as_str(),
-        if args.fast {
-            " · fast preset"
-        } else {
-            ""
-        },
+        if args.fast { " · fast preset" } else { "" },
     ));
     info!("consent OK; starting scan");
 
@@ -992,8 +973,8 @@ fn write_web_sealed_bundle(
     producer_version: &str,
 ) -> Result<()> {
     use crate::contract::{
-        finalize_scan, target_id_from_display, write_scan_bundle, CoverageDocument, CoverageSurface,
-        FindingsDocument, ManifestDocument, Producer, ScanBody, ScanScope, ScanTarget,
+        CoverageDocument, CoverageSurface, FindingsDocument, ManifestDocument, Producer, ScanBody,
+        ScanScope, ScanTarget, finalize_scan, target_id_from_display, write_scan_bundle,
     };
     use crate::engines::web_adapt::web_finding_to_semantic;
 
@@ -1078,9 +1059,7 @@ fn write_web_sealed_bundle(
                 revision: None,
                 base_revision: None,
                 head_revision: None,
-                snapshot_digest: Some(format!(
-                    "codex-security-snapshot/v1:sha256:{digest_hex}"
-                )),
+                snapshot_digest: Some(format!("codex-security-snapshot/v1:sha256:{digest_hex}")),
             },
             scope: ScanScope {
                 include_paths: vec!["/".into()],

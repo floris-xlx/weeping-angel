@@ -19,8 +19,7 @@ use serde_json::Value;
 use super::types::Ecosystem;
 
 const UA: &str = concat!("weeping-angel-depcheck/", env!("CARGO_PKG_VERSION"));
-const DISPOSABLE_URL: &str =
-    "https://disposable.github.io/disposable-email-domains/domains.txt";
+const DISPOSABLE_URL: &str = "https://disposable.github.io/disposable-email-domains/domains.txt";
 
 const KNOWN_FREEMAIL: &[&str] = &[
     "gmail.com",
@@ -188,9 +187,8 @@ async fn fetch_cargo_emails(client: &Client, package: &str) -> Result<Vec<String
     }
     // Prefer owners → user — crates.io rarely exposes emails publicly; try authors string on versions
     if let Some(vers) = data.get("versions").and_then(|v| v.as_array()) {
-        if let Some(authors) = vers
-            .first()
-            .and_then(|v| v.get("crate_size")) // placeholder to keep structure
+        if let Some(authors) = vers.first().and_then(|v| v.get("crate_size"))
+        // placeholder to keep structure
         {
             let _ = authors;
         }
@@ -211,9 +209,8 @@ async fn fetch_cargo_emails(client: &Client, package: &str) -> Result<Vec<String
 
 fn extract_domain(raw: &str) -> Option<String> {
     static RE: OnceLock<Regex> = OnceLock::new();
-    let re = RE.get_or_init(|| {
-        Regex::new(r"(?i)[\w.+-]+@([\w-]+\.[\w.-]+)").expect("email domain regex")
-    });
+    let re = RE
+        .get_or_init(|| Regex::new(r"(?i)[\w.+-]+@([\w-]+\.[\w.-]+)").expect("email domain regex"));
     re.captures(raw)
         .map(|c| c[1].trim_end_matches('.').to_ascii_lowercase())
 }

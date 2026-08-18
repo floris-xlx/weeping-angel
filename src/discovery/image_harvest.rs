@@ -92,7 +92,8 @@ impl MethodProbe {
         let mut cors_headers = HashMap::new();
         for (k, v) in &resp.headers {
             let kl = k.to_ascii_lowercase();
-            if kl.starts_with("access-control-") || kl == "vary" && v.to_ascii_lowercase().contains("origin")
+            if kl.starts_with("access-control-")
+                || kl == "vary" && v.to_ascii_lowercase().contains("origin")
             {
                 cors_headers.insert(k.clone(), v.clone());
             }
@@ -100,9 +101,10 @@ impl MethodProbe {
         Self {
             method: method.into(),
             status,
-            content_type: resp.content_type.clone().or_else(|| {
-                resp.header("content-type").map(|s| s.to_string())
-            }),
+            content_type: resp
+                .content_type
+                .clone()
+                .or_else(|| resp.header("content-type").map(|s| s.to_string())),
             content_length,
             accept_ranges: resp.header("accept-ranges").map(|s| s.to_string()),
             cache_control: resp.header("cache-control").map(|s| s.to_string()),
@@ -211,9 +213,9 @@ pub struct ImageCandidate {
 
 /// Collect image URLs from HTML with source labels.
 pub fn collect_from_html(base: &Url, html: &str) -> Vec<ImageCandidate> {
-    use scraper::{Html, Selector};
     use once_cell::sync::Lazy;
     use regex::Regex;
+    use scraper::{Html, Selector};
 
     static CSS_URL_RE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"(?i)url\(\s*['"]?([^'")\s]+)['"]?\s*\)"#).unwrap());
@@ -441,7 +443,11 @@ pub async fn harvest(
         images.push(HarvestedImage {
             url: cand.url.as_str().into(),
             path: cand.url.path().into(),
-            sources: cand.sources.iter().map(|s| s.as_str().to_string()).collect(),
+            sources: cand
+                .sources
+                .iter()
+                .map(|s| s.as_str().to_string())
+                .collect(),
             exists: false,
             head: None,
             options: None,
@@ -466,7 +472,11 @@ pub async fn harvest(
         let head_probes = head_probes.clone();
         async move {
             let sources: Vec<String> = {
-                let mut s: Vec<_> = cand.sources.iter().map(|s| s.as_str().to_string()).collect();
+                let mut s: Vec<_> = cand
+                    .sources
+                    .iter()
+                    .map(|s| s.as_str().to_string())
+                    .collect();
                 s.sort();
                 s.dedup();
                 s
@@ -580,11 +590,7 @@ pub async fn harvest(
     head_miss_paths.dedup();
 
     // Prefer existing images first in manifest
-    images.sort_by(|a, b| {
-        b.exists
-            .cmp(&a.exists)
-            .then_with(|| a.path.cmp(&b.path))
-    });
+    images.sort_by(|a, b| b.exists.cmp(&a.exists).then_with(|| a.path.cmp(&b.path)));
 
     ImageHarvestManifest {
         tool: "weeping-angel".into(),

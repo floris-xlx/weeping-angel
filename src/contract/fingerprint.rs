@@ -4,10 +4,10 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use sha2::{Digest, Sha256};
 
-use crate::contract::types::{Fingerprints, FindingsDocument, ManifestDocument, SemanticFinding};
+use crate::contract::types::{FindingsDocument, Fingerprints, ManifestDocument, SemanticFinding};
 
 pub const FINGERPRINT_ALGORITHM: &str = "codex-security/v1";
 
@@ -48,14 +48,7 @@ pub fn derive_fingerprint(
     if !instance.is_empty() {
         validate_slug(instance, "identity.instance")?;
     }
-    let material = [
-        FINGERPRINT_ALGORITHM,
-        target_id,
-        rule_id,
-        anchor,
-        instance,
-    ]
-    .join("\0");
+    let material = [FINGERPRINT_ALGORITHM, target_id, rule_id, anchor, instance].join("\0");
     Ok(format!(
         "{FINGERPRINT_ALGORITHM}:sha256:{}",
         sha256_text(&material)
@@ -78,9 +71,9 @@ pub fn occurrence_id_from(scan_id: &str, fingerprint: &str) -> String {
 
 fn validate_slug(value: &str, field: &str) -> Result<()> {
     let ok = !value.is_empty()
-        && value
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '/' | '-'));
+        && value.chars().all(|c| {
+            c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '/' | '-')
+        });
     let starts_ok = value
         .chars()
         .next()
@@ -173,7 +166,10 @@ mod tests {
             fp,
             "codex-security/v1:sha256:990a4a6a2ec18440dd47eac4d7256c0ee2c02db1b43104720cab3cbe9db706ca"
         );
-        assert_eq!(finding_id_from_fingerprint(&fp), "csf_852f90d6e1177502ff113d4a");
+        assert_eq!(
+            finding_id_from_fingerprint(&fp),
+            "csf_852f90d6e1177502ff113d4a"
+        );
         assert_eq!(
             occurrence_id_from("scan_example_001", &fp),
             "occ_e79cb19591e696572a1c22be"

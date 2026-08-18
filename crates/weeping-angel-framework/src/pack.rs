@@ -1,0 +1,425 @@
+//! Versioned framework-pack loader. Network-free. Provider-independent.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use serde::Deserialize;
+use thiserror::Error;
+use weeping_angel_assurance_ir::{
+    Control, ControlId, ControlTestId, EvidenceRequirement, EvidenceRequirementId, EvidenceType,
+    FrameworkId, FrameworkVersion, Mapping, MappingCompleteness, MappingDirection, MappingRelation,
+    PlannedControlTest, PlannedTestKind, Requirement, RequirementId, canonical_digest,
+};
+
+use crate::{
+    Assessment, AssessmentRequests, FrameworkCompileError, FrameworkProfile, FrameworkTarget,
+};
+
+pub const FRAMEWORK_PACK_SCHEMA: &str = "weeping-angel/framework-pack/v1";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FrameworkPackDigest(pub String);
+
+impl FrameworkPackDigest {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FrameworkContentProvider {
+    StructuralOnly,
+    LicensedContent,
+    UserSuppliedContent,
+}
+
+#[derive(Debug, Error)]
+pub enum PackError {
+    #[error("unknown pack: {0}")]
+    UnknownPack(String),
+    #[error("unknown requirement: {0}")]
+    UnknownRequirement(String),
+    #[error("dangling mapping {from} → {to}")]
+    Dangling { from: String, to: String },
+    #[error("unsupported relation: {0}")]
+    UnsupportedRelation(String),
+    #[error("empty rationale where required for {0}")]
+    EmptyRationale(String),
+    #[error("io: {0}")]
+    Io(String),
+    #[error("parse: {0}")]
+    Parse(String),
+    #[error("schema: {0}")]
+    Schema(String),
+}
+
+impl From<PackError> for FrameworkCompileError {
+    fn from(value: PackError) -> Self {
+        match value {
+            PackError::UnknownPack(message) => FrameworkCompileError::UnknownPack { message },
+            PackError::UnknownRequirement(id) => FrameworkCompileError::UnknownRequirement { id },
+            PackError::Dangling { from, to } => FrameworkCompileError::MappingIntegrity {
+                message: format!("dangling mapping {from} → {to}"),
+            },
+            PackError::UnsupportedRelation(rel) => FrameworkCompileError::MappingIntegrity {
+                message: format!("unsupported relation {rel}"),
+            },
+            PackError::EmptyRationale(id) => FrameworkCompileError::MappingIntegrity {
+                message: format!("empty rationale where required for {id}"),
+            },
+            other => FrameworkCompileError::Schema {
+                message: other.to_string(),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct ManifestFile {
+    schema: String,
+    framework: ManifestFramework,
+}
+
+#[derive(Debug, Deserialize)]
+struct ManifestFramework {
+    id: String,
+    version: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RequirementsFile {
+    #[serde(default)]
+    requirement: Vec<RequirementRow>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RequirementRow {
+    id: String,
+    title: String,
+    #[serde(default)]
+    kind: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct MappingsFile {
+    #[serde(default)]
+    mapping: Vec<MappingRow>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MappingRow {
+    from: String,
+    to: String,
+    #[serde(default)]
+    direction: String,
+    #[serde(default)]
+    completeness: String,
+    #[serde(default)]
+    relation: String,
+    #[serde(default)]
+    rationale: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct MetadataFile {
+    #[serde(default)]
+    control: Vec<ControlRow>,
+    #[serde(default)]
+    test: Vec<TestRow>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ControlRow {
+    id: String,
+    title: String,
+    #[serde(default)]
+    description: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct TestRow {
+    id: String,
+    control: String,
+    #[serde(default)]
+    kind: String,
+    #[serde(default)]
+    required: Vec<String>,
+    #[serde(default)]
+    break_on: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct LoadedPack {
+    pub digest: FrameworkPackDigest,
+    pub profile: String,
+    pub version: String,
+    pub content_provider: FrameworkContentProvider,
+    pub requirements: Vec<Requirement>,
+    pub controls: Vec<Control>,
+    pub mappings: Vec<Mapping>,
+    pub tests: Vec<PlannedControlTest>,
+    pub evidence_requirements: Vec<EvidenceRequirement>,
+}
+
+pub fn pack_search_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("frameworks"));
+        roots.push(base.join("..").join("..").join("frameworks"));
+        roots.push(base.join("..").join("frameworks"));
+    }
+    roots.push(PathBuf::from("frameworks"));
+    roots
+}
+
+pub fn resolve_pack_dir(framework: &str, version: &str) -> Result<PathBuf, PackError> {
+    for root in pack_search_roots() {
+        let candidate = root.join(framework).join(version);
+        if candidate.join("manifest.toml").is_file() {
+            return Ok(candidate);
+        }
+    }
+    Err(PackError::UnknownPack(format!(
+        "no pack for {framework}/{version}"
+    )))
+}
+
+pub fn load_framework_pack(framework: &str, version: &str) -> Result<LoadedPack, PackError> {
+    let dir = resolve_pack_dir(framework, version)?;
+    load_framework_pack_from(&dir)
+}
+
+pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
+    let manifest_text = read(dir.join("manifest.toml"))?;
+    let manifest: ManifestFile = toml::from_str(&manifest_text).map_err(parse_err)?;
+    if manifest.schema != FRAMEWORK_PACK_SCHEMA {
+        return Err(PackError::Schema(format!(
+            "expected {FRAMEWORK_PACK_SCHEMA}, got {}",
+            manifest.schema
+        )));
+    }
+
+    let reqs_file: RequirementsFile =
+        toml::from_str(&read(dir.join("requirements.toml"))?).map_err(parse_err)?;
+    let maps_file: MappingsFile =
+        toml::from_str(&read(dir.join("mappings.toml"))?).map_err(parse_err)?;
+    let meta_path = dir.join("metadata.toml");
+    let meta: MetadataFile = if meta_path.is_file() {
+        toml::from_str(&read(meta_path)?).map_err(parse_err)?
+    } else {
+        MetadataFile {
+            control: Vec::new(),
+            test: Vec::new(),
+        }
+    };
+
+    let framework_id = FrameworkId::new(&manifest.framework.id);
+    let framework_version = FrameworkVersion::new(&manifest.framework.version);
+
+    let mut requirements = Vec::new();
+    for row in reqs_file.requirement {
+        requirements.push(Requirement::new(
+            RequirementId::new(&row.id),
+            framework_id.clone(),
+            framework_version.clone(),
+            row.title,
+            row.kind,
+        ));
+    }
+
+    let mut controls = Vec::new();
+    for row in &meta.control {
+        controls.push(Control::new(
+            ControlId::new(&row.id),
+            row.title.clone(),
+            row.description.clone(),
+        ));
+    }
+
+    let mut mappings = Vec::new();
+    for row in maps_file.mapping {
+        if !requirements.iter().any(|r| r.id().as_str() == row.from) {
+            return Err(PackError::Dangling {
+                from: row.from,
+                to: row.to,
+            });
+        }
+        if !controls.iter().any(|c| c.id().as_str() == row.to) && !meta.control.is_empty() {
+            return Err(PackError::Dangling {
+                from: row.from,
+                to: row.to,
+            });
+        }
+        if row.rationale.trim().is_empty() && row.completeness != "full" {
+            return Err(PackError::EmptyRationale(format!(
+                "{}→{}",
+                row.from, row.to
+            )));
+        }
+        let completeness = match row.completeness.as_str() {
+            "full" => MappingCompleteness::Full,
+            "related" => MappingCompleteness::Related,
+            _ => MappingCompleteness::Partial,
+        };
+        let relation = match row.relation.as_str() {
+            "Equivalent" => MappingRelation::Equivalent,
+            "Satisfies" => MappingRelation::Satisfies,
+            "PartiallySatisfies" => MappingRelation::PartiallySatisfies,
+            "Supports" => MappingRelation::Supports,
+            "Related" => MappingRelation::Related,
+            "" => MappingRelation::from_completeness(completeness),
+            other => return Err(PackError::UnsupportedRelation(other.into())),
+        };
+        let direction = match row.direction.as_str() {
+            "reverse" => MappingDirection::Reverse,
+            "bidirectional" => MappingDirection::Bidirectional,
+            _ => MappingDirection::Forward,
+        };
+        mappings.push(
+            Mapping::new(
+                RequirementId::new(&row.from),
+                ControlId::new(&row.to),
+                direction,
+                completeness,
+            )
+            .with_relation(relation)
+            .with_rationale(row.rationale),
+        );
+    }
+
+    let mut tests = Vec::new();
+    let mut evidence_requirements = Vec::new();
+    for row in meta.test {
+        let kind = if row.kind.eq_ignore_ascii_case("manual") {
+            PlannedTestKind::Manual
+        } else {
+            PlannedTestKind::Automated
+        };
+        let mut planned =
+            PlannedControlTest::new(ControlTestId::new(&row.id), ControlId::new(&row.control));
+        planned.kind = kind;
+        planned.required_evidence = row
+            .required
+            .iter()
+            .map(|t| EvidenceType::new(t.as_str()))
+            .collect();
+        planned.break_on = row
+            .break_on
+            .iter()
+            .map(|t| EvidenceType::new(t.as_str()))
+            .collect();
+        for ty in &planned.required_evidence {
+            evidence_requirements.push(EvidenceRequirement::new(
+                EvidenceRequirementId::new(format!("ev.{}", ty.as_str())),
+                ty.clone(),
+            ));
+        }
+        tests.push(planned);
+    }
+
+    evidence_requirements.sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
+    evidence_requirements.dedup_by(|a, b| a.id() == b.id());
+
+    let digest_body = serde_json::json!({
+        "schema": FRAMEWORK_PACK_SCHEMA,
+        "framework": manifest.framework.id,
+        "version": manifest.framework.version,
+        "requirements": requirements.iter().map(|r| r.id().as_str()).collect::<Vec<_>>(),
+        "controls": controls.iter().map(|c| c.id().as_str()).collect::<Vec<_>>(),
+        "mappings": mappings.iter().map(|m| {
+            (m.from_requirement().as_str(), m.to_control().as_str(), format!("{:?}", m.relation()))
+        }).collect::<Vec<_>>(),
+        "tests": tests.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(),
+    });
+    let digest = FrameworkPackDigest(
+        canonical_digest(&digest_body).map_err(|e| PackError::Parse(e.to_string()))?,
+    );
+
+    Ok(LoadedPack {
+        digest,
+        profile: manifest.framework.id,
+        version: manifest.framework.version,
+        content_provider: FrameworkContentProvider::StructuralOnly,
+        requirements,
+        controls,
+        mappings,
+        tests,
+        evidence_requirements,
+    })
+}
+
+pub fn validate_framework_pack(dir: &Path) -> Result<LoadedPack, PackError> {
+    let pack = load_framework_pack_from(dir)?;
+    if pack.requirements.is_empty() {
+        return Err(PackError::Schema("pack has no requirements".into()));
+    }
+    Ok(pack)
+}
+
+pub fn assessment_from_pack(pack: &LoadedPack, target: &FrameworkTarget) -> Assessment {
+    let _ = target;
+    let mut assessment = Assessment::new(weeping_angel_assurance_ir::AssessmentId::new(format!(
+        "assess-{}-{}",
+        pack.profile, pack.version
+    )));
+    assessment.requirements = pack.requirements.clone();
+    assessment.controls = pack.controls.clone();
+    assessment.mappings = pack.mappings.clone();
+    assessment.evidence_requirements = pack.evidence_requirements.clone();
+    assessment.tests = pack.tests.clone();
+    assessment.requests = AssessmentRequests::default();
+    assessment
+}
+
+pub fn merge_pack(assessment: &mut Assessment, pack: &LoadedPack) {
+    for req in &pack.requirements {
+        if !assessment.requirements.iter().any(|r| r.id() == req.id()) {
+            assessment.requirements.push(req.clone());
+        }
+    }
+    for ctl in &pack.controls {
+        if !assessment.controls.iter().any(|c| c.id() == ctl.id()) {
+            assessment.controls.push(ctl.clone());
+        }
+    }
+    for mapping in &pack.mappings {
+        let exists = assessment.mappings.iter().any(|m| {
+            m.from_requirement() == mapping.from_requirement()
+                && m.to_control() == mapping.to_control()
+        });
+        if !exists {
+            assessment.mappings.push(mapping.clone());
+        }
+    }
+    for ev in &pack.evidence_requirements {
+        if !assessment
+            .evidence_requirements
+            .iter()
+            .any(|e| e.id() == ev.id())
+        {
+            assessment.evidence_requirements.push(ev.clone());
+        }
+    }
+    if assessment.tests.is_empty() {
+        assessment.tests = pack.tests.clone();
+    } else {
+        for test in &pack.tests {
+            if !assessment.tests.iter().any(|t| t.id == test.id) {
+                assessment.tests.push(test.clone());
+            }
+        }
+    }
+}
+
+pub fn profile_to_pack_id(profile: FrameworkProfile) -> &'static str {
+    profile.as_selector()
+}
+
+fn read(path: PathBuf) -> Result<String, PackError> {
+    fs::read_to_string(&path).map_err(|e| PackError::Io(format!("{}: {e}", path.display())))
+}
+
+fn parse_err(err: toml::de::Error) -> PackError {
+    PackError::Parse(err.to_string())
+}

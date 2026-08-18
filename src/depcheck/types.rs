@@ -163,14 +163,12 @@ impl FileKind {
 
     pub fn ecosystem(self) -> Option<Ecosystem> {
         match self {
-            Self::PackageJson
-            | Self::PackageLockJson
-            | Self::YarnLock
-            | Self::PnpmLock => Some(Ecosystem::Npm),
-            Self::RequirementsTxt
-            | Self::Pipfile
-            | Self::PipfileLock
-            | Self::PyprojectToml => Some(Ecosystem::Pip),
+            Self::PackageJson | Self::PackageLockJson | Self::YarnLock | Self::PnpmLock => {
+                Some(Ecosystem::Npm)
+            }
+            Self::RequirementsTxt | Self::Pipfile | Self::PipfileLock | Self::PyprojectToml => {
+                Some(Ecosystem::Pip)
+            }
             Self::ComposerJson | Self::ComposerLock => Some(Ecosystem::Composer),
             Self::Gemfile | Self::GemfileLock => Some(Ecosystem::Rubygems),
             Self::PomXml | Self::BuildGradle => Some(Ecosystem::Maven),

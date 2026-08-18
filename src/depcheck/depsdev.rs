@@ -61,16 +61,17 @@ pub async fn fetch_transitive(
     let mut out = Vec::new();
     if let Some(deps) = data.get("dependencies").and_then(|v| v.as_array()) {
         // First node is often the root; skip index 0 when present
-        let iter = if deps.len() > 1 { &deps[1..] } else { deps.as_slice() };
+        let iter = if deps.len() > 1 {
+            &deps[1..]
+        } else {
+            deps.as_slice()
+        };
         for dep in iter {
             let pname = dep
                 .pointer("/package/name")
                 .or_else(|| dep.get("name"))
                 .and_then(|v| v.as_str());
-            let pver = dep
-                .get("version")
-                .and_then(|v| v.as_str())
-                .unwrap_or("*");
+            let pver = dep.get("version").and_then(|v| v.as_str()).unwrap_or("*");
             if let Some(n) = pname {
                 if !n.is_empty() {
                     out.push(PackageRef::new(n, pver));

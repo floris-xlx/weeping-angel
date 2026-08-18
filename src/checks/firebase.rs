@@ -22,8 +22,7 @@ static FIREBASE_HOST_RE: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 
-static API_KEY_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\bAIza[0-9A-Za-z\-_]{35}\b").unwrap());
+static API_KEY_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\bAIza[0-9A-Za-z\-_]{35}\b").unwrap());
 
 static PROJECT_ID_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)(?:projectId|project_id)\s*[:=]\s*["']([a-z0-9][a-z0-9-]{2,62})["']"#)
@@ -43,10 +42,8 @@ static FIRESTORE_DB_URL_RE: Lazy<Regex> = Lazy::new(|| {
 });
 
 static FIREBASE_CONFIG_BLOB_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?is)(?:firebaseConfig|firebase\.initializeApp\s*\()\s*[=:{]\s*\{[^}]{20,800}\}",
-    )
-    .unwrap()
+    Regex::new(r"(?is)(?:firebaseConfig|firebase\.initializeApp\s*\()\s*[=:{]\s*\{[^}]{20,800}\}")
+        .unwrap()
 });
 
 #[async_trait]
@@ -163,7 +160,10 @@ impl Check for FirebaseCheck {
             }
 
             if let Some(m) = FIREBASE_CONFIG_BLOB_RE.find(body) {
-                if seen.insert(format!("config:{}", m.as_str().chars().take(40).collect::<String>())) {
+                if seen.insert(format!(
+                    "config:{}",
+                    m.as_str().chars().take(40).collect::<String>()
+                )) {
                     findings.push(
                         Finding::builder(self.id(), "firebase-config-blob")
                             .title("Firebase config object embedded in client")
@@ -210,7 +210,10 @@ impl Check for FirebaseCheck {
             }
 
             for cap in FIRESTORE_DB_URL_RE.captures_iter(body) {
-                let full = cap.get(0).map(|m| m.as_str().to_string()).unwrap_or_default();
+                let full = cap
+                    .get(0)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_default();
                 if full.is_empty() {
                     continue;
                 }
@@ -318,9 +321,7 @@ impl Check for FirebaseCheck {
                                     .title("Firebase Realtime Database root denied (rules present)")
                                     .severity(Severity::Info)
                                     .url(u.as_str())
-                                    .description(format!(
-                                        "Unauthenticated GET returned HTTP {st}."
-                                    ))
+                                    .description(format!("Unauthenticated GET returned HTTP {st}."))
                                     .build(),
                             );
                         }

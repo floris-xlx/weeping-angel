@@ -1,0 +1,19 @@
+schema = "weeping-angel/framework-pack/v1"
+
+[framework]
+id = "iso-27001"
+version = "2022"
+kind = "information-security-management"
+content_mode = "StructuralOnly"
+
+[content]
+requirements = "requirements.toml"
+mappings = "mappings.toml"
+applicability = "applicability.toml"
+metadata = "metadata.toml"
+
+[capabilities]
+control_applicability = true
+statement_of_applicability = true
+risk_treatment = true
+manual_attestation = true

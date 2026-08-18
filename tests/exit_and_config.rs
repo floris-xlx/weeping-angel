@@ -94,7 +94,10 @@ fn profile_module_sets_nested() {
 
 #[test]
 fn merge_hosts_unions() {
-    let h = merge_hosts(vec!["a.com".into(), "b.com".into()], vec!["b.com".into(), "c.com".into()]);
+    let h = merge_hosts(
+        vec!["a.com".into(), "b.com".into()],
+        vec!["b.com".into(), "c.com".into()],
+    );
     assert_eq!(h.len(), 3);
     assert!(h.contains("a.com"));
     assert!(h.contains("c.com"));

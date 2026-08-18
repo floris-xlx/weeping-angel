@@ -1,10 +1,17 @@
 //! Exhaustive target URL normalization matrix.
 
-use weeping_angel::target::{NormalizeOptions, host_of_normalized, normalize_one, normalize_targets};
+use weeping_angel::target::{
+    NormalizeOptions, host_of_normalized, normalize_one, normalize_targets,
+};
 
 #[test]
 fn public_hosts_default_https() {
-    for raw in ["example.com", "Example.COM", "sub.domain.co.uk", "xn--bcher-kva.example"] {
+    for raw in [
+        "example.com",
+        "Example.COM",
+        "sub.domain.co.uk",
+        "xn--bcher-kva.example",
+    ] {
         let u = normalize_one(raw, NormalizeOptions::default()).unwrap();
         assert!(u.starts_with("https://"), "{raw} → {u}");
         assert!(u.contains("://"), "{u}");
@@ -35,11 +42,7 @@ fn loopback_and_local_default_http() {
 
 #[test]
 fn prefer_http_forces_public_hosts() {
-    let u = normalize_one(
-        "example.com",
-        NormalizeOptions { prefer_http: true },
-    )
-    .unwrap();
+    let u = normalize_one("example.com", NormalizeOptions { prefer_http: true }).unwrap();
     assert_eq!(u, "http://example.com/");
 }
 

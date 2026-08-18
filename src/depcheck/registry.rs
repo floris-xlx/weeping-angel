@@ -93,11 +93,7 @@ enum Retryable {
 }
 
 impl HttpRegistry {
-    async fn check_once(
-        &self,
-        ecosystem: Ecosystem,
-        name: &str,
-    ) -> Result<CheckStatus, Retryable> {
+    async fn check_once(&self, ecosystem: Ecosystem, name: &str) -> Result<CheckStatus, Retryable> {
         let url = match build_url(ecosystem, name) {
             Some(u) => u,
             None => return Ok(CheckStatus::Safe),

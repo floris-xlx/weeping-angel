@@ -1,3 +1,4 @@
+pub mod active;
 pub mod auth_compare;
 pub mod auth_surface;
 pub mod cookies;
@@ -9,7 +10,6 @@ pub mod rate_limits;
 pub mod secrets;
 pub mod tech;
 pub mod tls;
-pub mod active;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -81,10 +81,13 @@ pub mod test_util {
     use crate::http::{ClientConfig, HttpClient, ResponseSnapshot};
 
     pub fn dummy_client() -> Arc<HttpClient> {
-        let authz = Authorization::new(true, vec!["example.com".into(), "127.0.0.1".into()], false, false);
-        Arc::new(
-            HttpClient::new(authz, ClientConfig::default()).expect("test client"),
-        )
+        let authz = Authorization::new(
+            true,
+            vec!["example.com".into(), "127.0.0.1".into()],
+            false,
+            false,
+        );
+        Arc::new(HttpClient::new(authz, ClientConfig::default()).expect("test client"))
     }
 
     pub fn snapshot(

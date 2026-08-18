@@ -14,20 +14,15 @@ pub fn parse_go_mod(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     let mut in_replace = false;
 
     static REQ_BLOCK: OnceLock<Regex> = OnceLock::new();
-    let req_block =
-        REQ_BLOCK.get_or_init(|| Regex::new(r"^require\s*\(").expect("require block"));
+    let req_block = REQ_BLOCK.get_or_init(|| Regex::new(r"^require\s*\(").expect("require block"));
     static REP_BLOCK: OnceLock<Regex> = OnceLock::new();
-    let rep_block =
-        REP_BLOCK.get_or_init(|| Regex::new(r"^replace\s*\(").expect("replace block"));
+    let rep_block = REP_BLOCK.get_or_init(|| Regex::new(r"^replace\s*\(").expect("replace block"));
     static REQ_LINE: OnceLock<Regex> = OnceLock::new();
-    let req_line =
-        REQ_LINE.get_or_init(|| Regex::new(r"^require\s+\S").expect("require line"));
+    let req_line = REQ_LINE.get_or_init(|| Regex::new(r"^require\s+\S").expect("require line"));
     static REP_LINE: OnceLock<Regex> = OnceLock::new();
-    let rep_line =
-        REP_LINE.get_or_init(|| Regex::new(r"^replace\s+\S").expect("replace line"));
+    let rep_line = REP_LINE.get_or_init(|| Regex::new(r"^replace\s+\S").expect("replace line"));
     static DOMAIN: OnceLock<Regex> = OnceLock::new();
-    let domain =
-        DOMAIN.get_or_init(|| Regex::new(r"^[a-zA-Z0-9]+\.[a-zA-Z]").expect("domain"));
+    let domain = DOMAIN.get_or_init(|| Regex::new(r"^[a-zA-Z0-9]+\.[a-zA-Z]").expect("domain"));
 
     for line in content.lines() {
         let s = line.trim();

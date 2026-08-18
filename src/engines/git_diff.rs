@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 /// How to select files for a diff-scoped scan.
 #[derive(Debug, Clone)]
@@ -103,9 +103,34 @@ fn is_source_like(path: &str) -> bool {
         .to_ascii_lowercase();
     matches!(
         ext.as_str(),
-        "rs" | "py" | "js" | "jsx" | "ts" | "tsx" | "go" | "java" | "kt" | "rb" | "php"
-            | "c" | "cc" | "cpp" | "h" | "hpp" | "cs" | "swift" | "scala" | "sh" | "bash"
-            | "yaml" | "yml" | "toml" | "json" | "sql" | "env" | "vue" | "svelte"
+        "rs" | "py"
+            | "js"
+            | "jsx"
+            | "ts"
+            | "tsx"
+            | "go"
+            | "java"
+            | "kt"
+            | "rb"
+            | "php"
+            | "c"
+            | "cc"
+            | "cpp"
+            | "h"
+            | "hpp"
+            | "cs"
+            | "swift"
+            | "scala"
+            | "sh"
+            | "bash"
+            | "yaml"
+            | "yml"
+            | "toml"
+            | "json"
+            | "sql"
+            | "env"
+            | "vue"
+            | "svelte"
     )
 }
 
@@ -118,10 +143,7 @@ fn is_noise_path(path: &str) -> bool {
 }
 
 fn git_name_only(repo: &Path, range: &str) -> Result<Vec<String>> {
-    git_name_only_args(
-        repo,
-        &["diff", "--name-only", "--diff-filter=ACMR", range],
-    )
+    git_name_only_args(repo, &["diff", "--name-only", "--diff-filter=ACMR", range])
 }
 
 fn git_name_only_args(repo: &Path, args: &[&str]) -> Result<Vec<String>> {

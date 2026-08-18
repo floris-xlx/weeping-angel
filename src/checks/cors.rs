@@ -50,7 +50,10 @@ impl Check for CorsCheck {
 
             if let Some(origin) = acao {
                 if origin == "*" {
-                    let sev = if acac.map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false) {
+                    let sev = if acac
+                        .map(|v| v.eq_ignore_ascii_case("true"))
+                        .unwrap_or(false)
+                    {
                         Severity::High
                     } else {
                         Severity::Low
@@ -85,7 +88,10 @@ impl Check for CorsCheck {
                             .evidence(Evidence::new("access-control-allow-origin", origin))
                             .build(),
                     );
-                    if acac.map(|v| v.eq_ignore_ascii_case("true")).unwrap_or(false) {
+                    if acac
+                        .map(|v| v.eq_ignore_ascii_case("true"))
+                        .unwrap_or(false)
+                    {
                         findings.push(
                             Finding::builder(self.id(), "cors-credentials-reflected")
                                 .title("CORS reflects Origin with credentials")

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::depcheck::detect::detect_file_type;
 use crate::depcheck::extract_packages;
 use crate::depcheck::load_path;
-use crate::depcheck::registry::{check_many, HttpRegistry, RegistryClient};
+use crate::depcheck::registry::{HttpRegistry, RegistryClient, check_many};
 use crate::depcheck::types::{CheckStatus, FileKind, PackageRef, ScanOptions};
 use crate::engines::EngineHit;
 
@@ -117,10 +117,13 @@ fn hit_for(rel: &str, name: &str, version: &str, ecosystem: &str) -> EngineHit {
             "Package `{name}`@{version} from `{rel}` was not found on the public {ecosystem} registry. \
              An attacker who registers this name could supply a higher version to consumers that resolve public-first."
         ),
-        evidence: format!("registry_checked=true ecosystem={ecosystem} package={name} version={version}"),
+        evidence: format!(
+            "registry_checked=true ecosystem={ecosystem} package={name} version={version}"
+        ),
         severity: "high",
         confidence: "high",
-        confidence_rationale: "Public registry returned not-found for this exact package name.".into(),
+        confidence_rationale: "Public registry returned not-found for this exact package name."
+            .into(),
         category: "supply-chain".into(),
         cwe: vec!["CWE-427".into()],
         remediation: format!(

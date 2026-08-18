@@ -35,10 +35,7 @@ fn detects_standard_filenames() {
         detect_file_type(&fixture("Cargo.toml"), None),
         FileKind::CargoToml
     );
-    assert_eq!(
-        detect_file_type(&fixture("go.mod"), None),
-        FileKind::GoMod
-    );
+    assert_eq!(detect_file_type(&fixture("go.mod"), None), FileKind::GoMod);
     assert_eq!(
         detect_file_type(&fixture("composer.json"), None),
         FileKind::ComposerJson
@@ -97,9 +94,11 @@ fn parse_go_mod_drops_replaced_modules() {
     assert_eq!(eco, Ecosystem::Go);
     let names: Vec<_> = pkgs.iter().map(|p| p.name.as_str()).collect();
     assert!(names.contains(&"github.com/stretchr/testify"));
-    assert!(!names
-        .iter()
-        .any(|n| *n == "example.com/internal/acme-go-sdk-xyz"));
+    assert!(
+        !names
+            .iter()
+            .any(|n| *n == "example.com/internal/acme-go-sdk-xyz")
+    );
 }
 
 #[test]

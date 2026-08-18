@@ -1,0 +1,289 @@
+schema = "weeping-angel/framework-pack/v1"
+
+# Canonical control library (not iso27001.* and not provider-prefixed).
+
+[[control]]
+id = "access.mfa.privileged"
+title = "Privileged multi-factor authentication"
+description = "Privileged identities require a second factor."
+automation = "Automated"
+
+[[control]]
+id = "access.least-privilege"
+title = "Least privilege"
+description = "Identities hold only the access required for their role."
+automation = "Hybrid"
+
+[[control]]
+id = "access.periodic-review"
+title = "Periodic access review"
+description = "Access rights are reviewed on a defined cadence."
+automation = "Hybrid"
+
+[[control]]
+id = "source.branch-protection"
+title = "Source branch protection"
+description = "The default branch rejects force-push and unreviewed merges."
+automation = "Automated"
+
+[[control]]
+id = "source.required-review"
+title = "Required peer review"
+description = "Protected branches require a minimum number of approving reviews."
+automation = "Automated"
+
+[[control]]
+id = "source.code-ownership"
+title = "Code ownership"
+description = "CODEOWNERS (or equivalent) names reviewers for protected paths."
+automation = "Automated"
+
+[[control]]
+id = "source.security-scanning"
+title = "Source security scanning"
+description = "Secret, dependency, and code scanning are configured on the repository."
+automation = "Automated"
+
+[[control]]
+id = "source.commit-signing"
+title = "Commit signing"
+description = "Signed commits are required on the protected default branch."
+automation = "Automated"
+
+[[control]]
+id = "vulnerability.remediation"
+title = "Vulnerability remediation"
+description = "Known vulnerabilities are tracked to a remediation outcome."
+automation = "Hybrid"
+
+[[control]]
+id = "logging.security-events"
+title = "Security event logging"
+description = "Security-relevant events are recorded for in-scope systems."
+automation = "Hybrid"
+
+[[control]]
+id = "incident.response-process"
+title = "Incident response process"
+description = "A documented incident-response process exists and is attested."
+automation = "Manual"
+
+[[control]]
+id = "backup.recovery-testing"
+title = "Backup recovery testing"
+description = "Backups exist and restore tests are recorded."
+automation = "Hybrid"
+
+[[control]]
+id = "encryption.data-at-rest"
+title = "Encryption at rest"
+description = "In-scope data stores declare encryption at rest."
+automation = "Hybrid"
+
+[[control]]
+id = "encryption.data-in-transit"
+title = "Encryption in transit"
+description = "In-scope services declare encryption in transit."
+automation = "Automated"
+
+[[control]]
+id = "supplier.security-assessment"
+title = "Supplier security assessment"
+description = "Suppliers handling in-scope data have a recorded security assessment."
+automation = "Manual"
+
+[[control]]
+id = "personnel.access-termination"
+title = "Access termination"
+description = "Access is revoked when personnel leave or change role."
+automation = "Hybrid"
+
+[[control]]
+id = "asset.inventory"
+title = "Asset inventory"
+description = "In-scope assets are listed in an inventory artifact."
+automation = "Hybrid"
+
+[[control]]
+id = "change.approval"
+title = "Change approval"
+description = "Production-impacting changes record an approval."
+automation = "Hybrid"
+
+[[control]]
+id = "security.headers"
+title = "Security headers"
+description = "HTTP responses carry baseline security headers."
+automation = "Automated"
+
+[[control]]
+id = "security.tls"
+title = "Transport security"
+description = "TLS is configured without known weak protocols."
+automation = "Automated"
+
+[[control]]
+id = "security.secret-exposure"
+title = "Secret exposure"
+description = "Discovered secret exposures make the related control ineffective."
+automation = "Automated"
+
+[[control]]
+id = "logging.audit-trail"
+title = "Audit trail"
+description = "Administrative actions are recorded."
+automation = "Hybrid"
+
+[[test]]
+id = "test.source.branch-protection"
+control = "source.branch-protection"
+kind = "automated"
+required = ["source.branch.protection"]
+break_on = []
+
+[[test]]
+id = "test.source.required-review"
+control = "source.required-review"
+kind = "automated"
+required = ["source.branch.required_reviews"]
+break_on = []
+
+[[test]]
+id = "test.source.code-ownership"
+control = "source.code-ownership"
+kind = "automated"
+required = ["source.codeowners.present"]
+break_on = []
+
+[[test]]
+id = "test.source.security-scanning"
+control = "source.security-scanning"
+kind = "automated"
+required = ["source.security.secret_scanning.enabled"]
+break_on = []
+
+[[test]]
+id = "test.source.commit-signing"
+control = "source.commit-signing"
+kind = "automated"
+required = ["source.commit.signing"]
+break_on = []
+
+[[test]]
+id = "test.access.mfa.privileged"
+control = "access.mfa.privileged"
+kind = "hybrid"
+required = ["source.admin.permissions"]
+break_on = []
+
+[[test]]
+id = "test.access.least-privilege"
+control = "access.least-privilege"
+kind = "hybrid"
+required = ["source.collaborator.permission"]
+break_on = []
+
+[[test]]
+id = "test.access.periodic-review"
+control = "access.periodic-review"
+kind = "manual"
+required = ["policy.access.reviewed"]
+break_on = []
+
+[[test]]
+id = "test.vulnerability.remediation"
+control = "vulnerability.remediation"
+kind = "hybrid"
+required = ["security.vulnerability.present"]
+break_on = ["security.vulnerability.present"]
+
+[[test]]
+id = "test.logging.security-events"
+control = "logging.security-events"
+kind = "hybrid"
+required = ["logging.security-events"]
+break_on = []
+
+[[test]]
+id = "test.incident.response-process"
+control = "incident.response-process"
+kind = "manual"
+required = ["policy.security.reviewed"]
+break_on = []
+
+[[test]]
+id = "test.backup.recovery-testing"
+control = "backup.recovery-testing"
+kind = "hybrid"
+required = ["backup.configuration.present"]
+break_on = []
+
+[[test]]
+id = "test.encryption.data-at-rest"
+control = "encryption.data-at-rest"
+kind = "hybrid"
+required = ["encryption.at-rest.configured"]
+break_on = []
+
+[[test]]
+id = "test.encryption.data-in-transit"
+control = "encryption.data-in-transit"
+kind = "automated"
+required = ["encryption.in-transit.configured"]
+break_on = []
+
+[[test]]
+id = "test.supplier.security-assessment"
+control = "supplier.security-assessment"
+kind = "manual"
+required = ["policy.supplier.assessed"]
+break_on = []
+
+[[test]]
+id = "test.personnel.access-termination"
+control = "personnel.access-termination"
+kind = "hybrid"
+required = ["personnel.access.terminated"]
+break_on = []
+
+[[test]]
+id = "test.asset.inventory"
+control = "asset.inventory"
+kind = "hybrid"
+required = ["asset.inventory.present"]
+break_on = []
+
+[[test]]
+id = "test.change.approval"
+control = "change.approval"
+kind = "hybrid"
+required = ["change.approval.present"]
+break_on = []
+
+[[test]]
+id = "test.security.headers"
+control = "security.headers"
+kind = "automated"
+required = ["security.header.misconfiguration"]
+break_on = ["security.header.misconfiguration"]
+
+[[test]]
+id = "test.security.tls"
+control = "security.tls"
+kind = "automated"
+required = ["security.tls.misconfiguration"]
+break_on = ["security.tls.misconfiguration"]
+
+[[test]]
+id = "test.security.secret-exposure"
+control = "security.secret-exposure"
+kind = "automated"
+required = ["security.secret.exposure"]
+break_on = ["security.secret.exposure"]
+
+[[test]]
+id = "test.logging.audit-trail"
+control = "logging.audit-trail"
+kind = "hybrid"
+required = ["logging.audit-trail"]
+break_on = []

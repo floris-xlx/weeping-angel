@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 use anyhow::Result;
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 use regex::Regex;
 
 use super::map_to_vec;
@@ -36,10 +36,7 @@ pub fn parse_pom_xml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
             }
             Ok(Event::Text(t)) => {
                 if in_dependency && !current_tag.is_empty() {
-                    let text = t
-                        .decode()
-                        .map(|c| c.into_owned())
-                        .unwrap_or_default();
+                    let text = t.decode().map(|c| c.into_owned()).unwrap_or_default();
                     match current_tag.as_str() {
                         "groupId" => group_id = text,
                         "artifactId" => artifact_id = text,

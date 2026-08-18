@@ -3,12 +3,12 @@
 //!
 //! Gated behind the `demo` feature (pulls in axum).
 
+use axum::Router;
 use axum::body::Body;
 use axum::extract::{Query, Request};
-use axum::http::{header, HeaderValue, StatusCode};
+use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{Html, IntoResponse, Redirect, Response};
 use axum::routing::get;
-use axum::Router;
 use serde::Deserialize;
 
 /// Full lab router used by `weeping-angel-demo` and integration tests.
@@ -17,10 +17,7 @@ pub fn router() -> Router {
         .route("/", get(home))
         .route("/spa", get(spa_shell))
         .route("/assets/app.js", get(app_js))
-        .route(
-            "/assets/images/home/dashboardpic.png",
-            get(dashboard_pic),
-        )
+        .route("/assets/images/home/dashboardpic.png", get(dashboard_pic))
         .route("/assets/images/home/hero.png", get(dashboard_pic))
         .route("/login", get(login))
         .route("/signup", get(signup))

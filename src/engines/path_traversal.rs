@@ -131,6 +131,9 @@ mod tests {
     fn detects_os_path_join() {
         let src = "def load(req):\n    p = os.path.join(BASE, req.args['file'])\n    return open(p).read()\n";
         let hits = scan("app.py", src);
-        assert!(hits.iter().any(|h| h.rule_id.contains("path-join") || h.rule_id.contains("open-user")));
+        assert!(
+            hits.iter()
+                .any(|h| h.rule_id.contains("path-join") || h.rule_id.contains("open-user"))
+        );
     }
 }

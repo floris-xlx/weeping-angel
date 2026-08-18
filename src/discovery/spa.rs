@@ -12,13 +12,11 @@ static NEXT_DATA: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?s)<script[^>]*id=["']__NEXT_DATA__["'][^>]*>(.*?)</script>"#).unwrap()
 });
 
-static INITIAL_STATE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"(?s)window\.__INITIAL_STATE__\s*=\s*(\{.*?\});"#).unwrap()
-});
+static INITIAL_STATE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"(?s)window\.__INITIAL_STATE__\s*=\s*(\{.*?\});"#).unwrap());
 
-static ROUTE_ARRAY: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#"(?i)(?:routes|paths|pages)\s*[:=]\s*\[([^\]]{0,2000})\]"#).unwrap()
-});
+static ROUTE_ARRAY: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"(?i)(?:routes|paths|pages)\s*[:=]\s*\[([^\]]{0,2000})\]"#).unwrap());
 
 static QUOTED_PATH: Lazy<Regex> =
     Lazy::new(|| Regex::new(r#""(/[A-Za-z0-9][A-Za-z0-9._/-]{0,120})""#).unwrap());

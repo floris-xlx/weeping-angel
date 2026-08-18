@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -30,7 +30,8 @@ pub struct RemediationResult {
 
 /// Load reportable findings from a sealed scan as remediation requests.
 pub fn requests_from_scan(scan_dir: &Path) -> Result<Vec<RemediationRequest>> {
-    let findings: Value = serde_json::from_str(&fs::read_to_string(scan_dir.join("findings.json"))?)?;
+    let findings: Value =
+        serde_json::from_str(&fs::read_to_string(scan_dir.join("findings.json"))?)?;
     let mut out = Vec::new();
     if let Some(arr) = findings["findings"].as_array() {
         for f in arr {
@@ -66,8 +67,8 @@ pub fn generate_patch(
     if !src_path.is_file() {
         bail!("source file missing: {}", src_path.display());
     }
-    let original = fs::read_to_string(&src_path)
-        .with_context(|| format!("read {}", src_path.display()))?;
+    let original =
+        fs::read_to_string(&src_path).with_context(|| format!("read {}", src_path.display()))?;
     let (patched, strategy, summary) = apply_rule_fix(&original, req)?;
 
     if patched == original {
@@ -88,7 +89,10 @@ pub fn generate_patch(
     fs::create_dir_all(&patch_dir)?;
     let patch_path = patch_dir.join("fix.patch");
     fs::write(&patch_path, &patch)?;
-    fs::write(patch_dir.join("summary.json"), serde_json::to_string_pretty(&json_meta(req, &strategy, &summary))?)?;
+    fs::write(
+        patch_dir.join("summary.json"),
+        serde_json::to_string_pretty(&json_meta(req, &strategy, &summary))?,
+    )?;
 
     let preview: String = patch.chars().take(4000).collect();
     Ok(RemediationResult {
@@ -132,16 +136,16 @@ pub fn apply_patch(source_root: &Path, patch_path: &Path) -> Result<RemediationR
 }
 
 /// Verify by re-running engines on a single file and checking the fingerprint family is gone or reduced.
-pub fn verify_file_clean(source_root: &Path, rel_path: &str, rule_id: &str) -> Result<RemediationResult> {
+pub fn verify_file_clean(
+    source_root: &Path,
+    rel_path: &str,
+    rule_id: &str,
+) -> Result<RemediationResult> {
     let path = source_root.join(rel_path);
     let content = fs::read_to_string(&path)?;
     let hits = crate::engines::scan_source_file(rel_path, &content);
     let remaining = hits.iter().filter(|h| h.rule_id == rule_id).count();
-    let state = if remaining == 0 {
-        "verified"
-    } else {
-        "failed"
-    };
+    let state = if remaining == 0 { "verified" } else { "failed" };
     Ok(RemediationResult {
         finding_id: String::new(),
         rule_id: rule_id.into(),
@@ -162,7 +166,11 @@ fn apply_rule_fix(original: &str, req: &RemediationRequest) -> Result<(String, S
     let line_idx = req.start_line.saturating_sub(1) as usize;
     let mut lines: Vec<String> = original.lines().map(str::to_string).collect();
     if line_idx >= lines.len() {
-        bail!("start_line {} out of range for {}", req.start_line, req.path);
+        bail!(
+            "start_line {} out of range for {}",
+            req.start_line,
+            req.path
+        );
     }
     let line = lines[line_idx].clone();
 
@@ -170,7 +178,9 @@ fn apply_rule_fix(original: &str, req: &RemediationRequest) -> Result<(String, S
     if req.rule_id.contains("command-injection.shell-true")
         || line.to_ascii_lowercase().contains("shell=true")
     {
-        let new_line = line.replace("shell=True", "shell=False").replace("shell=true", "shell=false");
+        let new_line = line
+            .replace("shell=True", "shell=False")
+            .replace("shell=true", "shell=false");
         if new_line != line {
             lines[line_idx] = new_line;
             return Ok((
@@ -185,9 +195,8 @@ fn apply_rule_fix(original: &str, req: &RemediationRequest) -> Result<(String, S
         // Redact literal assignment values on that line
         let redacted = redact_string_literals(&line);
         if redacted != line {
-            lines[line_idx] = format!(
-                "{redacted}  # weeping-angel: secret removed — load from env"
-            );
+            lines[line_idx] =
+                format!("{redacted}  # weeping-angel: secret removed — load from env");
             return Ok((
                 join_preserve(original, &lines),
                 "secret-redact".into(),
@@ -389,11 +398,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let src_root = dir.path().join("src");
         fs::create_dir_all(&src_root).unwrap();
-        fs::write(
-            src_root.join("x.js"),
-            "el.innerHTML = userInput;\n",
-        )
-        .unwrap();
+        fs::write(src_root.join("x.js"), "el.innerHTML = userInput;\n").unwrap();
         let scan = dir.path().join("scan");
         fs::create_dir_all(&scan).unwrap();
         fs::write(

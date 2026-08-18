@@ -51,12 +51,10 @@ pub fn analyze_npm_project(
         }
     }
 
-    let pkg_path = package_json
-        .map(|p| p.to_path_buf())
-        .or_else(|| {
-            let p = project_root.join("package.json");
-            p.is_file().then_some(p)
-        });
+    let pkg_path = package_json.map(|p| p.to_path_buf()).or_else(|| {
+        let p = project_root.join("package.json");
+        p.is_file().then_some(p)
+    });
 
     if let Some(ref pj) = pkg_path {
         if let Ok(text) = fs::read_to_string(pj) {
@@ -223,7 +221,8 @@ fn analyze_package_json(
         .or_else(|| Some("index.js".into()));
 
     if let Some(ep) = entry {
-        let exists = project_root.join(&ep).is_file() || pj.parent().map(|p| p.join(&ep).is_file()).unwrap_or(false);
+        let exists = project_root.join(&ep).is_file()
+            || pj.parent().map(|p| p.join(&ep).is_file()).unwrap_or(false);
         report.entrypoint = Some(ep);
         report.entrypoint_exists = Some(exists);
         if !exists {

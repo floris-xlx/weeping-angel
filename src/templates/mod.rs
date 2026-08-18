@@ -80,11 +80,9 @@ impl Matcher {
                 let regex_ok = if self.regex.is_empty() {
                     true
                 } else {
-                    self.regex.iter().any(|pat| {
-                        Regex::new(pat)
-                            .map(|re| re.is_match(body))
-                            .unwrap_or(false)
-                    })
+                    self.regex
+                        .iter()
+                        .any(|pat| Regex::new(pat).map(|re| re.is_match(body)).unwrap_or(false))
                 };
                 // if both empty under body, require 200 via status matcher elsewhere
                 if self.contains.is_empty() && self.regex.is_empty() {

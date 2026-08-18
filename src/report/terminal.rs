@@ -176,11 +176,7 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
             style::dim("url:"),
             style::bright_blue(&style::truncate_url(&f.url, width.saturating_sub(12)))
         ));
-        style::eprint_line(&format!(
-            "  {}   {}",
-            style::dim("id:"),
-            style::dim(&f.id)
-        ));
+        style::eprint_line(&format!("  {}   {}", style::dim("id:"), style::dim(&f.id)));
         if let Some(cwe) = &f.cwe {
             style::eprint_line(&format!("  {}  {}", style::dim("cwe:"), style::yellow(cwe)));
         }
@@ -231,7 +227,11 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
                 by_src.entry(src).or_default().push(r.url.as_str());
             }
         } else {
-            for f in report.findings.iter().filter(|f| f.id == "route-discovered") {
+            for f in report
+                .findings
+                .iter()
+                .filter(|f| f.id == "route-discovered")
+            {
                 by_src
                     .entry("discovery".into())
                     .or_default()

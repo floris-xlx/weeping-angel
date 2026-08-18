@@ -103,13 +103,10 @@ fn export_command_node(command: &Command, path: &[String]) -> CommandNode {
     };
     let usage = {
         let mut usage_command = command.clone();
-        usage_command
-            .render_usage()
-            .to_string()
-            .replace(
-                &format!("Usage: {}", command.get_name()),
-                &format!("Usage: {display_name}"),
-            )
+        usage_command.render_usage().to_string().replace(
+            &format!("Usage: {}", command.get_name()),
+            &format!("Usage: {display_name}"),
+        )
     };
 
     CommandNode {
@@ -192,7 +189,11 @@ fn export_argument_node(arg: &Arg) -> ArgumentNode {
 fn argument_takes_value(arg: &Arg) -> bool {
     !matches!(
         arg.get_action(),
-        ArgAction::SetTrue | ArgAction::SetFalse | ArgAction::Count | ArgAction::Help | ArgAction::Version
+        ArgAction::SetTrue
+            | ArgAction::SetFalse
+            | ArgAction::Count
+            | ArgAction::Help
+            | ArgAction::Version
     ) && !arg.is_positional()
         || arg.is_positional()
 }
@@ -225,10 +226,11 @@ mod tests {
 
         let scan = export_command_reference(&["scan".into()]).expect("scan");
         assert_eq!(scan.command.name, "scan");
-        assert!(scan
-            .command
-            .arguments
-            .iter()
-            .any(|a| a.id == "i_own_this" || a.long.as_deref() == Some("--i-own-this")));
+        assert!(
+            scan.command
+                .arguments
+                .iter()
+                .any(|a| a.id == "i_own_this" || a.long.as_deref() == Some("--i-own-this"))
+        );
     }
 }

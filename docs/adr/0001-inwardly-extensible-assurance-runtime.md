@@ -44,7 +44,7 @@ AssuranceEngine::builder()
 
 `AssessmentReport` is `{ assessmentId, profile, digest, results, evidenceCount }`. It does not expose compiler or collector topology.
 
-CLI `weeping-angel assurance {…}` is specified for a later slice. This slice does **not** add an `Assurance` command.
+CLI `weeping-angel assurance {…}` was deferred from this slice. It landed with ADR 0002 (clap family + non-certification banner; library `assess` is the execution path).
 
 ### Crate graph (as built)
 
@@ -97,7 +97,7 @@ Forbidden edges, enforced by `ACT-003` / `ACT-013`:
 
 - Workspace split (scanner stays at repo root so packager / `CARGO_MANIFEST_DIR` fixtures stay valid).
 - Callers cannot add a GDPR column to findings; they go through IR + compile + test.
-- Facade `assess` currently compiles a **canonical stub assessment** (one partial mapping, `branch_protection` evidence). Full catalogs are Phases 9–14.
+- Facade `assess` compiled a **canonical stub assessment** (one partial mapping, `branch_protection` evidence) in this slice. ISO 27001:2022 pack + hosted GitHub collector landed under ADR 0002; other profiles still use the stub.
 - Collector crate may depend on IR **identity** types (`AssetId`, `EvidenceType`) but not on framework catalogs.
 
 **Rejected alternatives**
@@ -118,15 +118,18 @@ Forbidden edges, enforced by `ACT-003` / `ACT-013`:
 
 ## Deferred (not this decision)
 
-- Phases 9–14: real ISO 27001 / 27701 / GDPR / SOC 2 / NIS2 / DORA catalogs.
-- Phase 15: hosted GitHub / AWS / Cloudflare collectors.
-- Phase 16: persistent orchestrator (this `assess` is in-process).
-- Phase 17: auditor UX / ISO 27007 program product.
-- CLI `weeping-angel assurance …`.
+ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA, and the `assurance` clap family landed as **ADR 0002**. Still deferred:
+
+- Production packs for ISO 27701 / GDPR / SOC 2 / NIS2 / DORA.
+- Additional hosted collectors (AWS, Cloudflare, …).
+- Persistent multi-backend orchestrator beyond SQLite.
+- Auditor UX / ISO 27007 program product.
+- Full CLI dispatch for every `assurance` subcommand.
 
 ## Related
 
 - Spec SSOT: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
 - Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- ISO 27001 vertical (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Scan contract (security-only): [`codex-security/references/scan-contract.md`](../../codex-security/references/scan-contract.md)
 - Athena analogue: `athena-query` `Statement` / `CompileTarget` / `compile` / `CapabilityViolation` (pattern only; no crate dependency)

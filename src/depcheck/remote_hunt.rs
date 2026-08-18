@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use futures::stream::{FuturesUnordered, StreamExt};
 use regex::Regex;
 use reqwest::Client;
@@ -18,7 +18,7 @@ use tokio::sync::Semaphore;
 
 use super::detect::detect_from_content;
 use super::extract_packages;
-use super::registry::{check_many, RegistryClient};
+use super::registry::{RegistryClient, check_many};
 use super::types::{CheckStatus, Ecosystem, FileKind, PackageRef, ScanOptions};
 
 const UA: &str = concat!("weeping-angel-depcheck/", env!("CARGO_PKG_VERSION"));
@@ -111,7 +111,8 @@ fn parse_target_line(line: &str, strip_path: bool) -> Option<TargetBase> {
         return None;
     }
     static RE: OnceLock<Regex> = OnceLock::new();
-    let re = RE.get_or_init(|| Regex::new(r"^(https?://)?([^/\s]+)(/.*)?$").expect("url line regex"));
+    let re =
+        RE.get_or_init(|| Regex::new(r"^(https?://)?([^/\s]+)(/.*)?$").expect("url line regex"));
     let caps = re.captures(line)?;
     let protocol = caps
         .get(1)
@@ -145,7 +146,10 @@ fn append_suffix(append: &str) -> String {
 
 fn probe_urls(base: &TargetBase, append: &str, extra: &[String]) -> Vec<String> {
     let suffix = append_suffix(append);
-    let mut paths: Vec<String> = DEFAULT_PROBE_PATHS.iter().map(|s| (*s).to_string()).collect();
+    let mut paths: Vec<String> = DEFAULT_PROBE_PATHS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
     for p in extra {
         let p = p.trim_start_matches('/');
         if !p.is_empty() && !paths.iter().any(|x| x == p) {
@@ -160,10 +164,7 @@ fn probe_urls(base: &TargetBase, append: &str, extra: &[String]) -> Vec<String> 
 
 fn registry_url_for(eco: Ecosystem, name: &str) -> String {
     match eco {
-        Ecosystem::Npm => format!(
-            "https://registry.npmjs.org/{}",
-            name.replace('/', "%2f")
-        ),
+        Ecosystem::Npm => format!("https://registry.npmjs.org/{}", name.replace('/', "%2f")),
         Ecosystem::Pip => format!("https://pypi.org/project/{name}/"),
         Ecosystem::Composer => format!("https://packagist.org/packages/{name}"),
         Ecosystem::Rubygems => format!("https://rubygems.org/gems/{name}"),

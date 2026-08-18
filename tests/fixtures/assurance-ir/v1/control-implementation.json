@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "impl.access.mfa.org",
+  "controlId": "control.access.mfa",
+  "status": "implemented"
+}

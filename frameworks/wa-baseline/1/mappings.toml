@@ -1,0 +1,9 @@
+schema = "weeping-angel/framework-pack/v1"
+
+[[mapping]]
+from = "wa-baseline:source-integrity"
+to = "source.branch-protection"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Branch protection is one source-integrity control."

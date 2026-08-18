@@ -7,10 +7,7 @@ use weeping_angel::parse::{
 
 #[test]
 fn split_list_delimiters() {
-    assert_eq!(
-        split_list("a, b;c\td  e,,"),
-        vec!["a", "b", "c", "d", "e"]
-    );
+    assert_eq!(split_list("a, b;c\td  e,,"), vec!["a", "b", "c", "d", "e"]);
     assert!(split_list("").is_empty());
     assert_eq!(split_list("  single  "), vec!["single"]);
 }
@@ -34,7 +31,17 @@ fn bool_loose_matrix() {
 
 #[test]
 fn consent_matrix() {
-    for t in ["", "true", "yes", "y", "1", "on", "i-own-this", "owned", "authorized"] {
+    for t in [
+        "",
+        "true",
+        "yes",
+        "y",
+        "1",
+        "on",
+        "i-own-this",
+        "owned",
+        "authorized",
+    ] {
         assert_eq!(parse_consent(t).unwrap(), true, "consent {t:?}");
     }
     for f in ["false", "no", "0", "off"] {
@@ -83,7 +90,10 @@ fn allow_hosts_url_wildcard_csv_port() {
     ]);
     assert!(h.iter().any(|x| x == "app.example.com"), "{h:?}");
     assert!(h.iter().any(|x| x == "*.cdn.example.com"), "{h:?}");
-    assert!(h.iter().any(|x| x == ".example.org" || x == "example.org"), "{h:?}");
+    assert!(
+        h.iter().any(|x| x == ".example.org" || x == "example.org"),
+        "{h:?}"
+    );
     assert!(h.iter().any(|x| x == "127.0.0.1"), "{h:?}");
     assert!(h.iter().any(|x| x == "proto.example"), "{h:?}");
 }

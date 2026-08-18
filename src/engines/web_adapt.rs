@@ -16,11 +16,7 @@ pub fn web_finding_to_semantic(f: &Finding) -> SemanticFinding {
         Severity::Low => "low",
         Severity::Info => "informational",
     };
-    let rule_id = format!(
-        "web.{}.{}",
-        slug(&f.module),
-        slug(&f.id)
-    );
+    let rule_id = format!("web.{}.{}", slug(&f.module), slug(&f.id));
     let anchor = slug(&format!("{}-{}", f.module, f.id));
     let path_hint = f
         .evidence
@@ -54,11 +50,7 @@ pub fn web_finding_to_semantic(f: &Finding) -> SemanticFinding {
     };
     finding.taxonomy = Taxonomy {
         category: format!("web-{}", slug(&f.module)),
-        cwe: f
-            .cwe
-            .as_ref()
-            .map(|c| vec![c.clone()])
-            .unwrap_or_default(),
+        cwe: f.cwe.as_ref().map(|c| vec![c.clone()]).unwrap_or_default(),
     };
     finding.locations = vec![CodeLocation {
         path: path_hint,

@@ -11,9 +11,9 @@ use std::process::Command;
 use std::time::Duration;
 
 use chrono::{TimeZone, Utc};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use weeping_angel::contract::{
-    normalize_raw_candidate, ArtifactRecord, Candidate, CoverageDocument, SemanticFinding,
+    ArtifactRecord, Candidate, CoverageDocument, SemanticFinding, normalize_raw_candidate,
 };
 use weeping_angel::engines::EngineHit;
 
@@ -21,24 +21,24 @@ use weeping_angel_assurance::bridge;
 use weeping_angel_assurance::{AssessmentReport, AssessmentScope, AssuranceEngine};
 use weeping_angel_assurance_ir::crosswalk::ComplianceGraph;
 use weeping_angel_assurance_ir::{
-    AssessmentId, AssetId, AuditProgramId, Control, ControlId, ControlImplementationId,
-    ControlTestId, EvidenceRequirement, EvidenceRequirementId, ExceptionId, FrameworkId,
-    FrameworkVersion, IdentityId, Mapping, MappingCompleteness, MappingDirection,
-    ProcessingActivityId, Requirement, RequirementId, RiskId, VendorId, ASSURANCE_IR_SCHEMA,
+    ASSURANCE_IR_SCHEMA, AssessmentId, AssetId, AuditProgramId, Control, ControlId,
+    ControlImplementationId, ControlTestId, EvidenceRequirement, EvidenceRequirementId,
+    ExceptionId, FrameworkId, FrameworkVersion, IdentityId, Mapping, MappingCompleteness,
+    MappingDirection, ProcessingActivityId, Requirement, RequirementId, RiskId, VendorId,
 };
 use weeping_angel_collector::{
     CollectorDescriptor, CollectorError, CollectorScope, EvidenceCollector, FixtureCollector,
 };
 use weeping_angel_control_test::{
-    evaluate, AssessmentContext, CompiledControlTest, ControlTestKind, ControlTestResult,
-    Effectiveness, EvidenceSet,
+    AssessmentContext, CompiledControlTest, ControlTestKind, ControlTestResult, Effectiveness,
+    EvidenceSet, evaluate,
 };
 use weeping_angel_evidence::{
     EvidenceEnvelope, EvidenceError, EvidenceObservation, EvidenceProvenance, EvidenceType,
 };
 use weeping_angel_framework::{
-    compile_framework, Assessment, AssessmentRequests, FrameworkCapabilities, FrameworkCompileError,
-    FrameworkContext, FrameworkProfile, FrameworkTarget,
+    Assessment, AssessmentRequests, FrameworkCapabilities, FrameworkCompileError, FrameworkContext,
+    FrameworkProfile, FrameworkTarget, compile_framework,
 };
 
 const FORBIDDEN_COMPLIANCE_KEYS: &[&str] = &[
@@ -328,19 +328,16 @@ fn stub_assessment(request_soa: bool) -> Assessment {
         EvidenceRequirementId::new("ev.branch_protection"),
         EvidenceType::new("branch_protection"),
     );
-    Assessment {
-        id: AssessmentId::new("assess-stub-1"),
-        schema_version: ASSURANCE_IR_SCHEMA.into(),
-        requirements: vec![requirement],
-        controls: vec![control],
-        mappings: vec![mapping],
-        evidence_requirements: vec![evidence_req],
-        tests: vec![],
-        requests: AssessmentRequests {
-            statement_of_applicability: request_soa,
-            ..AssessmentRequests::default()
-        },
-    }
+    let mut assessment = Assessment::new(AssessmentId::new("assess-stub-1"));
+    assessment.requirements = vec![requirement];
+    assessment.controls = vec![control];
+    assessment.mappings = vec![mapping];
+    assessment.evidence_requirements = vec![evidence_req];
+    assessment.requests = AssessmentRequests {
+        statement_of_applicability: request_soa,
+        ..AssessmentRequests::default()
+    };
+    assessment
 }
 
 fn compiled_branch_test() -> CompiledControlTest {
@@ -361,10 +358,7 @@ fn fresh_context() -> AssessmentContext {
 }
 
 fn assert_digest_stable(digest: &str) {
-    assert!(
-        !digest.is_empty(),
-        "integrity digest must be non-empty"
-    );
+    assert!(!digest.is_empty(), "integrity digest must be non-empty");
     assert!(
         digest.len() >= 32,
         "digest should be a stable hash, got {digest:?}"
@@ -449,7 +443,11 @@ fn act_003_framework_crate_has_no_network_or_sdk_deps() {
         !deps.is_empty() || package_map(&meta).contains_key("weeping-angel-framework"),
         "ACT-003: weeping-angel-framework must be a workspace package"
     );
-    let forbidden: Vec<_> = deps.iter().filter(|d| is_forbidden_network_dep(d)).cloned().collect();
+    let forbidden: Vec<_> = deps
+        .iter()
+        .filter(|d| is_forbidden_network_dep(d))
+        .cloned()
+        .collect();
     assert!(
         forbidden.is_empty(),
         "ACT-003 / INV-3: framework must not depend on network/SDK crates: {forbidden:?} (deps={deps:?})"
@@ -465,8 +463,11 @@ fn act_003_framework_crate_has_no_network_or_sdk_deps() {
 #[test]
 fn act_004_control_test_is_provider_blind() {
     let test = compiled_branch_test();
-    let env = EvidenceEnvelope::seal(branch_protection_obs(true), fresh_provenance("repo:in-scope"))
-        .expect("valid observation");
+    let env = EvidenceEnvelope::seal(
+        branch_protection_obs(true),
+        fresh_provenance("repo:in-scope"),
+    )
+    .expect("valid observation");
     let mut set = EvidenceSet::new();
     set.insert(env);
     let set_json = serde_json::to_value(&set).unwrap();
@@ -566,10 +567,7 @@ fn act_005_crosswalk_preserves_direction_and_refuses_partial_equivalence() {
         !graph.equivalent(&c, &a),
         "direction must be preserved; reverse path is not invented"
     );
-    assert_eq!(
-        graph.maps(&a, &b),
-        Some(MappingCompleteness::Partial)
-    );
+    assert_eq!(graph.maps(&a, &b), Some(MappingCompleteness::Partial));
     assert_eq!(
         graph.maps(&b, &a),
         None,
@@ -675,7 +673,13 @@ fn act_006_ir_ids_control_has_no_iso_fields_requirement_is_not_control() {
         .map(|p| std::fs::read_to_string(p).unwrap())
         .collect::<Vec<_>>()
         .join("\n");
-    for forbidden in ["octocrab", "aws_sdk", "cloudflare", "reqwest::", "GitHubClient"] {
+    for forbidden in [
+        "octocrab",
+        "aws_sdk",
+        "cloudflare",
+        "reqwest::",
+        "GitHubClient",
+    ] {
         assert!(
             !joined.contains(forbidden),
             "ACT-006: IR must not mention provider/SDK type {forbidden}"
@@ -809,18 +813,21 @@ fn act_009_evidence_envelope_is_immutable_and_not_a_claim() {
 
 #[test]
 fn act_010_collector_descriptor_has_evidence_types_not_frameworks() {
-    let collector = FixtureCollector::new("fixture.github-like", "1.0.0")
-        .with_evidence_types([
-            EvidenceType::new("branch_protection"),
-            EvidenceType::new("repository_visibility"),
-        ]);
+    let collector = FixtureCollector::new("fixture.github-like", "1.0.0").with_evidence_types([
+        EvidenceType::new("branch_protection"),
+        EvidenceType::new("repository_visibility"),
+    ]);
     let desc: CollectorDescriptor = collector.descriptor();
     assert_eq!(desc.id, "fixture.github-like");
     assert_eq!(desc.version, "1.0.0");
-    assert!(desc.evidence_types.contains(&EvidenceType::new("branch_protection")));
-    assert!(desc
-        .evidence_types
-        .contains(&EvidenceType::new("repository_visibility")));
+    assert!(
+        desc.evidence_types
+            .contains(&EvidenceType::new("branch_protection"))
+    );
+    assert!(
+        desc.evidence_types
+            .contains(&EvidenceType::new("repository_visibility"))
+    );
 
     let value = serde_json::to_value(&desc).unwrap();
     let obj = value.as_object().expect("descriptor object");
@@ -904,9 +911,7 @@ fn act_012_control_test_fail_closed_and_may_be_ineffective() {
     let absent = EvidenceObservation::new(EvidenceType::new("security_findings_absent"))
         .with_narrative("scan completed with no vulnerabilities");
     let mut no_vuln = EvidenceSet::new();
-    no_vuln.insert(
-        EvidenceEnvelope::seal(absent, fresh_provenance("repo:in-scope")).unwrap(),
-    );
+    no_vuln.insert(EvidenceEnvelope::seal(absent, fresh_provenance("repo:in-scope")).unwrap());
     let no_vuln_result = evaluate(&test, &no_vuln, &ctx);
     assert_ne!(
         no_vuln_result.effectiveness,
@@ -953,8 +958,11 @@ fn act_012_control_test_fail_closed_and_may_be_ineffective() {
 
     let mut good = EvidenceSet::new();
     good.insert(
-        EvidenceEnvelope::seal(branch_protection_obs(true), fresh_provenance("repo:in-scope"))
-            .unwrap(),
+        EvidenceEnvelope::seal(
+            branch_protection_obs(true),
+            fresh_provenance("repo:in-scope"),
+        )
+        .unwrap(),
     );
     let effective = evaluate(&test, &good, &ctx);
     assert_eq!(
@@ -1161,7 +1169,10 @@ fn act_015_security_domain_types_remain_uncollapsed() {
     let coverage: CoverageDocument =
         serde_json::from_str(&std::fs::read_to_string(coverage_path).unwrap()).unwrap();
     assert_eq!(coverage.document_type, "codex-security.coverage");
-    assert_no_forbidden_keys("CoverageDocument", &serde_json::to_value(&coverage).unwrap());
+    assert_no_forbidden_keys(
+        "CoverageDocument",
+        &serde_json::to_value(&coverage).unwrap(),
+    );
 
     let rejected = normalize_raw_candidate(
         &json!({
@@ -1279,13 +1290,18 @@ fn col_005_retry_does_not_duplicate_immutable_evidence() {
 fn col_006_scope_is_fail_closed() {
     let collector = FixtureCollector::new("fixture.github-like", "1.0.0")
         .with_evidence_types([EvidenceType::new("branch_protection")])
-        .with_planned(AssetId::new("repo:out-of-scope"), branch_protection_obs(true));
+        .with_planned(
+            AssetId::new("repo:out-of-scope"),
+            branch_protection_obs(true),
+        );
     let scope = CollectorScope::new().allow_asset(AssetId::new("repo:in-scope"));
     match collector.collect(&scope) {
         Err(CollectorError::OutOfScope { .. }) => {}
         Ok(envelopes) => {
             assert!(
-                envelopes.iter().all(|e| e.provenance().asset() != &AssetId::new("repo:out-of-scope")),
+                envelopes
+                    .iter()
+                    .all(|e| e.provenance().asset() != &AssetId::new("repo:out-of-scope")),
                 "COL-006: must never silently collect an out-of-scope asset"
             );
             assert!(

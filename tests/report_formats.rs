@@ -274,7 +274,9 @@ fn openapi_has_paths_from_discovery() {
     assert_eq!(doc["openapi"], "3.0.3");
     let paths = doc["paths"].as_object().unwrap();
     assert!(
-        paths.keys().any(|k| k.contains("login") || k == "/login" || k.contains("api")),
+        paths
+            .keys()
+            .any(|k| k.contains("login") || k == "/login" || k.contains("api")),
         "paths={:?}",
         paths.keys().collect::<Vec<_>>()
     );
@@ -287,7 +289,13 @@ fn write_reports_to_temp_files() {
     let report = sample_report();
     write_reports(
         &report,
-        &[Format::Json, Format::Html, Format::Sarif, Format::Manifest, Format::OpenApi],
+        &[
+            Format::Json,
+            Format::Html,
+            Format::Sarif,
+            Format::Manifest,
+            Format::OpenApi,
+        ],
         Some(&prefix),
         50,
         100,
@@ -299,7 +307,9 @@ fn write_reports_to_temp_files() {
         .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
         .collect();
     assert!(
-        entries.iter().any(|n| n.contains("json") || n.ends_with(".json")),
+        entries
+            .iter()
+            .any(|n| n.contains("json") || n.ends_with(".json")),
         "entries={entries:?}"
     );
     assert!(
@@ -329,7 +339,10 @@ fn severity_ordering_and_parse() {
     assert!(Severity::High > Severity::Medium);
     assert_eq!(Severity::from_str_loose("crit"), Some(Severity::Critical));
     assert_eq!(Severity::from_str_loose("med"), Some(Severity::Medium));
-    assert_eq!(Severity::from_str_loose("informational"), Some(Severity::Info));
+    assert_eq!(
+        Severity::from_str_loose("informational"),
+        Some(Severity::Info)
+    );
     assert_eq!(Severity::from_str_loose("nope"), None);
     assert_eq!(Severity::Low.as_str(), "low");
     assert_eq!(format!("{}", Severity::High), "high");

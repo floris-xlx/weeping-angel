@@ -108,7 +108,8 @@ fn detect_json(sample: &str, full: &str) -> FileKind {
         return FileKind::Unknown;
     };
 
-    if obj.get("requires").and_then(|v| v.as_bool()) == Some(true) && obj.contains_key("dependencies")
+    if obj.get("requires").and_then(|v| v.as_bool()) == Some(true)
+        && obj.contains_key("dependencies")
     {
         return FileKind::PackageLockJson;
     }
@@ -157,17 +158,15 @@ fn detect_text(sample: &str) -> FileKind {
     }
 
     static YARN_KEY: OnceLock<Regex> = OnceLock::new();
-    let yarn_key = YARN_KEY.get_or_init(|| {
-        Regex::new(r#"(?m)^"?@?[\w/.-]+@[^:]+:\s*$"#).expect("yarn key regex")
-    });
+    let yarn_key = YARN_KEY
+        .get_or_init(|| Regex::new(r#"(?m)^"?@?[\w/.-]+@[^:]+:\s*$"#).expect("yarn key regex"));
     if yarn_key.is_match(sample) && sample.contains("version ") {
         return FileKind::YarnLock;
     }
 
     static GO_MOD: OnceLock<Regex> = OnceLock::new();
-    let go_mod = GO_MOD.get_or_init(|| {
-        Regex::new(r"(?m)^\s*module\s+\S+").expect("go module regex")
-    });
+    let go_mod =
+        GO_MOD.get_or_init(|| Regex::new(r"(?m)^\s*module\s+\S+").expect("go module regex"));
     static GO_VER: OnceLock<Regex> = OnceLock::new();
     let go_ver = GO_VER.get_or_init(|| Regex::new(r"(?m)^\s*go\s+\d").expect("go ver regex"));
     if go_mod.is_match(sample) && go_ver.is_match(sample) {
@@ -197,8 +196,7 @@ fn detect_text(sample: &str) -> FileKind {
     }
 
     static PIPFILE: OnceLock<Regex> = OnceLock::new();
-    let pipfile =
-        PIPFILE.get_or_init(|| Regex::new(r"(?m)^\[packages\]").expect("pipfile regex"));
+    let pipfile = PIPFILE.get_or_init(|| Regex::new(r"(?m)^\[packages\]").expect("pipfile regex"));
     if pipfile.is_match(sample) {
         return FileKind::Pipfile;
     }
@@ -221,8 +219,7 @@ fn detect_text(sample: &str) -> FileKind {
     }
 
     static GEMFILE: OnceLock<Regex> = OnceLock::new();
-    let gemfile =
-        GEMFILE.get_or_init(|| Regex::new(r#"(?m)^gem\s+['"]"#).expect("gemfile regex"));
+    let gemfile = GEMFILE.get_or_init(|| Regex::new(r#"(?m)^gem\s+['"]"#).expect("gemfile regex"));
     if gemfile.is_match(sample) {
         return FileKind::Gemfile;
     }

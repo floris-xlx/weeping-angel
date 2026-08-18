@@ -55,7 +55,9 @@ pub fn parse_package_json(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)>
         if let Some(arr) = data.get(key).and_then(|v| v.as_array()) {
             for item in arr {
                 if let Some(name) = item.as_str() {
-                    packages.entry(name.to_string()).or_insert_with(|| "*".into());
+                    packages
+                        .entry(name.to_string())
+                        .or_insert_with(|| "*".into());
                 }
             }
         }
@@ -134,9 +136,8 @@ fn extract_lock_v1(deps: &Value, packages: &mut BTreeMap<String, String>) {
                 if let Some(from) = o.get("from").and_then(|v| v.as_str()) {
                     if from.contains("npm:") {
                         static RE: OnceLock<Regex> = OnceLock::new();
-                        let re = RE.get_or_init(|| {
-                            Regex::new(r"npm:(@?[^@]+)").expect("npm from regex")
-                        });
+                        let re = RE
+                            .get_or_init(|| Regex::new(r"npm:(@?[^@]+)").expect("npm from regex"));
                         if let Some(c) = re.captures(from) {
                             pkg_name = c[1].to_string();
                         }
@@ -165,10 +166,8 @@ pub fn parse_yarn_lock(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
 
     static V1: OnceLock<Regex> = OnceLock::new();
     let v1 = V1.get_or_init(|| {
-        Regex::new(
-            r#"(?m)^"?(@?[^@"\s][^@"]*?)@(?:npm:)?[^:]+:\s*$\n\s+version\s+"?([^"\n]+)"?"#,
-        )
-        .expect("yarn v1 regex")
+        Regex::new(r#"(?m)^"?(@?[^@"\s][^@"]*?)@(?:npm:)?[^:]+:\s*$\n\s+version\s+"?([^"\n]+)"?"#)
+            .expect("yarn v1 regex")
     });
     for caps in v1.captures_iter(content) {
         let name = caps[1].trim_matches('"').to_string();
@@ -180,9 +179,8 @@ pub fn parse_yarn_lock(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     if packages.is_empty() {
         let mut current: Option<String> = None;
         static KEY: OnceLock<Regex> = OnceLock::new();
-        let key = KEY.get_or_init(|| {
-            Regex::new(r#"^"?(@?[^@"\s][^@"]*?)@[^"]*"?:\s*$"#).expect("yarn key")
-        });
+        let key = KEY
+            .get_or_init(|| Regex::new(r#"^"?(@?[^@"\s][^@"]*?)@[^"]*"?:\s*$"#).expect("yarn key"));
         static VER: OnceLock<Regex> = OnceLock::new();
         let ver =
             VER.get_or_init(|| Regex::new(r#"\s+version:?\s+"?([^"\n]+)"#).expect("yarn ver"));
@@ -206,9 +204,8 @@ pub fn parse_pnpm_lock(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     let mut packages = BTreeMap::new();
 
     static V9: OnceLock<Regex> = OnceLock::new();
-    let v9 = V9.get_or_init(|| {
-        Regex::new(r"(?m)^'?(@?[^@'\s]+)@(\d[^':\s]*)'?:").expect("pnpm v9")
-    });
+    let v9 =
+        V9.get_or_init(|| Regex::new(r"(?m)^'?(@?[^@'\s]+)@(\d[^':\s]*)'?:").expect("pnpm v9"));
     for caps in v9.captures_iter(content) {
         packages.insert(caps[1].to_string(), caps[2].to_string());
     }

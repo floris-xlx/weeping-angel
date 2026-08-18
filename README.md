@@ -57,21 +57,32 @@ cargo build --release --example weeping-angel-demo --features demo
 cargo test --workspace --features demo
 ```
 
-Assurance contract tests: `sdd_assurance_runtime_target` (ACT-001…015). The pre-spine baseline suite is superseded / ignored.
+Assurance contract tests: `sdd_assurance_runtime_target` (ACT-001…015) and `sdd_iso27001_assurance_target` (ISO/EVD/CTL/GH). Both baseline suites are superseded / ignored.
 
-## Assurance runtime (library)
+## Assurance runtime (ISO 27001 readiness)
 
-Weeping Angel is also an **inwardly extensible** assurance compiler: capabilities + observations in, control-test results out. Findings stay security-only. Collectors advertise evidence types, not frameworks. There is **no** `assurance` CLI yet.
+Weeping Angel is also an **inwardly extensible** assurance compiler: capabilities + observations in, control-test results out. Findings stay security-only. Collectors advertise evidence types, not frameworks. Automated output is a **readiness assessment**, never ISO certification.
 
 ```text
 AssuranceEngine::builder().collector(…).framework(target).assess(scope)
 ```
 
-Workspace crates: `weeping-angel-assurance-ir` → `framework` / `evidence` → `collector`; `ir` + `evidence` → `control-test`; facade `weeping-angel-assurance` composes them. Profile catalogs (ISO/GDPR/SOC 2/…) are compile stubs in this slice.
+ISO 27001:2022 ships as a versioned structural pack (`frameworks/iso-27001/2022`). Canonical controls (`source.branch-protection`, …) are mapped from ISO refs; GitHub / local / manual / scanner evidence never writes framework status.
 
-- Decision: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](docs/adr/0001-inwardly-extensible-assurance-runtime.md)
+```bash
+weeping-angel assurance assess --framework iso-27001 --scope .
+weeping-angel assurance framework validate frameworks/iso-27001/2022
+weeping-angel assurance soa
+```
+
+The clap family is `assurance {framework,collect,evidence,assess,result,compare,soa}`. The binary currently prints the non-certification banner; library `assess` / `project_readiness` / `project_soa` / `compare` is the execution path.
+
+Workspace crates: `weeping-angel-assurance-ir` → `framework` / `evidence` → `collector`; `ir` + `evidence` → `control-test`; facade `weeping-angel-assurance` composes them.
+
+- Decisions: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](docs/adr/0001-inwardly-extensible-assurance-runtime.md), [`docs/adr/0002-iso-27001-assurance-vertical.md`](docs/adr/0002-iso-27001-assurance-vertical.md)
 - Contract: [`docs/contracts/assurance-runtime.md`](docs/contracts/assurance-runtime.md)
-- Spec: [`docs/sdd/assurance-runtime-spine.md`](docs/sdd/assurance-runtime-spine.md)
+- Specs: [`docs/sdd/assurance-runtime-spine.md`](docs/sdd/assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](docs/sdd/iso-27001-automated-assurance-mvp.md)
+- Packs: [`frameworks/README.md`](frameworks/README.md)
 
 ## Scan a target you control
 

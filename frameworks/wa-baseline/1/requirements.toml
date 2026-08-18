@@ -1,0 +1,9 @@
+schema = "weeping-angel/framework-pack/v1"
+
+[[requirement]]
+id = "wa-baseline:source-integrity"
+external = "source-integrity"
+kind = "canonical"
+title = "Source integrity"
+parent = ""
+automation = "Automated"

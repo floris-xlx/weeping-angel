@@ -10,14 +10,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use clap::Parser;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use weeping_angel::cli::{Cli, Commands};
 use weeping_angel::contract::{
-    normalize_raw_candidate, ArtifactRecord, Candidate, CoverageDocument, FindingsDocument,
-    SemanticFinding,
+    ArtifactRecord, Candidate, CoverageDocument, FindingsDocument, SemanticFinding,
+    normalize_raw_candidate,
 };
-use weeping_angel::engines::web_adapt::web_finding_to_semantic;
 use weeping_angel::engines::EngineHit;
+use weeping_angel::engines::web_adapt::web_finding_to_semantic;
 use weeping_angel::finding::Finding;
 
 const FORBIDDEN_COMPLIANCE_KEYS: &[&str] = &[
@@ -201,7 +201,9 @@ fn commands_are_scan_finalize_code_diff_workbench_depcheck_version_completions()
         ]
     );
     assert!(
-        !names.iter().any(|n| n.contains("assurance") || n.contains("assess")),
+        !names
+            .iter()
+            .any(|n| n.contains("assurance") || n.contains("assess")),
         "Commands currently has no assurance surface: {names:?}"
     );
 }
@@ -223,10 +225,24 @@ fn clap_rejects_assurance_subcommand() {
 fn commands_match_is_exhaustive_without_assurance() {
     // Construct one of each current variant via clap; match must stay exhaustive.
     let samples = [
-        vec!["weeping-angel", "scan", "example.com", "--i-own-this", "--allow-host", "example.com"],
+        vec![
+            "weeping-angel",
+            "scan",
+            "example.com",
+            "--i-own-this",
+            "--allow-host",
+            "example.com",
+        ],
         vec!["weeping-angel", "finalize", "--scan-dir", "."],
         vec!["weeping-angel", "scan-code", ".", "-o", "out/code"],
-        vec!["weeping-angel", "scan-diff", "--repo", ".", "-o", "out/diff"],
+        vec![
+            "weeping-angel",
+            "scan-diff",
+            "--repo",
+            ".",
+            "-o",
+            "out/diff",
+        ],
         vec!["weeping-angel", "workbench", "list"],
         vec!["weeping-angel", "depcheck", "package.json"],
         vec!["weeping-angel", "version"],
@@ -244,10 +260,15 @@ fn commands_match_is_exhaustive_without_assurance() {
             Commands::Depcheck(_) => "Depcheck",
             Commands::Version => "Version",
             Commands::Completions { .. } => "Completions",
+            Commands::Assurance(_) => "Assurance",
         };
         seen.insert(tag);
     }
-    assert_eq!(seen.len(), 8, "expected all eight current Commands variants");
+    assert_eq!(
+        seen.len(),
+        8,
+        "expected all eight current Commands variants"
+    );
 }
 
 #[test]
@@ -255,7 +276,9 @@ fn commands_match_is_exhaustive_without_assurance() {
 fn semantic_finding_serde_is_security_only() {
     let finding = SemanticFinding::default();
     let value = serde_json::to_value(&finding).unwrap();
-    let obj = value.as_object().expect("SemanticFinding serializes as object");
+    let obj = value
+        .as_object()
+        .expect("SemanticFinding serializes as object");
     let keys: BTreeSet<&str> = obj.keys().map(String::as_str).collect();
     for required in [
         "findingId",
@@ -399,7 +422,10 @@ fn candidate_artifact_and_coverage_remain_codex_security_types() {
         .keys()
         .map(String::as_str)
         .collect();
-    assert_eq!(artifact_keys, BTreeSet::from(["path", "sha256", "mediaType"]));
+    assert_eq!(
+        artifact_keys,
+        BTreeSet::from(["path", "sha256", "mediaType"])
+    );
 
     let coverage_path = manifest_dir().join("tests/fixtures/completed-scan/coverage.json");
     let coverage: CoverageDocument =

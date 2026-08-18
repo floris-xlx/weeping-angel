@@ -1,11 +1,11 @@
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
 use weeping_angel::cli::{Cli, Commands, VERSION_LINE};
-use weeping_angel::{
-    run_depcheck_command, run_finalize_command, run_scan_code_command, run_scan_diff_command,
-    run_scan_command, run_workbench_command,
-};
 use weeping_angel::style;
+use weeping_angel::{
+    run_depcheck_command, run_finalize_command, run_scan_code_command, run_scan_command,
+    run_scan_diff_command, run_workbench_command,
+};
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +26,8 @@ async fn main() {
         1 => "weeping_angel=info".to_string(),
         _ => "weeping_angel=debug,debug".to_string(),
     };
-    let filter: EnvFilter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(filter));
+    let filter: EnvFilter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(filter));
     tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_target(false)
@@ -69,6 +70,10 @@ async fn main() {
                 2
             }
         },
+        Commands::Assurance(_) => {
+            println!("This is a readiness assessment and is not certification.");
+            0
+        }
         Commands::Depcheck(args) => match run_depcheck_command(args).await {
             Ok(code) => code,
             Err(e) => {
@@ -82,12 +87,7 @@ async fn main() {
         }
         Commands::Completions { shell } => {
             let mut cmd = Cli::clap_command();
-            clap_complete::generate(
-                shell,
-                &mut cmd,
-                "weeping-angel",
-                &mut std::io::stdout(),
-            );
+            clap_complete::generate(shell, &mut cmd, "weeping-angel", &mut std::io::stdout());
             0
         }
     };

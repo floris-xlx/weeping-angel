@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -41,10 +41,7 @@ pub struct Candidate {
 }
 
 /// Normalize one raw discovery candidate (no candidate_id yet).
-pub fn normalize_raw_candidate(
-    row: &Value,
-    scope: &BTreeSet<String>,
-) -> Result<Candidate> {
+pub fn normalize_raw_candidate(row: &Value, scope: &BTreeSet<String>) -> Result<Candidate> {
     let obj = row
         .as_object()
         .ok_or_else(|| anyhow::anyhow!("candidate row must be an object"))?;
@@ -149,10 +146,7 @@ fn parse_locations(value: Option<&Value>) -> Result<Vec<CandidateLocation>> {
             .or_else(|| o.get("endLine"))
             .and_then(|v| v.as_u64())
             .map(|n| n as u32);
-        let role = o
-            .get("role")
-            .and_then(|v| v.as_str())
-            .map(str::to_string);
+        let role = o.get("role").and_then(|v| v.as_str()).map(str::to_string);
         out.push(CandidateLocation {
             path,
             start_line,

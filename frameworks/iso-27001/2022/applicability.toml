@@ -1,0 +1,73 @@
+schema = "weeping-angel/framework-pack/v1"
+
+# Statement-of-Applicability oriented metadata. Rationales are original.
+
+[[entry]]
+reference = "A.5.1"
+requirement = "iso27001:a.5.1"
+applicable = true
+applicability_rationale = "Information-security policy is in scope for every assessed organization."
+soa = true
+
+[[entry]]
+reference = "A.5.15"
+requirement = "iso27001:a.5.15"
+applicable = true
+applicability_rationale = "Access control applies whenever identities can reach in-scope systems."
+soa = true
+
+[[entry]]
+reference = "A.5.18"
+requirement = "iso27001:a.5.18"
+applicable = true
+applicability_rationale = "Access rights apply to every in-scope identity store."
+soa = true
+
+[[entry]]
+reference = "A.8.2"
+requirement = "iso27001:a.8.2"
+applicable = true
+applicability_rationale = "Privileged access exists on source-control and production systems."
+soa = true
+
+[[entry]]
+reference = "A.8.5"
+requirement = "iso27001:a.8.5"
+applicable = true
+applicability_rationale = "Authentication is required for privileged source and production access."
+soa = true
+
+[[entry]]
+reference = "A.8.8"
+requirement = "iso27001:a.8.8"
+applicable = true
+applicability_rationale = "Technical vulnerabilities apply to developed and operated software."
+soa = true
+
+[[entry]]
+reference = "A.8.25"
+requirement = "iso27001:a.8.25"
+applicable = true
+applicability_rationale = "Software is developed or integrated in this scope."
+soa = true
+
+[[entry]]
+reference = "A.8.13"
+requirement = "iso27001:a.8.13"
+applicable = true
+applicability_rationale = "Information requiring backup exists in this scope."
+soa = true
+
+[[entry]]
+reference = "A.5.19"
+requirement = "iso27001:a.5.19"
+applicable = true
+applicability_rationale = "Suppliers process or host in-scope information."
+soa = true
+
+[[entry]]
+reference = "A.6.5"
+requirement = "iso27001:a.6.5"
+applicable = true
+applicability_rationale = "Personnel with access are hired and offboarded."
+soa = true

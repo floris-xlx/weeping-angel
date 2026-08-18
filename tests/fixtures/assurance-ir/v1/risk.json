@@ -1,0 +1,6 @@
+{
+  "id": "risk:source-tamper",
+  "title": "Source tampering",
+  "description": "Unauthorized change to the source of record.",
+  "status": "open"
+}

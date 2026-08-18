@@ -2,11 +2,49 @@
 
 use std::collections::BTreeMap;
 
-use crate::{MappingCompleteness, MappingDirection, RequirementId};
+use crate::{
+    ControlId, ControlTestId, EvidenceRequirementId, ExceptionId, MappingCompleteness,
+    MappingDirection, MappingProvenance, MappingRelation, RequirementId, RiskId,
+};
+
+/// Explicit graph edge kinds. Never infer A satisfies C from A supports B supports C.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GraphEdgeKind {
+    Contains,
+    MapsTo,
+    Satisfies,
+    PartiallySatisfies,
+    Supports,
+    TestedBy,
+    RequiresEvidence,
+    AppliesTo,
+    Supersedes,
+    DerivedFrom,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ComplianceNodeRef {
+    Requirement(RequirementId),
+    Control(ControlId),
+    Test(ControlTestId),
+    EvidenceRequirement(EvidenceRequirementId),
+    Risk(RiskId),
+    Exception(ExceptionId),
+}
+
+#[derive(Debug, Clone)]
+pub struct ComplianceEdge {
+    pub from: ComplianceNodeRef,
+    pub to: ComplianceNodeRef,
+    pub relation: MappingRelation,
+    pub completeness: MappingCompleteness,
+    pub provenance: MappingProvenance,
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct ComplianceGraph {
     edges: BTreeMap<(RequirementId, RequirementId), MappingCompleteness>,
+    typed: Vec<ComplianceEdge>,
 }
 
 impl ComplianceGraph {
@@ -27,6 +65,10 @@ impl ComplianceGraph {
         }
     }
 
+    pub fn link_edge(&mut self, edge: ComplianceEdge) {
+        self.typed.push(edge);
+    }
+
     pub fn maps(&self, from: &RequirementId, to: &RequirementId) -> Option<MappingCompleteness> {
         self.edges.get(&(from.clone(), to.clone())).copied()
     }
@@ -39,7 +81,10 @@ impl ComplianceGraph {
         }
         matches!(
             (self.maps(left, right), self.maps(right, left)),
-            (Some(MappingCompleteness::Full), Some(MappingCompleteness::Full))
+            (
+                Some(MappingCompleteness::Full),
+                Some(MappingCompleteness::Full)
+            )
         )
     }
 }

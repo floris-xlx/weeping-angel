@@ -178,7 +178,9 @@ fn authority_host(authority: &str) -> String {
         if let Some(end) = without_user.find(']') {
             return without_user[1..end].to_string();
         }
-        return without_user.trim_matches(|c| c == '[' || c == ']').to_string();
+        return without_user
+            .trim_matches(|c| c == '[' || c == ']')
+            .to_string();
     }
     if let Some((h, port)) = without_user.rsplit_once(':') {
         if port.chars().all(|c| c.is_ascii_digit()) {
@@ -196,10 +198,7 @@ fn should_default_http(host: &str, authority: &str) -> bool {
     if let Ok(ip) = h.parse::<IpAddr>() {
         return match ip {
             IpAddr::V4(v4) => {
-                v4.is_loopback()
-                    || v4.is_private()
-                    || v4.is_link_local()
-                    || v4.octets()[0] == 0 // 0.0.0.0-ish lab
+                v4.is_loopback() || v4.is_private() || v4.is_link_local() || v4.octets()[0] == 0 // 0.0.0.0-ish lab
             }
             IpAddr::V6(v6) => v6.is_loopback() || v6.is_unique_local(),
         };
@@ -260,21 +259,13 @@ mod tests {
 
     #[test]
     fn prefer_http_override() {
-        let u = normalize_one(
-            "example.com",
-            NormalizeOptions { prefer_http: true },
-        )
-        .unwrap();
+        let u = normalize_one("example.com", NormalizeOptions { prefer_http: true }).unwrap();
         assert_eq!(u, "http://example.com/");
     }
 
     #[test]
     fn multi_csv_targets() {
-        let v = normalize_targets(
-            &["a.com, b.com".into()],
-            NormalizeOptions::default(),
-        )
-        .unwrap();
+        let v = normalize_targets(&["a.com, b.com".into()], NormalizeOptions::default()).unwrap();
         assert_eq!(v.len(), 2);
         assert!(v[0].starts_with("https://a.com"));
         assert!(v[1].starts_with("https://b.com"));

@@ -286,7 +286,10 @@ fn guess_auth(url: &str, findings: &[Finding]) -> AuthGuess {
             "auth-endpoint-protected" | "login-guarded" | "signup-guarded" => {
                 return AuthGuess::AuthRequired;
             }
-            "login-form" | "signup-form" | "login-unguarded" | "signup-unguarded"
+            "login-form"
+            | "signup-form"
+            | "login-unguarded"
+            | "signup-unguarded"
             | "auth-endpoint-unauthenticated" => {
                 return AuthGuess::PublicAuthForm;
             }

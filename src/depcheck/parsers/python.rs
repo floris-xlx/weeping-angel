@@ -12,15 +12,12 @@ use crate::depcheck::types::{Ecosystem, PackageRef};
 pub fn parse_requirements_txt(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     let mut packages = BTreeMap::new();
     static NAME: OnceLock<Regex> = OnceLock::new();
-    let name_re =
-        NAME.get_or_init(|| Regex::new(r"^([a-zA-Z0-9][\w.-]*)").expect("req name"));
+    let name_re = NAME.get_or_init(|| Regex::new(r"^([a-zA-Z0-9][\w.-]*)").expect("req name"));
     static VER: OnceLock<Regex> = OnceLock::new();
-    let ver_re =
-        VER.get_or_init(|| Regex::new(r"[=<>!~]+\s*(.+)").expect("req ver"));
+    let ver_re = VER.get_or_init(|| Regex::new(r"[=<>!~]+\s*(.+)").expect("req ver"));
     static URL_AT: OnceLock<Regex> = OnceLock::new();
-    let url_re = URL_AT.get_or_init(|| {
-        Regex::new(r"\s+@\s+(https?://|git\+|file://)").expect("req url")
-    });
+    let url_re =
+        URL_AT.get_or_init(|| Regex::new(r"\s+@\s+(https?://|git\+|file://)").expect("req url"));
 
     for line in content.lines() {
         let mut line = line.trim().to_string();
@@ -57,9 +54,7 @@ pub fn parse_pipfile(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     let mut packages = BTreeMap::new();
     let mut in_pkgs = false;
     static GIT: OnceLock<Regex> = OnceLock::new();
-    let git = GIT.get_or_init(|| {
-        Regex::new(r"\{\s*(git|path|url|file)\s*=").expect("pipfile git")
-    });
+    let git = GIT.get_or_init(|| Regex::new(r"\{\s*(git|path|url|file)\s*=").expect("pipfile git"));
 
     for line in content.lines() {
         let s = line.trim();
@@ -128,8 +123,10 @@ pub fn parse_pyproject_toml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem
 
     static POETRY: OnceLock<Regex> = OnceLock::new();
     let poetry = POETRY.get_or_init(|| {
-        Regex::new(r"^\[tool\.poetry\.(dev-)?dependencies\]|^\[tool\.poetry\.group\.\w+\.dependencies\]")
-            .expect("poetry section")
+        Regex::new(
+            r"^\[tool\.poetry\.(dev-)?dependencies\]|^\[tool\.poetry\.group\.\w+\.dependencies\]",
+        )
+        .expect("poetry section")
     });
     static PATH: OnceLock<Regex> = OnceLock::new();
     let path = PATH.get_or_init(|| Regex::new(r"\b(git|path|url)\s*=").expect("poetry path"));
@@ -164,12 +161,10 @@ pub fn parse_pyproject_toml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem
 
     // PEP 621 dependencies = [ ... ]
     static PEP: OnceLock<Regex> = OnceLock::new();
-    let pep = PEP.get_or_init(|| {
-        Regex::new(r"(?ms)^\s*dependencies\s*=\s*\[(.*?)\]").expect("pep621 deps")
-    });
+    let pep = PEP
+        .get_or_init(|| Regex::new(r"(?ms)^\s*dependencies\s*=\s*\[(.*?)\]").expect("pep621 deps"));
     static NAME: OnceLock<Regex> = OnceLock::new();
-    let name_re =
-        NAME.get_or_init(|| Regex::new(r"^([a-zA-Z0-9][\w.-]*)").expect("pep name"));
+    let name_re = NAME.get_or_init(|| Regex::new(r"^([a-zA-Z0-9][\w.-]*)").expect("pep name"));
     if let Some(c) = pep.captures(content) {
         for m in quoted.captures_iter(&c[1]) {
             let dep = m[1].trim();

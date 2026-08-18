@@ -1,7 +1,7 @@
 //! SARIF 2.1.0 projection from sealed codex-security findings.
 
 use anyhow::Result;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::contract::types::{FindingsDocument, ManifestDocument, SemanticFinding};
 
@@ -41,11 +41,7 @@ pub fn findings_to_sarif(
         rules.push(rule);
     }
 
-    let results: Vec<Value> = findings
-        .findings
-        .iter()
-        .map(finding_to_result)
-        .collect();
+    let results: Vec<Value> = findings.findings.iter().map(finding_to_result).collect();
 
     let doc = json!({
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",

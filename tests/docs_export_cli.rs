@@ -24,26 +24,34 @@ fn scan_export_includes_consent_and_targets() {
     let exp = export_command_reference(&["scan".into()]).unwrap();
     assert_eq!(exp.command.name, "scan");
     assert!(exp.command.display_name.contains("scan"));
-    let ids: Vec<_> = exp.command.arguments.iter().map(|a| a.id.as_str()).collect();
+    let ids: Vec<_> = exp
+        .command
+        .arguments
+        .iter()
+        .map(|a| a.id.as_str())
+        .collect();
     assert!(
-        ids.iter().any(|id| id.contains("i_own") || id.contains("own")),
+        ids.iter()
+            .any(|id| id.contains("i_own") || id.contains("own")),
         "ids={ids:?}"
     );
     assert!(
         exp.command
             .arguments
             .iter()
-            .any(|a| a.long.as_deref() == Some("--i-own-this")
-                || a.display.contains("i-own-this")),
+            .any(|a| a.long.as_deref() == Some("--i-own-this") || a.display.contains("i-own-this")),
         "args={:?}",
-        exp.command.arguments.iter().map(|a| &a.display).collect::<Vec<_>>()
+        exp.command
+            .arguments
+            .iter()
+            .map(|a| &a.display)
+            .collect::<Vec<_>>()
     );
     assert!(
         exp.command
             .arguments
             .iter()
-            .any(|a| a.long.as_deref() == Some("--allow-host")
-                || a.display.contains("allow-host")),
+            .any(|a| a.long.as_deref() == Some("--allow-host") || a.display.contains("allow-host")),
     );
     assert!(
         exp.command.arguments.iter().any(|a| a.kind == "positional"),
@@ -61,7 +69,10 @@ fn scan_export_mentions_fast_and_log_http() {
         .map(|a| a.display.clone())
         .collect::<Vec<_>>()
         .join(" ");
-    assert!(displays.contains("fast") || displays.contains("--fast"), "{displays}");
+    assert!(
+        displays.contains("fast") || displays.contains("--fast"),
+        "{displays}"
+    );
     assert!(
         displays.contains("log-http") || displays.contains("log_http"),
         "{displays}"
@@ -71,7 +82,10 @@ fn scan_export_mentions_fast_and_log_http() {
 #[test]
 fn unknown_path_errors() {
     let err = export_command_reference(&["does-not-exist".into()]).unwrap_err();
-    assert!(err.contains("Unknown") || err.contains("does-not-exist"), "{err}");
+    assert!(
+        err.contains("Unknown") || err.contains("does-not-exist"),
+        "{err}"
+    );
 }
 
 #[test]

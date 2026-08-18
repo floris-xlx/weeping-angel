@@ -1,0 +1,15 @@
+schema = "weeping-angel/framework-pack/v1"
+
+[framework]
+id = "wa-baseline"
+version = "1"
+kind = "canonical-baseline"
+content_mode = "StructuralOnly"
+
+[content]
+requirements = "requirements.toml"
+mappings = "mappings.toml"
+
+[capabilities]
+control_applicability = true
+manual_attestation = true

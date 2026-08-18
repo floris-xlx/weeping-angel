@@ -6,11 +6,11 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::Result;
+use axum::Router;
 use axum::extract::{Multipart, Path as AxumPath, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Json};
 use axum::routing::{get, post};
-use axum::Router;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::RwLock;
@@ -131,10 +131,7 @@ async fn api_scan_url(
     State(state): State<AppState>,
     Json(body): Json<UrlScanBody>,
 ) -> impl IntoResponse {
-    let kind = body
-        .r#type
-        .as_deref()
-        .and_then(FileKind::from_str_loose);
+    let kind = body.r#type.as_deref().and_then(FileKind::from_str_loose);
     let opts = ScanOptions {
         threads: body.threads.unwrap_or(20),
         timeout_secs: body.timeout.unwrap_or(10),
@@ -167,7 +164,10 @@ async fn api_scan_url(
         finish_job(state2, id2, outcome).await;
     });
 
-    (StatusCode::ACCEPTED, Json(json!({ "id": id, "status": "running" })))
+    (
+        StatusCode::ACCEPTED,
+        Json(json!({ "id": id, "status": "running" })),
+    )
 }
 
 async fn api_scan_upload(
@@ -270,27 +270,33 @@ async fn api_scan_upload(
     let state2 = state.clone();
     let id2 = id.clone();
     tokio::spawn(async move {
-        let client: Arc<dyn RegistryClient> =
-            match HttpRegistry::new(opts.timeout_secs) {
-                Ok(c) => Arc::new(c),
-                Err(e) => {
-                    finish_job(state2, id2, Err(e.to_string())).await;
-                    return;
-                }
-            };
+        let client: Arc<dyn RegistryClient> = match HttpRegistry::new(opts.timeout_secs) {
+            Ok(c) => Arc::new(c),
+            Err(e) => {
+                finish_job(state2, id2, Err(e.to_string())).await;
+                return;
+            }
+        };
         let outcome = scan_manifest(&input, &opts, client)
             .await
             .map_err(|e| e.to_string());
         finish_job(state2, id2, outcome).await;
     });
 
-    (StatusCode::ACCEPTED, Json(json!({ "id": id, "status": "running" }))).into_response()
+    (
+        StatusCode::ACCEPTED,
+        Json(json!({ "id": id, "status": "running" })),
+    )
+        .into_response()
 }
 
 async fn fetch_and_scan(url: &str, opts: ScanOptions) -> Result<ScanSummary, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(opts.timeout_secs.max(5)))
-        .user_agent(concat!("weeping-angel-depcheck/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!(
+            "weeping-angel-depcheck/",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
         .map_err(|e| e.to_string())?;
     let body = client
@@ -340,4 +346,3 @@ async fn finish_job(state: AppState, id: String, outcome: Result<ScanSummary, St
         }
     }
 }
-

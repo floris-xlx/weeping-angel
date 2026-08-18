@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use crate::discovery;
-use crate::finding::{is_inventory_finding, Finding, ScanReport, Severity};
+use crate::finding::{Finding, ScanReport, Severity, is_inventory_finding};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {

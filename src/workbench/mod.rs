@@ -6,7 +6,7 @@ pub mod remediation;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::Serialize;
 
 const SCHEMA: &str = r#"
@@ -54,8 +54,8 @@ pub fn open_db(path: Option<&Path>) -> Result<Connection> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let conn = Connection::open(&path)
-        .with_context(|| format!("open workbench db {}", path.display()))?;
+    let conn =
+        Connection::open(&path).with_context(|| format!("open workbench db {}", path.display()))?;
     conn.execute_batch(SCHEMA)?;
     Ok(conn)
 }
@@ -65,13 +65,12 @@ pub fn register_scan(conn: &Connection, scan_dir: &Path) -> Result<ScanRow> {
     let manifest_path = scan_dir.join("scan-manifest.json");
     let findings_path = scan_dir.join("findings.json");
     if !manifest_path.is_file() || !findings_path.is_file() {
-        bail!(
-            "scan-dir missing sealed artifacts: {}",
-            scan_dir.display()
-        );
+        bail!("scan-dir missing sealed artifacts: {}", scan_dir.display());
     }
-    let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&manifest_path)?)?;
-    let findings: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&findings_path)?)?;
+    let manifest: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&manifest_path)?)?;
+    let findings: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&findings_path)?)?;
 
     let scan_id = manifest["scan"]["id"]
         .as_str()

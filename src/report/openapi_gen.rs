@@ -3,7 +3,7 @@
 //! This is recon-derived (not a replacement for vendor specs). Paths, response
 //! status codes, content types, and auth/rate-limit annotations come from the scan.
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use url::Url;
 
 use crate::finding::ScanReport;
@@ -71,10 +71,7 @@ pub fn from_report(report: &ScanReport) -> Value {
         };
 
         let mut op = Map::new();
-        op.insert(
-            "summary".into(),
-            json!(summarize_route(&path, &route.tags)),
-        );
+        op.insert("summary".into(), json!(summarize_route(&path, &route.tags)));
         op.insert(
             "operationId".into(),
             json!(operation_id(&route.method, &path)),
@@ -90,10 +87,7 @@ pub fn from_report(report: &ScanReport) -> Value {
         op.insert("responses".into(), Value::Object(responses));
 
         let mut x_weeping = Map::new();
-        x_weeping.insert(
-            "auth_guess".into(),
-            json!(auth_guess_str(&route.auth)),
-        );
+        x_weeping.insert("auth_guess".into(), json!(auth_guess_str(&route.auth)));
         x_weeping.insert(
             "rate_limit_guess".into(),
             json!(rate_guess_str(&route.rate_limit)),
@@ -121,10 +115,7 @@ pub fn from_report(report: &ScanReport) -> Value {
             route.rate_limit,
             RateLimitGuess::HeadersPresent | RateLimitGuess::Http429
         ) {
-            op.insert(
-                "x-rate-limit-observed".into(),
-                json!(true),
-            );
+            op.insert("x-rate-limit-observed".into(), json!(true));
         }
 
         let method = route.method.to_ascii_lowercase();
@@ -285,7 +276,13 @@ fn operation_id(method: &str, path: &str) -> String {
         s.push_str("root");
     }
     s.chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -318,8 +315,8 @@ fn rate_guess_str(r: &RateLimitGuess) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
     use crate::finding::{Finding, ScanStats, Severity};
+    use chrono::Utc;
 
     #[test]
     fn builds_openapi_paths() {

@@ -4,8 +4,8 @@
 //! (unless `FORCE_COLOR` / `CLICOLOR_FORCE` is set).
 
 use std::io::{self, IsTerminal, Write};
-use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 
 use crate::finding::Severity;
 use crate::parse::LogHttp;
@@ -125,8 +125,7 @@ pub fn color_enabled() -> bool {
         if std::env::var_os("NO_COLOR").is_some() {
             return false;
         }
-        if std::env::var_os("FORCE_COLOR").is_some()
-            || std::env::var_os("CLICOLOR_FORCE").is_some()
+        if std::env::var_os("FORCE_COLOR").is_some() || std::env::var_os("CLICOLOR_FORCE").is_some()
         {
             return true;
         }
@@ -332,7 +331,11 @@ pub fn log_request_ok(
         let mut line = format!("  {back} {st}  {time}  {size}");
         if let Some(fu) = final_url {
             if fu != url {
-                line.push_str(&format!("  {} {}", dim("redir→"), dim(&truncate_url(fu, 48))));
+                line.push_str(&format!(
+                    "  {} {}",
+                    dim("redir→"),
+                    dim(&truncate_url(fu, 48))
+                ));
             }
         }
         eprint_line(&line);

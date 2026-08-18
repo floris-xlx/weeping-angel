@@ -102,10 +102,7 @@ pub fn scan(rel_path: &str, content: &str) -> Vec<EngineHit> {
                     anchor: rule.anchor.into(),
                     instance: Some(format!("{}-l{}", slug_path(rel_path), line_no)),
                     title: rule.title.into(),
-                    summary: format!(
-                        "{} at `{}:{}`.",
-                        rule.title, rel_path, line_no
-                    ),
+                    summary: format!("{} at `{}:{}`.", rule.title, rel_path, line_no),
                     evidence: format!(
                         "Matched `{}` on line {line_no} (secret value redacted in report).",
                         rule.id

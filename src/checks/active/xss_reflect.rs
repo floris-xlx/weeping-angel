@@ -66,7 +66,10 @@ impl Check for XssReflectProbe {
                             "Context-encode all user input in HTML/JS/attributes; deploy CSP.",
                         )
                         .cwe("CWE-79")
-                        .evidence(Evidence::new("body", format!("canary {canary} reflected raw")))
+                        .evidence(Evidence::new(
+                            "body",
+                            format!("canary {canary} reflected raw"),
+                        ))
                         .build(),
                 );
             } else if raw_canary && !only_escaped {

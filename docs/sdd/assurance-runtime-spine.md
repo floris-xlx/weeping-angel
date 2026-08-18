@@ -2,12 +2,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** (Phases 0–8 spine; catalogs/hosted collectors remain stub/spec) |
+| Status | **Implemented** (Phases 0–8 spine). ISO 27001 vertical: ADR 0002 / [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md) |
 | Slice | Phases **0–8** (key checkpoint) |
 | Dual-suite | Baseline characterized pre-spine HEAD → Target RED → implement → Target GREEN → **baseline superseded** |
 | ADR | Accepted [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Head | Workspace: root scanner `weeping-angel` + six assurance crates under `crates/`. No `assurance` CLI yet. |
+| Head | Workspace: root scanner `weeping-angel` + six assurance crates under `crates/`. ISO pack + `assurance` clap family: ADR 0002. |
 | Analog | Athena query/compiler: `Statement` IR → `CompileTarget` + capabilities → fail-closed `compile` → dialect adapters internally |
 
 This document is the durable SDD for the assurance spine. Phases 0–8 landed as six workspace crates. Later phases must not invent a Vanta-style pile of framework-specific checks. Machine contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md).
@@ -505,7 +505,7 @@ Encodes ACT-001…015 and collector rules.
 - `EvidenceSet` is a digest-keyed map (COL-005).
 - Cargo 1.96 `PackageId` helpers in the target suite read the real crate graph for ACT-003/013.
 - Do not add AWS/GitHub/Cloudflare types to IR or framework.
-- Next product slices: catalogs (9–14), hosted collectors (15), CLI `assurance`.
+- Next product slices after the spine: catalogs, hosted collectors, CLI `assurance`. ISO 27001 pack + GitHub/local/manual collectors + clap family landed under ADR 0002; remaining regimes/collectors stay later work.
 
 ---
 
@@ -515,6 +515,7 @@ Encodes ACT-001…015 and collector rules.
 | --- | --- |
 | This spec | `docs/sdd/assurance-runtime-spine.md` |
 | Accepted ADR | `docs/adr/0001-inwardly-extensible-assurance-runtime.md` |
+| ISO 27001 vertical ADR | `docs/adr/0002-iso-27001-assurance-vertical.md` |
 | Public contract | `docs/contracts/assurance-runtime.md` |
 | IR | `crates/weeping-angel-assurance-ir` |
 | Framework compile | `crates/weeping-angel-framework` |

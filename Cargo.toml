@@ -209,3 +209,15 @@ path = "tests/sdd/assurance_runtime.baseline.rs"
 [[test]]
 name = "sdd_assurance_runtime_target"
 path = "tests/sdd/assurance_runtime.target.rs"
+
+[[test]]
+name = "sdd_iso27001_assurance_baseline"
+path = "tests/sdd/iso27001_assurance.baseline.rs"
+
+[[test]]
+name = "sdd_iso27001_assurance_target"
+path = "tests/sdd/iso27001_assurance.target.rs"
+
+[[test]]
+name = "sdd_compliance_ir_target"
+path = "tests/sdd/compliance_ir.target.rs"

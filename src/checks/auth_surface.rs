@@ -79,8 +79,8 @@ impl Check for AuthSurfaceCheck {
                             || lower.contains("register")
                             || lower.contains("create account")
                             || lower.contains("sign up");
-                        let is_login = !is_signup
-                            || LOGIN_HINTS.iter().any(|h| form_text.contains(h));
+                        let is_login =
+                            !is_signup || LOGIN_HINTS.iter().any(|h| form_text.contains(h));
 
                         if is_signup {
                             if seen.insert(format!("signup-form:{url}")) {

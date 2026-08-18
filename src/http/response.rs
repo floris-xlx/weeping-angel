@@ -48,11 +48,7 @@ impl ResponseSnapshot {
                 let c = c.to_ascii_lowercase();
                 c.contains("javascript") || c.contains("ecmascript")
             })
-            .unwrap_or_else(|| {
-                self.final_url
-                    .path()
-                    .ends_with(".js")
-            })
+            .unwrap_or_else(|| self.final_url.path().ends_with(".js"))
     }
 
     pub fn is_json(&self) -> bool {

@@ -20,7 +20,12 @@ pub fn to_string(report: &ScanReport) -> String {
         let rem = f
             .remediation
             .as_deref()
-            .map(|r| format!("<div class=\"rem\"><strong>Fix:</strong> {}</div>", escape(r)))
+            .map(|r| {
+                format!(
+                    "<div class=\"rem\"><strong>Fix:</strong> {}</div>",
+                    escape(r)
+                )
+            })
             .unwrap_or_default();
         let cwe = f
             .cwe

@@ -25,23 +25,20 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 use convert::packages_to_map;
 use detect::detect_file_type;
 use filter::{filter_packages, partition_secure_namespaces};
 use parsers::parse_manifest;
-use registry::{check_many, HttpRegistry, RegistryClient};
+use registry::{HttpRegistry, RegistryClient, check_many};
 use report::partition_results;
 use types::{
     CheckStatus, Ecosystem, FileKind, ManifestInput, PackageRef, ScanOptions, ScanSummary,
 };
 
 /// Parse + filter a single manifest (no network).
-pub fn extract_packages(
-    kind: FileKind,
-    content: &str,
-) -> Result<(Vec<PackageRef>, Ecosystem)> {
+pub fn extract_packages(kind: FileKind, content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     let (raw, eco) = parse_manifest(kind, content)?;
     let filtered = filter_packages(eco, raw);
     Ok((filtered, eco))
@@ -49,8 +46,7 @@ pub fn extract_packages(
 
 /// Load a local file into a [`ManifestInput`].
 pub fn load_path(path: &Path, kind_override: Option<FileKind>) -> Result<ManifestInput> {
-    let content = fs::read_to_string(path)
-        .with_context(|| format!("read {}", path.display()))?;
+    let content = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
     let kind = kind_override.unwrap_or_else(|| detect_file_type(path, Some(&content)));
     if kind == FileKind::Unknown {
         bail!(
@@ -105,15 +101,11 @@ pub async fn scan_manifest(
     let all_packages = packages_to_map(&packages);
 
     // confused `-s`: skip registry checks for claimed scopes / namespaces
-    let (to_check, known_secure) =
-        partition_secure_namespaces(packages, &opts.secure_namespaces);
+    let (to_check, known_secure) = partition_secure_namespaces(packages, &opts.secure_namespaces);
 
     if opts.verbose && !opts.quiet {
         for p in &known_secure {
-            eprintln!(
-                "  [*] skipping known-secure namespace match: {}",
-                p.name
-            );
+            eprintln!("  [*] skipping known-secure namespace match: {}", p.name);
         }
         eprintln!(
             "  [*] checking {} package(s) against {} …",
@@ -175,11 +167,7 @@ pub fn list_only(input: &ManifestInput) -> Result<(BTreeMap<String, String>, Eco
 
 /// Exit code helper: 1 if any vulnerable, else 0.
 pub fn exit_code(summary: &ScanSummary) -> i32 {
-    if summary.vulnerable.is_empty() {
-        0
-    } else {
-        1
-    }
+    if summary.vulnerable.is_empty() { 0 } else { 1 }
 }
 
 /// Collect EngineHit-ready vulnerable package names from a summary.

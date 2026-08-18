@@ -6,7 +6,8 @@ const EMBEDDED: &str = include_str!("../../wordlists/common-paths.txt");
 
 pub fn load_paths(path: &Path) -> Result<Vec<String>> {
     let raw = if path.exists() {
-        std::fs::read_to_string(path).with_context(|| format!("read wordlist {}", path.display()))?
+        std::fs::read_to_string(path)
+            .with_context(|| format!("read wordlist {}", path.display()))?
     } else {
         EMBEDDED.to_string()
     };
