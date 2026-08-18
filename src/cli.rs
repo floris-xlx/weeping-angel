@@ -25,6 +25,16 @@ Examples:
   weeping-angel scan-code . -o out/code --fail-on high
   weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD
   weeping-angel workbench list
+  weeping-angel depcheck package.json
+  weeping-angel depcheck -l npm package.json
+  weeping-angel depcheck -l npm -s '@mycompany/*' package.json
+  weeping-angel depcheck --provider pypi --path ./project
+  weeping-angel depcheck --provider npm --dependency left-pad:1.3.0 --check-email
+  weeping-angel depcheck -d ./app -i --entrypoint index.js
+  cat hosts.txt | weeping-angel depcheck --stdin --i-own-this --threads 20
+  weeping-angel depcheck --hosts-file hosts.txt --i-own-this --link --silent
+  weeping-angel depcheck --list Cargo.lock
+  weeping-angel depcheck --web --port 8443
 
 Version flags work without a subcommand: -v, -V, --version.
 Web scans require --i-own-this and --allow-host (or --allow-host-from-target).
@@ -44,12 +54,13 @@ pub const VERSION_LINE: &str = concat!(
 #[command(
     name = "weeping-angel",
     version = VERSION_LINE,
-    about = "Authorized dual-domain security toolchain (web recon + code analysis)",
-    long_about = "Authorized security toolchain: live web recon/DAST and algorithmic code scans.\n\n\
+    about = "Authorized security toolchain (web recon, code SAST, depcheck)",
+    long_about = "Authorized security toolchain: live web recon/DAST, algorithmic code scans, and dependency-confusion detection (depcheck).\n\n\
 Web scans require --i-own-this and --allow-host (or --allow-host-from-target).\n\
 Targets accept bare hosts (example.com), //host, http://, or https://.\n\
 Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\n\
-Code/diff scans produce Codex Security–compatible sealed bundles.",
+Code/diff scans produce Codex Security–compatible sealed bundles.\n\
+depcheck is detection-only (no auto-publish / exploit payloads).",
     after_help = AFTER_HELP,
     arg_required_else_help = true,
     propagate_version = true,
@@ -103,6 +114,10 @@ pub enum Commands {
     /// Local SQLite workbench: register / list sealed scans
     #[command(visible_alias = "wb")]
     Workbench(WorkbenchArgs),
+
+    /// Dependency confusion scanner (multi-format, detection only)
+    #[command(visible_alias = "dc")]
+    Depcheck(DepcheckArgs),
 
     /// Print version and package description
     Version,
@@ -220,6 +235,151 @@ pub struct FinalizeArgs {
     /// Scan directory containing scan-manifest.json, findings.json, coverage.json
     #[arg(long = "scan-dir", value_name = "DIR")]
     pub scan_dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct DepcheckArgs {
+    /// Dependency file or project directory (omit with --url / --web / --dependency)
+    #[arg(conflicts_with = "dependency")]
+    pub target: Option<PathBuf>,
+
+    /// Path to folder(s) to analyze (DepFuzzer / Loki alias for positional target)
+    #[arg(long, short = 'd', visible_alias = "directory", conflicts_with_all = ["target", "dependency", "url"])]
+    pub path: Option<PathBuf>,
+
+    /// Fetch dependency file from URL (requires --i-own-this)
+    #[arg(long, short = 'u')]
+    pub url: Option<String>,
+
+    /// Check one dependency: NAME or NAME:VERSION (DepFuzzer-compatible)
+    #[arg(long, value_name = "NAME[:VERSION]")]
+    pub dependency: Option<String>,
+
+    /// Package repository system. Values: npm, pip/pypi, composer, mvn/maven, gradle, rubygems, cargo, go, nuget, all
+    #[arg(
+        long,
+        short = 'l',
+        visible_alias = "provider",
+        value_name = "LANG"
+    )]
+    pub language: Option<String>,
+
+    /// List packages only (no registry checks)
+    #[arg(long)]
+    pub list: bool,
+
+    /// Known-secure namespaces (confused `-s`). Comma-separated; `*` wildcards. Repeatable.
+    #[arg(long = "secure-namespace", short = 's', value_name = "PATTERN", action = clap::ArgAction::Append)]
+    pub secure_namespaces: Vec<String>,
+
+    /// Stream takeover candidates as they are found (DepFuzzer `--print-takeover`)
+    #[arg(long = "print-takeover")]
+    pub print_takeover: bool,
+
+    /// Write takeover candidates to a text file (NAME:VERSION per line)
+    #[arg(long = "output-file", value_name = "PATH")]
+    pub output_file: Option<PathBuf>,
+
+    /// For packages that exist: check maintainer emails for disposable / purchasable domains (DepFuzzer `--check-email`)
+    #[arg(long = "check-email")]
+    pub check_email: bool,
+
+    /// Also walk transitive deps via deps.dev (DepFuzzer-style; slower)
+    #[arg(long)]
+    pub transitive: bool,
+
+    /// Convert extracted packages to package.json for other tools
+    #[arg(long)]
+    pub convert: bool,
+
+    /// Export scan results JSON
+    #[arg(long, short = 'e', value_name = "PATH")]
+    pub export: Option<PathBuf>,
+
+    /// Concurrent registry checks (default: 20)
+    #[arg(long, short = 't', default_value_t = 20)]
+    pub threads: usize,
+
+    /// Registry request timeout seconds (default: 10)
+    #[arg(long, default_value_t = 10)]
+    pub timeout: u64,
+
+    /// Override file type detection (e.g. package_lock_json, requirements_txt)
+    #[arg(long = "type", value_name = "KIND")]
+    pub file_type: Option<String>,
+
+    /// Only print vulnerable package names
+    #[arg(long, short = 'q')]
+    pub quiet: bool,
+
+    /// Verbose scan progress (confused `-v` style)
+    #[arg(long = "scan-verbose")]
+    pub scan_verbose: bool,
+
+    /// Loki inspector: show git commit that introduced each free-namespace dependency
+    #[arg(long = "inspect", short = 'i')]
+    pub inspect: bool,
+
+    /// Application entry file for impact context (Loki `--entrypoint`; defaults to package.json main / index.js)
+    #[arg(long = "entrypoint", value_name = "FILE")]
+    pub entrypoint: Option<String>,
+
+    /// Skip npm hardening recon (.npmrc / floating ranges / scopes)
+    #[arg(long = "no-hardening")]
+    pub no_hardening: bool,
+
+    /// DepenFusion-style: read hosts/URLs from stdin and probe package.json + package-lock.json
+    #[arg(long)]
+    pub stdin: bool,
+
+    /// File of hosts/URLs to probe (one per line; DepenFusion-style remote hunt)
+    #[arg(long = "hosts-file", value_name = "PATH")]
+    pub hosts_file: Option<PathBuf>,
+
+    /// Append string to each probe URL (DepenFusion `-a`, e.g. `?token=foo`)
+    #[arg(long = "append", value_name = "SUFFIX", default_value = "")]
+    pub append: String,
+
+    /// Ignore path from input URLs; probe host root only (DepenFusion `-p`)
+    #[arg(long = "strip-path")]
+    pub strip_path: bool,
+
+    /// Print full https://registry.npmjs.org/… links for missing packages (DepenFusion `-link`)
+    #[arg(long = "link")]
+    pub link: bool,
+
+    /// Silent remote-hunt output: only missing package names/links (DepenFusion `-s` silent)
+    #[arg(long = "silent")]
+    pub silent: bool,
+
+    /// Start scan-only local Web UI
+    #[arg(long)]
+    pub web: bool,
+
+    /// Web UI port (default: 8443)
+    #[arg(long, default_value_t = 8443)]
+    pub port: u16,
+
+    /// Web UI bind address (default: 127.0.0.1)
+    #[arg(long, default_value = "127.0.0.1")]
+    pub bind: String,
+
+    /// Ownership consent required when using --url
+    #[arg(
+        long = "i-own-this",
+        num_args = 0..=1,
+        default_missing_value = "true",
+        require_equals = true,
+        value_parser = parse::parse_consent,
+        value_name = "BOOL"
+    )]
+    pub i_own_this: Option<bool>,
+}
+
+impl DepcheckArgs {
+    pub fn consent(&self) -> bool {
+        self.i_own_this == Some(true)
+    }
 }
 
 #[derive(Debug, Clone, Parser)]

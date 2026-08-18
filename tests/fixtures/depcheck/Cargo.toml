@@ -1,0 +1,10 @@
+[package]
+name = "depcheck-fixture"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1"
+acme-private-crate-xyz = "0.1"
+local-util = { path = "../local-util" }
+git-dep = { git = "https://github.com/example/git-dep" }

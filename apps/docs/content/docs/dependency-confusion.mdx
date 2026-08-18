@@ -1,0 +1,131 @@
+---
+title: Dependency confusion
+description: Theory, recon, and mitigation for dependency confusion — mapped to weeping-angel depcheck (detection only)
+---
+
+# Dependency confusion
+
+Dependency confusion (also called **namespace confusion** or **substitution**) is a supply-chain
+issue popularized by Alex Birsan (2021). When a project uses **private** package names and the
+package manager also consults a **public** registry, an attacker who registers the same name with a
+**higher version** can win resolution and run install/build hooks on CI or developer machines.
+
+`weeping-angel depcheck` focuses on **authorized detection and hardening recon**. It does **not**
+publish packages, inject payloads, or open reverse shells.
+
+## How resolution goes wrong
+
+1. An internal name (for example `internal-utils`) exists only on a private registry.
+2. The name is **not** claimed on the public registry (npm, PyPI, crates.io, …).
+3. Install uses a hybrid config or floating range (`^`, `~`, `>=`, `*`).
+4. A public package at a higher version is preferred → untrusted code runs.
+
+Floating ranges make hijacking easier; exact pins and lockfiles reduce (but do not eliminate) risk
+if the name is still unclaimed and resolution can fall through to the public realm.
+
+## Manifest vs lockfile
+
+| | Manifest (`package.json`, `requirements.txt`) | Lockfile (`package-lock.json`, `yarn.lock`, …) |
+|---|---|---|
+| Shape | name → version **string** | nested objects / custom text |
+| Registry URL | usually absent | often in `resolved` |
+| Transitive deps | no | yes |
+| Older scanners (`confused`) | often OK | often **fail** to parse |
+
+Use `weeping-angel depcheck` for both. Lockfiles are especially valuable for recon because they can
+leak **private registry URLs** and exact versions.
+
+## Recon with weeping-angel
+
+### Local file or directory
+
+```bash
+weeping-angel depcheck package.json
+weeping-angel depcheck package-lock.json    # lockfiles supported
+weeping-angel depcheck ./project/           # recursive discovery
+weeping-angel depcheck -l npm -s '@acme/*' package.json
+```
+
+### Single dependency / email heuristics
+
+```bash
+weeping-angel depcheck --provider npm --dependency left-pad:1.3.0 --check-email
+```
+
+### Remote host hunt (DepenFusion-style)
+
+Probes common paths (`package.json`, lockfiles, `requirements.txt`, `composer.json`, `pom.xml`,
+`go.mod`, `Cargo.toml`, …) on each host, then checks public registries.
+
+```bash
+cat hosts.txt | weeping-angel depcheck --stdin --i-own-this --threads 20
+weeping-angel depcheck --hosts-file hosts.txt --i-own-this --link --silent
+weeping-angel depcheck --hosts-file hosts.txt --i-own-this --append "?token=foo" --strip-path
+```
+
+Requires `--i-own-this`. Exit code `1` if any free-namespace hit is found.
+
+### Inspector + npm hardening
+
+```bash
+weeping-angel depcheck -d ./app --inspect --entrypoint index.js
+```
+
+- **Inspector**: git commit that introduced each free-namespace dependency.
+- **Hardening**: `.npmrc` hybrid/public fallback, floating ranges on missing names, missing
+  `@scope:registry`, entrypoint presence.
+
+### Web UI (scan only)
+
+```bash
+weeping-angel depcheck --web
+```
+
+Open `http://127.0.0.1:8443` — upload or URL scan. No exploit panel.
+
+## Interpreting results
+
+| Finding | Meaning |
+|---|---|
+| Missing on public registry | Free namespace — claim it or lock private resolution |
+| Floating range on missing name | Higher public version can win more easily |
+| Scoped package without `@scope:registry` | Public fallback risk for that scope |
+| Maintainer email / domain heuristic (`--check-email`) | Possible abandoned-owner signal — **verify manually** |
+| Inspector commit | When the risky name entered the repo |
+
+## Mitigation (defense)
+
+- Prefer **scopes / namespaces** (`@company/…`, Maven `groupId`, Composer `vendor/…`).
+- Point private scopes at a private registry; **disable public fallback** for unknown private names
+  (Verdaccio / Artifactory / Nexus uplink policy).
+- **Pin versions** and commit lockfiles; use `npm ci` (or equivalent) in CI.
+- Claim internal names on public registries with empty/placeholder packages where policy allows.
+- Reserve NuGet prefixes; use Maven `exclusiveContent` / mirrors.
+- Restrict build-agent egress; monitor public registries for your internal names.
+- For pip, prefer `--index-url` (single index) over `--extra-index-url` when possible.
+
+## What weeping-angel will not do
+
+- Auto-publish packages to npm / PyPI / crates.io / …
+- Generate install hooks, reverse shells, or “attack mode” payloads
+- Register domains or take over maintainer accounts
+
+Those steps belong only in **authorized** engagements with separate tooling and legal approval.
+
+## Tool mapping (scanning)
+
+| Need | Command |
+|---|---|
+| Any local manifest / lockfile | `weeping-angel depcheck <file>` |
+| Project tree | `weeping-angel depcheck ./dir/` |
+| URL to one file | `weeping-angel depcheck --url … --i-own-this` |
+| Many hosts | `--stdin` / `--hosts-file` + `--i-own-this` |
+| Git introduction | `--inspect` |
+| npm config / range risks | default hardening (disable with `--no-hardening`) |
+
+## References
+
+- Alex Birsan — Dependency Confusion (2021)
+- Visma ProdSec — [confused](https://github.com/visma-prodsec/confused)
+- Synacktiv — DepFuzzer
+- OWASP — Supply Chain Security

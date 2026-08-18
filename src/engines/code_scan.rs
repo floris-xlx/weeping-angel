@@ -119,6 +119,11 @@ pub fn run_code_scan_with_opts(
         file_contents.insert(rel.replace('\\', "/"), content);
     }
 
+    // Dependency confusion (live registry checks; skip with WA_DEPCHECK_SKIP_NETWORK=1)
+    hits.extend(crate::engines::depcheck_engine::scan_tree_for_confusion(
+        root, &files,
+    ));
+
     // Intra-function light taint: upgrade confidence + structured validation
     crate::engines::taint_lite::enrich_hits(&mut hits, &file_contents);
 
@@ -229,6 +234,7 @@ pub fn run_code_scan_with_opts(
                 limitations: Some(vec![
                     "Pattern/static engines only; no AI semantic review.".into(),
                     "No full interprocedural taint; confidence often medium.".into(),
+                    "DepCheck registry checks in scan-code are opt-in via WA_DEPCHECK_NETWORK=1.".into(),
                 ]),
             },
             threat_model: None,
@@ -380,12 +386,43 @@ pub fn inventory_source_files(root: &Path, scope_prefix: Option<&str>) -> Result
             .and_then(|e| e.to_str())
             .unwrap_or("")
             .to_ascii_lowercase();
-        let ok = matches!(
-            ext.as_str(),
-            "rs" | "py" | "js" | "jsx" | "ts" | "tsx" | "go" | "java" | "kt" | "rb" | "php"
-                | "c" | "cc" | "cpp" | "h" | "hpp" | "cs" | "swift" | "scala" | "sh" | "bash"
-                | "zsh" | "yaml" | "yml" | "toml" | "json" | "sql" | "env"
-        );
+        let fname = entry
+            .path()
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        let is_dep_manifest = matches!(
+            fname.as_str(),
+            "package.json"
+                | "package-lock.json"
+                | "npm-shrinkwrap.json"
+                | "yarn.lock"
+                | "pnpm-lock.yaml"
+                | "requirements.txt"
+                | "pipfile"
+                | "pipfile.lock"
+                | "pyproject.toml"
+                | "composer.json"
+                | "composer.lock"
+                | "gemfile"
+                | "gemfile.lock"
+                | "pom.xml"
+                | "build.gradle"
+                | "build.gradle.kts"
+                | "go.mod"
+                | "go.sum"
+                | "cargo.toml"
+                | "cargo.lock"
+                | "packages.config"
+        ) || fname.ends_with(".csproj");
+        let ok = is_dep_manifest
+            || matches!(
+                ext.as_str(),
+                "rs" | "py" | "js" | "jsx" | "ts" | "tsx" | "go" | "java" | "kt" | "rb" | "php"
+                    | "c" | "cc" | "cpp" | "h" | "hpp" | "cs" | "swift" | "scala" | "sh" | "bash"
+                    | "zsh" | "yaml" | "yml" | "toml" | "json" | "sql" | "env"
+            );
         if ok {
             files.push(rel);
         }

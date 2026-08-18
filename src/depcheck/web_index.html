@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>weeping-angel DepCheck</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--ok:#3fb950;--bad:#f85149;--warn:#d29922}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;align-items:baseline;flex-wrap:wrap}
+header h1{margin:0;font-size:1.25rem}header .tag{color:var(--muted);font-size:.85rem}
+main{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1rem;max-width:1200px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.card h2{margin:0 0 .75rem;font-size:1rem}
+label{display:block;font-size:.8rem;color:var(--muted);margin:.5rem 0 .25rem}
+input,select,button,textarea{width:100%;padding:.55rem .65rem;border-radius:8px;border:1px solid var(--border);background:#0d1117;color:var(--text)}
+button{cursor:pointer;background:var(--accent);border:none;color:#04101f;font-weight:600;margin-top:.75rem}
+button.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+.drop{border:1px dashed var(--border);border-radius:8px;padding:1.5rem;text-align:center;color:var(--muted);margin-top:.5rem}
+.drop.drag{border-color:var(--accent);color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.75rem 0}
+.stat{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:.6rem;text-align:center}
+.stat b{display:block;font-size:1.2rem}.stat span{font-size:.7rem;color:var(--muted)}
+.badge{display:inline-block;padding:.1rem .4rem;border-radius:999px;font-size:.75rem}
+.badge-red{background:rgba(248,81,73,.15);color:var(--bad)}
+.badge-green{background:rgba(63,185,80,.15);color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}th,td{padding:.4rem;border-bottom:1px solid var(--border);text-align:left}
+.progress{height:8px;background:#0d1117;border-radius:999px;overflow:hidden;margin:.5rem 0}
+.progress>div{height:100%;background:var(--accent);width:0%;transition:width .2s}
+.note{font-size:.8rem;color:var(--warn);margin-top:.75rem}
+.empty{color:var(--muted);text-align:center;padding:1rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>weeping-angel DepCheck</h1>
+  <span class="tag">Universal dependency confusion scanner — detection only</span>
+  <span class="tag" id="ver"></span>
+</header>
+<main>
+  <section class="card">
+    <h2>Scan</h2>
+    <label>Upload dependency file</label>
+    <div class="drop" id="drop">Drop file here or click to choose<input type="file" id="file" hidden/></div>
+    <label>Or fetch URL</label>
+    <input id="url" placeholder="https://example.com/package.json"/>
+    <label>Type override (optional)</label>
+    <select id="type"><option value="">auto-detect</option></select>
+    <label>Threads</label>
+    <input id="threads" type="number" value="20" min="1" max="100"/>
+    <button id="btnScan">Start scan</button>
+    <button class="secondary" id="btnClear">Clear results</button>
+    <p class="note">No auto-exploit / publish. Authorized testing only.</p>
+    <div class="progress"><div id="bar"></div></div>
+    <div id="status" class="tag"></div>
+  </section>
+  <section class="card">
+    <h2>Results</h2>
+    <div id="results" class="empty">No scan yet</div>
+  </section>
+  <section class="card" style="grid-column:1/-1">
+    <h2>History</h2>
+    <div id="history" class="empty">No scans yet</div>
+  </section>
+</main>
+<script>
+let currentId=null, pollTimer=null, selectedFile=null;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function init(){
+  const info=await (await fetch('/api/info')).json();
+  document.getElementById('ver').textContent='v'+info.version+' · '+info.parsers.length+' parsers';
+  const sel=document.getElementById('type');
+  info.parsers.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o);});
+  loadHistory();
+}
+
+const drop=document.getElementById('drop');
+const fileInput=document.getElementById('file');
+drop.onclick=()=>fileInput.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag');};
+drop.ondragleave=()=>drop.classList.remove('drag');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');if(e.dataTransfer.files[0]){selectedFile=e.dataTransfer.files[0];drop.textContent=selectedFile.name;}};
+fileInput.onchange=()=>{if(fileInput.files[0]){selectedFile=fileInput.files[0];drop.textContent=selectedFile.name;}};
+
+document.getElementById('btnClear').onclick=()=>{
+  document.getElementById('results').innerHTML='<div class="empty">No scan yet</div>';
+  document.getElementById('bar').style.width='0%';
+  document.getElementById('status').textContent='';
+};
+
+document.getElementById('btnScan').onclick=async()=>{
+  const type=document.getElementById('type').value;
+  const threads=document.getElementById('threads').value;
+  const url=document.getElementById('url').value.trim();
+  let resp;
+  if(selectedFile){
+    const fd=new FormData();
+    fd.append('file',selectedFile);
+    if(type)fd.append('type',type);
+    fd.append('threads',threads);
+    resp=await fetch('/api/scan/upload',{method:'POST',body:fd});
+  }else if(url){
+    resp=await fetch('/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,type:type||null,threads:+threads})});
+  }else{
+    document.getElementById('status').textContent='Choose a file or enter a URL';
+    return;
+  }
+  const data=await resp.json();
+  if(!resp.ok){document.getElementById('status').textContent=data.error||'scan failed';return;}
+  currentId=data.id;
+  document.getElementById('status').textContent='Scanning…';
+  document.getElementById('bar').style.width='10%';
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(poll,500);
+};
+
+async function poll(){
+  if(!currentId)return;
+  const data=await (await fetch('/api/scan/'+currentId)).json();
+  document.getElementById('bar').style.width=(data.progress||0)+'%';
+  if(data.status==='done'){
+    clearInterval(pollTimer);pollTimer=null;
+    document.getElementById('bar').style.width='100%';
+    document.getElementById('status').textContent='Done in '+(data.elapsed_secs||0).toFixed(1)+'s';
+    showResults(data.result);
+    loadHistory();
+  }else if(data.status==='error'){
+    clearInterval(pollTimer);pollTimer=null;
+    document.getElementById('status').textContent='Error: '+(data.error||'unknown');
+  }else{
+    document.getElementById('bar').style.width=Math.min(90,(data.progress||10)+5)+'%';
+  }
+}
+
+function showResults(r){
+  if(!r){document.getElementById('results').innerHTML='<div class="empty">No result</div>';return;}
+  const vulns=(r.vulnerable||[]).map(v=>`<tr><td>${esc(v.name)}</td><td>${esc(v.version)}</td><td><span class="badge badge-red">missing</span></td></tr>`).join('');
+  document.getElementById('results').innerHTML=`
+    <div class="stats">
+      <div class="stat"><b>${r.packages?Object.keys(r.packages).length:0}</b><span>Total</span></div>
+      <div class="stat"><b>${(r.safe||[]).length}</b><span>Safe</span></div>
+      <div class="stat"><b>${(r.vulnerable||[]).length}</b><span>Vulnerable</span></div>
+      <div class="stat"><b>${(r.errors||[]).length}</b><span>Errors</span></div>
+    </div>
+    <div>File: <code>${esc(r.file)}</code> · Ecosystem: <code>${esc(r.ecosystem)}</code></div>
+    ${vulns?`<table><thead><tr><th>Package</th><th>Version</th><th>Status</th></tr></thead><tbody>${vulns}</tbody></table>`:'<p><span class="badge badge-green">OK</span> No missing packages on public registry.</p>'}
+  `;
+}
+
+async function loadHistory(){
+  const hist=await (await fetch('/api/history')).json();
+  const el=document.getElementById('history');
+  if(!hist.length){el.innerHTML='<div class="empty">No scans yet</div>';return;}
+  el.innerHTML='<table><thead><tr><th>File</th><th>Ecosystem</th><th>Total</th><th>Vulnerable</th><th>Duration</th></tr></thead><tbody>'+
+    hist.map(h=>`<tr style="cursor:pointer" onclick="loadScan('${h.id}')"><td>${esc(h.file)}</td><td>${esc(h.ecosystem)}</td><td>${h.total}</td><td>${h.vulnerable>0?'<span class="badge badge-red">'+h.vulnerable+'</span>':'<span class="badge badge-green">0</span>'}</td><td>${(+h.duration).toFixed(1)}s</td></tr>`).join('')+
+    '</tbody></table>';
+}
+
+async function loadScan(id){
+  const data=await (await fetch('/api/scan/'+id)).json();
+  if(data.status==='done')showResults(data.result);
+}
+
+init();
+</script>
+</body>
+</html>

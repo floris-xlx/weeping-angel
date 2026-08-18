@@ -1,24 +1,39 @@
 {
   "generated_by": "weeping-angel-docs-export",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "command_path": [],
   "command": {
     "name": "weeping-angel",
     "display_name": "weeping-angel",
     "usage": "Usage: weeping-angel [OPTIONS] <COMMAND>",
-    "about": "Authorized web recon and security scanning CLI",
-    "long_about": "Scan only systems you own or have written permission to test.\nRequires --i-own-this and --allow-host (or --allow-host-from-target).\n\nTargets accept bare hosts (example.com), //host, http://, or https://.\nConsent: --i-own-this or --i-own-this=true|yes|1 (value requires =).",
-    "after_help": null,
+    "about": "Authorized dual-domain security toolchain (web recon + code analysis)",
+    "long_about": "Authorized security toolchain: live web recon/DAST and algorithmic code scans.\n\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nTargets accept bare hosts (example.com), //host, http://, or https://.\nConsent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\nCode/diff scans produce Codex Security–compatible sealed bundles.",
+    "after_help": "Examples:\n  weeping-angel -v\n  weeping-angel --version\n  weeping-angel version\n  weeping-angel completions powershell\n  weeping-angel scan example.com --i-own-this --allow-host example.com\n  weeping-angel scan-code . -o out/code --fail-on high\n  weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD\n  weeping-angel workbench list\n  weeping-angel depcheck package.json\n  weeping-angel depcheck --list Cargo.lock\n  weeping-angel depcheck --web --port 8443\n\nVersion flags work without a subcommand: -v, -V, --version.\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nIncrease engine logs with --verbose (repeat: --verbose --verbose).\n",
     "aliases": [],
     "visible_aliases": [],
     "arguments": [
       {
+        "id": "version",
+        "kind": "option",
+        "display": "--version",
+        "short": "-v",
+        "long": "--version",
+        "help": "Print version (-v, -V, --version). Works without a subcommand",
+        "long_help": null,
+        "required": false,
+        "global": true,
+        "repeatable": false,
+        "positional_index": null,
+        "default_values": [],
+        "possible_values": []
+      },
+      {
         "id": "verbose",
         "kind": "option",
         "display": "--verbose",
-        "short": "-v",
+        "short": null,
         "long": "--verbose",
-        "help": "Increase logging verbosity (-v, -vv)",
+        "help": "Increase logging verbosity (repeatable)",
         "long_help": null,
         "required": false,
         "global": true,
@@ -33,11 +48,15 @@
         "name": "scan",
         "display_name": "weeping-angel scan",
         "usage": "Usage: weeping-angel scan [OPTIONS] [TARGETS]...",
-        "about": "Run an authorized security scan",
+        "about": "Run an authorized live web security scan",
         "long_about": null,
         "after_help": null,
-        "aliases": [],
-        "visible_aliases": [],
+        "aliases": [
+          "s"
+        ],
+        "visible_aliases": [
+          "s"
+        ],
         "arguments": [
           {
             "id": "targets",
@@ -336,7 +355,7 @@
             "display": "--cookie <COOKIE>",
             "short": null,
             "long": "--cookie",
-            "help": "Extra Cookie header (repeatable; values merged)",
+            "help": "Extra Cookie (`name=value` or `name value`; repeatable; values merged)",
             "long_help": null,
             "required": false,
             "global": false,
@@ -348,10 +367,10 @@
           {
             "id": "headers",
             "kind": "option",
-            "display": "--header <NAME: VALUE>",
+            "display": "--header <HEADER>",
             "short": null,
             "long": "--header",
-            "help": "Extra header Name: Value or Name=Value (repeatable)",
+            "help": "Extra header: `Name: Value`, `Name=Value`, or `Name Value` (repeatable)",
             "long_help": null,
             "required": false,
             "global": false,
@@ -521,6 +540,832 @@
               "0"
             ],
             "possible_values": []
+          }
+        ],
+        "subcommands": []
+      },
+      {
+        "name": "finalize",
+        "display_name": "weeping-angel finalize",
+        "usage": "Usage: weeping-angel finalize --scan-dir <DIR>",
+        "about": "Validate, fingerprint, seal, and project report.md for a scan bundle",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [
+          "seal"
+        ],
+        "visible_aliases": [
+          "seal"
+        ],
+        "arguments": [
+          {
+            "id": "scan_dir",
+            "kind": "option",
+            "display": "--scan-dir <DIR>",
+            "short": null,
+            "long": "--scan-dir",
+            "help": "Scan directory containing scan-manifest.json, findings.json, coverage.json",
+            "long_help": null,
+            "required": true,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          }
+        ],
+        "subcommands": []
+      },
+      {
+        "name": "scan-code",
+        "display_name": "weeping-angel scan-code",
+        "usage": "Usage: weeping-angel scan-code [OPTIONS] --scan-dir <DIR> <PATH>",
+        "about": "Algorithmic code SAST (full tree or scoped path) → sealed contract",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [
+          "code"
+        ],
+        "visible_aliases": [
+          "code"
+        ],
+        "arguments": [
+          {
+            "id": "path",
+            "kind": "positional",
+            "display": "<PATH>",
+            "short": null,
+            "long": null,
+            "help": "Repository or directory root to inventory",
+            "long_help": null,
+            "required": true,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "scan_dir",
+            "kind": "option",
+            "display": "--scan-dir <DIR>",
+            "short": "-o",
+            "long": "--scan-dir",
+            "help": "Output scan directory (created if missing)",
+            "long_help": null,
+            "required": true,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "scope",
+            "kind": "option",
+            "display": "--scope <SCOPE>",
+            "short": null,
+            "long": "--scope",
+            "help": "Optional path scope under the root (default: entire tree)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "fail_on",
+            "kind": "option",
+            "display": "--fail-on <FAIL_ON>",
+            "short": null,
+            "long": "--fail-on",
+            "help": "Exit 1 when findings at or above this severity: low|medium|high|critical (default: low)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "low"
+            ],
+            "possible_values": []
+          }
+        ],
+        "subcommands": []
+      },
+      {
+        "name": "scan-diff",
+        "display_name": "weeping-angel scan-diff",
+        "usage": "Usage: weeping-angel scan-diff [OPTIONS] --scan-dir <DIR>",
+        "about": "Algorithmic code SAST on a Git change-set (PR/commit/working-tree)",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [
+          "diff"
+        ],
+        "visible_aliases": [
+          "diff"
+        ],
+        "arguments": [
+          {
+            "id": "repo",
+            "kind": "option",
+            "display": "--repo <REPO>",
+            "short": null,
+            "long": "--repo",
+            "help": "Git repository root (defaults to cwd)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "."
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "scan_dir",
+            "kind": "option",
+            "display": "--scan-dir <DIR>",
+            "short": "-o",
+            "long": "--scan-dir",
+            "help": "Output scan directory (created if missing)",
+            "long_help": null,
+            "required": true,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "base",
+            "kind": "option",
+            "display": "--base <BASE>",
+            "short": null,
+            "long": "--base",
+            "help": "Base revision (e.g. main, origin/main, commit SHA). Omit for working-tree mode",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "head",
+            "kind": "option",
+            "display": "--head <HEAD>",
+            "short": null,
+            "long": "--head",
+            "help": "Head revision (default HEAD). Used with --base for PR/branch/commit ranges",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "HEAD"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "working_tree",
+            "kind": "option",
+            "display": "--working-tree",
+            "short": null,
+            "long": "--working-tree",
+            "help": "Scan staged+unstaged+untracked changes vs base (default HEAD) instead of a revision range",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "fail_on",
+            "kind": "option",
+            "display": "--fail-on <FAIL_ON>",
+            "short": null,
+            "long": "--fail-on",
+            "help": "Exit 1 when findings at or above this severity: low|medium|high|critical (default: medium)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "medium"
+            ],
+            "possible_values": []
+          }
+        ],
+        "subcommands": []
+      },
+      {
+        "name": "workbench",
+        "display_name": "weeping-angel workbench",
+        "usage": "Usage: weeping-angel workbench [OPTIONS] <COMMAND>",
+        "about": "Local SQLite workbench: register / list sealed scans",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [
+          "wb"
+        ],
+        "visible_aliases": [
+          "wb"
+        ],
+        "arguments": [
+          {
+            "id": "db",
+            "kind": "option",
+            "display": "--db <DB>",
+            "short": null,
+            "long": "--db",
+            "help": "Override workbench SQLite path (default: ~/.weeping-angel/workbench.sqlite3)",
+            "long_help": null,
+            "required": false,
+            "global": true,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          }
+        ],
+        "subcommands": [
+          {
+            "name": "register",
+            "display_name": "weeping-angel workbench register",
+            "usage": "Usage: weeping-angel workbench register --scan-dir <SCAN_DIR>",
+            "about": "Index a sealed scan directory",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "scan_dir",
+                "kind": "option",
+                "display": "--scan-dir <SCAN_DIR>",
+                "short": null,
+                "long": "--scan-dir",
+                "help": "Path to sealed scan_dir (has findings.json + scan-manifest.json)",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "list",
+            "display_name": "weeping-angel workbench list",
+            "usage": "Usage: weeping-angel workbench list [OPTIONS]",
+            "about": "List recent registered scans",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "limit",
+                "kind": "option",
+                "display": "--limit <LIMIT>",
+                "short": null,
+                "long": "--limit",
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [
+                  "20"
+                ],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "show",
+            "display_name": "weeping-angel workbench show",
+            "usage": "Usage: weeping-angel workbench show <SCAN_ID>",
+            "about": "Show one registered scan by id",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "scan_id",
+                "kind": "positional",
+                "display": "<SCAN_ID>",
+                "short": null,
+                "long": null,
+                "help": null,
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "compare",
+            "display_name": "weeping-angel workbench compare",
+            "usage": "Usage: weeping-angel workbench compare [OPTIONS] --before <BEFORE> --after <AFTER>",
+            "about": "Compare two sealed scans by primary fingerprint (introduced / resolved / persistent)",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "before",
+                "kind": "option",
+                "display": "--before <BEFORE>",
+                "short": null,
+                "long": "--before",
+                "help": "Earlier scan directory",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "after",
+                "kind": "option",
+                "display": "--after <AFTER>",
+                "short": null,
+                "long": "--after",
+                "help": "Later scan directory",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "out",
+                "kind": "option",
+                "display": "--out <OUT>",
+                "short": null,
+                "long": "--out",
+                "help": "Optional path to write compare JSON (default: after/compare.json)",
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "generate-patches",
+            "display_name": "weeping-angel workbench generate-patches",
+            "usage": "Usage: weeping-angel workbench generate-patches --scan-dir <SCAN_DIR> --source-root <SOURCE_ROOT>",
+            "about": "Generate algorithmic remediation patches for findings in a sealed scan",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "scan_dir",
+                "kind": "option",
+                "display": "--scan-dir <SCAN_DIR>",
+                "short": null,
+                "long": "--scan-dir",
+                "help": "Sealed scan directory (reads findings.json; writes remediation/)",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "source_root",
+                "kind": "option",
+                "display": "--source-root <SOURCE_ROOT>",
+                "short": null,
+                "long": "--source-root",
+                "help": "Source tree root (paths in findings are relative to this)",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "apply-patch",
+            "display_name": "weeping-angel workbench apply-patch",
+            "usage": "Usage: weeping-angel workbench apply-patch --source-root <SOURCE_ROOT> --patch <PATCH>",
+            "about": "Apply a generated unified-diff patch under source-root",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "source_root",
+                "kind": "option",
+                "display": "--source-root <SOURCE_ROOT>",
+                "short": null,
+                "long": "--source-root",
+                "help": "Source tree root",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "patch",
+                "kind": "option",
+                "display": "--patch <PATCH>",
+                "short": null,
+                "long": "--patch",
+                "help": "Path to fix.patch (from generate-patches)",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "verify",
+            "display_name": "weeping-angel workbench verify",
+            "usage": "Usage: weeping-angel workbench verify --source-root <SOURCE_ROOT> --path <PATH> --rule-id <RULE_ID>",
+            "about": "Re-scan one file and confirm a rule_id no longer matches",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "source_root",
+                "kind": "option",
+                "display": "--source-root <SOURCE_ROOT>",
+                "short": null,
+                "long": "--source-root",
+                "help": "Source tree root",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "path",
+                "kind": "option",
+                "display": "--path <PATH>",
+                "short": null,
+                "long": "--path",
+                "help": "Path relative to source-root",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "rule_id",
+                "kind": "option",
+                "display": "--rule-id <RULE_ID>",
+                "short": null,
+                "long": "--rule-id",
+                "help": "Engine rule id (e.g. command-injection.shell-true)",
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          }
+        ]
+      },
+      {
+        "name": "depcheck",
+        "display_name": "weeping-angel depcheck",
+        "usage": "Usage: weeping-angel depcheck [OPTIONS] [TARGET]",
+        "about": "Dependency confusion scanner (multi-format, detection only)",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [
+          "dc"
+        ],
+        "visible_aliases": [
+          "dc"
+        ],
+        "arguments": [
+          {
+            "id": "target",
+            "kind": "positional",
+            "display": "<TARGET>",
+            "short": null,
+            "long": null,
+            "help": "Dependency file or project directory (omit with --url / --web)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "url",
+            "kind": "option",
+            "display": "--url <URL>",
+            "short": "-u",
+            "long": "--url",
+            "help": "Fetch dependency file from URL (requires --i-own-this)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "list",
+            "kind": "option",
+            "display": "--list",
+            "short": "-l",
+            "long": "--list",
+            "help": "List packages only (no registry checks)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "convert",
+            "kind": "option",
+            "display": "--convert",
+            "short": null,
+            "long": "--convert",
+            "help": "Convert extracted packages to package.json for other tools",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "export",
+            "kind": "option",
+            "display": "--export <PATH>",
+            "short": "-e",
+            "long": "--export",
+            "help": "Export scan results JSON",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "threads",
+            "kind": "option",
+            "display": "--threads <THREADS>",
+            "short": "-t",
+            "long": "--threads",
+            "help": "Concurrent registry checks (default: 20)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "20"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "timeout",
+            "kind": "option",
+            "display": "--timeout <TIMEOUT>",
+            "short": null,
+            "long": "--timeout",
+            "help": "Registry request timeout seconds (default: 10)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "10"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "file_type",
+            "kind": "option",
+            "display": "--type <KIND>",
+            "short": null,
+            "long": "--type",
+            "help": "Override file type detection (e.g. package_lock_json, requirements_txt)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "quiet",
+            "kind": "option",
+            "display": "--quiet",
+            "short": "-q",
+            "long": "--quiet",
+            "help": "Only print vulnerable package names",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "web",
+            "kind": "option",
+            "display": "--web",
+            "short": null,
+            "long": "--web",
+            "help": "Start scan-only local Web UI",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "port",
+            "kind": "option",
+            "display": "--port <PORT>",
+            "short": null,
+            "long": "--port",
+            "help": "Web UI port (default: 8443)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "8443"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "bind",
+            "kind": "option",
+            "display": "--bind <BIND>",
+            "short": null,
+            "long": "--bind",
+            "help": "Web UI bind address (default: 127.0.0.1)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              "127.0.0.1"
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "i_own_this",
+            "kind": "option",
+            "display": "--i-own-this <BOOL>",
+            "short": null,
+            "long": "--i-own-this",
+            "help": "Ownership consent required when using --url",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          }
+        ],
+        "subcommands": []
+      },
+      {
+        "name": "version",
+        "display_name": "weeping-angel version",
+        "usage": "Usage: weeping-angel version",
+        "about": "Print version and package description",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [],
+        "visible_aliases": [],
+        "arguments": [],
+        "subcommands": []
+      },
+      {
+        "name": "completions",
+        "display_name": "weeping-angel completions",
+        "usage": "Usage: weeping-angel completions <SHELL>",
+        "about": "Write shell completions to stdout",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [],
+        "visible_aliases": [],
+        "arguments": [
+          {
+            "id": "shell",
+            "kind": "positional",
+            "display": "<SHELL>",
+            "short": null,
+            "long": null,
+            "help": "Target shell",
+            "long_help": null,
+            "required": true,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "bash",
+              "elvish",
+              "fish",
+              "powershell",
+              "zsh"
+            ]
           }
         ],
         "subcommands": []

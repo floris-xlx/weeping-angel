@@ -5,7 +5,7 @@ description: "Root command tree"
 
 {/* Generated from clap export by scripts/generate-docs.mjs */}
 
-> Authorized web recon and security scanning CLI
+> Authorized dual-domain security toolchain (web recon + code analysis)
 
 ## Usage
 
@@ -15,18 +15,28 @@ Usage: weeping-angel [OPTIONS] <COMMAND>
 
 ## Details
 
-Scan only systems you own or have written permission to test.
-Requires --i-own-this and --allow-host (or --allow-host-from-target).
+Authorized security toolchain: live web recon/DAST and algorithmic code scans.
 
+Web scans require --i-own-this and --allow-host (or --allow-host-from-target).
 Targets accept bare hosts (example.com), //host, http://, or https://.
 Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).
+
+Code/diff scans produce Codex Security–compatible sealed bundles.
 
 ## Arguments
 
 | Flag / arg | Description | Default |
 |---|---|---|
-| `--verbose` | Increase logging verbosity (-v, -vv) | `—` |
+| `--version` | Print version (-v, -V, --version). Works without a subcommand | `—` |
+| `--verbose` | Increase logging verbosity (repeatable) | `—` |
 
 ## Subcommands
 
-- [`scan`](/docs/commands/scan) — Run an authorized security scan
+- [`scan`](/docs/commands/scan) — Run an authorized live web security scan
+- [`finalize`](/docs/commands/finalize) — Validate, fingerprint, seal, and project report.md for a scan bundle
+- [`scan-code`](/docs/commands/scan-code) — Algorithmic code SAST (full tree or scoped path) → sealed contract
+- [`scan-diff`](/docs/commands/scan-diff) — Algorithmic code SAST on a Git change-set (PR/commit/working-tree)
+- [`workbench`](/docs/commands/workbench) — Local SQLite workbench: register / list sealed scans
+- [`depcheck`](/docs/commands/depcheck) — Dependency confusion scanner (multi-format, detection only)
+- [`version`](/docs/commands/version) — Print version and package description
+- [`completions`](/docs/commands/completions) — Write shell completions to stdout

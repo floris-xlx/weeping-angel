@@ -1,0 +1,6 @@
+# fixture requirements
+requests>=2.28.0
+acme-internal-logger-xyz==1.2.3
+git+https://github.com/example/foo.git
+-e ./local-pkg
+flask

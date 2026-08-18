@@ -1,6 +1,13 @@
 {
   "title": "Commands",
   "pages": [
-    "scan"
+    "scan",
+    "finalize",
+    "scan-code",
+    "scan-diff",
+    "workbench",
+    "depcheck",
+    "version",
+    "completions"
   ]
 }

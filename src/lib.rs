@@ -5,6 +5,7 @@ pub mod checks;
 pub mod cli;
 pub mod config;
 pub mod contract;
+pub mod depcheck;
 pub mod discovery;
 pub mod docs_export;
 pub mod engine;
@@ -168,6 +169,505 @@ pub fn run_finalize_command(args: crate::cli::FinalizeArgs) -> Result<i32> {
         crate::style::ok(&report.display().to_string()),
     ));
     Ok(0)
+}
+
+fn resolve_depcheck_kind(args: &crate::cli::DepcheckArgs) -> Result<Option<crate::depcheck::types::FileKind>> {
+    use crate::depcheck::types::{Ecosystem, FileKind};
+
+    if let Some(s) = args.file_type.as_deref() {
+        return Ok(Some(
+            FileKind::from_str_loose(s).with_context(|| format!("unknown --type {s}"))?,
+        ));
+    }
+    if let Some(lang) = args.language.as_deref() {
+        if lang.eq_ignore_ascii_case("all") {
+            return Ok(None);
+        }
+        let eco = Ecosystem::from_str_loose(lang).with_context(|| {
+            format!(
+                "unknown -l/--language/--provider {lang} (expected npm|pip|pypi|composer|mvn|maven|gradle|rubygems|cargo|go|nuget|all)"
+            )
+        })?;
+        let path = args.path.as_ref().or(args.target.as_ref());
+        // Only force a default kind for a *single unknown file*. Directories must auto-detect
+        // per file, then optionally filter by provider ecosystem.
+        if let Some(target) = path {
+            if target.is_file() {
+                let detected = crate::depcheck::detect::detect_file_type(target, None);
+                if detected == FileKind::Unknown {
+                    return Ok(Some(eco.default_file_kind()));
+                }
+            }
+        }
+        return Ok(None);
+    }
+    Ok(None)
+}
+
+fn parse_dependency_arg(raw: &str) -> (String, String) {
+    if let Some((name, ver)) = raw.split_once(':') {
+        (name.trim().to_string(), ver.trim().to_string())
+    } else {
+        (raw.trim().to_string(), String::new())
+    }
+}
+
+/// Dependency confusion scanner (detection only — no auto-exploit).
+pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32> {
+    use std::collections::{HashSet, VecDeque};
+    use std::sync::Arc;
+
+    use crate::depcheck::depsdev::{self, is_nuget_reserved};
+    use crate::depcheck::email_check::{self, EmailFindingKind};
+    use crate::depcheck::registry::{HttpRegistry, RegistryClient};
+    use crate::depcheck::types::{
+        CheckStatus, Ecosystem, PackageRef, ScanOptions, ScanSummary,
+    };
+    use crate::depcheck::{
+        convert, exit_code, list_only, load_path, load_url_body, report, resolve_targets,
+        scan_manifest,
+    };
+
+    crate::style::init();
+
+    if args.web {
+        crate::depcheck::web::start_web(&args.bind, args.port).await?;
+        return Ok(0);
+    }
+
+    let provider_all = args
+        .language
+        .as_deref()
+        .is_some_and(|s| s.eq_ignore_ascii_case("all"));
+
+    let kind_override = resolve_depcheck_kind(&args)?;
+    let opts = ScanOptions {
+        threads: args.threads,
+        timeout_secs: args.timeout,
+        quiet: args.quiet || args.silent,
+        kind_override,
+        secure_namespaces: crate::depcheck::filter::parse_secure_namespace_list(
+            &args.secure_namespaces,
+        ),
+        verbose: args.scan_verbose,
+    };
+
+    let registry: Arc<dyn RegistryClient> = Arc::new(HttpRegistry::new(opts.timeout_secs)?);
+    let mut worst_exit = 0i32;
+    let mut takeover_lines: Vec<String> = Vec::new();
+
+    // ── DepenFusion-style remote host hunt (stdin / hosts-file) ───────
+    if args.stdin || args.hosts_file.is_some() {
+        if !args.consent() {
+            bail!("remote host hunting requires --i-own-this (authorized testing only)");
+        }
+        let lines = if let Some(path) = &args.hosts_file {
+            crate::depcheck::remote_hunt::read_hosts_file(path)?
+        } else {
+            crate::depcheck::remote_hunt::read_stdin_lines()?
+        };
+        let hunt = crate::depcheck::remote_hunt::HuntOptions {
+            threads: args.threads.max(1),
+            timeout_secs: args.timeout,
+            append: args.append.clone(),
+            strip_path: args.strip_path,
+            verbose: if args.scan_verbose { 2 } else { 0 },
+            silent: args.silent || args.quiet,
+            show_link: args.link,
+            extra_paths: Vec::new(),
+        };
+        let report = crate::depcheck::remote_hunt::hunt_remote(
+            &lines,
+            &hunt,
+            &opts,
+            Arc::clone(&registry),
+        )
+        .await?;
+        crate::depcheck::remote_hunt::print_hunt_report(&report, &hunt);
+        if let Some(path) = &args.output_file {
+            let body = report
+                .vulnerable
+                .iter()
+                .map(|h| format!("{}:{}", h.package, h.version))
+                .collect::<Vec<_>>()
+                .join("\n");
+            std::fs::write(path, body + "\n")?;
+            if !hunt.silent {
+                crate::style::eprint_line(&format!(
+                    "{} results saved to {}",
+                    crate::style::brand("weeping-angel"),
+                    path.display()
+                ));
+            }
+        }
+        if let Some(export) = &args.export {
+            let json = serde_json::to_string_pretty(&report)?;
+            std::fs::write(export, json)?;
+        }
+        return Ok(if report.vulnerable.is_empty() { 0 } else { 1 });
+    }
+
+    // ── Single dependency mode (DepFuzzer --dependency) ──────────────
+    if let Some(dep) = &args.dependency {
+        let lang = args.language.as_deref().unwrap_or("npm");
+        if lang.eq_ignore_ascii_case("all") {
+            bail!("--dependency requires a concrete --provider (not all)");
+        }
+        let eco = Ecosystem::from_str_loose(lang)
+            .with_context(|| format!("unknown --provider {lang}"))?;
+        let (root_name, root_ver) = parse_dependency_arg(dep);
+        if root_name.is_empty() {
+            bail!("empty --dependency");
+        }
+
+        let mut queue: VecDeque<PackageRef> = VecDeque::new();
+        queue.push_back(PackageRef::new(&root_name, if root_ver.is_empty() { "*" } else { &root_ver }));
+        let mut seen: HashSet<String> = HashSet::new();
+        let mut vulnerable = Vec::new();
+        let mut safe = Vec::new();
+        let mut errors = Vec::new();
+        let email_client = if args.check_email {
+            Some(email_check::http_client(opts.timeout_secs)?)
+        } else {
+            None
+        };
+        let deps_client = if args.transitive {
+            Some(depsdev::client(opts.timeout_secs)?)
+        } else {
+            None
+        };
+
+        while let Some(pkg) = queue.pop_front() {
+            if !seen.insert(pkg.name.clone()) {
+                continue;
+            }
+            if eco == Ecosystem::Nuget && is_nuget_reserved(&pkg.name) {
+                continue;
+            }
+
+            let mut result = registry.check(eco, &pkg.name).await;
+            result.version = pkg.version.clone();
+            match result.status {
+                CheckStatus::Vulnerable => {
+                    if args.print_takeover && !args.quiet {
+                        if pkg.name.contains('@') {
+                            eprintln!(
+                                "[DEBUG] {} is missing on the public registry but is scoped — verify the org/scope is claimed.",
+                                pkg.name
+                            );
+                        } else {
+                            eprintln!(
+                                "[DEBUG] {}:{} might be taken over !",
+                                pkg.name, pkg.version
+                            );
+                        }
+                    }
+                    takeover_lines.push(format!("{}:{}", pkg.name, pkg.version));
+                    vulnerable.push(result);
+                }
+                CheckStatus::Safe => {
+                    if let Some(http) = &email_client {
+                        match email_check::check_package_emails(http, eco, &pkg.name).await {
+                            Ok(findings) => {
+                                for f in findings {
+                                    match f.kind {
+                                        EmailFindingKind::DomainPossiblyPurchasable => {
+                                            eprintln!("[+] {}", f.detail);
+                                            worst_exit = worst_exit.max(1);
+                                        }
+                                        EmailFindingKind::DisposableEmail => {
+                                            eprintln!(
+                                                "[+] Dependency {} uses a disposable email provider: {}",
+                                                f.package, f.email
+                                            );
+                                            worst_exit = worst_exit.max(1);
+                                        }
+                                    }
+                                }
+                            }
+                            Err(e) if opts.verbose => {
+                                eprintln!("  [?] email check {}: {e}", pkg.name);
+                            }
+                            Err(_) => {}
+                        }
+                    }
+                    if let Some(http) = &deps_client {
+                        if let Ok(subs) =
+                            depsdev::fetch_transitive(http, eco, &pkg.name, &pkg.version).await
+                        {
+                            for sub in subs {
+                                if !seen.contains(&sub.name) {
+                                    queue.push_back(sub);
+                                }
+                            }
+                        }
+                    }
+                    safe.push(result);
+                }
+                CheckStatus::Error => errors.push(result),
+            }
+        }
+
+        let summary = ScanSummary {
+            file: format!("dependency:{root_name}"),
+            file_kind: eco.default_file_kind(),
+            ecosystem: eco,
+            packages: [(root_name.clone(), root_ver.clone())].into_iter().collect(),
+            vulnerable,
+            safe,
+            errors,
+            suppressed: Vec::new(),
+            introductions: Vec::new(),
+            hardening: None,
+            duration_secs: 0.0,
+            tool_version: env!("CARGO_PKG_VERSION").into(),
+        };
+        if !args.print_takeover || args.quiet {
+            report::print_summary(&summary, args.quiet);
+        } else if summary.vulnerable.is_empty() && !args.quiet {
+            eprintln!("[+] No package can be taken over !");
+        }
+        if let Some(path) = &args.output_file {
+            std::fs::write(path, takeover_lines.join("\n") + "\n")?;
+            crate::style::eprint_line(&format!(
+                "{} results saved to {}",
+                crate::style::brand("weeping-angel"),
+                path.display()
+            ));
+        }
+        if let Some(export) = &args.export {
+            report::export_json(export, &summary)?;
+        }
+        return Ok(worst_exit.max(exit_code(&summary)));
+    }
+
+    // ── Path / URL / target modes ────────────────────────────────────
+    let root = args.path.clone().or_else(|| args.target.clone());
+    let mut inputs = Vec::new();
+    if let Some(url) = &args.url {
+        if !args.consent() {
+            bail!("--url requires --i-own-this (authorized remote fetch)");
+        }
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(opts.timeout_secs.max(5)))
+            .user_agent(concat!(
+                "weeping-angel-depcheck/",
+                env!("CARGO_PKG_VERSION")
+            ))
+            .build()?;
+        let body = client
+            .get(url)
+            .send()
+            .await
+            .with_context(|| format!("fetch {url}"))?
+            .error_for_status()
+            .with_context(|| format!("HTTP error for {url}"))?
+            .text()
+            .await?;
+        inputs.push(load_url_body(url, body, opts.kind_override)?);
+    } else if let Some(target) = &root {
+        for path in resolve_targets(target)? {
+            let input = load_path(&path, opts.kind_override)?;
+            if provider_all {
+                inputs.push(input);
+            } else if let Some(lang) = args.language.as_deref() {
+                if let Some(eco) = Ecosystem::from_str_loose(lang) {
+                    if input.kind.ecosystem() == Some(eco) {
+                        inputs.push(input);
+                    }
+                } else {
+                    inputs.push(input);
+                }
+            } else {
+                inputs.push(input);
+            }
+        }
+        if inputs.is_empty() {
+            bail!(
+                "no dependency files matched provider {:?} under {}",
+                args.language,
+                target.display()
+            );
+        }
+    } else {
+        bail!("provide a target/--path, --dependency, --url, or --web");
+    }
+
+    let email_client = if args.check_email {
+        Some(email_check::http_client(opts.timeout_secs)?)
+    } else {
+        None
+    };
+
+    for input in &inputs {
+        if args.list {
+            let (pkgs, eco, kind) = list_only(input)?;
+            if !args.quiet {
+                crate::style::eprint_line(&format!(
+                    "{} list {} ecosystem={} kind={} packages={}",
+                    crate::style::brand("weeping-angel"),
+                    input.display,
+                    eco,
+                    kind,
+                    pkgs.len()
+                ));
+            }
+            for (name, version) in &pkgs {
+                println!("{name} @ {version}");
+            }
+            continue;
+        }
+
+        if args.convert {
+            let (packages, _, _) = list_only(input)?;
+            let pkgs: Vec<_> = packages
+                .into_iter()
+                .map(|(n, v)| PackageRef::new(n, v))
+                .collect();
+            let out = if let Some(path) = &input.path {
+                convert::write_converted(path, &pkgs)?
+            } else {
+                let out = std::path::PathBuf::from("depcheck-converted.json");
+                convert::write_converted_to(&out, &pkgs)?;
+                out
+            };
+            crate::style::eprint_line(&format!(
+                "{} converted {} packages → {}",
+                crate::style::brand("weeping-angel"),
+                pkgs.len(),
+                crate::style::ok(&out.display().to_string())
+            ));
+            continue;
+        }
+
+        if !args.quiet {
+            crate::style::eprint_line(&format!(
+                "{} starting analysis for {} ({})…",
+                crate::style::brand("weeping-angel"),
+                input.display,
+                input.kind
+            ));
+        }
+
+        let mut summary = scan_manifest(input, &opts, Arc::clone(&registry)).await?;
+
+        // NuGet reserved-prefix false positives
+        if summary.ecosystem == Ecosystem::Nuget {
+            summary.vulnerable.retain(|p| !is_nuget_reserved(&p.name));
+        }
+
+        for v in &summary.vulnerable {
+            if args.print_takeover && !args.quiet {
+                if v.name.contains('@') {
+                    eprintln!(
+                        "[DEBUG] {} is missing but scoped — verify org/scope ownership.",
+                        v.name
+                    );
+                } else {
+                    eprintln!("[DEBUG] {}:{} might be taken over !", v.name, v.version);
+                }
+            }
+            takeover_lines.push(format!("{}:{}", v.name, v.version));
+        }
+
+        // Loki inspector: git introduction commits for free-namespace packages
+        if args.inspect && !summary.vulnerable.is_empty() {
+            let start = input
+                .path
+                .as_deref()
+                .or(root.as_deref())
+                .unwrap_or_else(|| std::path::Path::new("."));
+            let names: Vec<String> = summary.vulnerable.iter().map(|v| v.name.clone()).collect();
+            match crate::depcheck::inspect::inspect_introductions(
+                start,
+                &names,
+                input.path.as_deref(),
+            ) {
+                Ok(intros) => summary.introductions = intros,
+                Err(e) if !args.quiet => {
+                    crate::style::eprint_line(&format!(
+                        "{} inspector skipped: {e:#}",
+                        crate::style::warn("[i]")
+                    ));
+                }
+                Err(_) => {}
+            }
+        }
+
+        // Loki hardening recon (npm / Node projects)
+        if !args.no_hardening && summary.ecosystem == Ecosystem::Npm {
+            let project_root = input
+                .path
+                .as_ref()
+                .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+                .or_else(|| root.clone())
+                .unwrap_or_else(|| std::path::PathBuf::from("."));
+            summary.hardening = Some(crate::depcheck::hardening::analyze_npm_project(
+                &project_root,
+                input.path.as_deref(),
+                &summary.vulnerable,
+                args.entrypoint.as_deref(),
+            ));
+        }
+
+        // Email checks on packages that exist
+        if let Some(http) = &email_client {
+            for s in &summary.safe {
+                match email_check::check_package_emails(http, summary.ecosystem, &s.name).await {
+                    Ok(findings) => {
+                        for f in findings {
+                            eprintln!("[+] {}", f.detail);
+                            worst_exit = worst_exit.max(1);
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+        }
+
+        if !args.print_takeover || args.quiet {
+            report::print_summary(&summary, args.quiet);
+        }
+
+        if let Some(export) = &args.export {
+            let path = if inputs.len() > 1 {
+                let stem = std::path::Path::new(&summary.file)
+                    .file_name()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("scan");
+                export.with_file_name(format!(
+                    "{}-{}",
+                    export
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("results"),
+                    stem
+                ))
+            } else {
+                export.clone()
+            };
+            report::export_json(&path, &summary)?;
+            if !args.quiet {
+                crate::style::eprint_line(&format!(
+                    "{} exported {}",
+                    crate::style::brand("weeping-angel"),
+                    path.display()
+                ));
+            }
+        }
+        worst_exit = worst_exit.max(exit_code(&summary));
+    }
+
+    if let Some(path) = &args.output_file {
+        std::fs::write(path, takeover_lines.join("\n") + "\n")?;
+        crate::style::eprint_line(&format!(
+            "{} results saved to {}",
+            crate::style::brand("weeping-angel"),
+            path.display()
+        ));
+    }
+
+    Ok(worst_exit)
 }
 
 pub fn run_scan_code_command(args: crate::cli::ScanCodeArgs) -> Result<i32> {

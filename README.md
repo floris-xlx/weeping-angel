@@ -102,6 +102,84 @@ cargo run --bin weeping-angel -- scan http://127.0.0.1:8787/ \
   --format terminal,json,html
 ```
 
+## Dependency confusion scanner (`depcheck`)
+
+Detection-only multi-format dependency confusion scanner (DepCheck-compatible parsers).
+Does **not** publish packages or generate exploit payloads.
+
+```bash
+# Scan a single manifest (auto-detects format)
+weeping-angel depcheck package.json
+weeping-angel depcheck Cargo.toml
+weeping-angel depcheck requirements.txt
+
+# confused-compatible language + known-secure namespaces (npm scopes, etc.)
+weeping-angel depcheck -l npm package.json
+weeping-angel depcheck -l npm -s '@mycompany/*' package.json
+weeping-angel depcheck -l pip requirements.txt
+weeping-angel depcheck -l mvn pom.xml
+weeping-angel depcheck -l rubygems Gemfile.lock
+weeping-angel depcheck -l composer composer.json
+
+# DepFuzzer-compatible provider / path / single dependency / email heuristics
+weeping-angel depcheck --provider pypi --path ~/Projects/MyApp
+weeping-angel depcheck --provider npm --dependency left-pad:1.3.0 --check-email
+weeping-angel depcheck --provider npm --dependency acme-private --print-takeover --output-file takeover.txt
+weeping-angel depcheck --provider all --path ./my-app/
+
+# Loki-style inspector + npm hardening recon (no attack / publish / reverse-shell)
+weeping-angel depcheck -d ./app --inspect --entrypoint index.js
+weeping-angel depcheck ./app -i   # git commit that introduced each free-namespace dep
+
+# DepenFusion-style remote hunt: probe hosts for exposed package.json / package-lock.json
+cat subdomains.txt | weeping-angel depcheck --stdin --i-own-this --threads 20
+weeping-angel depcheck --hosts-file hosts.txt --i-own-this --link --silent
+weeping-angel depcheck --hosts-file hosts.txt --i-own-this --append "?token=foo" --strip-path
+
+# Scan a project tree (finds known manifests recursively)
+weeping-angel depcheck ./my-app/
+
+# List packages only / convert / export
+weeping-angel depcheck --list package-lock.json
+weeping-angel depcheck --convert pnpm-lock.yaml
+weeping-angel depcheck --export results.json composer.lock
+
+# Fetch a remote manifest (requires consent)
+weeping-angel depcheck --url https://example.com/package.json --i-own-this
+
+# Quiet: only vulnerable (free-namespace) names
+weeping-angel depcheck -q package.json
+
+# Local scan-only Web UI (default http://127.0.0.1:8443)
+weeping-angel depcheck --web
+weeping-angel depcheck --web --port 9090
+```
+
+**Interpreting results (confused / DepFuzzer / Loki recon / Alex Birsan):**
+- **Missing on public registry** → free namespace an attacker could claim (dependency confusion).
+- **`--inspect`**: git commit that first introduced each free-namespace dependency (requires git).
+- **Hardening recon** (npm, on by default): `.npmrc` hybrid/public fallback, floating `^`/`~`
+  ranges on private candidates, missing `@scope:registry`, entrypoint presence.
+- **`--check-email`** (packages that *exist*): disposable / possibly purchasable maintainer
+  domains (heuristic). Detection only — does not register domains, publish packages, or open shells.
+- npm scopes: use `-s '@org/*'` for scopes you already own.
+
+**Remote hunt:** for each host/URL, probe common dependency paths (npm/yarn/pnpm, pip, Composer,
+RubyGems, Maven/Gradle, Go, Cargo, NuGet), check public registries, print missing names (and
+`=>` source URLs unless `--silent`). Requires `--i-own-this`. Detection only.
+
+Docs: `apps/docs` → **Dependency confusion** (theory, recon commands, mitigation — no exploit recipes).
+
+**Not implemented (offensive surfaces from Loki / marketing copy):** npm publish of PoC packages,
+reverse-shell payloads, `--attack` / payload injection, automated exploitation.
+
+Supported formats: `package.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`,
+`requirements.txt`, `Pipfile`, `Pipfile.lock`, `pyproject.toml`, `composer.json`/`.lock`,
+`Gemfile`/`.lock`, `pom.xml`, `build.gradle`/`.kts`, `go.mod`, `Cargo.toml`/`.lock`,
+`packages.config`, `*.csproj`.
+
+`scan-code` can optionally run the same registry checks when `WA_DEPCHECK_NETWORK=1` is set.
+
 ## Modules & profiles
 
 | Profile | Modules |

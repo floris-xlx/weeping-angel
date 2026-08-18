@@ -6,6 +6,7 @@
     "safety",
     "cli",
     "modules",
+    "dependency-confusion",
     "reports",
     "lab-demo",
     "---",

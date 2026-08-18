@@ -3,6 +3,7 @@
 pub mod authz_routes;
 pub mod code_scan;
 pub mod cmd_injection;
+pub mod depcheck_engine;
 pub mod git_diff;
 pub mod path_traversal;
 pub mod secrets_code;

@@ -1,0 +1,32 @@
+---
+title: "weeping-angel depcheck"
+description: "Dependency confusion scanner (multi-format, detection only)"
+---
+
+{/* Generated from clap export by scripts/generate-docs.mjs */}
+
+> Dependency confusion scanner (multi-format, detection only)
+
+## Usage
+
+```bash
+Usage: weeping-angel depcheck [OPTIONS] [TARGET]
+```
+
+## Arguments
+
+| Flag / arg | Description | Default |
+|---|---|---|
+| `<TARGET>` | Dependency file or project directory (omit with --url / --web) | `—` |
+| `--url <URL>` | Fetch dependency file from URL (requires --i-own-this) | `—` |
+| `--list` | List packages only (no registry checks) | `—` |
+| `--convert` | Convert extracted packages to package.json for other tools | `—` |
+| `--export <PATH>` | Export scan results JSON | `—` |
+| `--threads <THREADS>` | Concurrent registry checks (default: 20) | `20` |
+| `--timeout <TIMEOUT>` | Registry request timeout seconds (default: 10) | `10` |
+| `--type <KIND>` | Override file type detection (e.g. package_lock_json, requirements_txt) | `—` |
+| `--quiet` | Only print vulnerable package names | `—` |
+| `--web` | Start scan-only local Web UI | `—` |
+| `--port <PORT>` | Web UI port (default: 8443) | `8443` |
+| `--bind <BIND>` | Web UI bind address (default: 127.0.0.1) | `127.0.0.1` |
+| `--i-own-this <BOOL>` | Ownership consent required when using --url | `—` |

@@ -1,0 +1,13 @@
+{
+  "name": "depcheck-fixture",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "acme-billing-sdk-not-real-xyz": "^1.0.5",
+    "left-pad": "git+https://github.com/example/left-pad.git",
+    "local-helper": "file:../local-helper"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

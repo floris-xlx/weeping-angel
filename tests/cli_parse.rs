@@ -25,6 +25,176 @@ fn scan(args: &[&str]) -> weeping_angel::cli::ScanArgs {
 }
 
 #[test]
+fn depcheck_parses_list_and_threads() {
+    let cli = parse(&[
+        "depcheck",
+        "package.json",
+        "--list",
+        "--threads",
+        "5",
+        "--type",
+        "package_json",
+        "-q",
+    ]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.target.as_deref(), Some(std::path::Path::new("package.json")));
+            assert!(d.list);
+            assert_eq!(d.threads, 5);
+            assert_eq!(d.file_type.as_deref(), Some("package_json"));
+            assert!(d.quiet);
+            assert!(!d.web);
+            assert!(!d.consent());
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_parses_confused_language_and_secure_namespaces() {
+    let cli = parse(&[
+        "depcheck",
+        "-l",
+        "npm",
+        "-s",
+        "@mycompany/*,@trusted/*",
+        "-s",
+        "exact-pkg",
+        "package.json",
+    ]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.language.as_deref(), Some("npm"));
+            assert_eq!(
+                d.secure_namespaces,
+                vec!["@mycompany/*,@trusted/*".to_string(), "exact-pkg".to_string()]
+            );
+            assert!(!d.list);
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_language_mvn_alias() {
+    let cli = parse(&["depcheck", "-l", "mvn", "pom.xml"]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.language.as_deref(), Some("mvn"));
+            assert_eq!(d.target.as_deref(), Some(std::path::Path::new("pom.xml")));
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_depfuzzer_dependency_and_flags() {
+    let cli = parse(&[
+        "depcheck",
+        "--provider",
+        "pypi",
+        "--dependency",
+        "requests:0.1.0",
+        "--print-takeover",
+        "--check-email",
+        "--output-file",
+        "out.txt",
+        "--transitive",
+    ]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.language.as_deref(), Some("pypi"));
+            assert_eq!(d.dependency.as_deref(), Some("requests:0.1.0"));
+            assert!(d.print_takeover);
+            assert!(d.check_email);
+            assert!(d.transitive);
+            assert_eq!(
+                d.output_file.as_deref(),
+                Some(std::path::Path::new("out.txt"))
+            );
+            assert!(d.target.is_none());
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_path_alias() {
+    let cli = parse(&["depcheck", "--provider", "npm", "--path", "./app"]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.path.as_deref(), Some(std::path::Path::new("./app")));
+            assert_eq!(d.language.as_deref(), Some("npm"));
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_loki_inspect_and_directory() {
+    let cli = parse(&[
+        "depcheck",
+        "-d",
+        "./app",
+        "-i",
+        "--entrypoint",
+        "server.js",
+        "--no-hardening",
+    ]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert_eq!(d.path.as_deref(), Some(std::path::Path::new("./app")));
+            assert!(d.inspect);
+            assert_eq!(d.entrypoint.as_deref(), Some("server.js"));
+            assert!(d.no_hardening);
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_depenfusion_remote_flags() {
+    let cli = parse(&[
+        "depcheck",
+        "--stdin",
+        "--i-own-this",
+        "--append",
+        "?token=x",
+        "--strip-path",
+        "--link",
+        "--silent",
+        "--threads",
+        "5",
+    ]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert!(d.stdin);
+            assert!(d.consent());
+            assert_eq!(d.append, "?token=x");
+            assert!(d.strip_path);
+            assert!(d.link);
+            assert!(d.silent);
+            assert_eq!(d.threads, 5);
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
+fn depcheck_alias_dc_and_web() {
+    let cli = parse(&["dc", "--web", "--port", "9090", "--bind", "127.0.0.1"]);
+    match cli.command {
+        Commands::Depcheck(d) => {
+            assert!(d.web);
+            assert_eq!(d.port, 9090);
+            assert_eq!(d.bind, "127.0.0.1");
+            assert!(d.target.is_none());
+        }
+        other => panic!("expected Depcheck, got {other:?}"),
+    }
+}
+
+#[test]
 fn scan_diff_parses_base_head() {
     let cli = parse(&[
         "scan-diff",
