@@ -1,0 +1,141 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.repository.inventory"
+title = "Repository inventory fact"
+evidence_type = "repository.inventory"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.visibility"
+title = "Repository visibility fact"
+evidence_type = "repository.visibility"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.default-branch"
+title = "Default branch fact"
+evidence_type = "repository.default-branch"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.branch-protection"
+title = "Branch protection fact"
+evidence_type = "repository.branch-protection"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.review-policy"
+title = "Review policy fact"
+evidence_type = "repository.review-policy"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.review-ownership"
+title = "Review ownership fact"
+evidence_type = "repository.review-ownership"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.security-scanning"
+title = "Security scanning enablement fact"
+evidence_type = "repository.security-scanning"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.dependency-scanning"
+title = "Dependency scanning fact"
+evidence_type = "repository.dependency-scanning"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.commit-signing"
+title = "Commit signing fact"
+evidence_type = "repository.commit-signing"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.change-trace"
+title = "Change trace fact"
+evidence_type = "repository.change-trace"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.security-review"
+title = "Security review record fact"
+evidence_type = "repository.security-review"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.repository.secure-development-policy"
+title = "Secure-development policy attestation fact"
+evidence_type = "repository.secure-development-policy"
+collection = "manual"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.cicd.workflow-permissions"
+title = "CI workflow permissions fact"
+evidence_type = "cicd.workflow-permissions"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.cicd.status-checks"
+title = "Required status checks fact"
+evidence_type = "cicd.status-checks"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.deployment.environment-protection"
+title = "Deployment environment protection fact"
+evidence_type = "deployment.environment-protection"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.release.authorization"
+title = "Release authorization fact"
+evidence_type = "release.authorization"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.supply-chain.build-provenance"
+title = "Build provenance fact"
+evidence_type = "supply-chain.build-provenance"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.supply-chain.artifact-integrity"
+title = "Artifact integrity fact"
+evidence_type = "supply-chain.artifact-integrity"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.supply-chain.lockfile-state"
+title = "Lockfile state fact"
+evidence_type = "supply-chain.lockfile-state"
+collection = "automated"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.supply-chain.component-support"
+title = "Component support fact"
+evidence_type = "supply-chain.component-support"
+collection = "hybrid"
+criticality = "required"

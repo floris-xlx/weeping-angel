@@ -1,0 +1,403 @@
+{
+  "fixture": "stale-dependency-scan",
+  "collectedAt": "2026-08-17T11:00:00Z",
+  "intent": "Dependency scan envelopes exist but scanned_at is outside the freshness window",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": {
+        "kind": "repository",
+        "authoritative": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.secure-development-policy",
+      "subject_id": "org:acme",
+      "facts": {
+        "population_id": "org:acme",
+        "attested": "true",
+        "attested_at": "2026-08-19T11:00:00Z"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "repo:app",
+      "facts": {
+        "id": "repo:app",
+        "kind": "repository",
+        "archived": "false"
+      }
+    },
+    {
+      "type": "evidence.repository.inventory",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "archived": "false",
+        "owner_id": "user:owner",
+        "criticality": "production",
+        "in_scope": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.visibility",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "visibility": "private",
+        "visibility_allowed": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.default-branch",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "default_branch": "main",
+        "default_branch_named": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.branch-protection",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "protected": "true",
+        "force_push_restricted": "true",
+        "force_push_allowed": "false",
+        "deletion_restricted": "true",
+        "deletion_allowed": "false",
+        "admin_bypass_allowed": "false",
+        "admin_bypass_restricted": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.review-policy",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "reviews_required": "true",
+        "required_reviewer_count": "2",
+        "meets_review_threshold": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.review-ownership",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "ownership_defined": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.security-scanning",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "secret_scanning_enabled": "true",
+        "code_scanning_enabled": "true",
+        "applicable": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.dependency-scanning",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "dependency_scanning_enabled": "true",
+        "scanned_at": "2026-07-01T00:00:00Z",
+        "updates_monitored": "true",
+        "critical": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.commit-signing",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "signing_required": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.change-trace",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "traceable": "true",
+        "change_ref": "chg-1"
+      }
+    },
+    {
+      "type": "evidence.repository.security-review",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "material": "true",
+        "reviewed": "true",
+        "reviewed_at": "2026-08-19T11:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.cicd.workflow-permissions",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "permissions_minimized": "true",
+        "default_write": "false"
+      }
+    },
+    {
+      "type": "evidence.cicd.status-checks",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "status_checks_required": "true"
+      }
+    },
+    {
+      "type": "evidence.deployment.environment-protection",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "production": "true",
+        "authorization_required": "true",
+        "protected": "true"
+      }
+    },
+    {
+      "type": "evidence.release.authorization",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "authorized": "true",
+        "authorizer_id": "user:releaser",
+        "dev_release_separated": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.build-provenance",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "provenance_present": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.artifact-integrity",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "integrity_evidence_present": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.lockfile-state",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "lockfile_present": "true",
+        "pins_direct_deps": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.component-support",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "unsupported_present": "false",
+        "unsupported_handled": "true"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "repo:lib",
+      "facts": {
+        "id": "repo:lib",
+        "kind": "repository",
+        "archived": "false"
+      }
+    },
+    {
+      "type": "evidence.repository.inventory",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "archived": "false",
+        "owner_id": "user:owner",
+        "criticality": "production",
+        "in_scope": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.visibility",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "visibility": "private",
+        "visibility_allowed": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.default-branch",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "default_branch": "main",
+        "default_branch_named": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.branch-protection",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "protected": "true",
+        "force_push_restricted": "true",
+        "force_push_allowed": "false",
+        "deletion_restricted": "true",
+        "deletion_allowed": "false",
+        "admin_bypass_allowed": "false",
+        "admin_bypass_restricted": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.review-policy",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "reviews_required": "true",
+        "required_reviewer_count": "2",
+        "meets_review_threshold": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.review-ownership",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "ownership_defined": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.security-scanning",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "secret_scanning_enabled": "true",
+        "code_scanning_enabled": "true",
+        "applicable": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.dependency-scanning",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "dependency_scanning_enabled": "true",
+        "scanned_at": "2026-07-01T00:00:00Z",
+        "updates_monitored": "true",
+        "critical": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.commit-signing",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "signing_required": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.change-trace",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "traceable": "true",
+        "change_ref": "chg-1"
+      }
+    },
+    {
+      "type": "evidence.repository.security-review",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "material": "true",
+        "reviewed": "true",
+        "reviewed_at": "2026-08-19T11:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.cicd.workflow-permissions",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "permissions_minimized": "true",
+        "default_write": "false"
+      }
+    },
+    {
+      "type": "evidence.cicd.status-checks",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "status_checks_required": "true"
+      }
+    },
+    {
+      "type": "evidence.deployment.environment-protection",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "production": "true",
+        "authorization_required": "true",
+        "protected": "true"
+      }
+    },
+    {
+      "type": "evidence.release.authorization",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "authorized": "true",
+        "authorizer_id": "user:releaser",
+        "dev_release_separated": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.build-provenance",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "provenance_present": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.artifact-integrity",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "integrity_evidence_present": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.lockfile-state",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "lockfile_present": "true",
+        "pins_direct_deps": "true"
+      }
+    },
+    {
+      "type": "evidence.supply-chain.component-support",
+      "subject_id": "repo:lib",
+      "facts": {
+        "subject_id": "repo:lib",
+        "unsupported_present": "false",
+        "unsupported_handled": "true"
+      }
+    }
+  ]
+}

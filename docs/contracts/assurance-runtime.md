@@ -56,8 +56,8 @@ Requirement → Mapping → Canonical Control → Control Test → Evidence Requ
 - `Mapping` is `{ fromRequirement, toControl, direction, completeness, relation, rationale }`.
   - `direction`: `forward` \| `reverse` \| `bidirectional`
   - `completeness`: `full` \| `partial` \| `related`
-  - `relation`: `Equivalent` \| `Satisfies` \| `PartiallySatisfies` \| `Supports` \| `Related`
-  - Mapping is never identity. Partial does not become `full`. `relation` defaults from completeness (`full` → `Satisfies`, `partial` → `PartiallySatisfies`, `related` → `Related`). Non-trivial mappings require a rationale.
+  - `relation`: `Equivalent` \| `Satisfies` \| `PartiallySatisfies` \| `Supports` \| `EvidenceFor` \| `SupersetOf` \| `SubsetOf` \| `Related`
+  - Mapping is never identity. Partial does not become `full`. `relation` defaults from completeness (`full` → `Satisfies`, `partial` → `PartiallySatisfies`, `related` → `Related`). Material mappings carry rationale and provenance. `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot fully satisfy a requirement.
 
 `ComplianceGraph::equivalent(a, b)` is true only when both `a→b` and `b→a` exist with `completeness = full`. A partial path `A → B → C` is never `A ≡ C`. Reverse edges are not invented. `Supports` never upgrades to `Satisfies`.
 
@@ -78,7 +78,8 @@ Rules:
 - Public ISO pack is `StructuralOnly` — identifiers and mappings, no protected ISO normative wording.
 - `FrameworkPackDigest` is computed over canonical pack content and recorded on snapshots.
 - Old pack versions migrate explicitly or fail with guidance; they are never silently reinterpreted.
-- `stub_catalog(profile)` still returns `[]`. The ISO facade loads the pack via `load_framework_pack("iso-27001", "2022")` and `assessment_from_pack`.
+- Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`); the pack loader fails closed on unknown catalog targets and retired slivers.
+- Reports pin `frameworkPackDigest` and `catalogDigest`. SoA consumes generic three-state applicability (`Applicable` / `NotApplicable` / `Unresolved`).
 
 Content modes: `StructuralOnly` | `LicensedContent` | `UserSuppliedContent`.
 

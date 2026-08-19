@@ -1,219 +1,184 @@
 schema = "weeping-angel/framework-pack/v1"
 
-# ISO refs point at canonical controls. Partial never means fully satisfied.
+# ISO 27001:2022 structural refs → landed canonical catalog controls.
+# Partial / Supports / Related / EvidenceFor / SubsetOf never fully satisfy.
 
 [[mapping]]
-from = "iso27001:a.8.25"
-to = "source.branch-protection"
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
 direction = "forward"
 completeness = "partial"
 relation = "PartiallySatisfies"
-rationale = "Branch protection covers only the technical source-integrity slice of secure development."
+rationale = "Privileged MFA is the assessable technical slice of authentication for privileged identities, not the whole authentication practice."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.mfa"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "User MFA covers the general authentication population; policy and privileged cases remain outside this control."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.strong-authentication-policy"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "A strong-authentication policy is a supporting governance signal, not equivalent to the authentication requirement."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.2"
+to = "control.identity.privileged-access-minimization"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Privileged-access minimization is a technical subset of privileged access rights, not the full privilege-management practice."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.2"
+to = "control.identity.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Least privilege is a necessary technical slice of privileged access rights."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.3"
+to = "control.identity.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Least-privilege evidence supports access restriction; it does not cover the full restriction practice."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.5.15"
+to = "control.identity.least-privilege"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Technical least privilege does not cover access-control policy, recertification, or physical access."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.5.18"
+to = "control.identity.periodic-access-review"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Periodic access review is necessary for access-rights governance and is not the whole lifecycle."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.5.18"
+to = "control.identity.access-approval"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Access approval covers provisioning authority, not recertification or termination."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.5.16"
+to = "control.identity.unique-user-identities"
+direction = "forward"
+completeness = "partial"
+relation = "Supports"
+rationale = "Unique user identities support identity management and do not satisfy joiner-mover-leaver process."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.5.16"
+to = "control.identity.joiner-mover-leaver"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Joiner-mover-leaver is a lifecycle slice of identity management, not the full identity practice."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.6.5"
+to = "control.identity.terminated-user-removal"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Terminated-user removal is the assessable offboarding slice; HR process remains outside this control."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.6.5"
+to = "control.identity.access-revocation-timeliness"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Revocation timeliness is a measurable slice of responsibilities after employment change."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 identity", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
 
 [[mapping]]
 from = "iso27001:a.8.25"
-to = "source.required-review"
+to = "control.source.default-branch-protection"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "Default-branch protection is a technical slice of secure development and is not the full life cycle."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 sdlc", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
+
+[[mapping]]
+from = "iso27001:a.8.25"
+to = "control.source.required-review"
 direction = "forward"
 completeness = "partial"
 relation = "PartiallySatisfies"
 rationale = "Required reviews are one technical control, not the whole development life cycle."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 sdlc", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
 
 [[mapping]]
 from = "iso27001:a.8.25"
-to = "source.code-ownership"
+to = "control.source.secure-development-policy"
 direction = "forward"
 completeness = "partial"
 relation = "Supports"
-rationale = "Code ownership supports review quality; it does not satisfy process obligations."
+rationale = "A secure-development policy supports the life-cycle requirement and cannot fully satisfy it."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 sdlc", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
 
 [[mapping]]
 from = "iso27001:a.8.26"
-to = "source.security-scanning"
+to = "control.source.secret-scanning"
 direction = "forward"
 completeness = "partial"
 relation = "Supports"
-rationale = "Repository scanning supports application security requirements; it is not equivalent."
-
-[[mapping]]
-from = "iso27001:a.8.8"
-to = "vulnerability.remediation"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Scanner findings and remediation tracking cover only the technical vulnerability slice."
-
-[[mapping]]
-from = "iso27001:a.8.8"
-to = "source.security-scanning"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "Enabled scanning is an input to vulnerability management, not the full practice."
-
-[[mapping]]
-from = "iso27001:a.8.5"
-to = "access.mfa.privileged"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Privileged MFA is one authentication factor requirement, not the full control."
-
-[[mapping]]
-from = "iso27001:a.8.2"
-to = "access.mfa.privileged"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "MFA on privileged accounts supports privileged-access management."
-
-[[mapping]]
-from = "iso27001:a.8.2"
-to = "access.least-privilege"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Least-privilege settings are a technical subset of privileged access rights."
-
-[[mapping]]
-from = "iso27001:a.8.3"
-to = "access.least-privilege"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "Access restriction is supported by least-privilege evidence."
-
-[[mapping]]
-from = "iso27001:a.5.15"
-to = "access.least-privilege"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Technical access restrictions do not cover policy or recertification."
-
-[[mapping]]
-from = "iso27001:a.5.18"
-to = "access.periodic-review"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Periodic review evidence is necessary but not sufficient for access-rights governance."
-
-[[mapping]]
-from = "iso27001:a.5.16"
-to = "personnel.access-termination"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "Offboarding identity revocation supports identity management."
-
-[[mapping]]
-from = "iso27001:a.6.5"
-to = "personnel.access-termination"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Termination access evidence is a slice of people-process obligations."
-
-[[mapping]]
-from = "iso27001:a.5.9"
-to = "asset.inventory"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "An inventory artifact is not proof the inventory is complete or owned."
-
-[[mapping]]
-from = "iso27001:a.5.19"
-to = "supplier.security-assessment"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "A supplier assessment record does not prove ongoing supplier governance."
-
-[[mapping]]
-from = "iso27001:a.5.24"
-to = "incident.response-process"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "A documented process is evidence of existence, not effectiveness."
-
-[[mapping]]
-from = "iso27001:a.8.13"
-to = "backup.recovery-testing"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Backup configuration and a test record do not prove restore capability."
-
-[[mapping]]
-from = "iso27001:a.8.15"
-to = "logging.security-events"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Presence of security-event logging is not proof of review or retention."
-
-[[mapping]]
-from = "iso27001:a.8.24"
-to = "encryption.data-at-rest"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "At-rest encryption configuration is one cryptographic measure."
-
-[[mapping]]
-from = "iso27001:a.8.24"
-to = "encryption.data-in-transit"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "In-transit encryption configuration is one cryptographic measure."
-
-[[mapping]]
-from = "iso27001:a.8.32"
-to = "change.approval"
-direction = "forward"
-completeness = "partial"
-relation = "PartiallySatisfies"
-rationale = "Change-approval evidence does not cover the full change life cycle."
+rationale = "Secret scanning supports application security requirements and is not equivalent to them."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 sdlc", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }
 
 [[mapping]]
 from = "iso27001:a.8.26"
-to = "security.headers"
+to = "control.source.security-review"
 direction = "forward"
 completeness = "partial"
-relation = "Supports"
-rationale = "Security headers are a narrow application-hardening signal."
-
-[[mapping]]
-from = "iso27001:a.8.24"
-to = "security.tls"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "TLS configuration supports cryptography in transit."
-
-[[mapping]]
-from = "iso27001:a.8.25"
-to = "source.commit-signing"
-direction = "forward"
-completeness = "partial"
-relation = "Supports"
-rationale = "Commit signing supports source integrity but is not the whole life cycle."
-
-[[mapping]]
-from = "iso27001:5.2"
-to = "incident.response-process"
-direction = "forward"
-completeness = "related"
-relation = "Related"
-rationale = "Policy existence is related to incident process documentation."
-
-[[mapping]]
-from = "iso27001:a.5.1"
-to = "incident.response-process"
-direction = "forward"
-completeness = "related"
-relation = "Related"
-rationale = "Policy references relate to process documentation; they do not satisfy it."
+relation = "PartiallySatisfies"
+rationale = "Security review is a slice of application-security requirements, not the full practice."
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1 sdlc", author = "weeping-angel" }
+valid_for = { from = "2022", to = "2022" }

@@ -122,6 +122,10 @@ impl Control {
         &self.applicability
     }
 
+    pub fn subjects(&self) -> &[SubjectSelector] {
+        &self.subjects
+    }
+
     pub fn extensions(&self) -> &ExtensionMap {
         &self.extensions
     }

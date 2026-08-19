@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use weeping_angel_assurance_ir::{
     ASSURANCE_IR_SCHEMA, AssessmentId, Control, ControlId, ControlTestId, EvidenceRequirement,
-    EvidenceType, FrameworkVersion, PlannedTestKind, Requirement, ValidateIr, canonical_digest,
+    EvidenceType, FrameworkVersion, Mapping, PlannedTestKind, Requirement, ValidateIr,
+    canonical_digest,
 };
 
 pub use weeping_angel_assurance_ir::{Assessment, AssessmentDefinition, AssessmentRequests};
@@ -123,6 +124,8 @@ pub struct CompiledFramework {
     pub evidence_requirements: Vec<EvidenceRequirement>,
     pub validation: CompileValidation,
     pub digest: String,
+    #[serde(default)]
+    pub mappings: Vec<Mapping>,
 }
 
 #[derive(Debug, Error)]
@@ -220,6 +223,7 @@ pub fn compile_framework(
         evidence_requirements,
         validation: CompileValidation { stages, ok: true },
         digest,
+        mappings: normalized.mappings.clone(),
     })
 }
 
@@ -242,12 +246,10 @@ fn normalize(
     }
     let _ = target;
     let mut out = assessment.clone();
-    if target.profile == FrameworkProfile::Iso27001 && target.version.as_str() == "2022" {
-        match pack::load_framework_pack("iso-27001", "2022") {
-            Ok(loaded) => pack::merge_pack(&mut out, &loaded),
-            Err(pack::PackError::UnknownPack(_)) => {}
-            Err(err) => return Err(err.into()),
-        }
+    match pack::load_framework_pack(target.profile.as_selector(), target.version.as_str()) {
+        Ok(loaded) => pack::merge_pack(&mut out, &loaded),
+        Err(pack::PackError::UnknownPack(_)) => {}
+        Err(err) => return Err(err.into()),
     }
     out.requirements
         .sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
@@ -418,14 +420,15 @@ struct Projection {
     _selector: String,
 }
 
-/// Profile catalog. ISO 27001:2022 is loaded from the versioned pack.
+/// Profile catalog. Requirements load from the versioned pack for the profile identity.
 pub fn stub_catalog(profile: FrameworkProfile) -> Vec<Requirement> {
-    match profile {
-        FrameworkProfile::Iso27001 => pack::load_framework_pack("iso-27001", "2022")
-            .map(|p| p.requirements)
-            .unwrap_or_default(),
-        _ => Vec::new(),
+    const VERSIONS: &[&str] = &["2022", "2016", "2018", "1"];
+    for version in VERSIONS {
+        if let Ok(pack) = pack::load_framework_pack(profile.as_selector(), version) {
+            return pack.requirements;
+        }
     }
+    Vec::new()
 }
 
 #[derive(Serialize)]

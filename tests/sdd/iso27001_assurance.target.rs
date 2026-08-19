@@ -49,39 +49,22 @@ const FORBIDDEN_CERTIFICATION_PHRASES: &[&str] = &[
     "audit passed",
 ];
 
-const CANONICAL_CONTROL_PREFIXES: &[&str] = &[
-    "access.",
-    "source.",
-    "vulnerability.",
-    "logging.",
-    "incident.",
-    "backup.",
-    "encryption.",
-    "supplier.",
-    "personnel.",
-    "asset.",
-    "change.",
-    "security.",
-];
+// superseded by sdd_iso27001_remap_target — prefixes/ids now catalog control.*
+const CANONICAL_CONTROL_PREFIXES: &[&str] = &["control."];
 
 const EXPECTED_CANONICAL_CONTROLS: &[&str] = &[
-    "access.mfa.privileged",
-    "access.least-privilege",
-    "access.periodic-review",
-    "source.branch-protection",
-    "source.required-review",
-    "source.code-ownership",
-    "source.security-scanning",
-    "vulnerability.remediation",
-    "logging.security-events",
-    "incident.response-process",
-    "backup.recovery-testing",
-    "encryption.data-at-rest",
-    "encryption.data-in-transit",
-    "supplier.security-assessment",
-    "personnel.access-termination",
-    "asset.inventory",
-    "change.approval",
+    "control.identity.privileged-mfa",
+    "control.identity.mfa",
+    "control.identity.strong-authentication-policy",
+    "control.identity.privileged-access-minimization",
+    "control.identity.least-privilege",
+    "control.identity.periodic-access-review",
+    "control.identity.access-approval",
+    "control.identity.unique-user-identities",
+    "control.identity.joiner-mover-leaver",
+    "control.identity.terminated-user-removal",
+    "control.identity.access-revocation-timeliness",
+    "control.source.protected-branch",
 ];
 
 const GITHUB_EVIDENCE_TYPES: &[&str] = &[
@@ -1238,9 +1221,9 @@ fn in_memory_iso_assessment() -> Assessment {
         "Protect the authoritative source of software.",
     );
     let control = Control::new(
-        ControlId::new("source.branch-protection"),
-        "Source branch protection",
-        "Protected default branch with required reviews.",
+        ControlId::new("control.source.protected-branch"),
+        "Protected branch",
+        "Exists-only protected-branch fixture from the canonical catalog.",
     );
     let mapping = Mapping::new(
         requirement.id().clone(),

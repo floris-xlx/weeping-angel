@@ -1,11 +1,15 @@
 //! Immutable assessment runs and snapshot comparison.
 
-use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
 use weeping_angel_assurance_ir::AssessmentId;
+use weeping_angel_canonical_catalog::CanonicalCatalog;
 
 use crate::readiness::FrameworkReadinessSnapshot;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentRun {
     pub id: AssessmentId,
@@ -19,6 +23,57 @@ pub struct AssessmentRun {
     pub evidence_snapshot_digest: String, // evidenceSnapshotDigest
     pub result_digest: String,
     pub status: String,
+}
+
+impl AssessmentRun {
+    pub fn catalog_digest(&self) -> String {
+        catalog_digest()
+    }
+}
+
+impl Serialize for AssessmentRun {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut state = serializer.serialize_struct("AssessmentRun", 12)?;
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("framework", &self.framework)?;
+        state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
+        state.serialize_field("catalogDigest", &self.catalog_digest())?;
+        state.serialize_field(
+            "assessmentDefinitionDigest",
+            &self.assessment_definition_digest,
+        )?;
+        state.serialize_field("startedAt", &self.started_at)?;
+        state.serialize_field("completedAt", &self.completed_at)?;
+        state.serialize_field("scope", &self.scope)?;
+        state.serialize_field("collectorRuns", &self.collector_runs)?;
+        state.serialize_field("evidenceSnapshotDigest", &self.evidence_snapshot_digest)?;
+        state.serialize_field("resultDigest", &self.result_digest)?;
+        state.serialize_field("status", &self.status)?;
+        state.end()
+    }
+}
+
+pub fn catalog_digest() -> String {
+    for root in catalog_search_roots() {
+        if let Ok(catalog) = CanonicalCatalog::load(&root)
+            && let Ok(digest) = catalog.digest()
+        {
+            return digest.to_string();
+        }
+    }
+    String::new()
+}
+
+fn catalog_search_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("..").join("catalog/canonical/v1"));
+    }
+    roots.push(PathBuf::from("catalog/canonical/v1"));
+    roots
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

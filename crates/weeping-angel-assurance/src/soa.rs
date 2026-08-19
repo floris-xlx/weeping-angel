@@ -2,6 +2,40 @@
 
 use serde::{Deserialize, Serialize};
 use weeping_angel_control_test::Effectiveness;
+use weeping_angel_framework::load_framework_pack;
+
+/// Generic three-state applicability consumed by SoA projection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Applicability {
+    Applicable,
+    NotApplicable,
+    Unresolved,
+}
+
+impl Applicability {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Applicable => "applicable",
+            Self::NotApplicable => "notApplicable",
+            Self::Unresolved => "unresolved",
+        }
+    }
+
+    fn from_pack(raw: &str, fallback_bool: Option<bool>) -> Self {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "applicable" | "true" => Self::Applicable,
+            "notapplicable" | "not-applicable" | "not_applicable" | "false" => Self::NotApplicable,
+            "unresolved" | "manual" | "manualdeterminationrequired" => Self::Unresolved,
+            "" => match fallback_bool {
+                Some(true) => Self::Applicable,
+                Some(false) => Self::NotApplicable,
+                None => Self::Unresolved,
+            },
+            _ => Self::Unresolved,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,6 +50,7 @@ pub struct StatementOfApplicability {
 #[serde(rename_all = "camelCase")]
 pub struct SoaEntry {
     pub reference: String,
+    pub applicability: Applicability,
     pub applicable: bool,
     pub applicability_rationale: String,
     pub implementation_state: String,
@@ -23,10 +58,24 @@ pub struct SoaEntry {
     pub manual_review_state: String,
     pub evidence: Vec<String>,
     pub exceptions: Vec<String>,
+    pub mapped_controls: Vec<String>,
     pub notes: String,
 }
 
 pub fn project_soa(framework: &str, version: &str) -> StatementOfApplicability {
+    let mapped = load_framework_pack(framework, version)
+        .map(|pack| {
+            pack.mappings
+                .iter()
+                .map(|m| {
+                    (
+                        m.from_requirement().as_str().to_string(),
+                        m.to_control().as_str().to_string(),
+                    )
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
     let pack_dir = weeping_angel_framework::pack::resolve_pack_dir(framework, version).ok();
     let mut entries = Vec::new();
     if let Some(dir) = pack_dir {
@@ -36,27 +85,47 @@ pub fn project_soa(framework: &str, version: &str) -> StatementOfApplicability {
             && let Some(arr) = parsed.get("entry").and_then(|v| v.as_array())
         {
             for item in arr {
+                let requirement = item
+                    .get("requirement")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let raw_state = item
+                    .get("applicability")
+                    .or_else(|| item.get("state"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                let fallback = item.get("applicable").and_then(|v| v.as_bool());
+                let applicability = Applicability::from_pack(raw_state, fallback);
+                let rationale = item
+                    .get("applicability_rationale")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let mapped_controls = mapped
+                    .iter()
+                    .filter(|(from, _)| from == &requirement)
+                    .map(|(_, to)| to.clone())
+                    .collect();
                 entries.push(SoaEntry {
                     reference: item
                         .get("reference")
                         .and_then(|v| v.as_str())
                         .unwrap_or("")
                         .to_string(),
-                    applicable: item
-                        .get("applicable")
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(true),
-                    // applicability rationale is preserved verbatim from the pack.
-                    applicability_rationale: item
-                        .get("applicability_rationale")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string(),
+                    applicability,
+                    applicable: matches!(applicability, Applicability::Applicable),
+                    applicability_rationale: rationale,
                     implementation_state: "assessed".into(),
                     automated_effectiveness: None,
-                    manual_review_state: "pending".into(),
+                    manual_review_state: match applicability {
+                        Applicability::Unresolved => "manual determination required".into(),
+                        Applicability::NotApplicable => "not applicable".into(),
+                        Applicability::Applicable => "pending".into(),
+                    },
                     evidence: Vec::new(),
                     exceptions: Vec::new(),
+                    mapped_controls,
                     notes: String::new(),
                 });
             }

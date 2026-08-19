@@ -1,5 +1,7 @@
 # SDD: SDLC / Source-Control Canonical Assurance Catalog (v1 slice)
 
+> **Superseded as SSOT.** Durable spec: [`docs/sdd/sdlc-canonical-assurance-catalog.md`](../sdlc-canonical-assurance-catalog.md). This nested run freeze is kept for ID/history reuse only.
+
 | Field | Value |
 | --- | --- |
 | Status | **Specified — implement next (I1 frozen)** |

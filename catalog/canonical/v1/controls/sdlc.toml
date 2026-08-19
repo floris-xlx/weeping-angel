@@ -1,0 +1,261 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.source.repository-inventory"
+title = "Repository inventory and ownership"
+description = "In-scope repositories are enumerated with an owner and scope flag."
+objective = "Know every in-scope repository before assessing change controls."
+domains = ["assetManagement", "secureDevelopment"]
+evidence = ["evidence.repository.inventory"]
+tests = ["test.source.repository-inventory-complete"]
+automation = "automated"
+
+[[control]]
+id = "control.source.visibility-governance"
+title = "Repository visibility governance"
+description = "Repository visibility stays within the allowed public, internal, or private class."
+objective = "Prevent unapproved public exposure of source."
+domains = ["secureDevelopment", "governance"]
+evidence = ["evidence.repository.visibility"]
+tests = ["test.source.visibility-governed"]
+automation = "automated"
+
+[[control]]
+id = "control.source.default-branch-protection"
+title = "Protected default branch"
+description = "Every non-archived in-scope repository has a protected default branch."
+objective = "Require protection on the whole in-scope population, not existence of one protection envelope."
+domains = ["secureDevelopment", "changeManagement"]
+evidence = ["evidence.repository.default-branch", "evidence.repository.branch-protection"]
+tests = ["test.source.default-branches-protected"]
+automation = "automated"
+
+[[control]]
+id = "control.source.force-push-restricted"
+title = "Force-push restriction"
+description = "Protected default branches reject unauthorized history rewrite."
+objective = "Prohibit unauthorized force-push on protected branches."
+domains = ["secureDevelopment", "changeManagement"]
+evidence = ["evidence.repository.branch-protection"]
+tests = ["test.source.force-push-restricted"]
+automation = "automated"
+
+[[control]]
+id = "control.source.branch-deletion-restricted"
+title = "Branch deletion restriction"
+description = "Protected default branches cannot be deleted without authorization."
+objective = "Prevent accidental or unauthorized deletion of protected branches."
+domains = ["secureDevelopment", "changeManagement"]
+evidence = ["evidence.repository.branch-protection"]
+tests = ["test.source.branch-deletion-restricted"]
+automation = "automated"
+
+[[control]]
+id = "control.source.required-review"
+title = "Required pull-request review"
+description = "Production and other in-scope repositories require a review before merge."
+objective = "Do not treat a lone review-policy envelope as review on the population."
+domains = ["changeManagement", "secureDevelopment"]
+evidence = ["evidence.repository.review-policy"]
+tests = ["test.source.reviews-required"]
+automation = "automated"
+
+[[control]]
+id = "control.source.minimum-reviewer-count"
+title = "Minimum reviewer count"
+description = "Required review count meets the recorded policy threshold."
+objective = "Enforce the policy integer threshold as a fact, not a provider-specific default."
+domains = ["changeManagement"]
+evidence = ["evidence.repository.review-policy"]
+tests = ["test.source.minimum-reviewer-count"]
+automation = "automated"
+
+[[control]]
+id = "control.source.review-ownership"
+title = "Review ownership"
+description = "Path or team ownership is defined so required reviews land on accountable owners."
+objective = "Require ownership mapping, not a provider-native object name as a type id."
+domains = ["changeManagement", "secureDevelopment"]
+evidence = ["evidence.repository.review-ownership"]
+tests = ["test.source.review-ownership-present"]
+automation = "automated"
+
+[[control]]
+id = "control.source.required-status-checks"
+title = "Required status checks"
+description = "Protected default branches require status checks before merge."
+objective = "Gate merges on observed required checks."
+domains = ["changeManagement", "secureDevelopment"]
+evidence = ["evidence.cicd.status-checks"]
+tests = ["test.source.required-status-checks"]
+automation = "automated"
+
+[[control]]
+id = "control.source.admin-bypass-governance"
+title = "Administrator bypass governance"
+description = "Administrator override of protection is restricted or attested."
+objective = "Treat bypass allowance as a supporting fact; policy acceptance remains hybrid."
+domains = ["changeManagement", "governance"]
+evidence = ["evidence.repository.branch-protection", "evidence.repository.review-policy"]
+tests = ["test.source.admin-bypass-governed"]
+automation = "hybrid"
+
+[[control]]
+id = "control.source.signed-commits"
+title = "Signed commits and artifacts"
+description = "Where policy requires it, commits on the default branch must be signed."
+objective = "Observe signing-required as a fact on the repository population."
+domains = ["secureDevelopment", "cryptography"]
+evidence = ["evidence.repository.commit-signing"]
+tests = ["test.source.signed-commits-required"]
+automation = "automated"
+
+[[control]]
+id = "control.source.secret-scanning"
+title = "Secret scanning"
+description = "Secret scanning is enabled on in-scope repositories where applicable."
+objective = "Missing scan evidence is insufficient, not a technical failure."
+domains = ["secureDevelopment", "vulnerabilityManagement"]
+evidence = ["evidence.repository.security-scanning"]
+tests = ["test.source.secret-scanning-enabled"]
+automation = "automated"
+
+[[control]]
+id = "control.source.code-scanning"
+title = "Code scanning"
+description = "Static analysis is enabled on in-scope repositories where applicable."
+objective = "Observe enablement; findings belong to a later family."
+domains = ["secureDevelopment", "vulnerabilityManagement"]
+evidence = ["evidence.repository.security-scanning"]
+tests = ["test.source.code-scanning-enabled"]
+automation = "automated"
+
+[[control]]
+id = "control.source.dependency-scanning"
+title = "Dependency vulnerability scanning"
+description = "Critical in-scope repositories have a current dependency scan."
+objective = "Require enablement and freshness of scanned_at, not an absence-of-findings narrative."
+domains = ["vulnerabilityManagement", "supplierManagement"]
+evidence = ["evidence.repository.dependency-scanning"]
+tests = ["test.source.dependency-scanning-current"]
+automation = "automated"
+
+[[control]]
+id = "control.source.dependency-update-monitoring"
+title = "Dependency update monitoring"
+description = "In-scope repositories monitor dependency updates."
+objective = "Observe updates_monitored as a fact."
+domains = ["vulnerabilityManagement", "supplierManagement"]
+evidence = ["evidence.repository.dependency-scanning"]
+tests = ["test.source.dependency-updates-monitored"]
+automation = "automated"
+
+[[control]]
+id = "control.supply-chain.dependency-integrity"
+title = "Dependency pinning and lockfile integrity"
+description = "Where applicable, lockfiles are present and direct dependencies are pinned."
+objective = "Assess lockfile state, not a vendor-specific updater name."
+domains = ["supplierManagement", "secureDevelopment"]
+evidence = ["evidence.supply-chain.lockfile-state"]
+tests = ["test.supply-chain.lockfile-integrity"]
+automation = "automated"
+
+[[control]]
+id = "control.cicd.workflow-permissions"
+title = "CI workflow permission minimization"
+description = "CI workflows do not run with overbroad default write permissions."
+objective = "Require permissions_minimized on the in-scope CI population."
+domains = ["secureDevelopment", "accessControl"]
+evidence = ["evidence.cicd.workflow-permissions"]
+tests = ["test.cicd.workflow-permissions-minimized"]
+automation = "automated"
+
+[[control]]
+id = "control.release.protected-environment"
+title = "Protected deployment environments"
+description = "Production deployment environments require authorization before promotion."
+objective = "Protect production environments as a population, not a single flag on one project."
+domains = ["changeManagement", "secureDevelopment"]
+evidence = ["evidence.deployment.environment-protection"]
+tests = ["test.release.environments-protected"]
+automation = "automated"
+
+[[control]]
+id = "control.release.authorization"
+title = "Release authorization"
+description = "Releases are authorized through a recorded governance act."
+objective = "A single authorized=true fact is supporting and never sufficient by itself."
+domains = ["changeManagement", "governance"]
+evidence = ["evidence.release.authorization"]
+tests = ["test.release.authorization-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.release.authority-separation"
+title = "Separation of development and release authority"
+description = "Development and release authority are separated where the organization requires it."
+objective = "Role design is organizational; do not auto-pass from one technical flag."
+domains = ["governance", "changeManagement"]
+evidence = ["evidence.release.authorization"]
+tests = ["test.release.authority-separated"]
+automation = "hybrid"
+
+[[control]]
+id = "control.supply-chain.build-provenance"
+title = "Build provenance"
+description = "Release artifacts carry build provenance where required."
+objective = "Observe provenance_present as a fact, not a maturity-level conclusion."
+domains = ["secureDevelopment", "supplierManagement"]
+evidence = ["evidence.supply-chain.build-provenance"]
+tests = ["test.supply-chain.provenance-present"]
+automation = "automated"
+
+[[control]]
+id = "control.supply-chain.artifact-integrity"
+title = "Artifact integrity"
+description = "Release artifacts have integrity evidence where required."
+objective = "Require integrity_evidence_present on the producing population."
+domains = ["secureDevelopment", "supplierManagement"]
+evidence = ["evidence.supply-chain.artifact-integrity"]
+tests = ["test.supply-chain.artifacts-have-integrity"]
+automation = "automated"
+
+[[control]]
+id = "control.source.change-traceability"
+title = "Change traceability"
+description = "In-scope changes can be traced to an authorizing change reference."
+objective = "Linkage quality remains hybrid; the automatable slice is the traceable fact."
+domains = ["changeManagement"]
+evidence = ["evidence.repository.change-trace"]
+tests = ["test.source.changes-traceable"]
+automation = "hybrid"
+
+[[control]]
+id = "control.source.security-review"
+title = "Security review for material changes"
+description = "Material changes receive a recorded security review."
+objective = "Materiality and reviewer independence are organizational; do not auto-pass from one flag."
+domains = ["secureDevelopment", "governance"]
+evidence = ["evidence.repository.security-review"]
+tests = ["test.source.security-review-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.source.secure-development-policy"
+title = "Secure-development policy evidence"
+description = "A secure-development policy is attested for the organization."
+objective = "Policy text and attestation are manual; a single attested flag is not a pass."
+domains = ["governance", "secureDevelopment"]
+evidence = ["evidence.repository.secure-development-policy"]
+tests = ["test.source.secure-development-policy-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.supply-chain.unsupported-components"
+title = "Unsupported and deprecated component handling"
+description = "Unsupported or deprecated components are identified and handled."
+objective = "Risk acceptance versus upgrade remains hybrid."
+domains = ["supplierManagement", "vulnerabilityManagement"]
+evidence = ["evidence.supply-chain.component-support", "evidence.repository.dependency-scanning"]
+tests = ["test.supply-chain.unsupported-components-handled"]
+automation = "hybrid"

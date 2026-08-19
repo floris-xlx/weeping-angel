@@ -1,9 +1,14 @@
 //! Framework readiness projection. Never certification.
 
-use serde::{Deserialize, Serialize};
-use weeping_angel_assurance_ir::{AssessmentId, ControlId, MappingRelation, RequirementId};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
+use weeping_angel_assurance_ir::{
+    AssessmentId, ControlId, MappingCompleteness, MappingRelation, RequirementId,
+};
 use weeping_angel_control_test::{ControlTestResult, Effectiveness};
 use weeping_angel_framework::CompiledFramework;
+
+use crate::snapshot::catalog_digest;
 
 /// Explicit graph verbs used when projecting readiness.
 #[allow(dead_code)]
@@ -16,7 +21,7 @@ const GRAPH_VERBS: &[&str] = &[
     "Supports",
 ];
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrameworkReadinessSnapshot {
     pub assessment_id: AssessmentId,
@@ -37,6 +42,34 @@ pub struct FrameworkReadinessSnapshot {
     pub evidence_coverage: String,
 }
 
+impl Serialize for FrameworkReadinessSnapshot {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let metrics = coverage_metrics(self);
+        let mut state = serializer.serialize_struct("FrameworkReadinessSnapshot", 22)?;
+        state.serialize_field("assessmentId", &self.assessment_id)?;
+        state.serialize_field("framework", &self.framework)?;
+        state.serialize_field("frameworkVersion", &self.framework_version)?;
+        state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
+        state.serialize_field("catalogDigest", &catalog_digest())?;
+        state.serialize_field("assessmentDigest", &self.assessment_digest)?;
+        state.serialize_field("evaluatedAt", &self.evaluated_at)?;
+        state.serialize_field("requirements", &self.requirements)?;
+        state.serialize_field("controls", &self.controls)?;
+        state.serialize_field("effective", &self.effective)?;
+        state.serialize_field("ineffective", &self.ineffective)?;
+        state.serialize_field("partial", &self.partial)?;
+        state.serialize_field("manualReview", &self.manual_review)?;
+        state.serialize_field("insufficientEvidence", &self.insufficient_evidence)?;
+        state.serialize_field("notApplicable", &self.not_applicable)?;
+        state.serialize_field("automationCoverage", &metrics.automation)?;
+        state.serialize_field("evidenceCoverage", &metrics.evidence)?;
+        state.serialize_field("subjectCoverage", &metrics.subject)?;
+        state.serialize_field("controlCoverage", &metrics.control)?;
+        state.serialize_field("frameworkRequirementCoverage", &metrics.requirement)?;
+        state.end()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RequirementReadiness {
@@ -50,6 +83,93 @@ pub struct RequirementReadiness {
 pub struct ControlReadiness {
     pub id: ControlId,
     pub effectiveness: Effectiveness,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CoverageCounts {
+    covered: usize,
+    total: usize,
+    count: usize,
+}
+
+struct CoverageBundle {
+    automation: CoverageCounts,
+    evidence: CoverageCounts,
+    subject: CoverageCounts,
+    control: CoverageCounts,
+    requirement: CoverageCounts,
+}
+
+fn coverage_counts(covered: usize, total: usize) -> CoverageCounts {
+    CoverageCounts {
+        covered,
+        total,
+        count: covered,
+    }
+}
+
+fn coverage_metrics(snapshot: &FrameworkReadinessSnapshot) -> CoverageBundle {
+    let total_controls = snapshot.controls.len();
+    let automated = snapshot
+        .controls
+        .iter()
+        .filter(|c| {
+            !matches!(
+                c.effectiveness,
+                Effectiveness::ManualReviewRequired | Effectiveness::NotTested
+            )
+        })
+        .count();
+    let evidenced = snapshot
+        .controls
+        .iter()
+        .filter(|c| {
+            !matches!(
+                c.effectiveness,
+                Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
+            )
+        })
+        .count();
+    let subjects = snapshot
+        .controls
+        .iter()
+        .filter(|c| {
+            !matches!(
+                c.effectiveness,
+                Effectiveness::InsufficientEvidence | Effectiveness::NotTested
+            )
+        })
+        .count();
+    let req_total = snapshot.requirements.len();
+    let req_covered = snapshot
+        .requirements
+        .iter()
+        .filter(|r| !r.mapped_controls.is_empty())
+        .count();
+    CoverageBundle {
+        automation: coverage_counts(automated, total_controls),
+        evidence: coverage_counts(evidenced, total_controls),
+        subject: coverage_counts(subjects, total_controls),
+        control: coverage_counts(total_controls, total_controls),
+        requirement: coverage_counts(req_covered, req_total),
+    }
+}
+
+fn relation_may_fully_satisfy(
+    relation: MappingRelation,
+    completeness: MappingCompleteness,
+) -> bool {
+    match relation {
+        MappingRelation::Equivalent | MappingRelation::Satisfies | MappingRelation::SupersetOf => {
+            completeness == MappingCompleteness::Full
+        }
+        MappingRelation::PartiallySatisfies
+        | MappingRelation::Supports
+        | MappingRelation::Related
+        | MappingRelation::EvidenceFor
+        | MappingRelation::SubsetOf => false,
+    }
 }
 
 pub fn project_readiness(
@@ -88,60 +208,62 @@ pub fn project_readiness(
 
     let mut requirements = Vec::new();
     for req in &compiled.applicable_requirements {
-        let mapped: Vec<ControlId> = compiled.controls.iter().map(|c| c.id().clone()).collect();
-        let mut status = "insufficient evidence".to_string();
+        let req_mappings: Vec<_> = compiled
+            .mappings
+            .iter()
+            .filter(|m| m.from_requirement() == req.id())
+            .collect();
+        let mapped: Vec<ControlId> = req_mappings
+            .iter()
+            .map(|m| m.to_control().clone())
+            .collect();
         let related: Vec<_> = results
             .iter()
             .filter(|r| mapped.iter().any(|c| c == &r.control_id))
             .collect();
-        let any_manual = related
-            .iter()
-            .any(|r| r.effectiveness == Effectiveness::ManualReviewRequired);
         let any_ineff = related
             .iter()
             .any(|r| r.effectiveness == Effectiveness::Ineffective);
+        let any_stale = related
+            .iter()
+            .any(|r| r.effectiveness == Effectiveness::StaleEvidence);
+        let any_insufficient = related
+            .iter()
+            .any(|r| r.effectiveness == Effectiveness::InsufficientEvidence);
+        let any_manual = related
+            .iter()
+            .any(|r| r.effectiveness == Effectiveness::ManualReviewRequired);
         let all_eff = !related.is_empty()
             && related
                 .iter()
                 .all(|r| r.effectiveness == Effectiveness::Effective);
-        // A partial mapping cannot fully satisfy a requirement.
-        let has_partial = true;
-        if any_ineff {
-            status = "ineffective".into();
+        let has_partial = req_mappings.is_empty()
+            || req_mappings
+                .iter()
+                .any(|m| !relation_may_fully_satisfy(m.relation(), m.completeness()));
+        let status = if mapped.is_empty() {
+            "manual review required".to_string()
+        } else if any_ineff {
+            "ineffective".into()
+        } else if any_stale {
+            "stale evidence".into()
+        } else if any_insufficient {
+            "insufficient evidence".into()
         } else if any_manual {
-            status = "manual review required".into();
+            "manual review required".into()
         } else if all_eff && has_partial {
-            status = "partially covered".into();
+            "partially covered".into()
         } else if all_eff {
-            status = "effective".into();
-        }
-        let _ = MappingRelation::PartiallySatisfies;
+            "effective".into()
+        } else {
+            "insufficient evidence".into()
+        };
         requirements.push(RequirementReadiness {
             id: req.id().clone(),
             status,
             mapped_controls: mapped,
         });
     }
-
-    let total = results.len().max(1) as f64;
-    let automated = results
-        .iter()
-        .filter(|r| {
-            !matches!(
-                r.effectiveness,
-                Effectiveness::ManualReviewRequired | Effectiveness::NotTested
-            )
-        })
-        .count() as f64;
-    let evidenced = results
-        .iter()
-        .filter(|r| {
-            !matches!(
-                r.effectiveness,
-                Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
-            )
-        })
-        .count() as f64;
 
     FrameworkReadinessSnapshot {
         assessment_id,
@@ -158,7 +280,7 @@ pub fn project_readiness(
         manual_review,
         insufficient_evidence,
         not_applicable,
-        automation_coverage: format!("{:.0}%", (automated / total) * 100.0),
-        evidence_coverage: format!("{:.0}%", (evidenced / total) * 100.0),
+        automation_coverage: String::new(),
+        evidence_coverage: String::new(),
     }
 }

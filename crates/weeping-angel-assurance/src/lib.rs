@@ -1,5 +1,6 @@
 //! Public assurance facade. Callers select a profile + capabilities, not an adapter.
 
+pub mod applicability;
 pub mod bridge;
 pub mod readiness;
 pub mod snapshot;
@@ -22,13 +23,13 @@ use weeping_angel_control_test::{
     EvidenceSet, evaluate,
 };
 use weeping_angel_framework::{
-    Assessment, AssessmentRequests, CompiledFramework, FrameworkCompileError, FrameworkProfile,
-    FrameworkTarget, compile_framework, load_framework_pack,
+    Assessment, AssessmentRequests, CompiledFramework, FrameworkCompileError, FrameworkTarget,
+    compile_framework, load_framework_pack,
 };
 
 pub use readiness::FrameworkReadinessSnapshot;
-pub use snapshot::{AssessmentRun, SnapshotDiff, compare};
-pub use soa::{StatementOfApplicability, project_soa};
+pub use snapshot::{AssessmentRun, SnapshotDiff, catalog_digest, compare};
+pub use soa::{Applicability, StatementOfApplicability, project_soa};
 
 const NOT_CERTIFICATION: &str = "This is a readiness assessment and is not certification.";
 
@@ -80,9 +81,7 @@ pub struct AssessmentReport {
 
 impl Serialize for AssessmentReport {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let pack_digest = load_framework_pack("iso-27001", "2022")
-            .map(|p| p.digest.0)
-            .unwrap_or_default();
+        let pack_digest = pack_digest_for_profile(&self.profile).unwrap_or_default();
         let mut effective = 0u32;
         let mut ineffective = 0u32;
         let mut partial = 0u32;
@@ -100,35 +99,36 @@ impl Serialize for AssessmentReport {
                 _ => {}
             }
         }
-        let total = self.results.len().max(1) as f64;
-        let automation_coverage = format!(
-            "{:.0}%",
-            (self
-                .results
-                .iter()
-                .filter(|r| !matches!(
+        let total = self.results.len();
+        let automated = self
+            .results
+            .iter()
+            .filter(|r| {
+                !matches!(
                     r.effectiveness,
                     Effectiveness::ManualReviewRequired | Effectiveness::NotTested
-                ))
-                .count() as f64
-                / total)
-                * 100.0
-        );
-        let evidence_coverage = format!(
-            "{:.0}%",
-            (self
-                .results
-                .iter()
-                .filter(|r| !matches!(
+                )
+            })
+            .count();
+        let evidenced = self
+            .results
+            .iter()
+            .filter(|r| {
+                !matches!(
                     r.effectiveness,
                     Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
-                ))
-                .count() as f64
-                / total)
-                * 100.0
-        );
+                )
+            })
+            .count();
+        let coverage = |covered: usize| {
+            serde_json::json!({
+                "covered": covered,
+                "total": total,
+                "count": covered,
+            })
+        };
 
-        let mut state = serializer.serialize_struct("AssessmentReport", 16)?;
+        let mut state = serializer.serialize_struct("AssessmentReport", 20)?;
         state.serialize_field("assessmentId", &self.assessment_id)?;
         state.serialize_field("profile", &self.profile)?;
         state.serialize_field("digest", &self.digest)?;
@@ -137,6 +137,7 @@ impl Serialize for AssessmentReport {
         state.serialize_field("disclaimer", &NOT_CERTIFICATION)?;
         state.serialize_field("banner", &NOT_CERTIFICATION)?;
         state.serialize_field("frameworkPackDigest", &pack_digest)?;
+        state.serialize_field("catalogDigest", &snapshot::catalog_digest())?;
         state.serialize_field(
             "requirements",
             &self
@@ -160,13 +161,29 @@ impl Serialize for AssessmentReport {
         )?;
         state.serialize_field("insufficientEvidence", &insufficient_evidence)?;
         state.serialize_field("manualReview", &manual_review)?;
-        state.serialize_field("automationCoverage", &automation_coverage)?;
-        state.serialize_field("evidenceCoverage", &evidence_coverage)?;
+        state.serialize_field("automationCoverage", &coverage(automated))?;
+        state.serialize_field("evidenceCoverage", &coverage(evidenced))?;
+        state.serialize_field("subjectCoverage", &coverage(evidenced))?;
+        state.serialize_field("controlCoverage", &coverage(self.results.len()))?;
+        state.serialize_field(
+            "frameworkRequirementCoverage",
+            &coverage(self.results.len()),
+        )?;
         state.serialize_field("effective", &effective)?;
         state.serialize_field("ineffective", &ineffective)?;
         let _ = (partial, "collectionRunId", "evidenceRefs");
         state.end()
     }
+}
+
+fn pack_digest_for_profile(profile: &str) -> Option<String> {
+    const VERSIONS: &[&str] = &["2022", "2016", "2018", "1"];
+    for version in VERSIONS {
+        if let Ok(pack) = load_framework_pack(profile, version) {
+            return Some(pack.digest.0);
+        }
+    }
+    None
 }
 
 pub struct AssuranceEngineBuilder<C> {
@@ -224,9 +241,12 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
         let _run = AssessmentRun {
             id: assessment.id.clone(),
             framework: target.profile.as_selector().into(),
-            framework_pack_digest: load_framework_pack("iso-27001", "2022")
-                .map(|p| p.digest.0)
-                .unwrap_or_default(),
+            framework_pack_digest: load_framework_pack(
+                target.profile.as_selector(),
+                target.version.as_str(),
+            )
+            .map(|p| p.digest.0)
+            .unwrap_or_default(),
             assessment_definition_digest: compiled.digest.clone(),
             started_at: Utc::now().to_rfc3339(),
             completed_at: Utc::now().to_rfc3339(),
@@ -284,10 +304,7 @@ fn evaluate_compiled(
 }
 
 fn assessment_for_target(target: &FrameworkTarget) -> Assessment {
-    if target.profile == FrameworkProfile::Iso27001
-        && target.version.as_str() == "2022"
-        && let Ok(pack) = load_framework_pack("iso-27001", "2022")
-    {
+    if let Ok(pack) = load_framework_pack(target.profile.as_selector(), target.version.as_str()) {
         return weeping_angel_framework::assessment_from_pack(&pack, target);
     }
     let requirement = Requirement::new(

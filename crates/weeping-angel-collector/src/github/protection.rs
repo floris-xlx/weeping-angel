@@ -1,85 +1,147 @@
-use chrono::{DateTime, Utc};
 use serde_json::Value;
-use weeping_angel_assurance_ir::AssetId;
-use weeping_angel_evidence::{
-    EvidenceEnvelope, EvidenceObservation, EvidenceProvenance, EvidenceType,
-};
+use weeping_angel_evidence::EvidenceValue;
 
-use crate::{CollectorError, CollectorScope};
+use super::normalize::{EmitCtx, emit, repo_subject_id};
+use crate::{CollectorError, EvidenceEnvelope};
 
 pub fn from_protection_json(
     json: &Value,
-    asset: &AssetId,
-    collected_at: DateTime<Utc>,
-    scope: &CollectorScope,
+    owner: &str,
+    name: &str,
+    ctx: &EmitCtx<'_>,
 ) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+    let subject = repo_subject_id(owner, name);
     let mut out = Vec::new();
-    let prov = || EvidenceProvenance {
-        collector_id: "collector.github".into(),
-        collected_at,
-        scope: scope.as_label(),
-        asset: asset.clone(),
-    };
-    out.push(fact(
-        "source.branch.protection",
-        "enabled",
-        "true",
-        "branch protection is configured",
-        prov(),
-    )?);
+
+    let force_push_allowed = json
+        .pointer("/allow_force_pushes/enabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let deletion_allowed = json
+        .pointer("/allow_deletions/enabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let enforce_admins = json
+        .pointer("/enforce_admins/enabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let admin_bypass_allowed = !enforce_admins;
     let reviews = json
         .pointer("/required_pull_request_reviews/required_approving_review_count")
         .and_then(Value::as_i64)
         .unwrap_or(0);
-    out.push(fact(
-        "source.branch.required_reviews",
-        "count",
-        &reviews.to_string(),
-        "required approving review count",
-        prov(),
-    )?);
-    let force = json
-        .pointer("/allow_force_pushes/enabled")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
-    out.push(fact(
-        "source.branch.force_push_protection",
-        "enabled",
-        if force { "false" } else { "true" },
-        "force-push protection",
-        prov(),
-    )?);
-    let deletion = json
-        .pointer("/allow_deletions/enabled")
-        .and_then(Value::as_bool)
-        .unwrap_or(false);
-    out.push(fact(
-        "source.branch.deletion_protection",
-        "enabled",
-        if deletion { "false" } else { "true" },
-        "deletion protection",
-        prov(),
-    )?);
     let checks = json.pointer("/required_status_checks").is_some();
-    out.push(fact(
-        "source.branch.required_status_checks",
-        "configured",
-        if checks { "true" } else { "false" },
-        "required status checks",
-        prov(),
+    let code_owner_reviews = json
+        .pointer("/required_pull_request_reviews/require_code_owner_reviews")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let signing_required = json
+        .pointer("/required_signatures/enabled")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+
+    out.push(emit(
+        "evidence.repository.branch-protection",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("protected", EvidenceValue::from_bool(true)),
+            (
+                "force_push_allowed",
+                EvidenceValue::from_bool(force_push_allowed),
+            ),
+            (
+                "deletion_allowed",
+                EvidenceValue::from_bool(deletion_allowed),
+            ),
+            (
+                "admin_bypass_allowed",
+                EvidenceValue::from_bool(admin_bypass_allowed),
+            ),
+        ],
+        "default branch protection observation",
+        ctx,
     )?);
+    out.push(emit(
+        "evidence.repository.review-policy",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("reviews_required", EvidenceValue::from_bool(reviews > 0)),
+            ("required_reviewer_count", EvidenceValue::integer(reviews)),
+        ],
+        "required review observation",
+        ctx,
+    )?);
+    out.push(emit(
+        "evidence.cicd.status-checks",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("status_checks_required", EvidenceValue::from_bool(checks)),
+        ],
+        "required status checks observation",
+        ctx,
+    )?);
+    if signing_required {
+        out.push(emit(
+            "evidence.repository.commit-signing",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("signing_required", EvidenceValue::from_bool(true)),
+            ],
+            "commit signing observation",
+            ctx,
+        )?);
+    }
+    if code_owner_reviews {
+        out.push(emit(
+            "evidence.repository.review-ownership",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("ownership_defined", EvidenceValue::from_bool(true)),
+            ],
+            "review ownership observation",
+            ctx,
+        )?);
+    }
     Ok(out)
 }
 
-fn fact(
-    ty: &str,
-    key: &str,
-    value: &str,
-    narrative: &str,
-    prov: EvidenceProvenance,
-) -> Result<EvidenceEnvelope, CollectorError> {
-    let obs = EvidenceObservation::new(EvidenceType::new(ty))
-        .with_fact(key, value)
-        .with_narrative(narrative);
-    Ok(EvidenceEnvelope::seal(obs, prov)?)
+pub fn unprotected(
+    owner: &str,
+    name: &str,
+    ctx: &EmitCtx<'_>,
+) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+    let subject = repo_subject_id(owner, name);
+    let mut out = Vec::new();
+    out.push(emit(
+        "evidence.repository.branch-protection",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("protected", EvidenceValue::from_bool(false)),
+            ("force_push_allowed", EvidenceValue::from_bool(true)),
+            ("deletion_allowed", EvidenceValue::from_bool(true)),
+            ("admin_bypass_allowed", EvidenceValue::from_bool(true)),
+        ],
+        "default branch has no protection rule",
+        ctx,
+    )?);
+    out.push(emit(
+        "evidence.repository.review-policy",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("reviews_required", EvidenceValue::from_bool(false)),
+            ("required_reviewer_count", EvidenceValue::integer(0)),
+        ],
+        "no required reviews observed",
+        ctx,
+    )?);
+    out.push(emit(
+        "evidence.cicd.status-checks",
+        vec![
+            ("subject_id", EvidenceValue::string(&subject)),
+            ("status_checks_required", EvidenceValue::from_bool(false)),
+        ],
+        "no required status checks observed",
+        ctx,
+    )?);
+    Ok(out)
 }

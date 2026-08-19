@@ -7,11 +7,10 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md), the ISO pack source sliver, [catalog infrastructure](0003-canonical-assurance-catalog-v1.md), or [IAM](0003-iam-canonical-assurance-catalog.md). |
 | Extends | Catalog infrastructure, typed evidence, subject-population coverage, IAM family placement pattern |
-| Spec | [`docs/sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md`](../sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
+| Spec | [`docs/sdd/sdlc-canonical-assurance-catalog.md`](../sdd/sdlc-canonical-assurance-catalog.md) (durable SSOT). Prior I1 freeze: [`docs/sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md`](../sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — pointer at implement, not while draft |
 | Prompt | [`docs/prompts/canonical-assurance-v1/05-sdlc-catalog.md`](../prompts/canonical-assurance-v1/05-sdlc-catalog.md) |
-| Planning baseline | `f6eb344cacefe44f398730c7e963c98887427f1b` |
-| Snapshot | tree `35de6aa30ef5b7fc0019a4f99841306ea3af406b` · commit `f6eb344cacefe44f398730c7e963c98887427f1b` |
+| Planning baseline | `e430980c0d27a8138a153d49b62ddf3c57827891` (HEAD characterization; prior freeze `f6eb344cacefe44f398730c7e963c98887427f1b`) |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
@@ -35,7 +34,7 @@ Questions this decision answers:
 
 ### 1. SDLC is canonical catalog content, not a pack and not a collector
 
-Independently assessable SDLC controls live in the Prompt 01 tree (`controls|evidence|tests` for `source`, `cicd`, `release`, `supply-chain`, plus `evidence.repository.*` / `evidence.deployment.*`), listed in `catalog/canonical/v1/manifest.toml`. Loaded by `CanonicalCatalog::{load,validate,digest}` — **no second loader**.
+Independently assessable SDLC controls live in the Prompt 01 tree. **Preferred files:** `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` listed in `manifest.toml` (avoids `evidence/repository.toml`, which sibling `ghc_b028` asserts is absent). Loaded by `CanonicalCatalog::{load,validate,digest}` — **no second loader**.
 
 Public IDs use `control.source.*` / `control.cicd.*` / `control.release.*` / `control.supply-chain.*` and `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*`.
 
@@ -81,7 +80,8 @@ Provider details belong only in future collectors that **emit** canonical facts 
 
 ## Consequences
 
-- Implementers add catalog TOML + fixtures + dual-suite tests only.
-- `sdd_iso27001_assurance_target`, `sdd_iam_catalog_target`, and `sdd_canonical_assurance_catalog_target` stay green.
+- Implementers add `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` + seven fixtures + dual-suite tests only. Accept this ADR (drop `-draft`) after target GREEN.
+- Baseline suite characterizes absence of the SDLC **population** family (not every `control.source.*`); after target GREEN it is `#[ignore]` superseded, matching IAM.
+- `sdd_iso27001_assurance_target`, `sdd_iam_catalog_target`, `sdd_canonical_assurance_catalog_target`, and `ghc_b028` stay green.
 - Prompt 12 later remaps ISO pack source stubs onto `control.source.*`.
 - A GitHub/GitLab/Bitbucket collector can independently populate the same contracts.

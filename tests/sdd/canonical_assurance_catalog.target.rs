@@ -772,6 +772,7 @@ fn cat_013_collector_stays_framework_and_catalog_blind() {
 // ── Compatibility: IR / ISO packs stay put ─────────────────────────────────
 
 #[test]
+#[ignore = "superseded by sdd_iso27001_remap_target"]
 fn ir_schema_and_iso_pack_ids_are_not_remapped() {
     assert_eq!(ASSURANCE_IR_SCHEMA, "assurance-ir/v1");
     assert_eq!(FRAMEWORK_PACK_SCHEMA, "weeping-angel/framework-pack/v1");

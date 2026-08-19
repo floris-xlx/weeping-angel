@@ -836,6 +836,7 @@ fn iam_007_canonical_iam_content_has_no_framework_tokens() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_iso27001_remap_target"]
 fn iam_008_iso_pack_is_unchanged_and_has_no_control_identity() {
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
     let control_ids: BTreeSet<&str> = pack.controls.iter().map(|c| c.id().as_str()).collect();
@@ -1245,6 +1246,7 @@ fn iam_015_no_identity_provider_collectors_or_framework_sdk() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_iso27001_remap_target"]
 fn iam_016_iso_iam_sliver_ids_remain_the_gate_for_iso_suite() {
     let pack = load_framework_pack("iso-27001", "2022").unwrap();
     let tests: BTreeMap<&str, &weeping_angel_assurance_ir::PlannedControlTest> =

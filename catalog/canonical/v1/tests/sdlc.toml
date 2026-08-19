@@ -1,0 +1,378 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.source.repository-inventory-complete"
+control = "control.source.repository-inventory"
+kind = "automated"
+required_evidence = ["evidence.repository.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.repository.inventory"
+field = "in_scope"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.visibility-governed"
+control = "control.source.visibility-governance"
+kind = "automated"
+required_evidence = ["evidence.repository.visibility"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.visibility"
+field = "visibility_allowed"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.default-branches-protected"
+control = "control.source.default-branch-protection"
+kind = "automated"
+required_evidence = ["evidence.repository.default-branch", "evidence.repository.branch-protection"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.repository.branch-protection"
+field = "protected"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.force-push-restricted"
+control = "control.source.force-push-restricted"
+kind = "automated"
+required_evidence = ["evidence.repository.branch-protection"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.branch-protection"
+field = "force_push_restricted"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.branch-deletion-restricted"
+control = "control.source.branch-deletion-restricted"
+kind = "automated"
+required_evidence = ["evidence.repository.branch-protection"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.branch-protection"
+field = "deletion_restricted"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.reviews-required"
+control = "control.source.required-review"
+kind = "automated"
+required_evidence = ["evidence.repository.review-policy"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.review-policy"
+field = "reviews_required"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.minimum-reviewer-count"
+control = "control.source.minimum-reviewer-count"
+kind = "automated"
+required_evidence = ["evidence.repository.review-policy"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.review-policy"
+field = "meets_review_threshold"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.review-ownership-present"
+control = "control.source.review-ownership"
+kind = "automated"
+required_evidence = ["evidence.repository.review-ownership"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.repository.review-ownership"
+field = "ownership_defined"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.required-status-checks"
+control = "control.source.required-status-checks"
+kind = "automated"
+required_evidence = ["evidence.cicd.status-checks"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.cicd.status-checks"
+field = "status_checks_required"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.admin-bypass-governed"
+control = "control.source.admin-bypass-governance"
+kind = "hybrid"
+required_evidence = ["evidence.repository.branch-protection", "evidence.repository.review-policy"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.source.signed-commits-required"
+control = "control.source.signed-commits"
+kind = "automated"
+required_evidence = ["evidence.repository.commit-signing"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.commit-signing"
+field = "signing_required"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.secret-scanning-enabled"
+control = "control.source.secret-scanning"
+kind = "automated"
+required_evidence = ["evidence.repository.security-scanning"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.security-scanning"
+field = "secret_scanning_enabled"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.code-scanning-enabled"
+control = "control.source.code-scanning"
+kind = "automated"
+required_evidence = ["evidence.repository.security-scanning"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.security-scanning"
+field = "code_scanning_enabled"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.dependency-scanning-current"
+control = "control.source.dependency-scanning"
+kind = "automated"
+required_evidence = ["evidence.repository.dependency-scanning"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.dependency-scanning"
+field = "scanned_at"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.dependency-updates-monitored"
+control = "control.source.dependency-update-monitoring"
+kind = "automated"
+required_evidence = ["evidence.repository.dependency-scanning"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.dependency-scanning"
+field = "updates_monitored"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.supply-chain.lockfile-integrity"
+control = "control.supply-chain.dependency-integrity"
+kind = "automated"
+required_evidence = ["evidence.supply-chain.lockfile-state"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.supply-chain.lockfile-state"
+field = "pins_direct_deps"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.cicd.workflow-permissions-minimized"
+control = "control.cicd.workflow-permissions"
+kind = "automated"
+required_evidence = ["evidence.cicd.workflow-permissions"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.cicd.workflow-permissions"
+field = "permissions_minimized"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.release.environments-protected"
+control = "control.release.protected-environment"
+kind = "automated"
+required_evidence = ["evidence.deployment.environment-protection"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.deployment.environment-protection"
+field = "authorization_required"
+
+[[test.subjects]]
+kind = "deployment"
+
+[[test]]
+id = "test.release.authorization-recorded"
+control = "control.release.authorization"
+kind = "hybrid"
+required_evidence = ["evidence.release.authorization"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.release.authority-separated"
+control = "control.release.authority-separation"
+kind = "hybrid"
+required_evidence = ["evidence.release.authorization"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.supply-chain.provenance-present"
+control = "control.supply-chain.build-provenance"
+kind = "automated"
+required_evidence = ["evidence.supply-chain.build-provenance"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.supply-chain.build-provenance"
+field = "provenance_present"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.supply-chain.artifacts-have-integrity"
+control = "control.supply-chain.artifact-integrity"
+kind = "automated"
+required_evidence = ["evidence.supply-chain.artifact-integrity"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.supply-chain.artifact-integrity"
+field = "integrity_evidence_present"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.changes-traceable"
+control = "control.source.change-traceability"
+kind = "hybrid"
+required_evidence = ["evidence.repository.change-trace"]
+break_on = []
+
+[test.expression]
+op = "coverage-at-least"
+percentage = "100"
+evidence = "evidence.repository.change-trace"
+field = "traceable"
+
+[[test.subjects]]
+kind = "repository"
+
+[[test]]
+id = "test.source.security-review-recorded"
+control = "control.source.security-review"
+kind = "hybrid"
+required_evidence = ["evidence.repository.security-review"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.source.secure-development-policy-attested"
+control = "control.source.secure-development-policy"
+kind = "manual"
+required_evidence = ["evidence.repository.secure-development-policy"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.supply-chain.unsupported-components-handled"
+control = "control.supply-chain.unsupported-components"
+kind = "hybrid"
+required_evidence = ["evidence.supply-chain.component-support", "evidence.repository.dependency-scanning"]
+break_on = []
+
+[test.expression]
+op = "manual-review"

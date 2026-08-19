@@ -1,0 +1,62 @@
+{
+  "fixture": "partial-coverage",
+  "collectedAt": "2026-08-19T11:00:00Z",
+  "intent": "Non-authoritative / partial inventory; all-subjects must not be Effective",
+  "authoritative": false,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "repo:app",
+      "facts": {
+        "id": "repo:app",
+        "kind": "repository",
+        "archived": "false"
+      }
+    },
+    {
+      "type": "evidence.repository.inventory",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "archived": "false",
+        "owner_id": "user:owner",
+        "criticality": "production",
+        "in_scope": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.branch-protection",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "protected": "true",
+        "force_push_restricted": "true",
+        "force_push_allowed": "false",
+        "deletion_restricted": "true",
+        "deletion_allowed": "false",
+        "admin_bypass_allowed": "false",
+        "admin_bypass_restricted": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.review-policy",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "reviews_required": "true",
+        "required_reviewer_count": "2",
+        "meets_review_threshold": "true"
+      }
+    },
+    {
+      "type": "evidence.repository.security-scanning",
+      "subject_id": "repo:app",
+      "facts": {
+        "subject_id": "repo:app",
+        "secret_scanning_enabled": "true",
+        "code_scanning_enabled": "true",
+        "applicable": "true"
+      }
+    }
+  ]
+}

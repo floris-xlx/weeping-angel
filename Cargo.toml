@@ -221,6 +221,14 @@ name = "sdd_iso27001_assurance_target"
 path = "tests/sdd/iso27001_assurance.target.rs"
 
 [[test]]
+name = "sdd_iso27001_remap_baseline"
+path = "tests/sdd/iso27001_remap.baseline.rs"
+
+[[test]]
+name = "sdd_iso27001_remap_target"
+path = "tests/sdd/iso27001_remap.target.rs"
+
+[[test]]
 name = "sdd_compliance_ir_target"
 path = "tests/sdd/compliance_ir.target.rs"
 
@@ -255,3 +263,59 @@ path = "tests/sdd/canonical_assurance_catalog.baseline.rs"
 [[test]]
 name = "sdd_canonical_assurance_catalog_target"
 path = "tests/sdd/canonical_assurance_catalog.target.rs"
+
+[[test]]
+name = "sdd_github_collector_baseline"
+path = "tests/sdd/github_collector.baseline.rs"
+
+[[test]]
+name = "sdd_github_collector_target"
+path = "tests/sdd/github_collector.target.rs"
+
+[[test]]
+name = "sdd_assessment_lineage_baseline"
+path = "tests/sdd/assessment_lineage.baseline.rs"
+
+[[test]]
+name = "sdd_assessment_lineage_target"
+path = "tests/sdd/assessment_lineage.target.rs"
+
+[[test]]
+name = "sdd_vulnerability_catalog_baseline"
+path = "tests/sdd/vulnerability_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_vulnerability_catalog_target"
+path = "tests/sdd/vulnerability_catalog.target.rs"
+
+[[test]]
+name = "sdd_sdlc_catalog_baseline"
+path = "tests/sdd/sdlc_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_sdlc_catalog_target"
+path = "tests/sdd/sdlc_catalog.target.rs"
+
+[[test]]
+name = "sdd_infrastructure_catalog_baseline"
+path = "tests/sdd/infrastructure_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_infrastructure_catalog_target"
+path = "tests/sdd/infrastructure_catalog.target.rs"
+
+[[test]]
+name = "sdd_applicability_engine_baseline"
+path = "tests/sdd/applicability_engine.baseline.rs"
+
+[[test]]
+name = "sdd_applicability_engine_target"
+path = "tests/sdd/applicability_engine.target.rs"
+
+[[test]]
+name = "sdd_governance_catalog_baseline"
+path = "tests/sdd/governance_catalog.baseline.rs"
+
+[[test]]
+name = "sdd_governance_catalog_target"
+path = "tests/sdd/governance_catalog.target.rs"

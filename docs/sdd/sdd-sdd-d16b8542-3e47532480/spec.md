@@ -19,7 +19,9 @@
 | Transition | `auto` → **replacement** (absence of canonical vuln family superseded; ISO sliver kept) |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for the **vulnerability catalog slice** (Prompt 06). It does not replace Prompt 01 catalog infrastructure, Prompt 02 typed evidence, Prompt 03 population runtime, or Prompt 04 IAM content. Prompts 01–04 have landed; this slice consumes their loader, `EvidenceValue`, population evaluator, and catalog tree and **must not** invent a second copy.
+> Historical I1 freeze for run `sdd-d16b8542-3e47532480` (planning SHA `e2def07…`). The durable SSOT is now [`docs/sdd/vulnerability-canonical-assurance-catalog.md`](../vulnerability-canonical-assurance-catalog.md), re-characterized on `e430980c…`. Do not treat this run-dir file as the implementation contract.
+
+This document was the first specified characterization of the **vulnerability catalog slice** (Prompt 06). It does not replace Prompt 01 catalog infrastructure, Prompt 02 typed evidence, Prompt 03 population runtime, or Prompt 04 IAM content. Prompts 01–04 have landed; this slice consumes their loader, `EvidenceValue`, population evaluator, and catalog tree and **must not** invent a second copy.
 
 Architecture law (unchanged):
 
