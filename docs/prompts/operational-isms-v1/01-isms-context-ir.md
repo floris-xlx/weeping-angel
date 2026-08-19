@@ -3,6 +3,8 @@
 Repository: `floris-xlx/weeping-angel`
 Base: latest `main`
 Program: Operational ISMS v1
+Batch: 01/06 — Foundation (Prompts 01–04)
+Execution: implement, test, document, and leave the tree ready for Prompt 02
 Dependencies: Canonical Assurance v1 complete or rebased to latest main
 
 ## Mission
@@ -33,11 +35,23 @@ Add validation for dangling IDs, duplicate IDs, empty required identity fields, 
 
 Existing `AssessmentDefinition::new` must continue to work. New fields should be optional/defaulted when required for backward compatibility. Avoid broad renames of `Asset`, `Vendor`, `Risk`, `Control`, `Requirement`, `Mapping`, `SubjectSelector`, or evidence types.
 
+## Implementation constraints
+
+Keep the canonical model in the assurance IR layer and keep persistence, network clients, provider SDKs, framework packs, and CLI concerns outside it. Reuse existing stable-ID and canonical serialization conventions rather than introducing a second identity or digest system. Any new lifecycle enum must be exhaustive, serializable, and validated centrally.
+
 ## Tests
 
 Create dual SDD suites. Target tests must prove deterministic round-trip serialization, backward compatibility with current fixtures, rejection of duplicate/dangling references, provider/framework neutrality, and that the framework crate remains network-free.
 
 Add representative fixtures for one organization with two business units, one external issue, one internal issue, interested parties, objectives, and a risk methodology reference.
+
+## Acceptance gates
+
+- Existing assurance tests remain green.
+- Canonical serialization is byte-stable for equivalent input ordering.
+- No ISO/provider vocabulary is introduced into generic IR types.
+- Invalid references fail closed with deterministic errors.
+- A fixture can construct, serialize, deserialize, validate, and explain one complete ISMS context.
 
 ## Non-goals
 

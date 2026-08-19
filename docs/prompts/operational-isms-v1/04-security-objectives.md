@@ -3,7 +3,9 @@
 Repository: `floris-xlx/weeping-angel`
 Base: latest `main`
 Program: Operational ISMS v1
-Dependencies: Prompt 01, typed evidence/runtime from Canonical Assurance v1
+Batch: 01/06 — Foundation (Prompts 01–04)
+Execution: implement after Prompts 01–03 against the same branch/worktree
+Dependencies: Prompt 01, Prompt 02 scope engine, typed evidence/runtime from Canonical Assurance v1
 
 ## Mission
 
@@ -23,9 +25,21 @@ An objective can be `OnTrack`, `AtRisk`, `Missed`, `Achieved`, or `InsufficientE
 
 Store measurement lineage so management review can reconstruct exactly how a status was produced at a point in time.
 
+## Implementation constraints
+
+Objective evaluation must remain deterministic and side-effect free. Reuse `EvidenceValue` and existing evidence snapshot/lineage primitives instead of introducing a second metric-value representation. Scope every measurement explicitly. Stale, partial, or missing evidence must degrade to `InsufficientEvidence` or another non-success state according to explicit rules.
+
 ## Tests
 
 Cover threshold boundaries, missing data, stale measurement, mixed manual/automated objectives, scoped populations, historical measurements, and deterministic status transitions.
+
+## Acceptance gates
+
+- Replaying a pinned evidence snapshot reproduces the same objective status.
+- Missing or stale measurement data never yields `OnTrack` or `Achieved`.
+- Typed percentage/count/duration/boolean/ratio comparisons have boundary tests.
+- Objective scope reuses canonical scope resolution from Prompt 02.
+- Management-review consumers can reconstruct metric, target, measurement, evidence lineage, and resulting status without re-querying live systems.
 
 ## Non-goals
 
