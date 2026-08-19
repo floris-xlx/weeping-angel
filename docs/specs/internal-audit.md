@@ -43,7 +43,7 @@ This slice may edit only internal-audit IR types, validation of those types, and
 
 | Do not touch | Owner |
 | --- | --- |
-| Prompt 22 `Nonconformity` / CAPA state machine, effectiveness-review closure | Prompt 22 — store opaque `nonconformity_id` refs only |
+| Prompt 22 `Nonconformity` / CAPA state machine, effectiveness-review closure | Prompt 22 (landed neighbor) — store opaque `nonconformity_id` refs only |
 | Prompt 24 readiness CLI, auditor evidence pack, forbidden “certified” language | Prompt 24 |
 | Hosted auditor workflows / ISO 27007 program UX | Spine Phase 17; `Iso27007` remains a compile selector |
 | `catalog/canonical/v1/**` domain TOML, ISO pack IDs / `to =` remaps, `tests/contracts/iso27001_remap.*` | Catalog / ISO remap |
@@ -216,7 +216,7 @@ This slice **must not** rewrite those TOML ids or turn freshness into “audit q
 ### 3.8 No findings, independence, or human sign-off
 
 - No independence declaration or conflict evidence.
-- No audit finding / observation / nonconformity-on-audit types (Prompt 22 not landed; `supports_nonconformities` is a flag).
+- No audit finding / observation / nonconformity-on-audit types on the characterization SHA (Prompt 22 CAPA is now a neighbor engine; `supports_nonconformities` remains a compile flag this slice does not enable).
 - No conclusion enum, sign-off principal, or “incomplete cannot conclude” gate.
 - Control-test `Effectiveness::Effective` is a readiness result, not an audit conclusion.
 
@@ -443,14 +443,14 @@ AuditFinding {
   evidenceDigests: Vec<String>             // must be ⊆ pin.envelopeDigests when pin exists
   createdBy: PrincipalRef
   createdAt: DateTime<Utc>
-  nonconformityId?: NonconformityRef       // opaque; Prompt 22 owns lifecycle
+  nonconformityId?: NonconformityRef       // opaque String; Prompt 22 CAPA owns lifecycle
 }
 ```
 
 Laws:
 
 1. Creating a finding is an explicit API (`record_finding`). Failed control tests **may** appear on the prepare bundle as *candidate observations*; they do not insert `AuditFinding` rows.
-2. `kind = nonconformity` does **not** start CAPA. Optional `nonconformityId` is a stable string/newtype for Prompt 22 to consume later. This slice does not implement Open→Closed CAPA.
+2. `kind = nonconformity` does **not** start CAPA. Optional `nonconformityId` is a stable string (`NonconformityRef`) for Prompt 22 `propose_from_audit_finding` / inventory resolve. This slice does not implement Open→Closed CAPA.
 3. Scanner `Finding` is never auto-promoted. No `From<src::Finding> for AuditFinding`.
 4. Finding evidence digests must be in the pin once pinned (fail closed).
 5. `supports_nonconformities` remains a compile flag for Prompt 22; this slice may store refs without enabling that capability. Do not silently set `requests.nonconformities = true`.
@@ -679,7 +679,7 @@ Do not add a crate. Do not edit collision-fenced paths in §0.
 - Readers treat governance `internal-audit-current` or all-green `Effectiveness` as the audit conclusion (mitigate: separate types; IA-008; envelope fact ban on “passed”).
 - Machine sample silently becomes the sample (mitigate: proposal type + accept API + IA-004).
 - Pin stores live `assess()` identity without envelope list, so later ledger contents leak into replay (mitigate: store envelope digests + snapshot digest; IA-005 / IA-009).
-- Prompt 22 lands a different nonconformity id type (mitigate: opaque ref, no lifecycle).
+- Prompt 22 `NonconformityId` is a different type (mitigate: keep opaque `NonconformityRef` on findings; no CAPA lifecycle here).
 - Temporal-assurance `TimeRange` not landed yet (mitigate: identical `AuditPeriod` shape).
 - Independence auto-pass when auditor ≠ principal but auditor owns the controls (mitigate: conflict flags vs implementation owners; human override).
 - `supports_audit_program = true` on ISO 27001 default target would change ACT-007 (mitigate: do not flip defaults).

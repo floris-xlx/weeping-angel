@@ -14,7 +14,7 @@
 | Governance catalog (do **not** retarget) | [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) — `control.incident.{response-plan,exercise,postmortem}` + `evidence.incident.exercise` stay **capability/governance tests**, not this operational engine |
 | Prompt | [`docs/prompts/operational-isms-v1/19-incident-governance.md`](../prompts/operational-isms-v1/19-incident-governance.md) |
 | Consumes (seams) | assets; [`risk-register.md`](risk-register.md); [`control-implementation-registry.md`](control-implementation-registry.md); Prompt 15 `EventRef`; Prompt 16 `RemediationRef` |
-| Neighbors (do not implement here) | Prompt 15 event bus / snapshot drift product; Prompt 16 ticket/remediation engine product; Prompt 21 internal audit; Prompt 22 CAPA; Prompt 23 management review |
+| Neighbors (do not implement here) | Prompt 15 event bus / snapshot drift product; Prompt 16 ticket/remediation engine product; Prompt 21 internal audit; Prompt 22 CAPA (landed; consume, do not retarget `correctiveActionIds`); Prompt 23 management review |
 | Collision fence | Catalog TOML, ISO packs, GitHub collector, `src/finding.rs`, existing `sdd_*` suites except this dual-suite / `documentation_layout.rs` registration |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
@@ -475,7 +475,7 @@ Rules:
 
 ### 4.11 Corrective actions and closed-with-open
 
-`corrective_action_ids` are `RemediationRef` values pointing at Prompt 16 `RemediationId` (or Prompt 22 CAPA later). `AssessmentDefinition.remediations` is landed:
+`corrective_action_ids` are `RemediationRef` values pointing at Prompt 16 `RemediationId`. Prompt 22 CAPA `CorrectiveActionId` is a **different** type; this field was not retargeted. `AssessmentDefinition.remediations` is landed:
 
 - store typed ids (`validate_stable_id`);
 - when `assessment.remediations` is **empty**, dangling ids are stored, not fail-closed (old assessments / no remediations yet);
@@ -601,7 +601,7 @@ Baseline suite must encode §3: no `Incident`/`IncidentId`; no `assessment.incid
 - Rewriting or retargeting `control.incident.*` / `evidence.incident.exercise` as this register.
 - Implementing Prompt 15 event/drift product or a generic event bus.
 - Implementing Prompt 16 remediation/ticket product, Jira/Linear/GitHub issue APIs.
-- Implementing Prompt 21/22/23 (audit, CAPA, management review) beyond **consumable** fields/queries.
+- Implementing Prompt 21/22/23 (audit, CAPA, management review) beyond **consumable** fields/queries. CAPA is landed as `Nonconformity` / `CorrectiveAction`; incidents still only *propose* via Prompt 22 APIs.
 - Moving scanner `Finding` into IR; auto-promotion by severity.
 - Bumping `assurance-ir/v1`.
 - UI, persistence service, GRC SaaS sync.

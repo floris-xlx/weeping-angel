@@ -431,7 +431,7 @@ Required test: run detect twice on the same regression pair; the event id set is
 
 ### 4.8 Extensibility
 
-Unknown future kinds use `IsmsEventKind::Extensible { name }` with a deterministic payload object. Detectors for unlanded inventories (objectives, policies, audit findings, nonconformity, CAPA overdue) **may** be implemented as empty-input no-ops. The enum **must** name the Prompt 15 kinds so serde/API consumers can match them without waiting for Prompt 16–22 product registries.
+Unknown future kinds use `IsmsEventKind::Extensible { name }` with a deterministic payload object. Detectors for snapshot bags that a caller has not filled (objectives, policies, audit findings, nonconformity, CAPA overdue) **may** stay empty-input no-ops. Prompt 22 CAPA inventories live on `AssessmentDefinition`; they do **not** auto-populate `IsmsSnapshot.nonconformities` / `.corrective_actions`. The enum **must** name the Prompt 15 kinds so serde/API consumers can match them.
 
 ### 4.9 Crate and pipeline placement
 

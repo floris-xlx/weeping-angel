@@ -55,7 +55,7 @@ This slice may add remediation IR + a library engine in **existing crates**. It 
 | [`docs/specs/risk-treatment.md`](risk-treatment.md) `RiskTreatmentDecision` / `TreatmentAction` | Prompt 08 — **link** via `TreatmentActionId` / opaque `RemediationRef` identity; do not implement Mitigate/Accept/Avoid/Transfer here |
 | [`docs/specs/control-implementation-registry.md`](control-implementation-registry.md) additive `ControlImplementation` fields | Prompt 10 — consume existing `ControlImplementation` / `ControlImplementationId` |
 | [`docs/specs/temporal-assurance.md`](temporal-assurance.md) `valid_from` / revocation | Prompt 14 — consume `ControlTestResult` clocks as they exist |
-| Prompt 22 `Nonconformity` / CAPA | Later slice; remediations may be *cited* later, not owned here |
+| Prompt 22 `Nonconformity` / CAPA | Landed neighbor; remediations may be *cited* (`RemediationRef`), not owned here |
 | Notification transport, Slack, email, assignment inbox | Non-goal |
 | Jira / Linear / GitHub Issues HTTP clients, webhooks, OAuth | Non-goal — **refs only** |
 | `tests/sdd/` | ADR 0004 forbids this path |
@@ -709,7 +709,7 @@ Baseline suite must encode §3 found-case (RE-B01…B10).
 - Jira / Linear / GitHub Issues **clients**, OAuth, webhooks, remote state sync.
 - Implementing Prompt 15 event emission, snapshot drift, or a generic event bus.
 - Forking Prompt 06 `Risk`, Prompt 08 treatment strategy machines, Prompt 10 `ControlImplementation` expansion, Prompt 14 validity events.
-- Prompt 22 nonconformity/CAPA records (may cite remediations later).
+- Prompt 22 nonconformity/CAPA records (landed neighbor; may cite remediations via `RemediationRef`).
 - Auto-closing from one green test unless `SingleGreenPermitted` is explicit.
 - Scanner workbench patch generation (`RemediationRequest`).
 - New crate, new long-term database, GRC SaaS sync.

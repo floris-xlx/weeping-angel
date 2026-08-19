@@ -198,6 +198,8 @@ impl ValidateIr for AssessmentDefinition {
             requirement_ids: &requirement_ids,
         })?;
 
+        crate::capa::validate_capa_inventory(self)?;
+
         for activity in &self.processing_activities {
             for processor in &activity.processors {
                 if !vendor_ids.contains(processor.as_str()) {

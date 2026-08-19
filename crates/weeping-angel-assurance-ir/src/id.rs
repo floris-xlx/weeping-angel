@@ -153,6 +153,8 @@ typed_id!(AuditId);
 typed_id!(AuditFindingId);
 typed_id!(MappingId);
 typed_id!(IncidentId);
+typed_id!(NonconformityId);
+typed_id!(CorrectiveActionId);
 typed_id!(RecoveryObjectiveId);
 typed_id!(ContinuityExerciseId);
 typed_id!(ContinuityProfileId);

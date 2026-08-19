@@ -7,6 +7,7 @@ pub mod applicability;
 pub mod assessment;
 pub mod asset;
 pub mod audit;
+pub mod capa;
 pub mod continuity;
 pub mod control;
 pub mod crosswalk;
@@ -56,6 +57,14 @@ pub use audit::{
     NonconformityRef, SampleMethod, compute_proposal_digest, compute_sample_digest,
     flag_independence_conflicts, population_digest, validate_audit_inventories,
 };
+pub use capa::{
+    CapaError, ClosureDecision, ClosureOutcome, ContainmentAction, CorrectiveAction,
+    CorrectiveActionEvent, CorrectiveActionEventKind, CorrectiveActionKind, CorrectiveActionStatus,
+    EffectivenessCriteria, EffectivenessReview, EffectivenessReviewStatus, Nonconformity,
+    NonconformityClassification, NonconformityEvent, NonconformityEventKind, NonconformityScope,
+    NonconformitySeverity, NonconformitySource, NonconformitySourceKind, NonconformityStatus,
+    ReviewPeriod, RootCauseAnalysis, overdue_action_ids, validate_capa_at, validate_capa_inventory,
+};
 pub use continuity::{
     AssetRef, BackupExpectation, CadenceStatus, ContinuityDimension, ContinuityExercise,
     ContinuityGap, ContinuityRemediationRef, ContinuityResilienceError,
@@ -88,15 +97,16 @@ pub use framework::{ExternalRequirementRef, FrameworkRef};
 pub use id::{
     AlertRef, AssessmentId, AssetId, AuditFindingId, AuditId, AuditProgramId, BusinessUnitId,
     ContinuityExerciseId, ContinuityProfileId, ControlId, ControlImplementationId, ControlTestId,
-    ControlledDocumentId, DismissalId, EventId, EventRef, EvidenceRequirementId, EvidenceType,
-    ExceptionId, FindingRef, FrameworkId, FrameworkVersion, IdError, IdentityId, IncidentId,
-    InterestedPartyId, IsmsContextId, IssueId, MAX_ID_LEN, MappingId, ObjectiveId,
-    ObjectiveMeasurementId, ObjectiveMetricId, ObjectiveTargetId, ObligationId,
-    ObligationMappingId, OrganizationId, ProcessingActivityId, PromotionId, RecoveryObjectiveId,
-    RemediationActionId, RemediationId, RemediationRef, RequirementId, RequirementSourceId,
-    ResidualRiskId, RiskAcceptanceId, RiskCandidateId, RiskId, RiskMethodologyId, RiskTreatmentId,
-    ScopeId, SecurityObjectiveId, SlaPolicyId, StableId, SupplierIssueId, SupplierRequirementId,
-    SupplierReviewId, TreatmentActionId, TreatmentPlanId, VendorId, validate_stable_id,
+    ControlledDocumentId, CorrectiveActionId, DismissalId, EventId, EventRef,
+    EvidenceRequirementId, EvidenceType, ExceptionId, FindingRef, FrameworkId, FrameworkVersion,
+    IdError, IdentityId, IncidentId, InterestedPartyId, IsmsContextId, IssueId, MAX_ID_LEN,
+    MappingId, NonconformityId, ObjectiveId, ObjectiveMeasurementId, ObjectiveMetricId,
+    ObjectiveTargetId, ObligationId, ObligationMappingId, OrganizationId, ProcessingActivityId,
+    PromotionId, RecoveryObjectiveId, RemediationActionId, RemediationId, RemediationRef,
+    RequirementId, RequirementSourceId, ResidualRiskId, RiskAcceptanceId, RiskCandidateId, RiskId,
+    RiskMethodologyId, RiskTreatmentId, ScopeId, SecurityObjectiveId, SlaPolicyId, StableId,
+    SupplierIssueId, SupplierRequirementId, SupplierReviewId, TreatmentActionId, TreatmentPlanId,
+    VendorId, validate_stable_id,
 };
 pub use identity::{Identity, IdentityKind};
 pub use implementation::{

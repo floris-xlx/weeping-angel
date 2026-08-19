@@ -25,6 +25,7 @@ Decisions:
 - ISMS events / drift: [`docs/adr/0003-isms-events-drift.md`](../adr/0003-isms-events-drift.md) (sibling notes [`docs/adr/0005-isms-events-drift.md`](../adr/0005-isms-events-drift.md)) — `detect_events` / `detect_isms_drift` observations; not `SnapshotDiff` and not a notification bus
 - Incident governance: [`docs/adr/0003-incident-governance.md`](../adr/0003-incident-governance.md) — IR `Incident` on `AssessmentDefinition.incidents` (not SIEM, not catalog `control.incident.*`)
 - Internal audit: [`docs/adr/0003-internal-audit.md`](../adr/0003-internal-audit.md) — IR `AuditProgram` / `Audit` on `AssessmentDefinition.audit_programs` / `audits`; machine prepare only; humans accept samples and sign (not “audit passed”)
+- Nonconformity / CAPA: [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md) — IR `Nonconformity` / `CorrectiveAction` on `AssessmentDefinition.nonconformities` / `corrective_actions`; one green test is not closure; catalog `control.governance.corrective-action` stays attestation
 - ISMS context IR: [`docs/adr/0008-isms-context.md`](../adr/0008-isms-context.md), spec [`isms-context.md`](isms-context.md) — durable `IsmsContext` root (not an assessment result, not a parallel GRC schema)
 - Organizational scope engine: [`docs/adr/0008-scope-engine.md`](../adr/0008-scope-engine.md), spec [`scope-engine.md`](scope-engine.md) — `ScopeResolution` (`weeping-angel/scope-resolution/v1`); four-state boundary; not crawl URL scope and not facade `AssessmentScope`
 - Interested parties / obligations: [`docs/adr/0008-interested-parties-obligations.md`](../adr/0008-interested-parties-obligations.md), spec [`interested-parties-obligations.md`](interested-parties-obligations.md) — standalone `ObligationRegistry` (why a control/policy exists; not a framework `Requirement`, not collector satisfaction)
@@ -900,9 +901,33 @@ Rules:
 - `AuditEvidencePin` copies lineage `EvidenceSnapshot` digest + envelope digests. Later live `assess()` does not rewrite the pin. Replay uses the pin, not the current ledger.
 - Incomplete audits (missing accepted sample, pin, accepted independence, or leftover `planned` procedures) cannot conclude. `sign_off` requires a human `PrincipalRef`, non-empty statement, and a conclusion other than `notConcluded`.
 - `IndependenceRecord.accepted` is never machine-set. Conflict flags persist (`auditorOwnsControl`); absence of flags is not independence.
-- `AuditFinding.nonconformityId` is an opaque Prompt 22 seam. This slice does not start CAPA. Optional catalog fact projection (`evidence.governance.internal-audit`) is not landed. `Iso27007` remains a pack-less compile selector.
+- `AuditFinding.nonconformityId` remains an opaque `NonconformityRef` (`String`). This slice does not start CAPA; Prompt 22 `propose_from_audit_finding` is the only open path. Optional catalog fact projection (`evidence.governance.internal-audit`) is not landed. `Iso27007` remains a pack-less compile selector.
 
 See [`docs/specs/internal-audit.md`](internal-audit.md) and [ADR 0003 internal audit](../adr/0003-internal-audit.md).
+
+## Nonconformity and CAPA
+
+Canonical operational CAPA records in `weeping-angel-assurance-ir::capa` (`AssessmentDefinition.nonconformities` / `corrective_actions`, schema `assurance-ir/v1`). Audit findings, incidents, and `ControlRegressed` events **propose**; they never copy severity into `NonconformityClassification`. Engine (`weeping-angel-assurance::capa`):
+
+```text
+propose_from_audit_finding / propose_from_incident / propose_from_control_regression
+Nonconformity::open → contain → record_root_cause → classify → plan_corrective_action
+  → mark_implemented → start_effectiveness_review
+evaluate_capa_effectiveness(nc, actions, results, as_of, reviewer) → EffectivenessReview
+close_nonconformity / Nonconformity::{close, reopen, cancel, supersede}
+overdue_corrective_actions / open_nonconformities / failed_effectiveness_reviews
+nonconformities_for_audit / nonconformities_for_incident
+reopened_nonconformities / closed_nonconformities
+```
+
+Rules:
+
+- Default verification is `SustainedWindow` (14d, ≥ 2 `Effective` results, no intervening fail). `EffectivenessCriteria.window` is seconds (same serde as Prompt 16 `VerificationPolicy`). One green test does **not** auto-close. `close` is always explicit and requires `effectiveness.status == Satisfied` for outcome `ClosedEffective`.
+- Missing RCA cannot leave `Contained`. Unclassified records cannot reach `CorrectiveActionPlanned`. Cancel/supersede require rationale; supersession requires a successor id. Closed/Cancelled/Superseded are immutable except `Closed → Open` reopen.
+- `Incident.correctiveActionIds` stay `RemediationRef`. `requests.nonconformities` / `supports_nonconformities` stay fail-closed. Catalog `control.governance.corrective-action` remains an attestation fact.
+- `NonconformityRef` on audit findings remains `String`. `ComplianceNodeRef` has no CAPA variants. `IsmsSnapshot` CAPA bags stay empty no-ops unless a caller fills them.
+
+See [`docs/specs/nonconformity-capa.md`](nonconformity-capa.md) and [ADR 0003 nonconformity/CAPA](../adr/0003-nonconformity-capa.md).
 
 ## Controlled documents
 

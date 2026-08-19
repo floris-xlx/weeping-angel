@@ -3,6 +3,7 @@
 pub mod applicability;
 pub mod audit;
 pub mod bridge;
+pub mod capa;
 pub mod continuity;
 pub mod drift;
 pub mod events;

@@ -495,17 +495,17 @@ name = "sdd_internal_audit_target"
 path = "tests/contracts/internal_audit.target.rs"
 
 [[test]]
-name = "sdd_scope_engine_baseline"
-path = "tests/contracts/scope_engine.baseline.rs"
-
-[[test]]
-name = "sdd_scope_engine_target"
-path = "tests/contracts/scope_engine.target.rs"
-
-[[test]]
 name = "sdd_nonconformity_capa_baseline"
 path = "tests/contracts/nonconformity_capa.baseline.rs"
 
 [[test]]
 name = "sdd_nonconformity_capa_target"
 path = "tests/contracts/nonconformity_capa.target.rs"
+
+[[test]]
+name = "sdd_scope_engine_baseline"
+path = "tests/contracts/scope_engine.baseline.rs"
+
+[[test]]
+name = "sdd_scope_engine_target"
+path = "tests/contracts/scope_engine.target.rs"

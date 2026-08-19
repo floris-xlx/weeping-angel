@@ -13,8 +13,10 @@
 //! validation never walks CAPA; `ComplianceNodeRef` has no CAPA node;
 //! `ASSURANCE_IR_SCHEMA` is still `assurance-ir/v1`.
 //!
-//! Must stay GREEN until `sdd_nonconformity_capa_target` is GREEN and this file
-//! is skip-superseded. Does **not** implement the CAPA engine.
+//! SUPERSEDED by `sdd_nonconformity_capa_target`. Characterization of SHA
+//! `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` remains documentary. Tests are
+//! `#[ignore]` so CI does not require the retired absences. Dual-suite
+//! registration remains in root `Cargo.toml`.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -23,8 +25,8 @@ use chrono::{TimeZone, Utc};
 use serde_json::{Value, json};
 use weeping_angel::finding::Finding;
 use weeping_angel_assurance::audit::record_finding;
-use weeping_angel_assurance::drift::{GovernanceRecord, IsmsSnapshot, detect_isms_drift};
 use weeping_angel_assurance::closed_incidents_with_open_corrective_actions;
+use weeping_angel_assurance::drift::{GovernanceRecord, IsmsSnapshot, detect_isms_drift};
 use weeping_angel_assurance_ir::crosswalk::ComplianceNodeRef;
 use weeping_angel_assurance_ir::{
     ASSURANCE_IR_SCHEMA, AssessmentDefinition, AssessmentId, AssessmentRequests, Audit,
@@ -235,6 +237,7 @@ fn opaque_nonconformity_finding(kind: &str, severity: &str) -> Value {
 
 /// NC-B001 found case: no Nonconformity / CorrectiveAction product type.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b001_no_nonconformity_or_corrective_action_product_type() {
     let ir_src = crate_src("weeping-angel-assurance-ir");
     assert!(
@@ -242,7 +245,9 @@ fn nc_b001_no_nonconformity_or_corrective_action_product_type() {
         "NC-B001: capa/nonconformity module must not exist on characterization HEAD"
     );
     assert!(
-        !crate_src("weeping-angel-assurance").join("capa.rs").is_file(),
+        !crate_src("weeping-angel-assurance")
+            .join("capa.rs")
+            .is_file(),
         "NC-B001: assurance capa engine must not exist on characterization HEAD"
     );
 
@@ -251,7 +256,8 @@ fn nc_b001_no_nonconformity_or_corrective_action_product_type() {
 
     let ids = read_repo_file("crates/weeping-angel-assurance-ir/src/id.rs");
     assert!(
-        !ids.contains("typed_id!(NonconformityId)") && !ids.contains("typed_id!(CorrectiveActionId)"),
+        !ids.contains("typed_id!(NonconformityId)")
+            && !ids.contains("typed_id!(CorrectiveActionId)"),
         "NC-B001: id.rs has no NonconformityId / CorrectiveActionId"
     );
 
@@ -287,6 +293,7 @@ fn nc_b001_no_nonconformity_or_corrective_action_product_type() {
 
 /// NC-B002 found case: AssessmentDefinition has no CAPA inventories.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b002_assessment_definition_has_no_capa_inventories() {
     let fields = assessment_definition_struct_src();
     assert!(
@@ -340,6 +347,7 @@ fn nc_b002_assessment_definition_has_no_capa_inventories() {
 
 /// NC-B003 found case: request/capability bits fail-closed; enabling both still yields no CAPA objects.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b003_request_and_capability_flags_fail_closed() {
     let requests = AssessmentRequests::default();
     assert!(
@@ -394,6 +402,7 @@ fn nc_b003_request_and_capability_flags_fail_closed() {
 
 /// NC-B004 found case: AuditFinding.nonconformity_id is an opaque string; kind=nonconformity does not start CAPA.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b004_audit_nonconformity_ref_is_opaque_and_does_not_start_capa() {
     let r: NonconformityRef = "nc:opaque-prompt-22".to_string();
     assert_eq!(r, "nc:opaque-prompt-22");
@@ -412,11 +421,9 @@ fn nc_b004_audit_nonconformity_ref_is_opaque_and_does_not_start_capa() {
 
     let mut audit: Audit =
         serde_json::from_value(child_audit_payload()).expect("audit payload must decode");
-    let finding: AuditFinding = serde_json::from_value(opaque_nonconformity_finding(
-        "nonconformity",
-        "major",
-    ))
-    .expect("finding with opaque nonconformityId must decode");
+    let finding: AuditFinding =
+        serde_json::from_value(opaque_nonconformity_finding("nonconformity", "major"))
+            .expect("finding with opaque nonconformityId must decode");
     assert_eq!(finding.kind, AuditFindingKind::Nonconformity);
     assert_eq!(finding.severity, Some(AuditFindingSeverity::Major));
     assert_eq!(
@@ -425,8 +432,12 @@ fn nc_b004_audit_nonconformity_ref_is_opaque_and_does_not_start_capa() {
     );
 
     let mut findings = Vec::new();
-    record_finding(&mut audit, &mut findings, finding.clone()).expect("record_finding copies the opaque ref");
-    assert_eq!(audit.nonconformity_refs, vec!["nc:opaque-prompt-22".to_string()]);
+    record_finding(&mut audit, &mut findings, finding.clone())
+        .expect("record_finding copies the opaque ref");
+    assert_eq!(
+        audit.nonconformity_refs,
+        vec!["nc:opaque-prompt-22".to_string()]
+    );
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].kind, AuditFindingKind::Nonconformity);
 
@@ -465,6 +476,7 @@ fn nc_b004_audit_nonconformity_ref_is_opaque_and_does_not_start_capa() {
 
 /// NC-B005 found case: incident corrective actions are Prompt 16 RemediationRef.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b005_incident_corrective_actions_are_remediation_refs() {
     let at = clock();
     let owner = PrincipalRef::Team("ir-owner".into());
@@ -556,6 +568,7 @@ fn nc_b005_incident_corrective_actions_are_remediation_refs() {
 
 /// NC-B006 found case: drift names the events; empty bags are no-ops.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b006_drift_names_events_empty_bags_are_noops() {
     assert_eq!(
         IsmsEventKind::NonconformityOpened.as_label(),
@@ -637,6 +650,7 @@ fn nc_b006_drift_names_events_empty_bags_are_noops() {
 
 /// NC-B007 found case: catalog corrective-action is attestation, not this engine.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b007_catalog_corrective_action_is_attestation() {
     let catalog = load_catalog();
     let control = catalog
@@ -681,6 +695,7 @@ fn nc_b007_catalog_corrective_action_is_attestation() {
 
 /// NC-B008 found case: validation never walks CAPA.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b008_validation_never_walks_capa() {
     let validation = read_repo_file("crates/weeping-angel-assurance-ir/src/validation.rs");
     assert!(
@@ -695,11 +710,15 @@ fn nc_b008_validation_never_walks_capa() {
         .expect("clockless validate_assessment_ir does not require CAPA inventories");
     let finding: AuditFinding =
         serde_json::from_value(opaque_nonconformity_finding("nonconformity", "minor")).unwrap();
-    assert_eq!(finding.nonconformity_id.as_deref(), Some("nc:opaque-prompt-22"));
+    assert_eq!(
+        finding.nonconformity_id.as_deref(),
+        Some("nc:opaque-prompt-22")
+    );
 }
 
 /// NC-B009 found case: ComplianceNodeRef has no CAPA variants.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b009_crosswalk_has_no_capa_node() {
     fn classify(node: &ComplianceNodeRef) -> &'static str {
         match node {
@@ -725,6 +744,7 @@ fn nc_b009_crosswalk_has_no_capa_node() {
 
 /// NC-B010 found case: schema stays assurance-ir/v1; one green control test mints no CAPA.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b010_schema_unchanged_and_one_green_is_not_capa() {
     assert_eq!(ASSURANCE_IR_SCHEMA, "assurance-ir/v1");
 
@@ -770,6 +790,7 @@ fn nc_b010_schema_unchanged_and_one_green_is_not_capa() {
 
 /// Dual-suite registration so both `--test` binaries exist on this commit.
 #[test]
+#[ignore = "superseded by sdd_nonconformity_capa_target"]
 fn nc_b011_dual_suite_is_registered() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(

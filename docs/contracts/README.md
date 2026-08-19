@@ -18,6 +18,8 @@ ISMS events / drift: [`docs/specs/isms-events-drift.md`](../specs/isms-events-dr
 
 Internal audit: [`docs/specs/internal-audit.md`](../specs/internal-audit.md), [`docs/adr/0003-internal-audit.md`](../adr/0003-internal-audit.md), `tests/contracts/internal_audit.{baseline,target}.rs`.
 
+Nonconformity / CAPA: [`docs/specs/nonconformity-capa.md`](../specs/nonconformity-capa.md), [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md), `tests/contracts/nonconformity_capa.{baseline,target}.rs`. Dual-suite `sdd_nonconformity_capa_target` GREEN; baseline skip-superseded. Schema `assurance-ir/v1`. Library APIs in `weeping-angel-assurance::capa` (`propose_from_*`, `evaluate_capa_effectiveness`, `close_nonconformity`, overdue/open/failed/reopened queries). One green control test does not close CAPA.
+
 Controlled documents: [`docs/specs/controlled-documents.md`](../specs/controlled-documents.md), [`docs/adr/0003-controlled-documents.md`](../adr/0003-controlled-documents.md), `tests/contracts/controlled_documents.{baseline,target}.rs`.
 
 Personnel security lifecycle: [`docs/specs/personnel-security.md`](../specs/personnel-security.md), [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md), `tests/contracts/personnel_security.{baseline,target}.rs`.

@@ -2,12 +2,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified** — spec/ADR before product; `sdd_nonconformity_capa_target` must FAIL until implemented; baseline must PASS on current HEAD |
+| Status | **Implemented** — `sdd_nonconformity_capa_target` GREEN; baseline skip-superseded |
 | Program | Operational ISMS v1 — Prompt 22 nonconformity / CAPA |
 | Slice | Canonical `Nonconformity` + `CorrectiveAction` lifecycle with containment, RCA, planned actions, implementation evidence, effectiveness review, and immutable closure |
-| Dual-suite (register at implement, same commit as `.rs`) | `sdd_nonconformity_capa_baseline` · `sdd_nonconformity_capa_target` (`tests/contracts/nonconformity_capa.{baseline,target}.rs`) — **not** auto-discovered (I3); add `[[test]]` in root [`Cargo.toml`](../../Cargo.toml). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
-| ADR | Draft [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md) — 0003-* sibling filename (cite by **path**). Implement later phase may finalize to Accepted |
-| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — add a pointer **at implement**; do not fork the spine |
+| Dual-suite | `sdd_nonconformity_capa_baseline` (skip-superseded) · `sdd_nonconformity_capa_target` GREEN (`tests/contracts/nonconformity_capa.{baseline,target}.rs`) — **not** auto-discovered (I3); listed in root [`Cargo.toml`](../../Cargo.toml). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
+| ADR | Accepted [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md) — 0003-* sibling filename (cite by **path**) |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — Nonconformity and CAPA pointer; do not fork the spine |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Documentation architecture | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) — this file is the human SSOT; `docs/sdd/` is a stub; traces go to `.sdd/runs` and `.sdd/artifacts` |
@@ -23,7 +23,7 @@
 | Canonical digest | `serde_json` struct field order + `BTreeMap` / `BTreeSet` (`canon/v1`) |
 | JSON | `#[serde(rename_all = "camelCase")]` |
 | Identity | `typed_id!(NonconformityId)` + `typed_id!(CorrectiveActionId)` + `validate_stable_id`; **no** random v4 |
-| Workspace verify (after implement) | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
+| Workspace verify | `cargo test --test sdd_nonconformity_capa_target`; `cargo test --test sdd_documentation_layout`; keep header neighbors GREEN; `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
 This document is the durable human SSOT for Operational ISMS v1 **nonconformity and CAPA**. It owns the **canonical `Nonconformity` record**, the **canonical `CorrectiveAction` record**, **explicit proposal/open (never silent major/minor)**, **containment**, **root-cause analysis**, **planned/implemented actions**, **effectiveness criteria and review period**, **evidence-backed verification**, **closure decision**, **cancellation/supersession with rationale**, **reopen**, and **immutable history**.
 
@@ -86,7 +86,7 @@ Suggested **product** modules stay in **existing crates** (no new crate):
 | `Incident.corrective_action_ids` | Stay `RemediationRef` |
 | Drift `IsmsSnapshot.nonconformities` / `.corrective_actions` | Stay `GovernanceRecord` adapters; empty ⇒ no-op |
 
-Tiny allowed adjustments at **implement**: new `typed_id!` aliases; serde defaults / `skip_serializing_if`; transition APIs; validation messages; re-exports; optional golden fixture `tests/fixtures/assurance-ir/v1/capa.json`. Optional: `NonconformityRef` may become a type alias of `NonconformityId` **if** existing audit fixtures (`nc:opaque-prompt-22`) still deserialize. Do **not** bump `ASSURANCE_IR_SCHEMA`. Do **not** redesign `AssessmentDefinition` core inventories. Do **not** expand `Incident`, `AuditFinding`, or `Remediation` schemas in this slice except resolving refs.
+Landed adjustments: new `typed_id!` aliases; serde defaults / `skip_serializing_if`; transition APIs; validation messages; re-exports. `NonconformityRef` remains `String` so Prompt 21 opaque fixtures (`nc:opaque-prompt-22`) still deserialize. `ASSURANCE_IR_SCHEMA` was not bumped. `Incident`, `AuditFinding`, and `Remediation` schemas were not expanded except resolving refs when CAPA inventory is non-empty.
 
 ---
 
@@ -184,10 +184,10 @@ Pinned to **current HEAD** (landed Prompts 15, 16, 19, 21).
 | `VerificationPolicy` / `VerificationMode` | `remediation.rs` | **Reuse the type** (or an identical CAPA-local struct with the same serde names) for declared effectiveness criteria. Default `SustainedWindow` 14d / `minEffectiveResults = 2`. |
 | `AssessmentRequests.nonconformities` | `assessment.rs` | Keep fail-closed request bit. **Do not auto-set `true`.** Compiling a projection that *requests* nonconformities still requires `supports_nonconformities`. Non-empty inventories validate even when the flag is false (same pattern as audits/remediations). |
 | `FrameworkCapabilities.supports_nonconformities` | `weeping-angel-framework` | Default remains `false`. Requested ∧ ¬supported → `CapabilityViolation`. Flag does **not** construct CAPA objects. |
-| `ComplianceNodeRef` | `crosswalk.rs` | Optional additive `Nonconformity(NonconformityId)` and/or `CorrectiveAction(CorrectiveActionId)`. Do not infer “control is effective” from a closed CAPA. |
+| `ComplianceNodeRef` | `crosswalk.rs` | **Not extended.** Spec-optional CAPA variants were not required for NC-001–NC-012. Do not infer “control is effective” from a closed CAPA. |
 | Golden IR fixtures | `tests/fixtures/assurance-ir/v1/**` | Existing fixtures have no CAPA keys; default empty must keep decoding. |
 | Neighbor suites | root `Cargo.toml` | Listed header targets stay GREEN. |
-| Docs layout | ADR 0004 | Human SSOT is this file. Path is listed in `sdd_documentation_layout` `CANONICAL_SPECS` **at implement**. |
+| Docs layout | ADR 0004 | Human SSOT is this file. Path is listed in `sdd_documentation_layout` `CANONICAL_SPECS`. |
 
 Serde compatibility law:
 
@@ -200,9 +200,9 @@ Network-free. No ISO annex numbers as CAPA classification. No Jira/ServiceNow ob
 
 ---
 
-## 3. Current behavior (baseline — GREEN on current HEAD)
+## 3. Current behavior (baseline — characterization of pre-product HEAD)
 
-Executable characterization lives in `sdd_nonconformity_capa_baseline` (to be added at implement). This section is the **found case** of current HEAD. After target GREEN the absence tests are skip-superseded (`#[ignore = "superseded by sdd_nonconformity_capa_target"]`).
+Executable characterization lives in `sdd_nonconformity_capa_baseline` and is skip-superseded (`#[ignore = "superseded by sdd_nonconformity_capa_target"]`). This section is the **found case** of SHA `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` + landed Prompts 15/16/19/21 before this engine.
 
 ### 3.1 No `Nonconformity` / `CorrectiveAction` product type
 
@@ -314,13 +314,13 @@ Those tests stay **governance-only**. Baseline must assert the catalog ids still
 
 `ComplianceNodeRef` is `Requirement | Control | Test | EvidenceRequirement | Risk | Exception | Incident`. No `Nonconformity` / `CorrectiveAction` variant.
 
-### 3.10 Dual-suite not registered
+### 3.10 Dual-suite not registered (pre-product)
 
-Root `Cargo.toml` has no `sdd_nonconformity_capa_{baseline,target}`. `tests/contracts/nonconformity_capa.*.rs` do not exist. `CANONICAL_SPECS` does not yet list this file.
+On the characterization SHA, root `Cargo.toml` had no `sdd_nonconformity_capa_{baseline,target}` and `tests/contracts/nonconformity_capa.*.rs` did not exist. This HEAD registers both suites; baseline is skip-superseded; this spec path is in `CANONICAL_SPECS`.
 
 ---
 
-## 4. Desired behavior (target — FAIL until implemented)
+## 4. Landed behavior (target GREEN)
 
 ### 4.1 Product home
 
@@ -332,8 +332,7 @@ weeping-angel-assurance-ir
   assessment.rs      # nonconformities + corrective_actions inventories
   validation.rs      # integrity + lifecycle guards
   lib.rs             # re-exports
-  crosswalk.rs       # optional ComplianceNodeRef::Nonconformity / CorrectiveAction
-  audit.rs           # NonconformityRef remains the finding seam (alias ok)
+  audit.rs           # NonconformityRef remains the finding seam (String)
 
 weeping-angel-assurance
   capa.rs            # propose/open, contain, rca, plan, implement,
@@ -446,9 +445,9 @@ CorrectiveActionStatus =
   | Verified | FailedReview | Cancelled | Superseded
 
 EffectivenessCriteria {
-  # Prefer reusing VerificationPolicy field names:
+  # Reuses VerificationPolicy serde names (VerificationMode + window seconds):
   mode: SingleGreenPermitted | SustainedWindow | IndependentReviewRequired
-  windowSeconds?: u64                   # required when SustainedWindow
+  window?: u64                          # seconds; required when SustainedWindow (default 14d)
   minEffectiveResults: u32              # default 2 for SustainedWindow
   independentVerifier: bool
   statement: String                     # declared criteria in prose (required, non-empty)
@@ -569,7 +568,7 @@ Nonconformity::transition(to, principal, at) -> Result<(), CapaError>
 
 Reuse remediation verification semantics ([`remediation-engine.md`](remediation-engine.md) §4.8) against `EffectivenessCriteria.controlIds`:
 
-- Default `SustainedWindow`: need ≥ `minEffectiveResults` (default 2) `Effectiveness::Effective` results whose `checked_at` span is ≥ `window`, with **no** intervening `Ineffective` / `InsufficientEvidence` / `StaleEvidence`, **and** the span must lie within `reviewPeriod` (or start at `Implemented` and cover `windowSeconds`).
+- Default `SustainedWindow`: need ≥ `minEffectiveResults` (default 2) `Effectiveness::Effective` results whose `checked_at` span is ≥ `window` (seconds), with **no** intervening `Ineffective` / `InsufficientEvidence` / `StaleEvidence`, **and** the span must lie within `reviewPeriod` (or start at `Implemented` and cover `window`).
 - Two greens 3 days apart on a 14-day window ⇒ **not** Satisfied.
 - `IndependentReviewRequired` (or `independentVerifier`) requires reviewer `PrincipalRef` ≠ action owner / NC owner.
 - `ControlRecovered` / a single recovered control test **never** auto-closes CAPA.
@@ -684,9 +683,11 @@ These prepare audit / management-review consumption (Prompts 21/23). They do not
 - Maps/sets use `BTreeMap` / `BTreeSet`.
 - `version` default 1.
 
-### 4.13 Public-contract pointer (implement)
+### 4.13 Public-contract pointer
 
-Add a short section to [`assurance-runtime.md`](assurance-runtime.md) matching landed APIs. Do not duplicate this spec. Do not claim ISO 10.2 is satisfied because a row exists.
+[`assurance-runtime.md`](assurance-runtime.md) carries a short CAPA section matching landed APIs. Do not duplicate this spec. Do not claim ISO 10.2 is satisfied because a row exists.
+
+Not landed (spec-optional): `ComplianceNodeRef::{Nonconformity,CorrectiveAction}`; automatic `IsmsSnapshot` fill from IR inventories.
 
 ---
 
@@ -694,7 +695,7 @@ Add a short section to [`assurance-runtime.md`](assurance-runtime.md) matching l
 
 Follow [ADR 0004](../adr/0004-documentation-architecture.md). Directory `tests/contracts/` is **not** Cargo auto-discovery.
 
-Register at implement, **same commit** as the `.rs` files:
+Registered in root `Cargo.toml` (I3), **same commit** as the `.rs` files:
 
 ```toml
 [[test]]
@@ -706,9 +707,9 @@ name = "sdd_nonconformity_capa_target"
 path = "tests/contracts/nonconformity_capa.target.rs"
 ```
 
-| Suite | On current HEAD (pre-product) | After implement |
+| Suite | Pre-product HEAD | This HEAD |
 | --- | --- | --- |
-| Baseline | **PASS** (characterizes absence + seams) | skip-supersede with `#[ignore = "superseded by sdd_nonconformity_capa_target"]` |
+| Baseline | **PASS** (characterizes absence + seams) | skip-superseded `#[ignore = "superseded by sdd_nonconformity_capa_target"]` |
 | Target | **FAIL** (missing types / lifecycle) | **GREEN** (NC-001–NC-012) |
 
 Protocol: write tests first → **RED** target (must fail on the found case, not unrelated compile noise) → implement → **GREEN**. Baseline stays GREEN until superseded.
@@ -736,7 +737,7 @@ Target suite must encode at least the Prompt 22 found cases:
 - **NC-009 Immutable closure.** Mutating a `Closed`/`Cancelled`/`Superseded` record (title, RCA, actions, closure fields) returns `ImmutableClosure`. History is append-only. `Cancelled`/`Superseded` require rationale; `Superseded` requires a successor id.
 - **NC-010 No silent classification.** Constructing from finding/incident/`ControlRegressed` leaves `classification = None`. `classify` requires principal + non-empty rationale. Unclassified records cannot reach `CorrectiveActionPlanned`.
 - **NC-011 Compile flags / catalog fence.** Default `requests.nonconformities` and `supports_nonconformities` remain `false`. Presence of CAPA inventories does not flip them. `control.governance.corrective-action` / `test.governance.corrective-action-recorded` still exist and are not this engine. `ASSURANCE_IR_SCHEMA` unchanged.
-- **NC-012 Dual-suite registration.** `sdd_nonconformity_capa_{baseline,target}` listed in root `Cargo.toml`; files live under `tests/contracts/`; this spec path is in `CANONICAL_SPECS` after implement.
+- **NC-012 Dual-suite registration.** `sdd_nonconformity_capa_{baseline,target}` listed in root `Cargo.toml`; files live under `tests/contracts/`; this spec path is in `CANONICAL_SPECS`.
 
 Baseline suite must encode §3: no `Nonconformity`/`CorrectiveAction` types; no assessment CAPA inventories; flags default false; `NonconformityRef = String`; audit `kind = nonconformity` does not start CAPA; incident corrective actions are `RemediationRef`; drift bags empty; catalog attestation ids unchanged.
 
@@ -777,7 +778,7 @@ Neighbor targets listed in the header stay GREEN.
 
 ---
 
-## 9. Crate homes and files (implement phase)
+## 9. Crate homes and files
 
 | Path | Role |
 | --- | --- |
@@ -787,12 +788,12 @@ Neighbor targets listed in the header stay GREEN.
 | `crates/weeping-angel-assurance-ir/src/validation.rs` | Integrity + lifecycle |
 | `crates/weeping-angel-assurance-ir/src/lib.rs` | Re-exports |
 | `crates/weeping-angel-assurance/src/capa.rs` | Engine + queries |
-| `tests/contracts/nonconformity_capa.baseline.rs` | Absence characterization (PASS on HEAD) |
-| `tests/contracts/nonconformity_capa.target.rs` | Normative NC-001–NC-012 (FAIL until implement) |
-| `Cargo.toml` | `[[test]]` `sdd_nonconformity_capa_{baseline,target}` **same commit as `.rs`** |
-| `tests/contracts/documentation_layout.rs` | `CANONICAL_SPECS` includes this file (implement) |
-| `docs/specs/assurance-runtime.md` | Pointer section (implement) |
-| `docs/adr/0003-nonconformity-capa.md` | Decision (Draft now; Accepted after target GREEN) |
+| `tests/contracts/nonconformity_capa.baseline.rs` | Absence characterization (skip-superseded) |
+| `tests/contracts/nonconformity_capa.target.rs` | Normative NC-001–NC-012 (GREEN) |
+| `Cargo.toml` | `[[test]]` `sdd_nonconformity_capa_{baseline,target}` |
+| `tests/contracts/documentation_layout.rs` | `CANONICAL_SPECS` includes this file |
+| `docs/specs/assurance-runtime.md` | Pointer section |
+| `docs/adr/0003-nonconformity-capa.md` | Decision (Accepted) |
 | `docs/sdd/nonconformity-capa.md` | Stub pointer only |
 
 Do not add a crate. Do not edit collision-fenced paths in §0.
@@ -813,4 +814,4 @@ Weeping Angel has a canonical nonconformity/CAPA record in `assurance-ir/v1` tha
 - links to audit findings and incidents without forking those IRs;
 - leaves compile flags, catalog TOML, and `ASSURANCE_IR_SCHEMA` unchanged.
 
-Prompt 22 mission complete when `sdd_nonconformity_capa_target` is GREEN, baseline is skip-superseded, neighbor suites listed in the header remain GREEN, and workspace verify (`cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`) passes.
+Prompt 22 mission is complete: `sdd_nonconformity_capa_target` is GREEN, baseline is skip-superseded, neighbor suites listed in the header remain GREEN. Workspace verify: `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`.

@@ -1,35 +1,35 @@
-# ADR 0003 — Nonconformity and CAPA as operational IR records (draft)
+# ADR 0003 — Nonconformity and CAPA as operational IR records
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** — spec-first; not Accepted until `sdd_nonconformity_capa_target` is GREEN |
+| Status | **Accepted** — `sdd_nonconformity_capa_target` GREEN; baseline skip-superseded; inventories on `AssessmentDefinition.nonconformities` / `corrective_actions` |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. Does **not** supercede the governance-catalog corrective-action *attestation* (`control.governance.corrective-action`), IR schema `assurance-ir/v1`, ADR 0001 spine, Prompt 16 `Remediation`, Prompt 19 `Incident`, or Prompt 21 `AuditFinding`. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0003 remediation](0003-remediation-engine.md), [ADR 0003 incident governance](0003-incident-governance.md), [ADR 0003 internal audit](0003-internal-audit.md), [ADR 0003 ISMS events](0003-isms-events-drift.md), [ADR 0004](0004-documentation-architecture.md) |
 | Spec | [`docs/specs/nonconformity-capa.md`](../specs/nonconformity-capa.md) |
-| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) — pointer at implement |
-| Characterization | Current HEAD (`6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` + landed Prompts 15/16/19/21) |
-| Tests | Dual-suite `sdd_nonconformity_capa_{baseline,target}` at implement (`tests/contracts/nonconformity_capa.{baseline,target}.rs`). Baseline must PASS on current HEAD; target must FAIL until product lands. |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) — Nonconformity and CAPA |
+| Characterization | Pre-product SHA `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` + landed Prompts 15/16/19/21 (baseline found case) |
+| Tests | `sdd_nonconformity_capa_target` GREEN (NC-001–NC-012); `sdd_nonconformity_capa_baseline` skip-superseded (`#[ignore = "superseded by sdd_nonconformity_capa_target"]`) |
 
 > Filename `0003-*` is shared with catalog-program / IR-engine siblings. **0004** is documentation architecture. Cite this decision by **path**. Parallel Operational ISMS drafts occupy `0005-*` / `0006-*` / `0007-*` / `0008-*`; do not reuse those numbers for this decision.
 
 ## Context
 
-On current HEAD Weeping Angel can attest that an organization *has* a corrective-action process (governance catalog `control.governance.corrective-action` + `manual-review`). Internal audit can store an opaque `AuditFinding.nonconformityId` (`NonconformityRef = String`) and even label a finding `kind = nonconformity`. Incidents can cite Prompt 16 `RemediationRef` as `correctiveActionIds`. Prompt 15 already *names* `IsmsEventKind::NonconformityOpened` and `CorrectiveActionOverdue`, but `IsmsSnapshot` bags for those inventories are empty no-ops.
+Before this slice Weeping Angel could attest that an organization *has* a corrective-action process (governance catalog `control.governance.corrective-action` + `manual-review`). Internal audit stored an opaque `AuditFinding.nonconformityId` (`NonconformityRef = String`) and could label a finding `kind = nonconformity`. Incidents cited Prompt 16 `RemediationRef` as `correctiveActionIds`. Prompt 15 already *named* `IsmsEventKind::NonconformityOpened` and `CorrectiveActionOverdue`, but `IsmsSnapshot` bags for those inventories were empty no-ops.
 
-There is still no operational record that proves a detected nonconformity was contained, root-caused, corrected, verified for effectiveness over a declared period, and formally closed.
+There was no operational record that proved a detected nonconformity was contained, root-caused, corrected, verified for effectiveness over a declared period, and formally closed.
 
-HEAD facts:
+Pre-product facts (baseline SHA):
 
 1. No `Nonconformity` / `CorrectiveAction` / `NonconformityId` / `CorrectiveActionId` in `weeping-angel-assurance-ir`.
-2. `AssessmentDefinition` has no `nonconformities` / `corrective_actions` inventories.
-3. `AssessmentRequests.nonconformities` and `FrameworkCapabilities.supports_nonconformities` are fail-closed compile flags (default `false`).
-4. `AuditFinding.kind = nonconformity` does not start CAPA.
-5. `Incident.corrective_action_ids` / PIR `proposed_corrective_action_ids` are `RemediationRef`.
-6. Catalog `control.governance.corrective-action` is an attestation fact. Retargeting it as the operational register would collapse “we attested that we handle NCs” into “this CAPA closed.”
+2. `AssessmentDefinition` had no `nonconformities` / `corrective_actions` inventories.
+3. `AssessmentRequests.nonconformities` and `FrameworkCapabilities.supports_nonconformities` were fail-closed compile flags (default `false`).
+4. `AuditFinding.kind = nonconformity` did not start CAPA.
+5. `Incident.corrective_action_ids` / PIR `proposed_corrective_action_ids` were `RemediationRef`.
+6. Catalog `control.governance.corrective-action` was an attestation fact. Retargeting it as the operational register would collapse “we attested that we handle NCs” into “this CAPA closed.”
 
-Operational ISMS v1 Prompt 22 requires a canonical CAPA lifecycle **without** a generic issue tracker or an AI root-cause engine.
+Operational ISMS v1 Prompt 22 required a canonical CAPA lifecycle **without** a generic issue tracker or an AI root-cause engine.
 
 Questions this decision answers:
 
@@ -42,25 +42,27 @@ Questions this decision answers:
 
 ## Decision
 
-Field names and tables are specified in [`docs/specs/nonconformity-capa.md`](../specs/nonconformity-capa.md). Product home (implement): `weeping-angel-assurance-ir` + `weeping-angel-assurance`; schema stays `assurance-ir/v1`.
+Field names and tables are specified in [`docs/specs/nonconformity-capa.md`](../specs/nonconformity-capa.md). Landed in `weeping-angel-assurance-ir` (`capa.rs`) + `weeping-angel-assurance` (`capa`); schema stays `assurance-ir/v1`.
 
 ### 1. Same IR crate, two new records, same schema version
 
 The register **is** `Nonconformity` + `CorrectiveAction` stored on `AssessmentDefinition.nonconformities` and `AssessmentDefinition.corrective_actions` (`serde(default)` empty). There is no GRC sidecar crate, `CapaV2`, or `assurance-ir/v2`. JSON is camelCase. Canonical digest stays serde field order + BTree maps.
 
-Canonical identities are `NonconformityId` and `CorrectiveActionId` (`typed_id!`). `AuditFinding.nonconformity_id` remains the Prompt 21 seam (`NonconformityRef`); when the CAPA inventory is non-empty those refs must resolve.
+Canonical identities are `NonconformityId` and `CorrectiveActionId` (`typed_id!`). `AuditFinding.nonconformity_id` remains the Prompt 21 seam (`NonconformityRef = String`); when the CAPA inventory is non-empty those refs must resolve.
+
+`ComplianceNodeRef` was **not** extended with CAPA variants (spec-optional; not required for NC-001–NC-012). Closed CAPA does not imply a control is effective.
 
 Incorrect: storing CAPA only as `evidence.manual.attestation`; using Jira keys as the canonical id; overloading `Remediation` as the nonconformity.
 
 ### 2. Proposal is explicit; classification is a decision boundary
 
-Audit findings, incidents, and `ControlRegressed` events **may propose** nonconformities through `propose_from_*` / `Nonconformity::open` with a `PrincipalRef` and timestamps. They are not CAPA until that call.
+Audit findings, incidents, and `ControlRegressed` events **may propose** nonconformities through `propose_from_audit_finding` / `propose_from_incident` / `propose_from_control_regression` / `Nonconformity::open` with a `PrincipalRef` and timestamps. They are not CAPA until that call.
 
 There is no `From<AuditFinding> for Nonconformity`, no `From<Incident> for Nonconformity`, no severity auto-threshold, and no collector insert.
 
 `AuditFinding.kind = nonconformity` still does **not** start CAPA (Prompt 21 law).
 
-Major / minor / opportunity is **unset** until `classify(principal, rationale, classification)`. Copying `AuditFindingSeverity` or `IncidentSeverity` into `NonconformityClassification` is forbidden.
+Major / minor / opportunity is **unset** until `classify(principal, rationale, classification)`. Copying `AuditFindingSeverity` or `IncidentSeverity` into `NonconformityClassification` is forbidden. `propose_from_incident` may copy Prompt 16 `RemediationRef`s onto `nonconformity.remediationRefs` as supporting work; that is not classification and not a CAPA `CorrectiveActionId`.
 
 ### 3. `CorrectiveAction` is not `Remediation` and not incident IR
 
@@ -68,7 +70,7 @@ Prompt 16 `Remediation` remains the general assurance **work** record. Incident 
 
 This slice’s `CorrectiveAction` is the ISO 10.x CAPA action bound to a `NonconformityId`, with target date, implementation evidence, declared effectiveness criteria, review period, and reviewer.
 
-They may **cite** each other (`remediationRefs` on CAPA; later slices may cite `NonconformityId` from remediations if needed). Closing one does not close the other. Do not retarget incident fields in this slice.
+They may **cite** each other (`remediationRefs` on CAPA). Closing one does not close the other. Incident fields were not retargeted.
 
 ### 4. State machine is fail-closed; one green test does not auto-close
 
@@ -79,28 +81,32 @@ Open → Contained → RootCauseIdentified → CorrectiveActionPlanned
 + Closed → Open (reopen with rationale)
 ```
 
+IR methods: `open`, `contain`, `record_root_cause`, `classify`, `plan_corrective_action`, `mark_implemented`, `start_effectiveness_review`, `close`, `cancel`, `supersede`, `reopen`, `transition`. Library engine wraps propose/evaluate/close/query; it does not panic on illegal pairs (`CapaError`).
+
 Missing RCA cannot leave `Contained`. Unclassified records cannot reach `CorrectiveActionPlanned`.
 
-Effectiveness review **reads** `Effectiveness` / `ControlTestResult` and **reuses** Prompt 16 `VerificationPolicy` semantics (default `SustainedWindow`, 14d, ≥2 greens, no intervening fail). A single green control test **must not** close CAPA unless declared criteria (`SingleGreenPermitted`) are satisfied **inside** the required review period — and `close` is still an explicit principal + time + rationale.
+Effectiveness review **reads** `Effectiveness` / `ControlTestResult` and **reuses** Prompt 16 `VerificationMode` / window semantics. `EffectivenessCriteria` serde field is `window` (seconds), matching `VerificationPolicy` — not a distinct `windowSeconds` name. Default `SustainedWindow`, 14d, ≥2 greens, no intervening fail. A single green control test **must not** close CAPA unless declared criteria (`SingleGreenPermitted`) are satisfied **inside** the required review period — and `close` is still an explicit principal + time + rationale (`close_nonconformity` / `Nonconformity::close`).
 
-Failed review forbids `Closed`.
+Failed review forbids `Closed`. Repair is a legal transition back to `Implemented` or `CorrectiveActionPlanned` with a `ReviewFailed` history event.
 
 ### 5. Cancel, supersede, reopen, and immutable closure
 
-Cancellation and supersession require non-empty accountable rationale (supersession also requires a successor id). `Closed` / `Cancelled` / `Superseded` reject in-place mutation (`ImmutableClosure`). Reopen is a transition that **appends** history; it does not delete the prior closure.
+Cancellation and supersession require non-empty accountable rationale (supersession also requires a successor id ≠ self). `Closed` / `Cancelled` / `Superseded` reject in-place mutation (`ImmutableClosure`). Reopen is a transition that **appends** history; it does not delete the prior closure. Reopen clears current `closure` / `effectiveness` fields; prior `Closed` remains in `history`. A new close still requires a fresh Satisfied review.
 
 ### 6. Consume neighbors; do not fork them
 
 - Prompt 21: resolve `NonconformityRef` when inventory present; do not change finding creation.
 - Prompt 19: consume `Incident`; do not invent a parallel incident type.
 - Prompt 16: cite `RemediationRef`; do not replace the remediation engine.
-- Prompt 15: consume existing `IsmsEventKind` names. Optional adapter from IR inventories → `IsmsSnapshot` bags. Do not rewrite `detect_isms_drift`. Empty bags remain no-ops.
+- Prompt 15: consume existing `IsmsEventKind` names. **No** IR-inventory → `IsmsSnapshot` adapter landed; empty bags remain no-ops. `detect_isms_drift` was not rewritten.
 - Compile flags: do **not** auto-enable `requests.nonconformities` or `supports_nonconformities`.
 - Catalog: do **not** retarget `control.governance.corrective-action`.
 
+Query helpers in `weeping-angel-assurance::capa`: `open_nonconformities`, `overdue_corrective_actions`, `failed_effectiveness_reviews`, `nonconformities_for_audit`, `nonconformities_for_incident`, `reopened_nonconformities`, `closed_nonconformities`. Overdue is a query fact, not an auto-transition.
+
 ### 7. Dual-suite law
 
-Executable law is `tests/contracts/nonconformity_capa.{baseline,target}.rs` registered as `sdd_nonconformity_capa_{baseline,target}` in root `Cargo.toml` (same commit as the `.rs` files). Baseline characterizes current HEAD absence and must PASS until skip-superseded after target GREEN. Neighbors listed in the spec header stay GREEN. Spec path is added to `CANONICAL_SPECS` at implement. No `tests/sdd/`. Traces go to `.sdd/runs` and `.sdd/artifacts`. `docs/sdd/` remains a stub.
+Executable law is `tests/contracts/nonconformity_capa.{baseline,target}.rs` registered as `sdd_nonconformity_capa_{baseline,target}` in root `Cargo.toml`. Baseline characterizes pre-product absence and is skip-superseded after target GREEN. Neighbors listed in the spec header stay GREEN. Spec path is in `CANONICAL_SPECS`. No `tests/sdd/`. Traces go to `.sdd/runs` and `.sdd/artifacts`. `docs/sdd/` remains a stub.
 
 ## Non-goals
 
@@ -111,6 +117,8 @@ Executable law is `tests/contracts/nonconformity_capa.{baseline,target}.rs` regi
 - Parallel incident/audit IRs.
 - Auto-enabling compile flags.
 - Ticket HTTP clients, SIEM, certification language.
+- `ComplianceNodeRef` CAPA variants (optional, not landed).
+- Automatic `IsmsSnapshot` population from IR inventories.
 
 ## Consequences
 
@@ -118,7 +126,7 @@ Executable law is `tests/contracts/nonconformity_capa.{baseline,target}.rs` regi
 - Governance catalog continues to answer “do we attest a CAPA process?”; this ADR answers “what happened to *this* nonconformity?”
 - Audit findings and incidents remain proposal sources, not silent classifiers.
 - Prompt 16 remediations remain work records; CAPA actions remain management-system corrections.
-- After implement: Draft → **Accepted**; public-contract pointer lands; baseline skip-superseded.
+- Public-contract pointer is live; dual-suite target is GREEN; baseline is skip-superseded.
 
 ## Related
 

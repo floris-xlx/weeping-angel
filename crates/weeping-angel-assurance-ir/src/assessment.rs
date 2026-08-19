@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::audit::{Audit, AuditFinding, AuditProgram};
+use crate::capa::{CorrectiveAction, Nonconformity};
 use crate::id::validate_stable_id;
 use crate::remediation::Remediation;
 use crate::risk_treatment::RiskTreatmentDecision;
@@ -181,6 +182,10 @@ pub struct AssessmentDefinition {
     pub audits: Vec<Audit>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub audit_findings: Vec<AuditFinding>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub nonconformities: Vec<Nonconformity>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub corrective_actions: Vec<CorrectiveAction>,
 }
 
 impl AssessmentDefinition {
@@ -210,6 +215,8 @@ impl AssessmentDefinition {
             audit_programs: Vec::new(),
             audits: Vec::new(),
             audit_findings: Vec::new(),
+            nonconformities: Vec::new(),
+            corrective_actions: Vec::new(),
         }
     }
 }

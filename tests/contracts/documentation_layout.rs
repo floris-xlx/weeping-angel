@@ -43,6 +43,7 @@ const CANONICAL_SPECS: &[&str] = &[
     "docs/specs/isms-events-drift.md",
     "docs/specs/remediation-engine.md",
     "docs/specs/internal-audit.md",
+    "docs/specs/nonconformity-capa.md",
     "docs/specs/personnel-security.md",
     "docs/specs/controlled-documents.md",
     "docs/specs/continuity-resilience.md",
@@ -72,6 +73,7 @@ fn decisions_live_under_docs_adr() {
     assert!(exists("docs/adr/0003-controlled-documents.md"));
     assert!(exists("docs/adr/0003-isms-events-drift.md"));
     assert!(exists("docs/adr/0003-internal-audit.md"));
+    assert!(exists("docs/adr/0003-nonconformity-capa.md"));
     assert!(exists("docs/adr/0005-risk-methodology.md"));
     assert!(exists("docs/adr/0005-operational-risk-register.md"));
     assert!(exists("docs/adr/0005-continuity-resilience.md"));
