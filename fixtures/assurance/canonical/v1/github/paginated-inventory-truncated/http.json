@@ -1,0 +1,21 @@
+{
+  "scope": "org:acme",
+  "requests": [
+    {
+      "path": "/orgs/acme/repos",
+      "status": 200,
+      "body": "LINK: </orgs/acme/repos?page=2>; rel=\"next\"\n[{\"name\":\"app\",\"full_name\":\"acme/app\",\"visibility\":\"private\",\"default_branch\":\"develop\",\"archived\":false}]"
+    },
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-# ADR 0003 — ISO 27001:2022 pack remaps onto the canonical catalog (DRAFT)
+# ADR 0003 — ISO 27001:2022 pack remaps onto the canonical catalog
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** (accept after implement / target GREEN; drop `-draft`) |
+| Status | **Accepted** (Prompt 12 implement; ISO is a catalog projection) |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The **pack-local canonical library** decision in [ADR 0002](0002-iso-27001-assurance-vertical.md) §3 (`access.mfa.privileged`, `source.branch-protection`, … in `metadata.toml`) and the ISO-only compile/serialize branches as a long-term contract. Does **not** supercede ADR 0002’s structural pack, legal boundary, ledger, TestExpr, collectors, or non-certification language. |
@@ -73,7 +73,7 @@ Every framework, including ISO, resolves through:
 
 Generic `AssessmentReport` serialization performs **no** pack I/O. `AssessmentRun` (and readiness snapshots) pin **both** `frameworkPackDigest` and `catalogDigest`. ISO-only branches in `normalize` / `stub_catalog` / `assessment_for_target` are removed in favor of target identity (shared with Prompt 11; do not invent a second registry).
 
-Catalog ID resolution at compile/validate happens at the orchestrator / CLI seam so `weeping-angel-framework` does not take a hard dependency on the catalog crate unless a later accepted ADR documents a narrower hook.
+Catalog ID resolution uses a narrow pack-loader hook: discover `catalog/canonical/v1` by search roots and fail closed on unknown `control.*` mapping targets. The framework crate does not depend on `weeping-angel-canonical-catalog`.
 
 ### 4. SoA consumes generic applicability
 

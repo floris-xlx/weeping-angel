@@ -27,6 +27,11 @@ impl ApplicabilityDecision {
             FactValue::Unknown => Self::ManualDeterminationRequired,
         }
     }
+
+    /// Compile keeps Applicable and ManualDeterminationRequired; drops only NotApplicable.
+    pub fn remains_in_compiled_set(self) -> bool {
+        self != Self::NotApplicable
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

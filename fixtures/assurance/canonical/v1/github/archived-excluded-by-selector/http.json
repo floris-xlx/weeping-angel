@@ -1,0 +1,68 @@
+{
+  "scope": "org:acme",
+  "exclude_archived": true,
+  "requests": [
+    {
+      "path": "/orgs/acme/repos",
+      "status": 200,
+      "body": [
+        {
+          "name": "app",
+          "full_name": "acme/app",
+          "visibility": "private",
+          "default_branch": "develop",
+          "archived": false
+        },
+        {
+          "name": "legacy",
+          "full_name": "acme/legacy",
+          "visibility": "internal",
+          "default_branch": "main",
+          "archived": true
+        }
+      ]
+    },
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/legacy",
+      "status": 200,
+      "body": {
+        "name": "legacy",
+        "full_name": "acme/legacy",
+        "visibility": "internal",
+        "default_branch": "main",
+        "archived": true
+      }
+    },
+    {
+      "path": "/repos/acme/app/branches/develop/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 2 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true }
+      }
+    },
+    {
+      "path": "/repos/acme/legacy/branches/main/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 2 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true }
+      }
+    }
+  ]
+}

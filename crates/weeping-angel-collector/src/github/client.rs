@@ -172,10 +172,7 @@ impl GitHubClient {
                     return PageWalk {
                         items,
                         complete: false,
-                        error: Some(format!(
-                            "PermissionDenied: {} listing {path}",
-                            resp.status
-                        )),
+                        error: Some(format!("PermissionDenied: {} listing {path}", resp.status)),
                     };
                 }
                 Ok(resp) if resp.status == 404 => {

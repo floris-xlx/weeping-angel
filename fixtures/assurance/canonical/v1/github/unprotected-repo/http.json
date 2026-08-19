@@ -1,0 +1,21 @@
+{
+  "scope": "repo:acme/app",
+  "requests": [
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/app/branches/develop/protection",
+      "status": 404,
+      "body": { "message": "Not Found" }
+    }
+  ]
+}

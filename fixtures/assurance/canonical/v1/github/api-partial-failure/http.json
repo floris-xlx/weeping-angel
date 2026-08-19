@@ -1,0 +1,32 @@
+{
+  "scope": "repo:acme/app,repo:acme/other",
+  "requests": [
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/app/branches/develop/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 2 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true },
+        "required_status_checks": { "strict": true, "contexts": ["ci"] }
+      }
+    },
+    {
+      "path": "/repos/acme/other",
+      "status": 500,
+      "body": { "message": "upstream unavailable" }
+    }
+  ]
+}

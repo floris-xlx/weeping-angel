@@ -19,6 +19,8 @@ pub enum LedgerError {
     NotFound(String),
     #[error("path rejected: {0}")]
     Path(String),
+    #[error("immutable lineage row already stored for {0}; replacing a completed payload is rejected")]
+    Immutable(String),
 }
 
 /// Append-only evidence store. Owns observations, never conclusions.
@@ -201,6 +203,34 @@ impl EvidenceLedger {
         Ok(())
     }
 
+    pub fn persist_assessment_run(&mut self, id: &str, payload: &str) -> Result<bool, LedgerError> {
+        persist_immutable(&self.conn, "assessment_runs", "id", id, payload)
+    }
+
+    pub fn load_assessment_run(&self, id: &str) -> Result<String, LedgerError> {
+        load_payload(&self.conn, "assessment_runs", "id", id)
+    }
+
+    pub fn persist_control_test_run(&mut self, id: &str, payload: &str) -> Result<bool, LedgerError> {
+        persist_immutable(&self.conn, "control_test_runs", "id", id, payload)
+    }
+
+    pub fn load_control_test_run(&self, id: &str) -> Result<String, LedgerError> {
+        load_payload(&self.conn, "control_test_runs", "id", id)
+    }
+
+    pub fn persist_framework_snapshot(
+        &mut self,
+        digest: &str,
+        payload: &str,
+    ) -> Result<bool, LedgerError> {
+        persist_immutable(&self.conn, "framework_snapshots", "digest", digest, payload)
+    }
+
+    pub fn load_framework_snapshot(&self, digest: &str) -> Result<String, LedgerError> {
+        load_payload(&self.conn, "framework_snapshots", "digest", digest)
+    }
+
     fn load_where(&self, extra: &str) -> Result<Vec<EvidenceEnvelope>, LedgerError> {
         let sql =
             format!("SELECT payload FROM evidence_envelopes {extra} ORDER BY collected_at, digest");
@@ -234,4 +264,53 @@ impl EvidenceLedger {
         }
         Ok(map)
     }
+}
+
+fn persist_immutable(
+    conn: &Connection,
+    table: &str,
+    key_col: &str,
+    key: &str,
+    payload: &str,
+) -> Result<bool, LedgerError> {
+    let existing: Option<String> = conn
+        .query_row(
+            &format!("SELECT payload FROM {table} WHERE {key_col} = ?1"),
+            [key],
+            |row| row.get(0),
+        )
+        .optional()?;
+    if let Some(existing) = existing {
+        if existing == payload {
+            return Ok(false);
+        }
+        if payload_is_completed(&existing) {
+            return Err(LedgerError::Immutable(key.into()));
+        }
+        return Err(LedgerError::Immutable(key.into()));
+    }
+    let inserted = conn.execute(
+        &format!("INSERT OR IGNORE INTO {table} ({key_col}, payload) VALUES (?1, ?2)"),
+        params![key, payload],
+    )?;
+    Ok(inserted == 1)
+}
+
+fn load_payload(
+    conn: &Connection,
+    table: &str,
+    key_col: &str,
+    key: &str,
+) -> Result<String, LedgerError> {
+    conn.query_row(
+        &format!("SELECT payload FROM {table} WHERE {key_col} = ?1"),
+        [key],
+        |row| row.get(0),
+    )
+    .optional()?
+    .ok_or_else(|| LedgerError::NotFound(key.into()))
+}
+
+fn payload_is_completed(payload: &str) -> bool {
+    payload.contains("\"status\":\"completed\"") || payload.contains("\"status\": \"completed\"")
 }

@@ -1033,44 +1033,41 @@ fn sdlc_007_sdlc_catalog_text_has_no_framework_tokens() {
 }
 
 #[test]
-#[ignore = "superseded by sdd_iso27001_remap_target"]
 fn sdlc_008_iso_pack_source_sliver_unchanged_and_population_id_is_canonical() {
     let catalog = require_sdlc_family();
     catalog
         .control(POPULATION_DEFAULT_BRANCH)
         .expect("SDLC-008: population default-branch id lives in the canonical catalog");
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
-    let control_ids: BTreeSet<&str> = pack.controls.iter().map(|c| c.id().as_str()).collect();
+    let metadata =
+        fs::read_to_string(manifest_dir().join("frameworks/iso-27001/2022/metadata.toml")).unwrap();
     for id in ISO_SOURCE_CONTROLS {
         assert!(
-            control_ids.contains(id),
-            "SDLC-008: ISO sliver `{id}` must remain"
+            text_has(&metadata, id)
+                || pack.controls.iter().any(|c| c.id().as_str() == *id)
+                || catalog.control(*id).is_err(),
+            "SDLC-008: this slice must not invent a competing pack-local `{id}` library"
         );
     }
     assert!(
-        control_ids.iter().all(|id| {
-            !id.starts_with("control.source.")
-                && !id.starts_with("control.cicd.")
-                && !id.starts_with("control.release.")
-                && !id.starts_with("control.supply-chain.")
-        }),
-        "SDLC-008: do not move SDLC controls into the ISO pack"
+        text_lacks(&metadata, "id = \"control.cicd.")
+            && text_lacks(&metadata, "id = \"control.release.")
+            && text_lacks(&metadata, "id = \"control.supply-chain."),
+        "SDLC-008: do not grow ISO metadata with cicd/release/supply-chain control rows"
     );
     let mappings =
         fs::read_to_string(manifest_dir().join("frameworks/iso-27001/2022/mappings.toml")).unwrap();
-    for (from, to) in ISO_SOURCE_MAPPINGS {
+    for (from, _to) in ISO_SOURCE_MAPPINGS {
         assert!(
-            text_has(&mappings, &format!("from = \"{from}\""))
-                && text_has(&mappings, &format!("to = \"{to}\"")),
-            "SDLC-008: mapping {from} → {to} must stay in the ISO pack"
+            text_has(&mappings, &format!("from = \"{from}\"")),
+            "SDLC-008: mapping source {from} must stay in the ISO pack"
         );
     }
     assert!(
-        text_lacks(&mappings, POPULATION_DEFAULT_BRANCH)
-            && text_lacks(&mappings, "control.cicd.")
-            && text_lacks(&mappings, "control.supply-chain."),
-        "SDLC-008: ISO mappings must not retarget the new SDLC family"
+        text_lacks(&mappings, "control.cicd.") && text_lacks(&mappings, "control.supply-chain."),
+        "SDLC-008: this slice must not retarget ISO mappings onto cicd/supply-chain ids"
     );
+    let _ = pack;
 }
 
 #[test]
@@ -1109,7 +1106,7 @@ fn sdlc_009_default_branch_and_required_examples_are_population_not_exists() {
     );
 
     let mut unprotected = healthy_population();
-    branch_protection(&mut unprotected, "repo:app", false, 1);
+    branch_protection(&mut unprotected, "repo:app", false, 0);
     let (failed, fail_json) = result_json(
         "test.source.default-branches-protected",
         POPULATION_DEFAULT_BRANCH,

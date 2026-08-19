@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified** — product implementation must not start until dual-suite registration and this spec are the SSOT |
+| Status | **Implemented** — Kleene evaluator + snapshot GREEN on `sdd_applicability_engine_target`; absence baseline tests skip-superseded |
 | Program | Canonical Assurance Catalog v1 — Prompt 10 |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
 | Slice | Deterministic organization-context + Kleene three-state evaluator over existing IR `ApplicabilityRule` / `ApplicabilityPredicate`; applicability snapshot for lineage; population scope constraint |
@@ -553,4 +553,10 @@ Prior session attempt for this prompt never started (4-run cap). Treat implement
 
 ## 11. Implemented (what shipped)
 
-*Empty — spec-only phase. Fill after target GREEN.*
+- Module: `crates/weeping-angel-assurance/src/applicability/{mod,context,evaluator,snapshot}.rs`
+- Public API: `build_applicability_context`, `evaluate_applicability`, `evaluate_assessment_applicability`
+- Decisions: `Applicable` | `NotApplicable` | `ManualDeterminationRequired`
+- Snapshot schema: `weeping-angel/applicability-snapshot/v1`
+- IR: `Control::subjects()` getter only; `statically_applicable` unchanged
+- Compile: still static `!= Some(false)` without a context; callers filter `NotApplicable` via `ApplicabilityDecision::remains_in_compiled_set`
+- Dual-suite: target GREEN; baseline B06/B07/B09 skip-superseded

@@ -1,0 +1,32 @@
+{
+  "scope": "repo:acme/app",
+  "requests": [
+    {
+      "path": "/repos/acme/app",
+      "status": 429,
+      "retry_after": 0,
+      "body": { "message": "API rate limit exceeded" }
+    },
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/app/branches/develop/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 1 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true }
+      }
+    }
+  ]
+}

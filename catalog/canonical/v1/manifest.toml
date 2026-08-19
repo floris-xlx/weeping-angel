@@ -5,9 +5,9 @@ id = "canonical"
 version = "1"
 
 [files]
-controls = ["controls/fixture.example.toml", "controls/identity.toml", "controls/sdlc.toml"]
-evidence = ["evidence/fixture.example.toml", "evidence/identity.toml", "evidence/sdlc.toml"]
-tests = ["tests/fixture.example.toml", "tests/identity.toml", "tests/sdlc.toml"]
+controls = ["controls/fixture.example.toml", "controls/identity.toml", "controls/sdlc.toml", "controls/vulnerability.toml"]
+evidence = ["evidence/fixture.example.toml", "evidence/identity.toml", "evidence/sdlc.toml", "evidence/vulnerability.toml"]
+tests = ["tests/fixture.example.toml", "tests/identity.toml", "tests/sdlc.toml", "tests/vulnerability.toml"]
 
 [digest]
 algorithm = "sha256"

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** — specify-only; accept when `sdd_applicability_engine_target` is GREEN and public types are frozen |
+| Status | **Accepted** — `sdd_applicability_engine_target` GREEN; public types frozen in `weeping-angel-assurance::applicability` |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “`resolve_applicability` is a static `Never` filter and SoA is pack-boolean” *operational* reading of [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) compile stage 2 **for org-context evaluation**. Does **not** supercede IR declarativeness, pack schema, collector blindness, or Prompt 11 persist/explain ownership. |
@@ -13,7 +13,7 @@
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests (planned) | `sdd_applicability_engine_baseline` GREEN on static-only behavior; `sdd_applicability_engine_target` RED then GREEN |
 
-> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. **Keep Draft** until the Prompt 10 target suite is GREEN.
+> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
 ## Context
 

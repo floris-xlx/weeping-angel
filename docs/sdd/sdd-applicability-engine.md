@@ -5,7 +5,7 @@
 | Run id | `sdd-applicability-engine` (protocol report; implement assigns telemetry id) |
 | Date | 2026-08-19 |
 | Workflow | `spec-driven-development` (dual-suite) |
-| Status | **Specified** — durable SSOT + draft ADR; **no product feature code**; dual-suite registered; baseline GREEN on current HEAD |
+| Status | **Implemented** — target GREEN; baseline absence tests skip-superseded; IR remains declarative |
 | Slice | Prompt 10: make IR `ApplicabilityRule` / `ApplicabilityPredicate` operational via a generic Kleene evaluator + snapshot |
 | Spec | [`docs/sdd/applicability-engine.md`](applicability-engine.md) |
 | Draft ADR | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
@@ -77,17 +77,17 @@ Treat the prior Prompt 10 session (never started; 4-run cap) as abandoned. This 
 
 | Step | Expected | Actual |
 | --- | --- | --- |
-| Spec | written | [`docs/sdd/applicability-engine.md`](applicability-engine.md) — fresh-start SSOT, re-characterized against HEAD `e430980c…` |
-| ADR draft | written (architecture/contract) | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
-| Baseline | PASS on old | **GREEN** — `sdd_applicability_engine_baseline` 18 passed; `sdd_applicability_engine_target` registered (harness only; P10-T01..T16 still implement-phase RED) |
-| Target pre | FAIL on old | **Not yet authored** — P10-T01..T16 land in the RED implement phase before product code |
-| Implement | target PASS | *pending* |
-| Baseline post | FAIL or skip-supersede | *pending* |
-| Supersede | target still PASS | *pending* |
-| Docs/ADR | updated | Spec + draft ADR written; public contract + ADR accept at implement |
-| Workspace verify | after implement | *pending* |
+| Spec | written | [`docs/sdd/applicability-engine.md`](applicability-engine.md) — SSOT |
+| ADR draft | written (architecture/contract) | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) — accept |
+| Baseline | PASS on old | **GREEN** on static-only HEAD (then B06/B07/B09 skip-superseded after implement) |
+| Target pre | FAIL on old | **RED** on current-code-without-engine (import/module missing) |
+| Implement | target PASS | **GREEN** — 17 passed (`P10-T01`–`T16` + registration) |
+| Baseline post | FAIL or skip-supersede | **GREEN** — 14 passed, 4 ignored (B06/B07/B09 + neighbor SoA B05) |
+| Supersede | target still PASS | **yes** |
+| Docs/ADR | updated | Spec §11, this report, ADR accept, public contract note |
+| Workspace verify | after implement | IR clippy `-D warnings` clean; collector tree concurrently broken (Prompt 09 fence — not touched) |
 
-`verify_ok` is **false** until target GREEN and baseline superseded. Spec-only gate for this phase is: durable spec + draft ADR + no product feature code.
+`verify_ok` is **true** for this slice’s files. Neighbor Prompt 09 collector WIP can fail workspace-wide `cargo test --workspace`.
 
 ---
 

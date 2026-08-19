@@ -1,0 +1,65 @@
+{
+  "scope": "org:acme",
+  "requests": [
+    {
+      "path": "/orgs/acme/repos",
+      "status": 200,
+      "body": "LINK: </orgs/acme/repos?page=2>; rel=\"next\"\n[{\"name\":\"app\",\"full_name\":\"acme/app\",\"visibility\":\"private\",\"default_branch\":\"develop\",\"archived\":false}]"
+    },
+    {
+      "path": "/orgs/acme/repos?page=2",
+      "status": 200,
+      "body": [
+        {
+          "name": "other",
+          "full_name": "acme/other",
+          "visibility": "private",
+          "default_branch": "main",
+          "archived": false
+        }
+      ]
+    },
+    {
+      "path": "/repos/acme/app",
+      "status": 200,
+      "body": {
+        "name": "app",
+        "full_name": "acme/app",
+        "visibility": "private",
+        "default_branch": "develop",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/other",
+      "status": 200,
+      "body": {
+        "name": "other",
+        "full_name": "acme/other",
+        "visibility": "private",
+        "default_branch": "main",
+        "archived": false
+      }
+    },
+    {
+      "path": "/repos/acme/app/branches/develop/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 1 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true }
+      }
+    },
+    {
+      "path": "/repos/acme/other/branches/main/protection",
+      "status": 200,
+      "body": {
+        "required_pull_request_reviews": { "required_approving_review_count": 1 },
+        "allow_force_pushes": { "enabled": false },
+        "allow_deletions": { "enabled": false },
+        "enforce_admins": { "enabled": true }
+      }
+    }
+  ]
+}

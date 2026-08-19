@@ -1,8 +1,10 @@
 use serde_json::Value;
 use weeping_angel_evidence::EvidenceValue;
 
+use weeping_angel_evidence::EvidenceEnvelope;
+
 use super::normalize::{EmitCtx, emit, repo_subject_id};
-use crate::{CollectorError, EvidenceEnvelope};
+use crate::CollectorError;
 
 pub const MODULE: &str = "security";
 

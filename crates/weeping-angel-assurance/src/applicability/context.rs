@@ -191,27 +191,20 @@ pub fn build_applicability_context(
     let mut processing_activities = definition.processing_activities.clone();
     let mut risks = definition.risks.clone();
 
-    if !scope.subjects.is_empty() {
-        retain_included(
-            &scope.subjects,
-            &mut assets,
-            &mut identities,
-            &mut vendors,
-            &mut processing_activities,
-            &mut risks,
-        );
-    }
-
     let mut excluded_subjects = Vec::new();
-    apply_exclusions(
-        &scope,
-        &mut assets,
-        &mut identities,
-        &mut vendors,
-        &mut processing_activities,
-        &mut risks,
-        &mut excluded_subjects,
-    );
+    {
+        let mut inventories = Inventories {
+            assets: &mut assets,
+            identities: &mut identities,
+            vendors: &mut vendors,
+            processing_activities: &mut processing_activities,
+            risks: &mut risks,
+        };
+        if !scope.subjects.is_empty() {
+            inventories.retain_included(&scope.subjects);
+        }
+        inventories.apply_exclusions(&scope, &mut excluded_subjects);
+    }
     excluded_subjects.sort_by(|a, b| a.id.cmp(&b.id));
 
     ApplicabilityContext {
@@ -230,113 +223,106 @@ pub fn build_applicability_context(
     }
 }
 
-fn retain_included(
-    includes: &[SubjectSelector],
-    assets: &mut Vec<Asset>,
-    identities: &mut Vec<Identity>,
-    vendors: &mut Vec<Vendor>,
-    processing_activities: &mut Vec<ProcessingActivity>,
-    risks: &mut Vec<Risk>,
-) {
-    assets.retain(|asset| includes.iter().any(|sel| asset_matches(asset, sel)));
-    identities.retain(|identity| includes.iter().any(|sel| identity_matches(identity, sel)));
-    vendors.retain(|vendor| includes.iter().any(|sel| vendor_matches(vendor, sel)));
-    processing_activities
-        .retain(|activity| includes.iter().any(|sel| activity_matches(activity, sel)));
-    risks.retain(|risk| includes.iter().any(|sel| risk_matches(risk, sel)));
+struct Inventories<'a> {
+    assets: &'a mut Vec<Asset>,
+    identities: &'a mut Vec<Identity>,
+    vendors: &'a mut Vec<Vendor>,
+    processing_activities: &'a mut Vec<ProcessingActivity>,
+    risks: &'a mut Vec<Risk>,
 }
 
-fn apply_exclusions(
-    scope: &AssessmentScope,
-    assets: &mut Vec<Asset>,
-    identities: &mut Vec<Identity>,
-    vendors: &mut Vec<Vendor>,
-    processing_activities: &mut Vec<ProcessingActivity>,
-    risks: &mut Vec<Risk>,
-    excluded: &mut Vec<ExcludedSubject>,
-) {
-    for (index, exclusion) in scope.exclusions.iter().enumerate() {
-        let reason = exclusion
-            .rationale
-            .clone()
-            .unwrap_or_else(|| format!("excluded by assessment scope[{index}]"));
-        retain_unexcluded(
-            assets,
-            identities,
-            vendors,
-            processing_activities,
-            risks,
-            &exclusion.subjects,
-            index,
-            &reason,
+impl Inventories<'_> {
+    fn retain_included(&mut self, includes: &[SubjectSelector]) {
+        self.assets
+            .retain(|asset| includes.iter().any(|sel| asset_matches(asset, sel)));
+        self.identities
+            .retain(|identity| includes.iter().any(|sel| identity_matches(identity, sel)));
+        self.vendors
+            .retain(|vendor| includes.iter().any(|sel| vendor_matches(vendor, sel)));
+        self.processing_activities
+            .retain(|activity| includes.iter().any(|sel| activity_matches(activity, sel)));
+        self.risks
+            .retain(|risk| includes.iter().any(|sel| risk_matches(risk, sel)));
+    }
+
+    fn apply_exclusions(&mut self, scope: &AssessmentScope, excluded: &mut Vec<ExcludedSubject>) {
+        for (index, exclusion) in scope.exclusions.iter().enumerate() {
+            let reason = exclusion
+                .rationale
+                .clone()
+                .unwrap_or_else(|| format!("excluded by assessment scope[{index}]"));
+            self.drop_matching(&exclusion.subjects, index, &reason, excluded);
+        }
+    }
+
+    fn drop_matching(
+        &mut self,
+        selectors: &[SubjectSelector],
+        exclusion_index: usize,
+        reason: &str,
+        excluded: &mut Vec<ExcludedSubject>,
+    ) {
+        record_drops(
+            self.assets,
+            |asset, sel| asset_matches(asset, sel),
+            |asset| asset.id.as_str().to_string(),
+            selectors,
+            exclusion_index,
+            reason,
+            excluded,
+        );
+        record_drops(
+            self.identities,
+            |identity, sel| identity_matches(identity, sel),
+            |identity| identity.id.as_str().to_string(),
+            selectors,
+            exclusion_index,
+            reason,
+            excluded,
+        );
+        record_drops(
+            self.vendors,
+            |vendor, sel| vendor_matches(vendor, sel),
+            |vendor| vendor.id.as_str().to_string(),
+            selectors,
+            exclusion_index,
+            reason,
+            excluded,
+        );
+        record_drops(
+            self.processing_activities,
+            |activity, sel| activity_matches(activity, sel),
+            |activity| activity.id.as_str().to_string(),
+            selectors,
+            exclusion_index,
+            reason,
+            excluded,
+        );
+        record_drops(
+            self.risks,
+            |risk, sel| risk_matches(risk, sel),
+            |risk| risk.id.as_str().to_string(),
+            selectors,
+            exclusion_index,
+            reason,
             excluded,
         );
     }
 }
 
-fn retain_unexcluded(
-    assets: &mut Vec<Asset>,
-    identities: &mut Vec<Identity>,
-    vendors: &mut Vec<Vendor>,
-    processing_activities: &mut Vec<ProcessingActivity>,
-    risks: &mut Vec<Risk>,
+fn record_drops<T>(
+    items: &mut Vec<T>,
+    matches: impl Fn(&T, &SubjectSelector) -> bool,
+    id_of: impl Fn(&T) -> String,
     selectors: &[SubjectSelector],
     exclusion_index: usize,
     reason: &str,
     excluded: &mut Vec<ExcludedSubject>,
 ) {
-    assets.retain(|asset| {
-        if selectors.iter().any(|sel| asset_matches(asset, sel)) {
+    items.retain(|item| {
+        if selectors.iter().any(|sel| matches(item, sel)) {
             excluded.push(ExcludedSubject {
-                id: asset.id.as_str().to_string(),
-                reason: reason.to_string(),
-                exclusion_index,
-            });
-            false
-        } else {
-            true
-        }
-    });
-    identities.retain(|identity| {
-        if selectors.iter().any(|sel| identity_matches(identity, sel)) {
-            excluded.push(ExcludedSubject {
-                id: identity.id.as_str().to_string(),
-                reason: reason.to_string(),
-                exclusion_index,
-            });
-            false
-        } else {
-            true
-        }
-    });
-    vendors.retain(|vendor| {
-        if selectors.iter().any(|sel| vendor_matches(vendor, sel)) {
-            excluded.push(ExcludedSubject {
-                id: vendor.id.as_str().to_string(),
-                reason: reason.to_string(),
-                exclusion_index,
-            });
-            false
-        } else {
-            true
-        }
-    });
-    processing_activities.retain(|activity| {
-        if selectors.iter().any(|sel| activity_matches(activity, sel)) {
-            excluded.push(ExcludedSubject {
-                id: activity.id.as_str().to_string(),
-                reason: reason.to_string(),
-                exclusion_index,
-            });
-            false
-        } else {
-            true
-        }
-    });
-    risks.retain(|risk| {
-        if selectors.iter().any(|sel| risk_matches(risk, sel)) {
-            excluded.push(ExcludedSubject {
-                id: risk.id.as_str().to_string(),
+                id: id_of(item),
                 reason: reason.to_string(),
                 exclusion_index,
             });
@@ -438,7 +424,6 @@ fn identity_kind_matches(kind: IdentityKind, subject: SubjectKind) -> bool {
             IdentityKind::Service | IdentityKind::ServiceAccount,
             SubjectKind::ServiceAccount | SubjectKind::Service,
         ) => true,
-        (IdentityKind::Role | IdentityKind::Team, SubjectKind::PrivilegedIdentity) => false,
         _ => false,
     }
 }

@@ -307,7 +307,9 @@ const IAM_FIXTURES: &[&str] = &[
 ];
 
 fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    option_env!("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| std::env::current_dir().expect("cwd"))
 }
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {

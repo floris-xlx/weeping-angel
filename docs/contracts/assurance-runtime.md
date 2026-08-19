@@ -10,6 +10,7 @@ Decisions:
 - Typed evidence: [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md)
 - Population / coverage: [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md)
 - IAM catalog family: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md)
+- Applicability engine: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
 
 Public composition root is `weeping-angel-assurance`. Callers select a profile + capabilities; they do not import per-regime adapters.
 
@@ -26,6 +27,7 @@ Allowed language: `ready`, `effective`, `ineffective`, `insufficient evidence`, 
 | Evidence value encoding | `evidence-value/v1` (`EVIDENCE_VALUE_SCHEMA`) — hybrid JSON inside observation facts |
 | Framework pack schema | `weeping-angel/framework-pack/v1` (`FRAMEWORK_PACK_SCHEMA`) |
 | Canonical catalog schema | `weeping-angel/canonical-catalog/v1` (`CATALOG_SCHEMA`) |
+| Applicability snapshot schema | `weeping-angel/applicability-snapshot/v1` (`APPLICABILITY_SNAPSHOT_SCHEMA`) |
 | JSON | serde `camelCase` on public documents |
 | Digests | SHA-256 hex of `serde_json` bytes (struct field order; `BTreeMap`/`BTreeSet` for maps/sets) |
 | Catalog digest | Display `wa:canonical-catalog:weeping-angel/canonical-catalog/v1:` + SHA-256 hex of parsed documents (`DIGEST_PREFIX` + IR `canonical_digest`; prefix not mixed into the hash) |
@@ -38,7 +40,7 @@ Newtypes, stable string form, no random v4 in persisted identity:
 
 `FrameworkId`, `FrameworkVersion`, `RequirementId`, `ControlId`, `ControlImplementationId`, `ControlTestId`, `AssetId`, `IdentityId`, `VendorId`, `ProcessingActivityId`, `EvidenceRequirementId`, `RiskId`, `ExceptionId`, `AssessmentId`, `AuditProgramId`, `EvidenceType`.
 
-`EvidenceType` names a **fact kind**. Canonical names used by this vertical include `source.branch.protection`, `source.branch.required_reviews`, `source.codeowners.present`, `security_finding`, `manual_attestation`, and the IAM family `evidence.identity.*` (`inventory`, `authentication-state`, `mfa-status`, `privileged-membership`, `role-membership`, `last-active`, `account-status`, `account-owner`, `access-review`, `lifecycle-event`, `service-account`, `external-access`). It is not a framework name and must not be prefixed `github.*` / `iso27001.*` unless the provider or regime is genuinely part of the fact.
+`EvidenceType` names a **fact kind**. Canonical names used by this vertical include `source.branch.protection`, `source.branch.required_reviews`, `source.codeowners.present`, `security_finding`, `manual_attestation`, the IAM family `evidence.identity.*` (`inventory`, `authentication-state`, `mfa-status`, `privileged-membership`, `role-membership`, `last-active`, `account-status`, `account-owner`, `access-review`, `lifecycle-event`, `service-account`, `external-access`), and the vulnerability family `evidence.vulnerability.*` (`finding`, `scan-run`, `scan-coverage`, `remediation-state`, `owner`, `exception`, `exposure-review`), `evidence.secret.exposure`, `evidence.dependency.*` (`vulnerability`, `confusion-risk`), and `evidence.asset.software-inventory`. Scanner-bridge `security_*` types (`security_finding`, `security.vulnerability.present`, `security.secret.exposure`, `security.dependency_confusion_risk`) remain the **bridge taxonomy**, not the catalog library. It is not a framework name and must not be prefixed `github.*` / `iso27001.*` unless the provider or regime is genuinely part of the fact.
 
 `SubjectKind` (IR SSOT): `organization`, `asset`, `repository`, `service`, `identity`, `user`, `privilegedIdentity`, `device`, `vendor`, `dataset`, `processingActivity`, `branch`, `application`, `database`, `cloudAccount`, `cloudResource`, `serviceAccount`, `endpoint`, `dataStore`, `network`, `deployment`.
 
@@ -100,6 +102,8 @@ catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
 - Infrastructure ships fixture IDs `control.source.protected-branch` / `evidence.source.protected-branch` / `test.source.protected-branch`. Domain files are added via the manifest without changing the loader.
 - IAM family (Prompt 04): 23 `control.identity.*` controls, 12 `evidence.identity.*` fact types, 23 `test.identity.*` tests in `catalog/canonical/v1/{controls,evidence,tests}/identity.toml`. Tests are population predicates (`coverage-at-least` / `all-subjects` / `none-subjects`), not existence of one envelope. Access-approval, SoD, and periodic review stay hybrid/manual. ISO pack `access.*` ids are **not** remapped here.
 - Fixtures: `fixtures/assurance/canonical/v1/identity/` (`healthy-org`, `privileged-without-mfa`, `inactive-admin-active`, `terminated-employee-active`, `service-account-without-owner`, `partial-inventory`, `stale-access-review`, `break-glass-approved-exception`).
+- Vulnerability family (Prompt 06): 20 `control.vulnerability.*` controls, evidence types `evidence.vulnerability.*` / `evidence.secret.exposure` / `evidence.dependency.*` / `evidence.asset.software-inventory`, and population tests including `test.vulnerability.{scan-current,scan-coverage,no-critical-over-sla,no-high-over-sla,findings-have-owner}`, `test.secret.no-active-exposure`, and `test.dependency.no-critical-over-sla` in `catalog/canonical/v1/{controls,evidence,tests}/vulnerability.toml`. A scanner finding is evidence, not a compliance result. Accepted-risk and approved-exception are not remediation. Empty findings plus unknown coverage are never Effective. SSOT: [`docs/sdd/vulnerability-canonical-assurance-catalog.md`](../sdd/vulnerability-canonical-assurance-catalog.md).
+- Fixtures: `fixtures/assurance/canonical/v1/vulnerability/` (`complete-clean-scan`, `critical-inside-sla`, `critical-overdue`, `critical-approved-exception`, `critical-expired-exception`, `incomplete-scan-coverage`, `stale-scan`, `unresolved-secret-exposure`, `duplicate-superseded`, `zero-findings-unknown-coverage`). Clock `2026-08-19T12:00:00Z`; SLA critical 7d / high 30d.
 - No Entra / Okta / Google Workspace collector. GitHub still emits `source.*` only.
 - Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind.
 
@@ -142,6 +146,8 @@ Pipeline (recorded on `CompiledFramework.validation.stages`, exact keys):
 8. `integrity_validation`
 
 `CompiledFramework` **must** include: `applicableRequirements`, `controls`, `tests`, `evidenceRequirements`, `validation`, `digest`.
+
+Without an organization context, `resolve_applicability` still keeps a requirement unless `statically_applicable() == Some(false)`. With a context, `weeping-angel-assurance::applicability` evaluates IR `ApplicabilityRule` trees in Kleene three-state (`Applicable` / `NotApplicable` / `ManualDeterminationRequired`). Unknown facts are never false. Compile (or the caller immediately after) drops only `NotApplicable`; `ManualDeterminationRequired` stays in scope. `evaluate_assessment_applicability` returns an in-memory `ApplicabilitySnapshot` for lineage persist; this engine does not persist or explain.
 
 Additional compile errors from packs: `UnknownPack`, `UnknownRequirement`, dangling / unsupported / empty-rationale mappings.
 

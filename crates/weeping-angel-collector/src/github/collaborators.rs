@@ -2,8 +2,10 @@ use serde_json::Value;
 use weeping_angel_assurance_ir::AssetId;
 use weeping_angel_evidence::EvidenceValue;
 
+use weeping_angel_evidence::EvidenceEnvelope;
+
 use super::normalize::{EmitCtx, emit};
-use crate::{CollectorError, EvidenceEnvelope};
+use crate::CollectorError;
 
 pub const MODULE: &str = "collaborators";
 

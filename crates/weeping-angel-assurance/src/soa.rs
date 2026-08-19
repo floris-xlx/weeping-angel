@@ -62,7 +62,16 @@ pub struct SoaEntry {
     pub notes: String,
 }
 
+pub fn project_soa_from_snapshot(
+    snapshot: &crate::lineage::StatementOfApplicabilitySnapshot,
+) -> StatementOfApplicability {
+    snapshot.soa.clone()
+}
+
 pub fn project_soa(framework: &str, version: &str) -> StatementOfApplicability {
+    // When a pinned StatementOfApplicabilitySnapshot is available, callers
+    // should use project_soa_from_snapshot so historical SoA is not rewritten
+    // by later pack edits. Digest identity lives on the snapshot, not live disk.
     let mapped = load_framework_pack(framework, version)
         .map(|pack| {
             pack.mappings

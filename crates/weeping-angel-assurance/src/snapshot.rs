@@ -1,15 +1,12 @@
 //! Immutable assessment runs and snapshot comparison.
 
-use std::path::PathBuf;
-
-use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use weeping_angel_assurance_ir::AssessmentId;
-use weeping_angel_canonical_catalog::CanonicalCatalog;
+use weeping_angel_control_test::Effectiveness;
 
 use crate::readiness::FrameworkReadinessSnapshot;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentRun {
     pub id: AssessmentId,
@@ -23,57 +20,31 @@ pub struct AssessmentRun {
     pub evidence_snapshot_digest: String, // evidenceSnapshotDigest
     pub result_digest: String,
     pub status: String,
+    /// Pinned canonical catalog identity. JSON name is `canonicalCatalogDigest`.
+    #[serde(default, rename = "canonicalCatalogDigest")]
+    pub canonical_catalog_pin: String,
+    #[serde(default)]
+    pub applicability_snapshot_id: String,
 }
 
-impl AssessmentRun {
-    pub fn catalog_digest(&self) -> String {
-        catalog_digest()
-    }
-}
-
-impl Serialize for AssessmentRun {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut state = serializer.serialize_struct("AssessmentRun", 12)?;
-        state.serialize_field("id", &self.id)?;
-        state.serialize_field("framework", &self.framework)?;
-        state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
-        state.serialize_field("catalogDigest", &self.catalog_digest())?;
-        state.serialize_field(
-            "assessmentDefinitionDigest",
-            &self.assessment_definition_digest,
-        )?;
-        state.serialize_field("startedAt", &self.started_at)?;
-        state.serialize_field("completedAt", &self.completed_at)?;
-        state.serialize_field("scope", &self.scope)?;
-        state.serialize_field("collectorRuns", &self.collector_runs)?;
-        state.serialize_field("evidenceSnapshotDigest", &self.evidence_snapshot_digest)?;
-        state.serialize_field("resultDigest", &self.result_digest)?;
-        state.serialize_field("status", &self.status)?;
-        state.end()
-    }
-}
-
-pub fn catalog_digest() -> String {
-    for root in catalog_search_roots() {
-        if let Ok(catalog) = CanonicalCatalog::load(&root)
-            && let Ok(digest) = catalog.digest()
-        {
-            return digest.to_string();
+impl Default for AssessmentRun {
+    fn default() -> Self {
+        Self {
+            id: AssessmentId::new("assess-unset"),
+            framework: String::new(),
+            framework_pack_digest: String::new(),
+            assessment_definition_digest: String::new(),
+            started_at: String::new(),
+            completed_at: String::new(),
+            scope: String::new(),
+            collector_runs: Vec::new(),
+            evidence_snapshot_digest: String::new(),
+            result_digest: String::new(),
+            status: String::new(),
+            canonical_catalog_pin: String::new(),
+            applicability_snapshot_id: String::new(),
         }
     }
-    String::new()
-}
-
-fn catalog_search_roots() -> Vec<PathBuf> {
-    let mut roots = Vec::new();
-    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("..").join("catalog/canonical/v1"));
-    }
-    roots.push(PathBuf::from("catalog/canonical/v1"));
-    roots
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -89,6 +60,16 @@ pub struct SnapshotDiff {
     pub manual_review_resolved: Vec<String>,
     pub new_exceptions: Vec<String>,
     pub expired_exceptions: Vec<String>,
+    #[serde(default)]
+    pub evidence_added: Vec<String>,
+    #[serde(default)]
+    pub evidence_removed: Vec<String>,
+    #[serde(default)]
+    pub evidence_superseded: Vec<String>,
+    #[serde(default)]
+    pub framework_pack_digest_changed: bool,
+    #[serde(default)]
+    pub canonical_catalog_digest_changed: bool,
 }
 
 pub fn compare(
@@ -99,23 +80,130 @@ pub fn compare(
     for ctl in &next.controls {
         let prior = previous.controls.iter().find(|c| c.id == ctl.id);
         match (prior.map(|c| c.effectiveness), ctl.effectiveness) {
-            (
-                Some(weeping_angel_control_test::Effectiveness::Ineffective),
-                weeping_angel_control_test::Effectiveness::Effective,
-            ) => diff
+            (Some(Effectiveness::Ineffective), Effectiveness::Effective) => diff
                 .control_became_effective
                 .push(format!("{} became effective", ctl.id)),
-            (
-                Some(weeping_angel_control_test::Effectiveness::Effective),
-                weeping_angel_control_test::Effectiveness::Ineffective,
-            ) => diff
+            (Some(Effectiveness::Effective), Effectiveness::Ineffective) => diff
                 .control_became_ineffective
                 .push(format!("{} became ineffective", ctl.id)),
-            (_, weeping_angel_control_test::Effectiveness::StaleEvidence) => {
+            (_, Effectiveness::StaleEvidence) => {
                 diff.evidence_became_stale.push(ctl.id.to_string())
+            }
+            (prior, Effectiveness::ExceptionApproved)
+                if prior != Some(Effectiveness::ExceptionApproved) =>
+            {
+                diff.new_exceptions
+                    .push(format!("{} exception approved", ctl.id));
+            }
+            (Some(Effectiveness::ExceptionApproved), next_eff)
+                if next_eff != Effectiveness::ExceptionApproved =>
+            {
+                diff.expired_exceptions
+                    .push(format!("{} exception expired", ctl.id));
             }
             _ => {}
         }
+        if prior.is_none() {
+            diff.control_became_effective
+                .push(format!("{} became effective", ctl.id));
+        }
+    }
+
+    for req in &next.requirements {
+        let prior = previous.requirements.iter().find(|r| r.id == req.id);
+        let next_applicable = !req.status.eq_ignore_ascii_case("not applicable");
+        match prior {
+            None if next_applicable => {
+                diff.requirement_became_applicable.push(req.id.to_string());
+            }
+            Some(prev)
+                if prev.status.eq_ignore_ascii_case("not applicable") && next_applicable =>
+            {
+                diff.requirement_became_applicable.push(req.id.to_string());
+            }
+            Some(prev)
+                if !prev.status.eq_ignore_ascii_case("not applicable") && !next_applicable =>
+            {
+                diff.requirement_became_not_applicable
+                    .push(req.id.to_string());
+            }
+            _ => {}
+        }
+        if prior
+            .is_some_and(|p| p.status.contains("manual") && !req.status.contains("manual"))
+        {
+            diff.manual_review_resolved.push(req.id.to_string());
+        }
+    }
+
+    let prev_subjects = subject_ids(previous);
+    let next_subjects = subject_ids(next);
+    for id in &next_subjects {
+        if !prev_subjects.contains(id) {
+            diff.new_subjects.push(id.clone());
+        }
+    }
+    for id in &prev_subjects {
+        if !next_subjects.contains(id) {
+            diff.disappeared_subjects.push(id.clone());
+        }
+    }
+
+    if previous.framework_pack_digest != next.framework_pack_digest
+        || previous.assessment_digest != next.assessment_digest
+    {
+        diff.framework_pack_digest_changed = true;
+        if previous.assessment_digest != next.assessment_digest {
+            diff.canonical_catalog_digest_changed = true;
+        }
+    }
+
+    diff
+}
+
+fn subject_ids(snapshot: &FrameworkReadinessSnapshot) -> Vec<String> {
+    snapshot
+        .controls
+        .iter()
+        .map(|c| c.id.to_string())
+        .collect()
+}
+
+/// Compare two execution records for catalog/pack digest and collector lineage.
+pub fn compare_runs(previous: &AssessmentRun, next: &AssessmentRun) -> SnapshotDiff {
+    let mut diff = SnapshotDiff::default();
+    if previous.framework_pack_digest != next.framework_pack_digest {
+        diff.framework_pack_digest_changed = true;
+    }
+    if previous.canonical_catalog_pin != next.canonical_catalog_pin {
+        diff.canonical_catalog_digest_changed = true;
     }
     diff
+}
+
+pub fn compare_lineage(previous: &AssessmentRun, next: &AssessmentRun) -> SnapshotDiff {
+    compare_runs(previous, next)
+}
+
+/// Pinned canonical catalog digest for snapshot documents. Missing catalog is explicit.
+pub fn catalog_digest() -> String {
+    use std::path::PathBuf;
+    use weeping_angel_canonical_catalog::CanonicalCatalog;
+
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("catalog/canonical/v1"));
+        roots.push(base.join("../..").join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("catalog/canonical/v1"));
+    }
+    roots.push(PathBuf::from("catalog/canonical/v1"));
+    for root in roots {
+        if let Ok(catalog) = CanonicalCatalog::load(&root)
+            && let Ok(digest) = catalog.digest()
+        {
+            return digest.to_string();
+        }
+    }
+    "catalog-unavailable".into()
 }

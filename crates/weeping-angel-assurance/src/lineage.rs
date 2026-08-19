@@ -1,0 +1,614 @@
+//! Immutable assessment lineage: snapshots, result identity, explain, replay.
+
+use serde::{Deserialize, Serialize};
+use weeping_angel_assurance_ir::{
+    ApplicabilityRule, AssessmentId, Control, ControlId, ControlImplementation, ControlTestId,
+    Exception, Mapping, typed_canonical_digest,
+};
+use weeping_angel_control_test::{ControlTestResult, Effectiveness, PopulationEvaluation};
+use weeping_angel_framework::{Assessment, CompiledFramework};
+
+use crate::readiness::FrameworkReadinessSnapshot;
+use crate::snapshot::AssessmentRun;
+use crate::soa::StatementOfApplicability;
+use crate::{AssessmentReport, AssuranceError};
+
+pub const LINEAGE_SNAPSHOT_SCHEMA: &str = "weeping-angel/assessment-lineage/v1";
+
+/// Detected when current pack/catalog files no longer match a pinned digest.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, Serialize, Deserialize)]
+#[error("digest mismatch: expected {expected}, got {actual}")]
+pub struct DigestMismatch {
+    pub expected: String,
+    pub actual: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrameworkPackSnapshot {
+    pub schema: String,
+    pub framework: String,
+    pub version: String,
+    pub digest: String,
+    pub payload: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CanonicalCatalogSnapshot {
+    pub schema: String,
+    pub digest: String,
+    pub payload: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AssessmentDefinitionSnapshot {
+    pub schema: String,
+    pub assessment_id: AssessmentId,
+    pub digest: String,
+    pub definition: Assessment,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplicabilityDecision {
+    pub id: String,
+    pub rule: ApplicabilityRule,
+    pub static_outcome: String,
+    pub rationale: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackApplicabilityEntry {
+    pub reference: String,
+    pub applicable: bool,
+    pub applicability_rationale: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplicabilitySnapshot {
+    pub schema: String,
+    pub assessment_id: AssessmentId,
+    pub scope: String,
+    pub requirement_decisions: Vec<ApplicabilityDecision>,
+    pub control_decisions: Vec<ApplicabilityDecision>,
+    pub pack_entries: Vec<PackApplicabilityEntry>,
+    pub digest: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvidenceSnapshot {
+    pub schema: String,
+    pub envelope_digests: Vec<String>,
+    pub collection_run_ids: Vec<String>,
+    pub digest: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ControlTestRun {
+    pub id: String,
+    pub test_id: ControlTestId,
+    pub test_version: String,
+    pub input_digest: String,
+    pub control_id: ControlId,
+    pub effectiveness: Effectiveness,
+    pub evidence_refs: Vec<String>,
+    pub missing_evidence: Vec<String>,
+    pub population: Option<PopulationEvaluation>,
+    pub exception_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StatementOfApplicabilitySnapshot {
+    pub schema: String,
+    pub digest: String,
+    pub framework_pack_digest: String,
+    pub soa: StatementOfApplicability,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct MetricFamily {
+    pub covered: u64,
+    pub total: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CoverageMetrics {
+    pub control_effectiveness: MetricFamily,
+    pub evidence: MetricFamily,
+    pub automation: MetricFamily,
+    pub subject: MetricFamily,
+    pub framework_requirement: MetricFamily,
+    pub fresh_evidence: MetricFamily,
+    pub manual_review_burden: MetricFamily,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AssessmentSummary {
+    pub assessment_id: Option<AssessmentId>,
+    pub status: String,
+    pub effective: u32,
+    pub ineffective: u32,
+    pub partial: u32,
+    pub manual_review: u32,
+    pub insufficient_evidence: u32,
+    pub not_applicable: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExplainedTest {
+    pub id: ControlTestId,
+    pub test_version: String,
+    pub input_digest: String,
+    pub expr_identity: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ControlExplanation {
+    pub control: Control,
+    pub applicability: ApplicabilityDecision,
+    pub implementation: Option<ControlImplementation>,
+    pub population: Option<PopulationEvaluation>,
+    pub tests: Vec<ExplainedTest>,
+    pub evidence_requirements: Vec<String>,
+    pub evidence: Vec<String>,
+    pub missing_evidence: Vec<String>,
+    pub failing_subjects: Vec<String>,
+    pub missing_subjects: Vec<String>,
+    pub exceptions: Vec<Exception>,
+    pub mappings: Vec<Mapping>,
+    pub effectiveness: Effectiveness,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LineageBundle {
+    pub pack: FrameworkPackSnapshot,
+    pub catalog: CanonicalCatalogSnapshot,
+    pub definition: AssessmentDefinitionSnapshot,
+    pub applicability: ApplicabilitySnapshot,
+    pub evidence: EvidenceSnapshot,
+    pub tests: Vec<ControlTestRun>,
+    pub run: AssessmentRun,
+    pub readiness: FrameworkReadinessSnapshot,
+    pub soa: StatementOfApplicabilitySnapshot,
+    pub results: Vec<ControlTestResult>,
+}
+
+pub fn static_outcome_label(rule: &ApplicabilityRule) -> String {
+    match rule.statically_applicable() {
+        Some(true) => "applicable".into(),
+        Some(false) => "not applicable".into(),
+        None => "unresolved".into(),
+    }
+}
+
+pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> ApplicabilitySnapshot {
+    let requirement_decisions = assessment
+        .requirements
+        .iter()
+        .map(|req| ApplicabilityDecision {
+            id: req.id().to_string(),
+            rule: req.applicability().clone(),
+            static_outcome: static_outcome_label(req.applicability()),
+            rationale: format!(
+                "static applicability from ApplicabilityRule; unresolved predicates stay included"
+            ),
+        })
+        .collect::<Vec<_>>();
+    let control_decisions = assessment
+        .controls
+        .iter()
+        .map(|ctl| ApplicabilityDecision {
+            id: ctl.id().to_string(),
+            rule: ctl.applicability().clone(),
+            static_outcome: static_outcome_label(ctl.applicability()),
+            rationale: "static applicability from ApplicabilityRule".into(),
+        })
+        .collect::<Vec<_>>();
+    let mut snapshot = ApplicabilitySnapshot {
+        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
+        assessment_id: assessment.id.clone(),
+        scope: scope.into(),
+        requirement_decisions,
+        control_decisions,
+        pack_entries: Vec::new(),
+        digest: String::new(),
+    };
+    snapshot.digest = snapshot_digest("applicability-snapshot", &snapshot);
+    snapshot
+}
+
+pub fn seal_evidence_snapshot(
+    envelope_digests: impl IntoIterator<Item = String>,
+    collection_run_ids: impl IntoIterator<Item = String>,
+) -> EvidenceSnapshot {
+    let mut envelope_digests: Vec<String> = envelope_digests.into_iter().collect();
+    envelope_digests.sort();
+    envelope_digests.dedup();
+    let mut collection_run_ids: Vec<String> = collection_run_ids.into_iter().collect();
+    collection_run_ids.sort();
+    collection_run_ids.dedup();
+    let mut snapshot = EvidenceSnapshot {
+        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
+        envelope_digests,
+        collection_run_ids,
+        digest: String::new(),
+    };
+    snapshot.digest = snapshot_digest("evidence-snapshot", &snapshot);
+    snapshot
+}
+
+pub fn definition_snapshot(assessment: &Assessment) -> AssessmentDefinitionSnapshot {
+    let mut snap = AssessmentDefinitionSnapshot {
+        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
+        assessment_id: assessment.id.clone(),
+        digest: String::new(),
+        definition: assessment.clone(),
+    };
+    snap.digest = snapshot_digest("assessment-definition", &snap.definition);
+    snap
+}
+
+pub fn pack_snapshot(
+    framework: &str,
+    version: &str,
+    digest: &str,
+    payload: serde_json::Value,
+) -> FrameworkPackSnapshot {
+    FrameworkPackSnapshot {
+        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
+        framework: framework.into(),
+        version: version.into(),
+        digest: digest.into(),
+        payload,
+    }
+}
+
+pub fn catalog_snapshot(digest: &str, payload: serde_json::Value) -> CanonicalCatalogSnapshot {
+    CanonicalCatalogSnapshot {
+        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
+        digest: digest.into(),
+        payload,
+    }
+}
+
+pub fn control_test_run_from_result(
+    result: &ControlTestResult,
+    exception_ids: Vec<String>,
+) -> ControlTestRun {
+    ControlTestRun {
+        id: format!("{}:{}", result.test_id, result.input_digest),
+        test_id: result.test_id.clone(),
+        test_version: result.test_version.clone(),
+        input_digest: result.input_digest.clone(),
+        control_id: result.control_id.clone(),
+        effectiveness: result.effectiveness,
+        evidence_refs: result.evidence_refs.clone(),
+        missing_evidence: result.missing_evidence.clone(),
+        population: result.population.clone(),
+        exception_ids,
+    }
+}
+
+fn snapshot_digest<T: Serialize>(type_name: &str, value: &T) -> String {
+    typed_canonical_digest(type_name, value).unwrap_or_default()
+}
+
+/// Result identity: SHA-256 of canonical JSON. Excludes wall-clock `duration`
+/// and `evaluatedAt` (`checked_at`) so two processes with the same semantic
+/// results produce the same digest.
+pub fn assessment_result_digest(results: &[ControlTestResult]) -> String {
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Identity<'a> {
+        schema: &'static str,
+        results: Vec<ResultPin<'a>>,
+    }
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct ResultPin<'a> {
+        test_id: &'a ControlTestId,
+        control_id: &'a ControlId,
+        effectiveness: Effectiveness,
+        evidence_refs: &'a [String],
+        missing_evidence: &'a [String],
+        test_version: &'a str,
+        input_digest: &'a str,
+        population: &'a Option<PopulationEvaluation>,
+    }
+    let body = Identity {
+        schema: LINEAGE_SNAPSHOT_SCHEMA,
+        results: results
+            .iter()
+            .map(|r| {
+                let _duration = &r.duration;
+                let _evaluated_at = &r.checked_at;
+                ResultPin {
+                    test_id: &r.test_id,
+                    control_id: &r.control_id,
+                    effectiveness: r.effectiveness,
+                    evidence_refs: &r.evidence_refs,
+                    missing_evidence: &r.missing_evidence,
+                    test_version: &r.test_version,
+                    input_digest: &r.input_digest,
+                    population: &r.population,
+                }
+            })
+            .collect(),
+    };
+    typed_canonical_digest("assessment-result", &body).unwrap_or_default()
+}
+
+pub fn coverage_metrics(
+    results: &[ControlTestResult],
+    compiled: Option<&CompiledFramework>,
+) -> CoverageMetrics {
+    let total = results.len() as u64;
+    let effective = results
+        .iter()
+        .filter(|r| r.effectiveness == Effectiveness::Effective)
+        .count() as u64;
+    let evidenced = results
+        .iter()
+        .filter(|r| {
+            !matches!(
+                r.effectiveness,
+                Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
+            )
+        })
+        .count() as u64;
+    let automated = results
+        .iter()
+        .filter(|r| {
+            !matches!(
+                r.effectiveness,
+                Effectiveness::ManualReviewRequired | Effectiveness::NotTested
+            )
+        })
+        .count() as u64;
+    let with_subjects = results
+        .iter()
+        .filter(|r| {
+            r.population
+                .as_ref()
+                .is_some_and(|p| p.evaluated > 0 || p.population > 0)
+        })
+        .count() as u64;
+    let req_total = compiled
+        .map(|c| c.applicable_requirements.len() as u64)
+        .unwrap_or(total);
+    let fresh = results
+        .iter()
+        .filter(|r| r.effectiveness != Effectiveness::StaleEvidence)
+        .count() as u64;
+    let manual = results
+        .iter()
+        .filter(|r| r.effectiveness == Effectiveness::ManualReviewRequired)
+        .count() as u64;
+    CoverageMetrics {
+        control_effectiveness: MetricFamily {
+            covered: effective,
+            total,
+        },
+        evidence: MetricFamily {
+            covered: evidenced,
+            total,
+        },
+        automation: MetricFamily {
+            covered: automated,
+            total,
+        },
+        subject: MetricFamily {
+            covered: with_subjects,
+            total,
+        },
+        framework_requirement: MetricFamily {
+            covered: req_total,
+            total: req_total,
+        },
+        fresh_evidence: MetricFamily {
+            covered: fresh,
+            total,
+        },
+        manual_review_burden: MetricFamily {
+            covered: manual,
+            total,
+        },
+    }
+}
+
+pub fn assessment_summary(report: &AssessmentReport) -> AssessmentSummary {
+    let mut summary = AssessmentSummary {
+        assessment_id: Some(report.assessment_id.clone()),
+        status: report
+            .run
+            .as_ref()
+            .map(|r| r.status.clone())
+            .unwrap_or_else(|| "completed".into()),
+        ..AssessmentSummary::default()
+    };
+    for result in &report.results {
+        match result.effectiveness {
+            Effectiveness::Effective => summary.effective += 1,
+            Effectiveness::Ineffective => summary.ineffective += 1,
+            Effectiveness::PartiallyEffective => summary.partial += 1,
+            Effectiveness::ManualReviewRequired => summary.manual_review += 1,
+            Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence => {
+                summary.insufficient_evidence += 1
+            }
+            Effectiveness::NotApplicable => summary.not_applicable += 1,
+            _ => {}
+        }
+    }
+    summary
+}
+
+pub fn explain_control(
+    report: &AssessmentReport,
+    control_id: &str,
+    assessment: Option<&Assessment>,
+    applicability: Option<&ApplicabilitySnapshot>,
+) -> Result<ControlExplanation, AssuranceError> {
+    let result = report
+        .results
+        .iter()
+        .find(|r| r.control_id.as_str() == control_id)
+        .ok_or_else(|| AssuranceError::UnknownControl {
+            assessment: report.assessment_id.to_string(),
+            control: control_id.into(),
+        })?;
+    let control = assessment
+        .and_then(|a| a.controls.iter().find(|c| c.id().as_str() == control_id))
+        .cloned()
+        .unwrap_or_else(|| {
+            Control::new(
+                result.control_id.clone(),
+                control_id,
+                "control from pinned assessment run",
+            )
+        });
+    let applicability = applicability
+        .and_then(|snap| {
+            snap.control_decisions
+                .iter()
+                .find(|d| d.id == control_id)
+                .cloned()
+        })
+        .unwrap_or_else(|| ApplicabilityDecision {
+            id: control_id.into(),
+            rule: ApplicabilityRule::Always,
+            static_outcome: "applicable".into(),
+            rationale: "evaluated because the control was in the pinned assessment".into(),
+        });
+    let implementation = assessment.and_then(|a| {
+        a.implementations
+            .iter()
+            .find(|imp| imp.control_id().as_str() == control_id)
+            .cloned()
+    });
+    let mappings = assessment
+        .map(|a| {
+            a.mappings
+                .iter()
+                .filter(|m| m.to_control().as_str() == control_id)
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default();
+    let evidence_requirements = assessment
+        .map(|a| {
+            a.evidence_requirements
+                .iter()
+                .map(|e| e.id().to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    let exceptions = assessment
+        .map(|a| {
+            a.exceptions
+                .iter()
+                .filter(|e| {
+                    e.control_id
+                        .as_ref()
+                        .is_some_and(|id| id.as_str() == control_id)
+                })
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default();
+    let population = result.population.clone();
+    let failing_subjects = population
+        .as_ref()
+        .map(|p| p.failing_subjects.clone())
+        .unwrap_or_default();
+    let missing_subjects = population
+        .as_ref()
+        .map(|p| p.missing_subjects.clone())
+        .unwrap_or_default();
+    Ok(ControlExplanation {
+        control,
+        applicability,
+        implementation,
+        population,
+        tests: vec![ExplainedTest {
+            id: result.test_id.clone(),
+            test_version: result.test_version.clone(),
+            input_digest: result.input_digest.clone(),
+            expr_identity: None,
+        }],
+        evidence_requirements,
+        evidence: result.evidence_refs.clone(),
+        missing_evidence: result.missing_evidence.clone(),
+        failing_subjects,
+        missing_subjects,
+        exceptions,
+        mappings,
+        effectiveness: result.effectiveness,
+    })
+}
+
+/// Reconstruct a report from pinned snapshots. Does not consult current files.
+pub fn reconstruct(bundle: &LineageBundle) -> AssessmentReport {
+    let mut report = AssessmentReport {
+        assessment_id: bundle.run.id.clone(),
+        profile: bundle.run.framework.clone(),
+        digest: bundle.run.result_digest.clone(),
+        results: bundle.results.clone(),
+        evidence_count: bundle.evidence.envelope_digests.len(),
+        run: Some(bundle.run.clone()),
+        summary: None,
+        coverage_metrics: None,
+        framework_pack_digest: bundle.pack.digest.clone(),
+        canonical_catalog_digest: bundle.catalog.digest.clone(),
+    };
+    report.summary = Some(assessment_summary(&report));
+    report.coverage_metrics = Some(coverage_metrics(&report.results, None));
+    report
+}
+
+/// Replay from pins. Equivalent to [`reconstruct`]; current files are not required.
+pub fn replay_assessment(bundle: &LineageBundle) -> Result<AssessmentReport, AssuranceError> {
+    Ok(reconstruct(bundle))
+}
+
+pub fn load_lineage(bundle: &LineageBundle) -> AssessmentReport {
+    reconstruct(bundle)
+}
+
+/// Compare pinned digests to current files. Mismatch is detected, never rewritten.
+pub fn detect_digest_mismatch(pinned: &str, current: &str) -> Result<(), DigestMismatch> {
+    if pinned != current {
+        Err(DigestMismatch {
+            expected: pinned.into(),
+            actual: current.into(),
+        })
+    } else {
+        Ok(())
+    }
+}
+
+pub fn verify_current_against_pins(
+    bundle: &LineageBundle,
+    current_pack_digest: Option<&str>,
+    current_catalog_digest: Option<&str>,
+) -> Result<(), DigestMismatch> {
+    if let Some(current) = current_pack_digest {
+        detect_digest_mismatch(&bundle.pack.digest, current)?;
+    }
+    if let Some(current) = current_catalog_digest {
+        detect_digest_mismatch(&bundle.catalog.digest, current)?;
+    }
+    Ok(())
+}

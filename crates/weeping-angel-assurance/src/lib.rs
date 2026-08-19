@@ -1,35 +1,47 @@
 //! Public assurance facade. Callers select a profile + capabilities, not an adapter.
 
-pub mod applicability;
 pub mod bridge;
+pub mod lineage;
 pub mod readiness;
 pub mod snapshot;
 pub mod soa;
 
+use std::path::PathBuf;
 use std::time::Duration;
 
 use chrono::Utc;
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use thiserror::Error;
-use weeping_angel_assurance_ir::{
-    AssessmentId, AssetId, Control, ControlId, EvidenceRequirement, EvidenceRequirementId,
-    EvidenceType, FrameworkId, Mapping, MappingCompleteness, MappingDirection, Requirement,
-    RequirementId,
-};
+use weeping_angel_canonical_catalog::CanonicalCatalog;
 use weeping_angel_collector::{CollectorError, CollectorScope, EvidenceCollector};
 use weeping_angel_control_test::{
     AssessmentContext, CompiledControlTest, ControlTestKind, ControlTestResult, Effectiveness,
     EvidenceSet, evaluate,
 };
+use weeping_angel_evidence::CollectionRun;
 use weeping_angel_framework::{
-    Assessment, AssessmentRequests, CompiledFramework, FrameworkCompileError, FrameworkTarget,
-    compile_framework, load_framework_pack,
+    Assessment, CompiledFramework, FrameworkCompileError, FrameworkTarget, compile_framework,
+    load_framework_pack,
 };
+use weeping_angel_framework::pack::{PackError, resolve_pack_dir};
 
+pub use lineage::{
+    ApplicabilitySnapshot, AssessmentDefinitionSnapshot, AssessmentSummary, CanonicalCatalogSnapshot,
+    ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch, EvidenceSnapshot,
+    FrameworkPackSnapshot, LineageBundle, StatementOfApplicabilitySnapshot, assessment_result_digest,
+    explain_control, load_lineage, reconstruct, replay_assessment,
+};
 pub use readiness::FrameworkReadinessSnapshot;
-pub use snapshot::{AssessmentRun, SnapshotDiff, catalog_digest, compare};
-pub use soa::{Applicability, StatementOfApplicability, project_soa};
+pub use snapshot::{AssessmentRun, SnapshotDiff, compare, compare_lineage, compare_runs};
+pub use soa::{StatementOfApplicability, project_soa};
+
+use crate::lineage::{
+    assessment_summary, catalog_snapshot, coverage_metrics, definition_snapshot, pack_snapshot,
+    seal_evidence_snapshot, snapshot_applicability,
+};
+use weeping_angel_assurance_ir::AssessmentId;
+use weeping_angel_assurance_ir::AssetId;
 
 const NOT_CERTIFICATION: &str = "This is a readiness assessment and is not certification.";
 
@@ -43,6 +55,12 @@ pub enum AssuranceError {
     MissingCollector,
     #[error("engine is missing a framework target")]
     MissingFramework,
+    #[error("unknown pack: {0}")]
+    UnknownPack(String),
+    #[error(transparent)]
+    DigestMismatch(#[from] DigestMismatch),
+    #[error("unknown control {control} in assessment {assessment}")]
+    UnknownControl { assessment: String, control: String },
 }
 
 #[derive(Debug, Clone, Default)]
@@ -58,6 +76,18 @@ impl AssessmentScope {
     pub fn allow_asset(mut self, asset: AssetId) -> Self {
         self.allowed.insert(asset);
         self
+    }
+
+    pub fn describe(&self) -> String {
+        if self.allowed.is_empty() {
+            "assess".into()
+        } else {
+            self.allowed
+                .iter()
+                .map(|a| a.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        }
     }
 
     fn to_collector_scope(&self) -> CollectorScope {
@@ -77,58 +107,39 @@ pub struct AssessmentReport {
     pub digest: String,
     pub results: Vec<ControlTestResult>,
     pub evidence_count: usize,
+    #[serde(default)]
+    pub run: Option<AssessmentRun>,
+    #[serde(default)]
+    pub summary: Option<AssessmentSummary>,
+    #[serde(default)]
+    pub coverage_metrics: Option<CoverageMetrics>,
+    #[serde(default)]
+    pub framework_pack_digest: String,
+    #[serde(default)]
+    pub canonical_catalog_digest: String,
+}
+
+impl Default for AssessmentReport {
+    fn default() -> Self {
+        Self {
+            assessment_id: AssessmentId::new("assess-unset"),
+            profile: String::new(),
+            digest: String::new(),
+            results: Vec::new(),
+            evidence_count: 0,
+            run: None,
+            summary: None,
+            coverage_metrics: None,
+            framework_pack_digest: String::new(),
+            canonical_catalog_digest: String::new(),
+        }
+    }
 }
 
 impl Serialize for AssessmentReport {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let pack_digest = pack_digest_for_profile(&self.profile).unwrap_or_default();
-        let mut effective = 0u32;
-        let mut ineffective = 0u32;
-        let mut partial = 0u32;
-        let mut manual_review = 0u32;
-        let mut insufficient_evidence = 0u32;
-        for result in &self.results {
-            match result.effectiveness {
-                Effectiveness::Effective => effective += 1,
-                Effectiveness::Ineffective => ineffective += 1,
-                Effectiveness::PartiallyEffective => partial += 1,
-                Effectiveness::ManualReviewRequired => manual_review += 1,
-                Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence => {
-                    insufficient_evidence += 1
-                }
-                _ => {}
-            }
-        }
-        let total = self.results.len();
-        let automated = self
-            .results
-            .iter()
-            .filter(|r| {
-                !matches!(
-                    r.effectiveness,
-                    Effectiveness::ManualReviewRequired | Effectiveness::NotTested
-                )
-            })
-            .count();
-        let evidenced = self
-            .results
-            .iter()
-            .filter(|r| {
-                !matches!(
-                    r.effectiveness,
-                    Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
-                )
-            })
-            .count();
-        let coverage = |covered: usize| {
-            serde_json::json!({
-                "covered": covered,
-                "total": total,
-                "count": covered,
-            })
-        };
-
-        let mut state = serializer.serialize_struct("AssessmentReport", 20)?;
+        let projections = report_projections(self);
+        let mut state = serializer.serialize_struct("AssessmentReport", 18)?;
         state.serialize_field("assessmentId", &self.assessment_id)?;
         state.serialize_field("profile", &self.profile)?;
         state.serialize_field("digest", &self.digest)?;
@@ -136,59 +147,135 @@ impl Serialize for AssessmentReport {
         state.serialize_field("evidenceCount", &self.evidence_count)?;
         state.serialize_field("disclaimer", &NOT_CERTIFICATION)?;
         state.serialize_field("banner", &NOT_CERTIFICATION)?;
-        state.serialize_field("frameworkPackDigest", &pack_digest)?;
-        state.serialize_field("catalogDigest", &snapshot::catalog_digest())?;
-        state.serialize_field(
-            "requirements",
-            &self
-                .results
-                .iter()
-                .map(|r| r.control_id.as_str())
-                .collect::<Vec<_>>(),
-        )?;
-        state.serialize_field(
-            "controls",
-            &self
-                .results
-                .iter()
-                .map(|r| {
-                    serde_json::json!({
-                        "id": r.control_id.as_str(),
-                        "effectiveness": r.effectiveness,
-                    })
-                })
-                .collect::<Vec<_>>(),
-        )?;
-        state.serialize_field("insufficientEvidence", &insufficient_evidence)?;
-        state.serialize_field("manualReview", &manual_review)?;
-        state.serialize_field("automationCoverage", &coverage(automated))?;
-        state.serialize_field("evidenceCoverage", &coverage(evidenced))?;
-        state.serialize_field("subjectCoverage", &coverage(evidenced))?;
-        state.serialize_field("controlCoverage", &coverage(self.results.len()))?;
-        state.serialize_field(
-            "frameworkRequirementCoverage",
-            &coverage(self.results.len()),
-        )?;
-        state.serialize_field("effective", &effective)?;
-        state.serialize_field("ineffective", &ineffective)?;
-        let _ = (partial, "collectionRunId", "evidenceRefs");
+        state.serialize_field("frameworkPackDigest", &projections.pack_pin)?;
+        state.serialize_field("canonicalCatalogDigest", &projections.catalog_pin)?;
+        state.serialize_field("resultDigest", &self.digest)?;
+        state.serialize_field("summary", &projections.summary)?;
+        state.serialize_field("coverageMetrics", &projections.metrics)?;
+        state.serialize_field("assessmentRun", &self.run)?;
+        state.serialize_field("status", &projections.status)?;
+        state.serialize_field("collectionRuns", &projections.collection_runs)?;
+        state.serialize_field("readiness", &projections.readiness)?;
+        state.serialize_field("requirements", &projections.requirement_ids)?;
+        state.serialize_field("controls", &projections.controls)?;
+        state.serialize_field("insufficientEvidence", &projections.summary.insufficient_evidence)?;
+        state.serialize_field("manualReview", &projections.summary.manual_review)?;
+        state.serialize_field("effective", &projections.summary.effective)?;
+        state.serialize_field("ineffective", &projections.summary.ineffective)?;
         state.end()
     }
 }
 
-fn pack_digest_for_profile(profile: &str) -> Option<String> {
-    const VERSIONS: &[&str] = &["2022", "2016", "2018", "1"];
-    for version in VERSIONS {
-        if let Ok(pack) = load_framework_pack(profile, version) {
-            return Some(pack.digest.0);
-        }
+struct ReportProjections {
+    pack_pin: String,
+    catalog_pin: String,
+    summary: AssessmentSummary,
+    metrics: CoverageMetrics,
+    status: String,
+    collection_runs: Vec<String>,
+    readiness: FrameworkReadinessSnapshot,
+    requirement_ids: Vec<String>,
+    controls: Vec<serde_json::Value>,
+}
+
+fn report_projections(report: &AssessmentReport) -> ReportProjections {
+    let pack_pin = if !report.framework_pack_digest.is_empty() {
+        report.framework_pack_digest.clone()
+    } else if let Some(run) = &report.run {
+        run.framework_pack_digest.clone()
+    } else if !report.digest.is_empty() {
+        report.digest.clone()
+    } else {
+        "unpinned".into()
+    };
+    let catalog_pin = if !report.canonical_catalog_digest.is_empty() {
+        report.canonical_catalog_digest.clone()
+    } else if let Some(run) = &report.run {
+        run.canonical_catalog_pin.clone()
+    } else if !report.digest.is_empty() {
+        report.digest.clone()
+    } else {
+        "unpinned".into()
+    };
+    let summary = report
+        .summary
+        .clone()
+        .unwrap_or_else(|| assessment_summary(report));
+    let metrics = report
+        .coverage_metrics
+        .clone()
+        .unwrap_or_else(|| coverage_metrics(&report.results, None));
+    let status = report
+        .run
+        .as_ref()
+        .map(|r| r.status.clone())
+        .unwrap_or_else(|| summary.status.clone());
+    let collection_runs = report
+        .run
+        .as_ref()
+        .map(|r| r.collector_runs.clone())
+        .unwrap_or_default();
+    let controls: Vec<serde_json::Value> = report
+        .results
+        .iter()
+        .map(|r| {
+            serde_json::json!({
+                "id": r.control_id.as_str(),
+                "effectiveness": r.effectiveness,
+            })
+        })
+        .collect();
+    let requirement_ids: Vec<String> = report
+        .results
+        .iter()
+        .map(|r| r.control_id.to_string())
+        .collect();
+    let readiness = FrameworkReadinessSnapshot {
+        assessment_id: report.assessment_id.clone(),
+        framework: report.profile.clone(),
+        framework_version: String::new(),
+        framework_pack_digest: pack_pin.clone(),
+        assessment_digest: report.digest.clone(),
+        evaluated_at: report
+            .run
+            .as_ref()
+            .map(|r| r.completed_at.clone())
+            .unwrap_or_default(),
+        requirements: Vec::new(),
+        controls: report
+            .results
+            .iter()
+            .map(|r| crate::readiness::ControlReadiness {
+                id: r.control_id.clone(),
+                effectiveness: r.effectiveness,
+            })
+            .collect(),
+        effective: summary.effective,
+        ineffective: summary.ineffective,
+        partial: summary.partial,
+        manual_review: summary.manual_review,
+        insufficient_evidence: summary.insufficient_evidence,
+        not_applicable: summary.not_applicable,
+        automation_coverage: format!("{}", metrics.automation.covered),
+        evidence_coverage: format!("{}", metrics.evidence.covered),
+    };
+    ReportProjections {
+        pack_pin,
+        catalog_pin,
+        summary,
+        metrics,
+        status,
+        collection_runs,
+        readiness,
+        requirement_ids,
+        controls,
     }
-    None
 }
 
 pub struct AssuranceEngineBuilder<C> {
     collector: Option<C>,
     target: Option<FrameworkTarget>,
+    definition: Option<Assessment>,
 }
 
 pub struct AssuranceEngine;
@@ -198,6 +285,7 @@ impl AssuranceEngine {
         AssuranceEngineBuilder {
             collector: None,
             target: None,
+            definition: None,
         }
     }
 }
@@ -214,10 +302,16 @@ impl<C> AssuranceEngineBuilder<C> {
         self
     }
 
+    pub fn definition(mut self, assessment: Assessment) -> Self {
+        self.definition = Some(assessment);
+        self
+    }
+
     pub fn collector<N>(self, collector: N) -> AssuranceEngineBuilder<N> {
         AssuranceEngineBuilder {
             collector: Some(collector),
             target: self.target,
+            definition: self.definition,
         }
     }
 }
@@ -226,43 +320,114 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
     pub fn assess(self, scope: AssessmentScope) -> Result<AssessmentReport, AssuranceError> {
         let collector = self.collector.ok_or(AssuranceError::MissingCollector)?;
         let target = self.target.ok_or(AssuranceError::MissingFramework)?;
-        let assessment = assessment_for_target(&target);
+        let started_at = Utc::now().to_rfc3339();
+        let assessment = match self.definition {
+            Some(def) => def,
+            None => assessment_for_target(&target)?,
+        };
         let compiled = compile_framework(&assessment, &target)?;
-        let envelopes = collector.collect(&scope.to_collector_scope())?;
+        let descriptor = collector.descriptor();
+        let mut collection_run = CollectionRun::new(&descriptor.id, &descriptor.version);
+        collection_run.scope = scope.describe();
+        let envelopes = match collector.collect(&scope.to_collector_scope()) {
+            Ok(envs) => {
+                collection_run.evidence_count = envs.len() as u32;
+                collection_run.status = "completed".into();
+                collection_run.completed_at = Some(Utc::now());
+                envs
+            }
+            Err(_err) => {
+                collection_run.error_count = 1;
+                collection_run.status = if collection_run.evidence_count > 0 {
+                    "partial".into()
+                } else {
+                    "failed".into()
+                };
+                collection_run.completed_at = Some(Utc::now());
+                Vec::new()
+            }
+        };
         let mut set = EvidenceSet::new();
-        for env in envelopes {
-            set.insert(env);
+        for env in &envelopes {
+            set.insert(env.clone());
+        }
+        for exception in &assessment.exceptions {
+            set.insert_exception(exception.clone());
         }
         let ctx = AssessmentContext {
             now: Utc::now(),
             max_age: Duration::from_secs(24 * 3600),
         };
         let results = evaluate_compiled(&compiled, &set, &ctx);
-        let _run = AssessmentRun {
+        let status = if collection_run.status == "failed" {
+            "failed"
+        } else if collection_run.status == "partial" || collection_run.error_count > 0 {
+            "partial"
+        } else {
+            "completed"
+        };
+        let loaded_pack = load_framework_pack(target.profile.as_selector(), target.version.as_str());
+        let pack_digest = loaded_pack
+            .as_ref()
+            .map(|p| p.digest.0.clone())
+            .unwrap_or_else(|_| "unpinned".into());
+        let catalog_digest = load_catalog_pin();
+        let definition_digest = definition_snapshot(&assessment).digest;
+        let evidence_snapshot = seal_evidence_snapshot(
+            envelopes.iter().map(|e| e.digest().to_string()),
+            [collection_run.run_id.clone()],
+        );
+        let result_digest = assessment_result_digest(&results);
+        let mut applicability = snapshot_applicability(&assessment, &scope.describe());
+        if let Ok(entries) = load_pack_applicability_rows(
+            target.profile.as_selector(),
+            target.version.as_str(),
+        ) {
+            applicability.pack_entries = entries;
+        }
+        let collector_runs = vec![collection_run.run_id.clone()];
+        let run = AssessmentRun {
             id: assessment.id.clone(),
             framework: target.profile.as_selector().into(),
-            framework_pack_digest: load_framework_pack(
-                target.profile.as_selector(),
-                target.version.as_str(),
-            )
-            .map(|p| p.digest.0)
-            .unwrap_or_default(),
-            assessment_definition_digest: compiled.digest.clone(),
-            started_at: Utc::now().to_rfc3339(),
+            framework_pack_digest: pack_digest.clone(),
+            assessment_definition_digest: definition_digest,
+            started_at,
             completed_at: Utc::now().to_rfc3339(),
-            scope: "assess".into(),
-            collector_runs: Vec::new(),
-            evidence_snapshot_digest: compiled.digest.clone(),
-            result_digest: compiled.digest.clone(),
-            status: "completed".into(),
+            scope: scope.describe(),
+            collector_runs,
+            evidence_snapshot_digest: evidence_snapshot.digest.clone(),
+            result_digest: result_digest.clone(),
+            status: status.into(),
+            canonical_catalog_pin: catalog_digest.clone(),
+            applicability_snapshot_id: applicability.digest.clone(),
         };
-        Ok(AssessmentReport {
-            assessment_id: assessment.id,
+        let mut report = AssessmentReport {
+            assessment_id: assessment.id.clone(),
             profile: target.profile.as_selector().to_string(),
-            digest: compiled.digest,
+            digest: result_digest,
             results,
             evidence_count: set.len(),
-        })
+            run: Some(run),
+            summary: None,
+            coverage_metrics: None,
+            framework_pack_digest: pack_digest,
+            canonical_catalog_digest: catalog_digest,
+        };
+        report.summary = Some(assessment_summary(&report));
+        report.coverage_metrics = Some(coverage_metrics(&report.results, Some(&compiled)));
+        let _ = (
+            pack_snapshot(
+                target.profile.as_selector(),
+                target.version.as_str(),
+                &report.framework_pack_digest,
+                serde_json::json!({ "id": target.profile.as_selector() }),
+            ),
+            catalog_snapshot(
+                &report.canonical_catalog_digest,
+                serde_json::json!({ "schema": "weeping-angel/canonical-catalog/v1" }),
+            ),
+        );
+        Ok(report)
     }
 }
 
@@ -303,39 +468,69 @@ fn evaluate_compiled(
         .collect()
 }
 
-fn assessment_for_target(target: &FrameworkTarget) -> Assessment {
-    if let Ok(pack) = load_framework_pack(target.profile.as_selector(), target.version.as_str()) {
-        return weeping_angel_framework::assessment_from_pack(&pack, target);
+fn assessment_for_target(target: &FrameworkTarget) -> Result<Assessment, AssuranceError> {
+    let pack = load_framework_pack(target.profile.as_selector(), target.version.as_str()).map_err(
+        |err| match err {
+            PackError::UnknownPack(message) => AssuranceError::UnknownPack(message),
+            other => AssuranceError::Compile(other.into()),
+        },
+    )?;
+    Ok(weeping_angel_framework::assessment_from_pack(&pack, target))
+}
+
+fn load_catalog_pin() -> String {
+    for root in catalog_search_roots() {
+        if let Ok(catalog) = CanonicalCatalog::load(&root)
+            && let Ok(digest) = catalog.digest()
+        {
+            return digest.to_string();
+        }
     }
-    let requirement = Requirement::new(
-        RequirementId::new("canonical:stub-1"),
-        FrameworkId::new("canonical"),
-        target.version.clone(),
-        "Stub requirement",
-        "Protect the authoritative source of software.",
-    );
-    let control = Control::new(
-        ControlId::new("canonical.source-control"),
-        "Source control",
-        "Protect the authoritative software source.",
-    );
-    let mapping = Mapping::new(
-        requirement.id().clone(),
-        control.id().clone(),
-        MappingDirection::Forward,
-        MappingCompleteness::Partial,
-    );
-    let evidence_req = EvidenceRequirement::new(
-        EvidenceRequirementId::new("ev.branch_protection"),
-        EvidenceType::new("branch_protection"),
-    );
-    let mut assessment = Assessment::new(AssessmentId::new("assess-runtime-1"));
-    assessment.requirements = vec![requirement];
-    assessment.controls = vec![control];
-    assessment.mappings = vec![mapping];
-    assessment.evidence_requirements = vec![evidence_req];
-    assessment.requests = AssessmentRequests::default();
-    assessment
+    "catalog-unavailable".into()
+}
+
+fn catalog_search_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("catalog/canonical/v1"));
+        roots.push(base.join("../..").join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("catalog/canonical/v1"));
+    }
+    roots.push(PathBuf::from("catalog/canonical/v1"));
+    roots
+}
+
+fn load_pack_applicability_rows(
+    framework: &str,
+    version: &str,
+) -> Result<Vec<crate::lineage::PackApplicabilityEntry>, PackError> {
+    let dir = resolve_pack_dir(framework, version)?;
+    let path = dir.join("applicability.toml");
+    let text = std::fs::read_to_string(&path).map_err(|e| PackError::Io(e.to_string()))?;
+    let parsed: toml::Value = toml::from_str(&text).map_err(|e| PackError::Parse(e.to_string()))?;
+    let mut entries = Vec::new();
+    if let Some(arr) = parsed.get("entry").and_then(|v| v.as_array()) {
+        for item in arr {
+            entries.push(crate::lineage::PackApplicabilityEntry {
+                reference: item
+                    .get("reference")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .into(),
+                applicable: item
+                    .get("applicable")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(true),
+                applicability_rationale: item
+                    .get("applicability_rationale")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .into(),
+            });
+        }
+    }
+    Ok(entries)
 }
 
 /// Effectiveness is never inferred from an empty result set.
