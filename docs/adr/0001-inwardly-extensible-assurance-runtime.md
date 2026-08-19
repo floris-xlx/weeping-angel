@@ -127,7 +127,6 @@ ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors,
 - Persistent multi-backend orchestrator beyond SQLite.
 - Auditor UX / ISO 27007 program product.
 - Full CLI dispatch for non-catalog `assurance` subcommands.
-- Remapping ISO pack IDs onto `control.*` catalog IDs.
 
 ## Related
 
@@ -135,5 +134,6 @@ ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors,
 - Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
 - ISO 27001 vertical (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Canonical catalog infrastructure (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
+- ISO pack remapped onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)
 - Scan contract (security-only): [`codex-security/references/scan-contract.md`](../../codex-security/references/scan-contract.md)
 - Athena analogue: `athena-query` `Statement` / `CompileTarget` / `compile` / `CapabilityViolation` (pattern only; no crate dependency)

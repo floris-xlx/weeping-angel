@@ -80,6 +80,15 @@ async fn main() {
                     }
                 }
             }
+            AssuranceCommand::Explain(explain) => {
+                match weeping_angel::assurance_explain::run(explain) {
+                    Ok(code) => code,
+                    Err(e) => {
+                        style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                        2
+                    }
+                }
+            }
             _ => {
                 println!("This is a readiness assessment and is not certification.");
                 0

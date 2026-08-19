@@ -104,7 +104,7 @@ IR `Risk` is reused as an attestation record, not grown into a GRC engine. Findi
 
 If `evaluate_coverage` would convert excepted subjects into remaining-all-pass `Effective`, a **minimal** generic ExceptionApproved promotion in the existing evaluator is allowed. No second exception type.
 
-### 6. Coexist with siblings and the ISO sliver until Prompt 12 remaps
+### 6. Coexist with siblings; ISO organizational sliver retired unmapped
 
 | Sibling | Boundary |
 | --- | --- |
@@ -112,9 +112,9 @@ If `evaluate_coverage` would convert excepted subjects into remaining-all-pass `
 | Prompt 05 SDLC | Secure-development policy / change source vs IS policy / AUP / document-control / retention |
 | Prompt 06 vuln | Finding-level risk acceptance vs organizational risk attestations |
 | Prompt 07 infra | Operational restore / `evidence.resilience.recovery-plan` / `resilience.toml` vs BCP/DR governance / `evidence.resilience.continuity-plan` |
-| ISO pack | Frozen sliver; do not retarget mappings |
+| ISO pack | Prompt 12 retired pack-local organizational slivers and left those clauses unmapped ([ADR 0003 remap](0003-iso27001-canonical-remap.md)) |
 
-Two libraries coexist until Prompt 12: pack `incident.response-process` vs catalog `control.incident.*`.
+This slice does not retarget ISO mappings. After remap, pack `incident.response-process` is gone; `iso27001:a.5.24` / `a.5.1` stay unmapped rather than claimed as `control.incident.*`.
 
 ### 7. Deterministic fixtures
 
@@ -133,12 +133,12 @@ No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt
 **Positive**
 
 - Future organizational collectors have a stable emit contract (`evidence.manual.attestation`, `evidence.governance.*`, …).
-- Prompt 12 can map ISO organizational annexes onto `control.governance.*` / `control.incident.*` / `control.vendor.*` without rewriting collectors.
+- Prompt 12 retired pack organizational slivers and left those clauses unmapped; a later honest remap can still target `control.governance.*` / `control.incident.*` / `control.vendor.*` ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Assessments can be honest about manual/hybrid controls instead of faking automation.
 
 **Negative / cost**
 
-- Two organizational libraries until remap (pack vs catalog).
+- ISO organizational clauses remain unmapped after sliver retirement; catalog `control.incident.*` is not yet an ISO projection.
 - Hybrid/manual tests will not auto-pass from documents alone; assessments need real attestations.
 - ExceptionApproved honesty may require a small generic promotion in Prompt 03 evaluation if excepted subjects would otherwise become silent `Effective`.
 - Continuity IDs share the `control.resilience.*` namespace with Prompt 07; filenames and slugs must stay disjoint.

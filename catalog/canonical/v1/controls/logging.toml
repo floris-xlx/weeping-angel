@@ -1,0 +1,83 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.logging.audit-enabled"
+title = "Audit logging enabled"
+description = "Critical assets have current audit-logging configuration."
+objective = "Enable audit logging on critical assets."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.critical-assets-audit-current"]
+automation = "automated"
+[[control]]
+id = "control.logging.admin-events"
+title = "Administrative event logging"
+description = "Administrative events are recorded on in-scope assets."
+objective = "Log administrative events."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.admin-events-recorded"]
+automation = "automated"
+[[control]]
+id = "control.logging.auth-security-events"
+title = "Authentication and security event logging"
+description = "Authentication and security events are recorded."
+objective = "Log authentication and security events."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.auth-security-events-recorded"]
+automation = "automated"
+[[control]]
+id = "control.logging.retention-meets-policy"
+title = "Logging retention meets policy"
+description = "Retention meets the catalog-configured day threshold, not a hardcoded regime constant."
+objective = "Keep log retention at or above the configured threshold."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.retention"]
+tests = ["test.logging.retention-meets-threshold"]
+automation = "automated"
+[[control]]
+id = "control.logging.time-synchronization"
+title = "Time synchronization / consistent timestamps"
+description = "Time-sync facts are supporting; consistent-timestamp policy stays hybrid."
+objective = "Keep timestamps comparable across critical assets."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.time-synchronized"]
+automation = "hybrid"
+[[control]]
+id = "control.logging.security-alerting"
+title = "Security alerting configured"
+description = "Security alerting is configured for in-scope assets."
+objective = "Alert on security-relevant events."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.alerting"]
+tests = ["test.logging.alerting-configured"]
+automation = "automated"
+[[control]]
+id = "control.logging.privileged-actions-observable"
+title = "Privileged actions observable"
+description = "Privileged-action logging is observed; observability quality stays hybrid."
+objective = "Make privileged actions observable."
+domains = ["loggingMonitoring", "accessControl"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.privileged-actions-observable"]
+automation = "hybrid"
+[[control]]
+id = "control.logging.integrity-protected-storage"
+title = "Log integrity / protected storage"
+description = "Integrity-protection flags are supporting; tamper-evidence quality stays hybrid."
+objective = "Protect log storage integrity."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration"]
+tests = ["test.logging.integrity-protected"]
+automation = "hybrid"
+[[control]]
+id = "control.logging.monitoring-coverage"
+title = "Monitoring coverage of critical assets"
+description = "Alerting coverage spans the critical asset population."
+objective = "Cover critical assets with monitoring."
+domains = ["loggingMonitoring"]
+evidence = ["evidence.logging.configuration", "evidence.logging.alerting"]
+tests = ["test.logging.monitoring-coverage"]
+automation = "automated"

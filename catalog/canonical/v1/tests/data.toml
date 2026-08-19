@@ -1,0 +1,59 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.data.production-stores-inventoried"
+control = "control.data.production-inventory"
+kind = "automated"
+required_evidence = ["evidence.database.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.inventory"
+field = "critical"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.data.access-restricted"
+control = "control.data.access-restriction"
+kind = "hybrid"
+required_evidence = ["evidence.database.access-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.access-configuration"
+field = "restricted"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.data.retention-policy-represented"
+control = "control.data.retention-policy"
+kind = "hybrid"
+required_evidence = ["evidence.logging.retention"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.retention"
+field = "meets_threshold"
+min_days = 90
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.data.sensitive-classification-present"
+control = "control.data.sensitive-classification"
+kind = "hybrid"
+required_evidence = ["evidence.database.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.inventory"
+field = "classified"
+
+[[test.subjects]]
+kind = "database"

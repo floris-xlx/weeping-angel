@@ -144,6 +144,7 @@ continue other subjects; never protected=false or enabled=false. \
 Pagination hole or list 403 → inventory.complete not authoritative.";
 
 pub fn descriptor(version: &str) -> CollectorDescriptor {
+    let _ = (SOURCE_TO_CANONICAL, GITHUB_FAILURE_BEHAVIOR);
     CollectorDescriptor {
         id: "collector.github".into(),
         version: version.into(),

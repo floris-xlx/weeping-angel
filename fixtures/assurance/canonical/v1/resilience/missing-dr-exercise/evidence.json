@@ -1,0 +1,34 @@
+{
+  "fixture": "missing-dr-exercise",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "org:infra",
+      "facts": {
+        "id": "org:infra",
+        "kind": "organization"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "organization",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.resilience.recovery-plan",
+      "subject_id": "org:infra",
+      "facts": {
+        "subject_id": "org:infra",
+        "procedure_present": true,
+        "objectives_documented": true,
+        "redundant": true,
+        "reviewed_at": "2026-08-19T11:00:00Z"
+      }
+    }
+  ]
+}

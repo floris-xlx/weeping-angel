@@ -33,7 +33,7 @@ That SHA had no IAM family in `catalog/canonical/v1/`, no `control.identity.*` l
 
 **User-visible goal:** a coherent IAM catalog (~20–30 independently assessable controls) that can evaluate realistic identity populations from **any** future identity provider’s canonical evidence, produce deterministic and explainable results (missing ≠ stale ≠ failure ≠ manual review ≠ approved exception), and pass the catalog validator plus full workspace verification.
 
-This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12.
+This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12 — landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13.
 
 ---
 
@@ -75,7 +75,7 @@ Recorded against workspace HEAD `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (merg
 
 IDs are **not** in the Prompt 01 `control.*` namespace. They contain no provider token, but they are GitHub-shaped in evidence and live inside a **framework pack**, not a canonical catalog.
 
-ISO mappings (`mappings.toml`) point `iso27001:a.8.5` / `a.8.2` / `a.8.3` / `a.5.15` / `a.5.18` / `a.5.16` / `a.6.5` at those four IDs with `partial` completeness. This slice **must not** retarget those mappings (Prompt 12).
+ISO mappings (`mappings.toml`) on the planning SHA pointed `iso27001:a.8.5` / `a.8.2` / `a.8.3` / `a.5.15` / `a.5.18` / `a.5.16` / `a.6.5` at those four IDs with `partial` completeness. This slice **must not** retarget those mappings. Prompt 12 remapped them onto `control.identity.*` and retired the slivers ([§13 of the remap spec](iso-27001-canonical-remap.md#13-implement-log)).
 
 ### 3.3 Evidence and evaluation (planning SHA `5fa3a23a…`; superseded by Prompt 02)
 
@@ -377,12 +377,12 @@ Testable. Implementation is out of this spec phase.
 ## 6. Out of scope
 
 - Entra ID, Okta, Google Workspace, AD, Cognito, or GitHub-identity collector implementations.
-- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.identity.*` (Prompt 12).
+- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.identity.*` (Prompt 12 — ISO identity remaps landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13).
 - Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
 - Redesign of typed evidence / digest canonicalization (Prompt 02).
 - Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes (Prompt 03 owns them).
 - Changing generic `TestExpr` semantics unless Prompt 03 owner agrees a documented blocker exists.
-- Rewriting ISO `metadata.toml` / `mappings.toml` control ids (`access.mfa.privileged` stays until Prompt 12).
+- Rewriting ISO `metadata.toml` / `mappings.toml` control ids (`access.mfa.privileged` stayed until Prompt 12 remapped identity clauses; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
 - Adding further `SubjectKind` variants or a third `SubjectSelector` type in this slice (`ServiceAccount` already exists from Prompt 03).
 - HRIS, IGA, PAM, or ticket-system product integrations.
 - Certification, “compliant”, or audit-passed language.
@@ -500,7 +500,7 @@ Implement-phase note: workspace HEAD at implement was still `5fa3a23a77e63e39b4a
 | Target suite | `tests/sdd/iam_catalog.target.rs` (`sdd_iam_catalog_target`) GREEN IAM-001…016 |
 | Baseline suite | `tests/sdd/iam_catalog.baseline.rs` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) |
-| ISO pack | Unchanged `access.*` / `personnel.access-termination` ids and mappings |
+| ISO pack | Prompt 12 remapped A.8.5 / A.8.2 / A.8.3 / A.5.15 / A.5.18 / A.5.16 / A.6.5 onto `control.identity.*`; slivers retired ([remap §13](iso-27001-canonical-remap.md#13-implement-log)) |
 | Collectors | No Entra/Okta/Workspace/GitHub-identity collector |
 
 `assurance catalog stats` after this family (including the Prompt 01 protected-branch fixture):

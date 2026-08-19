@@ -1,0 +1,105 @@
+{
+  "fixture": "unapproved-secret-storage",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "secret:api",
+      "facts": {
+        "id": "secret:api",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "secret:db",
+      "facts": {
+        "id": "secret:db",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "secret:ci",
+      "facts": {
+        "id": "secret:ci",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "asset",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.secret.storage-configuration",
+      "subject_id": "secret:api",
+      "facts": {
+        "subject_id": "secret:api",
+        "storage_class": "approved",
+        "approved_storage": true,
+        "backend_kind": "vault"
+      }
+    },
+    {
+      "type": "evidence.secret.storage-configuration",
+      "subject_id": "secret:db",
+      "facts": {
+        "subject_id": "secret:db",
+        "storage_class": "approved",
+        "approved_storage": true,
+        "backend_kind": "vault"
+      }
+    },
+    {
+      "type": "evidence.secret.storage-configuration",
+      "subject_id": "secret:ci",
+      "facts": {
+        "subject_id": "secret:ci",
+        "storage_class": "unapproved",
+        "approved_storage": false,
+        "backend_kind": "file"
+      }
+    },
+    {
+      "type": "evidence.crypto.key-state",
+      "subject_id": "secret:api",
+      "facts": {
+        "subject_id": "secret:api",
+        "key_id": "key:secret:api",
+        "managed": true,
+        "rotated_at": "2026-08-19T11:00:00Z",
+        "cert_not_after": "2027-08-19T12:00:00Z",
+        "valid": true
+      }
+    },
+    {
+      "type": "evidence.crypto.key-state",
+      "subject_id": "secret:db",
+      "facts": {
+        "subject_id": "secret:db",
+        "key_id": "key:secret:db",
+        "managed": true,
+        "rotated_at": "2026-08-19T11:00:00Z",
+        "cert_not_after": "2027-08-19T12:00:00Z",
+        "valid": true
+      }
+    },
+    {
+      "type": "evidence.crypto.key-state",
+      "subject_id": "secret:ci",
+      "facts": {
+        "subject_id": "secret:ci",
+        "key_id": "key:secret:ci",
+        "managed": true,
+        "rotated_at": "2026-08-19T11:00:00Z",
+        "cert_not_after": "2027-08-19T12:00:00Z",
+        "valid": true
+      }
+    }
+  ]
+}

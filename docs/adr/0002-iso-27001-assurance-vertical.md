@@ -58,15 +58,17 @@ Content modes exist as `FrameworkContentProvider`: `StructuralOnly` | `LicensedC
 
 ### 3. Canonical controls, ISO mappings — never ISO-prefixed controls
 
-Reusable library (`source.branch-protection`, `access.mfa.privileged`, `security.tls`, … — twenty-plus controls in `metadata.toml`). ISO requirement ids (`iso27001:4.1`, `iso27001:a.8.25`, …) map **into** that library.
+Reusable library originally shipped as pack-local slivers (`source.branch-protection`, `access.mfa.privileged`, `security.tls`, … in `metadata.toml`). ISO requirement ids (`iso27001:4.1`, `iso27001:a.8.25`, …) mapped **into** that library.
 
-`Mapping` on `assurance-ir/v1` now carries:
+**Superseded for the control library:** Prompt 12 / [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired those slivers. Mapping `to` values are now catalog IDs (`control.identity.*`, landed `control.source.*`). Pack `metadata.toml` is annotations only.
+
+`Mapping` on `assurance-ir/v1` carries:
 
 ```text
-direction, completeness, relation, rationale
+direction, completeness, relation, rationale, provenance, valid_for
 ```
 
-`MappingRelation`: `Equivalent` | `Satisfies` | `PartiallySatisfies` | `Supports` | `Related`. Default is derived from completeness. Non-trivial mappings require a rationale. A later SOC 2 pack should map onto the same controls. GitHub-specific or `iso27001.*` control/test ids are rejected.
+`MappingRelation`: `Equivalent` | `Satisfies` | `PartiallySatisfies` | `Supports` | `EvidenceFor` | `SupersetOf` | `SubsetOf` | `Related`. Default is derived from completeness. Non-trivial mappings require a rationale. A later SOC 2 pack should map onto the same catalog controls. GitHub-specific or `iso27001.*` control/test ids are rejected.
 
 ### 4. Evidence ledger owns observations, never conclusions
 
@@ -178,14 +180,15 @@ ACT-001…015 and COL-001…006 remain the spine contract.
 - HTML reports and dashboards.
 - Full CLI dispatch for every non-catalog `assurance` subcommand (library assess is the MVP execution path). Catalog dispatch is ADR 0003.
 - Concurrent Compliance IR redesign (`AssessmentDefinition` as an IR document, richer `SubjectSelector` ownership).
-- Versioned canonical catalog outside the ISO pack (landed as [ADR 0003](0003-canonical-assurance-catalog-v1.md)).
 
 ## Related
 
 - Spec SSOT: [`docs/sdd/iso-27001-automated-assurance-mvp.md`](../sdd/iso-27001-automated-assurance-mvp.md)
+- Remap SSOT: [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md)
+- Canonical catalog (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
+- ISO remap onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)
 - Spine SDD: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
 - ADR 0001: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
-- Canonical catalog (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - Typed evidence (accepted; supersedes string-only facts): [`docs/adr/0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
 - Concurrent IR (do not own): [`docs/sdd/xylex/weeping-angel-assurance-ir/`](../sdd/xylex/weeping-angel-assurance-ir/)

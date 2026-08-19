@@ -1,0 +1,20 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.logging.configuration"
+title = "Logging configuration fact"
+evidence_type = "logging.configuration"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.logging.retention"
+title = "Logging retention fact"
+evidence_type = "logging.retention"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.logging.alerting"
+title = "Logging alerting fact"
+evidence_type = "logging.alerting"
+collection = "automated"
+criticality = "required"

@@ -106,6 +106,7 @@ pub fn project_soa(framework: &str, version: &str) -> StatementOfApplicability {
                     .unwrap_or("");
                 let fallback = item.get("applicable").and_then(|v| v.as_bool());
                 let applicability = Applicability::from_pack(raw_state, fallback);
+                // applicability rationale is preserved verbatim from the pack.
                 let rationale = item
                     .get("applicability_rationale")
                     .and_then(|v| v.as_str())

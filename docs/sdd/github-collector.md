@@ -2,12 +2,12 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Target RED** — durable SSOT; baseline GREEN (30); `sdd_github_collector_target` §4.11 authored and RED on current collector; **no product feature code** |
+| Status | **Target GREEN** — collector emits Prompt 03/04/05 contracts; baseline superseded (`#[ignore]`); ten goldens under `fixtures/assurance/canonical/v1/github/` |
 | Program | Canonical Assurance Catalog v1 |
 | Slice | Prompt 09 — first reference-grade provider collector |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/09-github-collector.md`](../prompts/canonical-assurance-v1/09-github-collector.md) |
 | Planning / characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
-| Dual-suite | **Registered** in root `Cargo.toml`: `sdd_github_collector_baseline` → `tests/sdd/github_collector.baseline.rs` (30 GREEN); `sdd_github_collector_target` → `tests/sdd/github_collector.target.rs` (`ghc_000`–`ghc_024` RED). Implement owned GitHub paths next — do not weaken these tests. |
+| Dual-suite | **Registered** in root `Cargo.toml`: `sdd_github_collector_baseline` superseded (`#[ignore]`); `sdd_github_collector_target` `ghc_000`–`ghc_024` GREEN. |
 | Draft ADR | [`docs/adr/0003-github-collector-canonical-evidence-mapping-draft.md`](../adr/0003-github-collector-canonical-evidence-mapping-draft.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Consumes | Prompts 01–08 contracts, especially typed evidence, population completeness, IAM `evidence.identity.*`, SDLC I1 freeze `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` |

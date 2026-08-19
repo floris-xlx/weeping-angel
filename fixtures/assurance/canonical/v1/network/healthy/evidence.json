@@ -1,0 +1,311 @@
+{
+  "fixture": "healthy",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "ep:web",
+      "facts": {
+        "id": "ep:web",
+        "kind": "endpoint"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "ep:api",
+      "facts": {
+        "id": "ep:api",
+        "kind": "endpoint"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "ep:admin",
+      "facts": {
+        "id": "ep:admin",
+        "kind": "endpoint"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "endpoint",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:admin",
+      "facts": {
+        "id": "net:admin",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:bastion",
+      "facts": {
+        "id": "net:bastion",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:console",
+      "facts": {
+        "id": "net:console",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "network",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:orders",
+      "facts": {
+        "id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:billing",
+      "facts": {
+        "id": "db:billing",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:billing",
+      "facts": {
+        "subject_id": "db:billing",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:catalog",
+      "facts": {
+        "id": "db:catalog",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:catalog",
+      "facts": {
+        "subject_id": "db:catalog",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "database",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "publicly_accessible": false,
+        "restricted": true,
+        "audit_enabled": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:billing",
+      "facts": {
+        "subject_id": "db:billing",
+        "publicly_accessible": false,
+        "restricted": true,
+        "audit_enabled": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:catalog",
+      "facts": {
+        "subject_id": "db:catalog",
+        "publicly_accessible": false,
+        "restricted": true,
+        "audit_enabled": true
+      }
+    },
+    {
+      "type": "evidence.network.tls-configuration",
+      "subject_id": "ep:web",
+      "facts": {
+        "subject_id": "ep:web",
+        "min_protocol": "1.2",
+        "meets_policy": true,
+        "insecure_protocol": false
+      }
+    },
+    {
+      "type": "evidence.network.tls-configuration",
+      "subject_id": "ep:api",
+      "facts": {
+        "subject_id": "ep:api",
+        "min_protocol": "1.2",
+        "meets_policy": true,
+        "insecure_protocol": false
+      }
+    },
+    {
+      "type": "evidence.network.tls-configuration",
+      "subject_id": "ep:admin",
+      "facts": {
+        "subject_id": "ep:admin",
+        "min_protocol": "1.2",
+        "meets_policy": true,
+        "insecure_protocol": false
+      }
+    },
+    {
+      "type": "evidence.data.encryption-in-transit",
+      "subject_id": "ep:web",
+      "facts": {
+        "subject_id": "ep:web",
+        "encrypted": true,
+        "min_protocol": "1.2"
+      }
+    },
+    {
+      "type": "evidence.data.encryption-in-transit",
+      "subject_id": "ep:api",
+      "facts": {
+        "subject_id": "ep:api",
+        "encrypted": true,
+        "min_protocol": "1.2"
+      }
+    },
+    {
+      "type": "evidence.data.encryption-in-transit",
+      "subject_id": "ep:admin",
+      "facts": {
+        "subject_id": "ep:admin",
+        "encrypted": true,
+        "min_protocol": "1.2"
+      }
+    },
+    {
+      "type": "evidence.network.exposure",
+      "subject_id": "net:admin",
+      "facts": {
+        "subject_id": "net:admin",
+        "public": false,
+        "admin_interface": true,
+        "management_plane": true,
+        "exposure_class": "restricted",
+        "restricted": true,
+        "prohibited_public": false
+      }
+    },
+    {
+      "type": "evidence.network.exposure",
+      "subject_id": "net:bastion",
+      "facts": {
+        "subject_id": "net:bastion",
+        "public": false,
+        "admin_interface": true,
+        "management_plane": true,
+        "exposure_class": "restricted",
+        "restricted": true,
+        "prohibited_public": false
+      }
+    },
+    {
+      "type": "evidence.network.exposure",
+      "subject_id": "net:console",
+      "facts": {
+        "subject_id": "net:console",
+        "public": false,
+        "admin_interface": true,
+        "management_plane": true,
+        "exposure_class": "restricted",
+        "restricted": true,
+        "prohibited_public": false
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:admin",
+      "facts": {
+        "subject_id": "net:admin",
+        "policy_present": true,
+        "reviewed_at": "2026-08-19T11:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:bastion",
+      "facts": {
+        "subject_id": "net:bastion",
+        "policy_present": true,
+        "reviewed_at": "2026-08-19T11:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:console",
+      "facts": {
+        "subject_id": "net:console",
+        "policy_present": true,
+        "reviewed_at": "2026-08-19T11:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.network.exposure",
+      "subject_id": "ep:web",
+      "facts": {
+        "subject_id": "ep:web",
+        "public": true,
+        "admin_interface": false,
+        "management_plane": false,
+        "exposure_class": "public",
+        "restricted": true,
+        "prohibited_public": false
+      }
+    }
+  ]
+}

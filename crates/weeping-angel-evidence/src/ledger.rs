@@ -19,7 +19,9 @@ pub enum LedgerError {
     NotFound(String),
     #[error("path rejected: {0}")]
     Path(String),
-    #[error("immutable lineage row already stored for {0}; replacing a completed payload is rejected")]
+    #[error(
+        "immutable lineage row already stored for {0}; replacing a completed payload is rejected"
+    )]
     Immutable(String),
 }
 
@@ -211,7 +213,11 @@ impl EvidenceLedger {
         load_payload(&self.conn, "assessment_runs", "id", id)
     }
 
-    pub fn persist_control_test_run(&mut self, id: &str, payload: &str) -> Result<bool, LedgerError> {
+    pub fn persist_control_test_run(
+        &mut self,
+        id: &str,
+        payload: &str,
+    ) -> Result<bool, LedgerError> {
         persist_immutable(&self.conn, "control_test_runs", "id", id, payload)
     }
 

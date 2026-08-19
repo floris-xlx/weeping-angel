@@ -269,6 +269,7 @@ fn sample_run() -> AssessmentRun {
         evidence_snapshot_digest: "evidence-snapshot-digest".into(),
         result_digest: "result-digest".into(),
         status: "completed".into(),
+        ..Default::default()
     }
 }
 
@@ -420,6 +421,7 @@ fn lin_002_current_catalog_changes_do_not_silently_rewrite_stored_results() {
         digest: "pinned-result-digest".into(),
         results: vec![sample_result(Effectiveness::Effective)],
         evidence_count: 1,
+        ..Default::default()
     };
     let json = serde_json::to_value(&pinned).expect("serialize pinned report");
     assert_eq!(
@@ -505,6 +507,7 @@ fn lin_003_explanation_references_exact_evidence_digests() {
         digest: "pinned-result-digest".into(),
         results: vec![sample_result(Effectiveness::Ineffective)],
         evidence_count: 1,
+        ..Default::default()
     };
     let json = serde_json::to_value(&report).unwrap();
     let cited = format!("{json}");
@@ -550,6 +553,7 @@ fn lin_004_assessment_report_serialization_is_pure() {
         digest: "pinned-result-digest".into(),
         results: vec![sample_result(Effectiveness::Effective)],
         evidence_count: 0,
+        ..Default::default()
     };
     let first = serde_json::to_value(&report).expect("serialize AssessmentReport");
     let second = serde_json::to_value(&report).expect("serialize AssessmentReport again");
@@ -983,6 +987,7 @@ fn lin_013_coverage_metrics_expose_seven_separate_families() {
         digest: "pinned-result-digest".into(),
         results: vec![sample_result(Effectiveness::Effective)],
         evidence_count: 1,
+        ..Default::default()
     };
     let json = serde_json::to_value(&report).unwrap();
     let metrics = metric_object(&json).unwrap_or(&json);

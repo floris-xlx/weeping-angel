@@ -15,7 +15,7 @@
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence | [`docs/sdd/typed-evidence.md`](typed-evidence.md) |
 | Population | [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Applicability engine (Prompt 10) | **Out of this slice.** Concurrent; do **not** add `OrgContext`, `ManualDeterminationRequired`, or `evaluate_org_context`. Persist `ApplicabilitySnapshot` from existing `ApplicabilityRule` + `statically_applicable` + pack rows. Unknown predicates stay unresolved, never false. |
+| Applicability engine (Prompt 10) | **Landed** in `weeping-angel-assurance::applicability`. This slice **persists** `ApplicabilitySnapshot` produced by `evaluate_assessment_applicability`; do **not** reimplement Kleene evaluation or add `OrgContext` / `evaluate_org_context`. Unknown predicates stay unresolved, never false. Persist/explain/ledger remain this slice. |
 | GitHub collector (Prompt 09) | **Collision fence.** Do not edit `tests/sdd/github_collector.*` or `crates/weeping-angel-collector/src/github/**`. |
 | ISO remap (Prompt 12) | **Collision fence.** Do not rewrite `catalog/canonical/v1` domain TOML or ISO pack IDs / `to =` mappings. |
 | Repository | `floris-xlx/weeping-angel` |
@@ -108,7 +108,7 @@ Pinned at characterization SHA `e430980c0d27a8138a153d49b62ddf3c57827891`.
 | `CollectionRun` | evidence crate | Already has `status`, `error_count`, `collector_id`, `collector_version`. Record them on the run and in the ledger. |
 | `CanonicalCatalog::{load,validate,digest}` | catalog crate | Consume digest string for `CanonicalCatalogSnapshot`. Do not fork the loader. |
 | `FrameworkPackDigest` / `load_framework_pack` | framework pack | One loader. `load_framework_pack(id, version)` and `load_framework_pack_from` stay the only resolution path. `wa-baseline/1` uses the same path. |
-| `ApplicabilityRule` | IR | Prompt 10 evaluator is **absent / concurrent**. Snapshot the rule tree + static outcome + pack rows. Do not add org-context evaluation here. |
+| `ApplicabilityRule` | IR | Prompt 10 evaluator **landed**. Persist `evaluate_assessment_applicability` output. Do not re-evaluate rules here. |
 | `Exception` | IR | Already has `subjects`, `status`, `expires_at`. Lineage and compare must surface them. Evaluator already can hold exceptions on `EvidenceSet`. |
 | `AssessmentDefinition` | IR (`type Assessment = AssessmentDefinition`) | Snapshot it. Do not fork a second definition type. |
 | `ControlTestResult` | control-test `result.inc` | Already carries `evidence_refs`, `missing_evidence`, `test_version`, `input_digest`, `population`, `evaluatedAt` (`checked_at`), `duration`. Result identity **excludes** `duration` and `evaluatedAt`. |
@@ -245,17 +245,17 @@ There is no `persist_assessment_run` / `load_assessment_run` / `persist_control_
 
 `CollectionRun` already models `status` (constructor starts as `"started"`), `error_count`, `evidence_count`, collector id/version, but `assess` never constructs or records one. `collector.collect` returning `Err` aborts `assess`; there is no partial assessment path.
 
-### 3.8 Prompt 10 applicability engine is absent
+### 3.8 Prompt 10 applicability engine (characterization vs now)
 
-IR `ApplicabilityRule` / `ApplicabilityPredicate` exist. `statically_applicable()` returns `Some(true|false)` only for `Always`/`Never` (and boolean combinations); **predicates are `None`**.
+At characterization SHA `e430980c…` the org-context evaluator was absent: `statically_applicable()` returned `Some(true|false)` only for `Always`/`Never` (and boolean combinations); **predicates were `None`**. Compile kept a requirement unless that fold was `Some(false)`. There was no `ApplicabilitySnapshot`.
 
-Compile `resolve_applicability` keeps a requirement unless `statically_applicable() == Some(false)`. Predicates therefore stay in. There is no `ApplicabilitySnapshot`, no three-state org-context evaluator, no persisted rationale graph.
+**After Prompt 10:** `weeping-angel-assurance::applicability` produces in-memory `ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`) with three-state decisions, rationale, unknown facts, and selected/excluded subjects. This lineage slice still does **not** persist or explain that snapshot.
 
 Pack `applicability.toml` is only consumed by `project_soa` (live disk).
 
 ### 3.9 Missing explanation and explicit metric types
 
-No `ControlExplanation`. No `AssessmentSummary` / `CoverageMetrics` types. No `EvidenceSnapshot` / `FrameworkPackSnapshot` / `CanonicalCatalogSnapshot` / `AssessmentDefinitionSnapshot` / `ApplicabilitySnapshot` / `StatementOfApplicabilitySnapshot` persist types. No `ControlTestRun` type (only an empty ledger table name).
+No `ControlExplanation`. No `AssessmentSummary` / `CoverageMetrics` types. No `EvidenceSnapshot` / `FrameworkPackSnapshot` / `CanonicalCatalogSnapshot` / `AssessmentDefinitionSnapshot` / `StatementOfApplicabilitySnapshot` persist types. In-memory `ApplicabilitySnapshot` exists (Prompt 10); it is not persisted. No `ControlTestRun` type (only an empty ledger table name).
 
 Coverage is two formatted percent strings on serialize / readiness, not separate first-class metrics for:
 
@@ -342,31 +342,23 @@ Without a ledger, the run object must still be **returned** (or attached to `Ass
 
 Result digest is SHA-256 hex of canonical JSON over the semantic result document (test ids, effectiveness, evidence refs, missing evidence, population, exception ids) — **not** the compile digest and **not** wall-clock `duration` / `evaluatedAt` (`checked_at`). Domain-separate snapshot/result hashes from raw compile-digest reuse (schema field inside the hashed body, or `typed_canonical_digest`).
 
-### 4.3 ApplicabilitySnapshot without Prompt 10
+### 4.3 ApplicabilitySnapshot (persist Prompt 10 output)
 
-Do **not** implement the org-context three-state engine. Persist what already exists:
+Do **not** reimplement the org-context three-state engine. Persist the document `evaluate_assessment_applicability` already produces (`weeping-angel/applicability-snapshot/v1`):
 
 ```text
 ApplicabilitySnapshot {
-  schema,                    # lineage snapshot schema id, not a new IR schema
+  schema,                    # weeping-angel/applicability-snapshot/v1
   assessment_id,
-  scope,                     # IR AssessmentScope if present
-  requirement_decisions[],   # id, rule tree (or digest), static outcome, rationale
+  scope,                     # IR AssessmentScope
+  requirement_decisions[],   # id, rule, ruleDigest, decision, rationale, predicates, subjects
   control_decisions[],       # same
-  pack_entries[],            # applicability.toml rows used, if any
+  pack_entries[],            # artifacts only; not Kleene inputs
   digest
 }
 ```
 
-Static outcome mapping until Prompt 10:
-
-| Rule | Decision recorded |
-| --- | --- |
-| `Always` | applicable |
-| `Never` | not applicable |
-| predicate / unknown combo | included / unresolved (must not be treated as false) |
-
-Prompt 10 may later replace the evaluator that *fills* this snapshot. The persist shape should already be loadable by explain/replay.
+Unknown facts stay `ManualDeterminationRequired` / unresolved, never false. Explain/replay loads this snapshot; it must not re-evaluate pack TOML as truth.
 
 ### 4.4 ControlExplanation + CLI
 
@@ -537,8 +529,8 @@ Assert **today’s** shortcuts (already authored in `assessment_lineage.baseline
 9. `AssuranceCommand` debug/source has no `Explain` variant.
 10. `src/main.rs` non-catalog assurance arm prints the banner and returns `0`.
 11. Ledger `init` creates `assessment_runs` / `control_test_runs` / `framework_snapshots` but the ledger impl has no `persist_assessment_run` / `load_assessment_run` (or equivalent) methods.
-12. No `ControlExplanation` / `ApplicabilitySnapshot` / `EvidenceSnapshot` type in product crates (string scan of `crates/`).
-13. IR still exposes `ApplicabilityRule` and `statically_applicable`; there is no Prompt 10 org-context evaluator module to confuse this slice.
+12. No `ControlExplanation` / `EvidenceSnapshot` persist type in product crates (string scan of `crates/`). `ApplicabilitySnapshot` now exists in `weeping-angel-assurance::applicability` (Prompt 10) — persist it; do not treat its presence as a lineage-implement failure.
+13. IR still exposes `ApplicabilityRule` and `statically_applicable`; org-context evaluation is `weeping-angel-assurance::applicability`, not this slice.
 
 After implement they should fail or be `#[ignore = "superseded by sdd_assessment_lineage_target"]`.
 
@@ -597,7 +589,7 @@ One regression test per later review comment must be titled `P?: <exact subject>
 - New frameworks (SOC 2, NIS2, DORA, GDPR, ISO 27701 production packs)
 - Domain catalog redesign or new IAM/SDLC/vuln/infra/governance content (`catalog/canonical/v1` TOML rewrite)
 - Prompt 09 GitHub collector mapping (`crates/weeping-angel-collector/src/github/**`, `tests/sdd/github_collector.*`)
-- Prompt 10 organization-context applicability evaluator (`OrgContext`, `ManualDeterminationRequired`, `evaluate_org_context`)
+- Prompt 10 organization-context applicability evaluator reimplementation (`OrgContext`, `evaluate_org_context`). Persist the landed `ApplicabilitySnapshot`.
 - Prompt 12 ISO remapping of pack `to =` onto `control.*` or ISO pack ID changes
 - Forking `assurance-ir/v1` or redesigning `Control` / `Requirement` / `Mapping` / `EvidenceRequirement` / `PlannedControlTest` / `AssessmentDefinition`
 - Teaching `compile_framework` to load `catalog/canonical/v1` as a pack substitute
@@ -613,7 +605,7 @@ One regression test per later review comment must be titled `P?: <exact subject>
 | --- | --- |
 | Spine ACT tests depend on the production stub assessment for non-ISO profiles | Target suite + ACT updates use explicit **test fixtures**; production path fail-closes on missing pack. Keep ACT-003 / collector-blindness. |
 | ISO target `iso_007` / serialize tests require `frameworkPackDigest` and may needle `load_framework_pack` | Keep pack digest **on the snapshot**; move load to assess/load-pack time, not `Serialize`. Update ISO tests only if they assert serialize-time loading. |
-| Prompt 10 absence (or concurrent landing) leaves applicability shallow or collides | Persist rule + static outcome + pack rows; unknown predicates stay unresolved, never false. Do not add Prompt 10 types. |
+| Prompt 10 snapshot already in product crates | Persist `weeping-angel-assurance::applicability::ApplicabilitySnapshot`; unknown predicates stay unresolved, never false. Do not reimplement Kleene evaluation. |
 | `INSERT OR REPLACE` on `collection_runs` already overwrites | Assessment/control-test/framework snapshot APIs must be append-only or digest-keyed; document collection-run replace as “same run_id update while started” only. |
 | Result digest including `evaluatedAt` / `duration` becomes non-deterministic | Exclude wall-clock fields from result identity (same as population contract). |
 | Hashing live TOML bytes breaks Windows CRLF | Digest canonicalized structures (existing pack/catalog digest law), not raw files. |
@@ -645,7 +637,7 @@ Implement later, in order:
 3. Prove target GREEN; skip-supersede baseline; keep neighbor + workspace green (`cargo test --workspace --features demo`).
 4. Accept the ADR; update the public contract (facade, CLI, ledger APIs, report fields).
 
-Do **not**: edit GitHub collector files; add Prompt 10 evaluator types; rewrite catalog domain TOML or ISO pack IDs.
+Do **not**: edit GitHub collector files; reimplement Prompt 10 evaluator types; rewrite catalog domain TOML or ISO pack IDs.
 
 ---
 

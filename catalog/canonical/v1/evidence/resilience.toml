@@ -1,0 +1,8 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.resilience.recovery-plan"
+title = "Recovery plan fact"
+evidence_type = "resilience.recovery-plan"
+collection = "hybrid"
+criticality = "required"

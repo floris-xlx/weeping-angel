@@ -279,6 +279,7 @@ fn assessment_report_serialize_hard_loads_iso_pack() {
         digest: "digest".into(),
         results: Vec::new(),
         evidence_count: 0,
+        ..Default::default()
     };
     let value = serde_json::to_value(&report).expect("serialize report");
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
@@ -438,6 +439,7 @@ fn assessment_run_has_pack_digest_only() {
         evidence_snapshot_digest: "ev".into(),
         result_digest: "res".into(),
         status: "completed".into(),
+        ..Default::default()
     };
     let value = serde_json::to_value(&run).expect("serialize run");
     assert_eq!(

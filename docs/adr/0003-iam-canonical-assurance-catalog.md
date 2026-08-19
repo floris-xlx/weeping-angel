@@ -5,13 +5,13 @@
 | Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md) or the ISO pack IAM sliver. |
+| Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md). ISO sliver collapse is [ADR 0003 remap](0003-iso27001-canonical-remap.md). |
 | Extends | [Catalog infrastructure](0003-canonical-assurance-catalog-v1.md), [typed evidence](0003-typed-evidence-canonical-serialization.md), [population / coverage](0003-subject-population-runtime-and-coverage-semantics.md) |
 | Spec | [`docs/sdd/iam-canonical-assurance-catalog.md`](../sdd/iam-canonical-assurance-catalog.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt | [`docs/prompts/canonical-assurance-v1/04-iam-catalog.md`](../prompts/canonical-assurance-v1/04-iam-catalog.md) |
 | Planning baseline | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
-| Tests | `sdd_iam_catalog_target` GREEN (IAM-001…016). Absence-characterization baseline `sdd_iam_catalog_baseline` superseded / `#[ignore]`. ISO pack suite remains GREEN and unchanged. |
+| Tests | `sdd_iam_catalog_target` GREEN (IAM-001…016). Absence-characterization baseline `sdd_iam_catalog_baseline` superseded / `#[ignore]`. ISO remap of identity slivers is [ADR 0003 remap](0003-iso27001-canonical-remap.md). |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
@@ -136,14 +136,11 @@ This slice **declares** those tests. It does not reimplement `AllSubjects` / `Co
 
 Access approval, segregation of duties, and periodic access review are Hybrid or Manual. A single technical signal must not auto-pass them. Break-glass uses existing IR `Exception` and `Effectiveness::ExceptionApproved` for an approved, unexpired, subject-scoped exception — not a second exception system.
 
-### 6. Coexist with the ISO sliver until Prompt 12 remaps
+### 6. ISO sliver coexistence (Prompt 12 remapped)
 
-ISO mappings still target `access.mfa.privileged` and siblings. This slice **does not** retarget those mappings or rename ISO pack ids. Two libraries coexist:
+This slice **did not** retarget ISO mappings. Two libraries coexisted until Prompt 12.
 
-- ISO pack library (ADR 0002) — frozen for this slice.
-- Canonical IAM family (`control.identity.*`) — added here.
-
-Prompt 12 owns collapsing ISO mappings onto the canonical family. Until then, `sdd_iso27001_assurance_target` remains green.
+**Later:** [ADR 0003 remap](0003-iso27001-canonical-remap.md) collapsed ISO A.8.5 / A.8.2 / A.8.3 / A.5.15 / A.5.18 / A.5.16 / A.6.5 onto `control.identity.*` and retired pack slivers `access.mfa.privileged` / siblings. See [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) §13.
 
 ### 7. Deterministic fixtures
 
@@ -176,7 +173,7 @@ Catalog stats after this family (including the Prompt 01 protected-branch fixtur
 
 **Negative / cost**
 
-- Two IAM libraries until remap (pack `access.*` vs catalog `control.identity.*`).
+- Historical sliver IDs may still appear on pre-remap snapshots; live ISO mappings target `control.identity.*` ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Hybrid/manual IAM tests will not auto-pass from technical facts alone; assessments need attestations for those controls.
 - Identity collectors are still future work; catalog evaluation of live IdP populations is fixture-only until Prompt 09+ siblings.
 

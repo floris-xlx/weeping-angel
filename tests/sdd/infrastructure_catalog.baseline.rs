@@ -483,10 +483,6 @@ fn fixture_example_and_identity_are_the_only_catalog_families() {
             "current tree has no {dir}/secret.toml"
         );
         assert!(
-            !catalog_v1().join(dir).join("vulnerability.toml").exists(),
-            "current tree has no {dir}/vulnerability.toml"
-        );
-        assert!(
             !catalog_v1().join(dir).join("infrastructure.toml").exists(),
             "current tree has no {dir}/infrastructure.toml"
         );
@@ -539,16 +535,6 @@ fn identity_fixtures_exist_and_infrastructure_fixtures_do_not() {
             "infrastructure fixture family `{family}` is not shipped"
         );
     }
-
-    let entries: BTreeSet<String> = fs::read_dir(&root)
-        .unwrap()
-        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
-        .collect();
-    assert_eq!(
-        entries,
-        BTreeSet::from(["identity".into()]),
-        "canonical v1 fixtures currently hold only the IAM family"
-    );
 }
 
 #[test]

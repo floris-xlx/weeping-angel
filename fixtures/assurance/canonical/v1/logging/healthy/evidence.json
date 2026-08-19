@@ -1,0 +1,132 @@
+{
+  "fixture": "healthy",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "asset:app",
+      "facts": {
+        "id": "asset:app",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "asset:api",
+      "facts": {
+        "id": "asset:api",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "asset:edge",
+      "facts": {
+        "id": "asset:edge",
+        "kind": "asset"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "asset",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.logging.configuration",
+      "subject_id": "asset:app",
+      "facts": {
+        "subject_id": "asset:app",
+        "audit_enabled": true,
+        "admin_events": true,
+        "auth_events": true,
+        "privileged_actions": true,
+        "integrity_protected": true,
+        "time_synchronized": true
+      }
+    },
+    {
+      "type": "evidence.logging.configuration",
+      "subject_id": "asset:api",
+      "facts": {
+        "subject_id": "asset:api",
+        "audit_enabled": true,
+        "admin_events": true,
+        "auth_events": true,
+        "privileged_actions": true,
+        "integrity_protected": true,
+        "time_synchronized": true
+      }
+    },
+    {
+      "type": "evidence.logging.configuration",
+      "subject_id": "asset:edge",
+      "facts": {
+        "subject_id": "asset:edge",
+        "audit_enabled": true,
+        "admin_events": true,
+        "auth_events": true,
+        "privileged_actions": true,
+        "integrity_protected": true,
+        "time_synchronized": true
+      }
+    },
+    {
+      "type": "evidence.logging.retention",
+      "subject_id": "asset:app",
+      "facts": {
+        "subject_id": "asset:app",
+        "retention_days": 90,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.logging.retention",
+      "subject_id": "asset:api",
+      "facts": {
+        "subject_id": "asset:api",
+        "retention_days": 90,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.logging.retention",
+      "subject_id": "asset:edge",
+      "facts": {
+        "subject_id": "asset:edge",
+        "retention_days": 90,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.logging.alerting",
+      "subject_id": "asset:app",
+      "facts": {
+        "subject_id": "asset:app",
+        "alerting_configured": true,
+        "coverage": true
+      }
+    },
+    {
+      "type": "evidence.logging.alerting",
+      "subject_id": "asset:api",
+      "facts": {
+        "subject_id": "asset:api",
+        "alerting_configured": true,
+        "coverage": true
+      }
+    },
+    {
+      "type": "evidence.logging.alerting",
+      "subject_id": "asset:edge",
+      "facts": {
+        "subject_id": "asset:edge",
+        "alerting_configured": true,
+        "coverage": true
+      }
+    }
+  ]
+}

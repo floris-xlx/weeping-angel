@@ -1,0 +1,14 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.crypto.key-state"
+title = "Key state fact"
+evidence_type = "crypto.key-state"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.secret.storage-configuration"
+title = "Secret storage configuration fact"
+evidence_type = "secret.storage-configuration"
+collection = "automated"
+criticality = "required"

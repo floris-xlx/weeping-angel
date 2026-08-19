@@ -10,7 +10,10 @@ Decisions:
 - Typed evidence: [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md)
 - Population / coverage: [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md)
 - IAM catalog family: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md)
+- SDLC catalog family: [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md)
+- Infrastructure catalog family: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md)
 - Applicability engine: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
+- ISO remap onto catalog: [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md)
 
 Public composition root is `weeping-angel-assurance`. Callers select a profile + capabilities; they do not import per-regime adapters.
 
@@ -55,11 +58,13 @@ Requirement → Mapping → Canonical Control → Control Test → Evidence Requ
 
 - `Control` fields: `schemaVersion`, `id`, `title`, `description`. No annex / SoA / clause / ISO fields.
 - `Requirement` is a distinct type (`id`, `frameworkId`, `frameworkVersion`, `title`, `description`).
-- `Mapping` is `{ fromRequirement, toControl, direction, completeness, relation, rationale }`.
+- `Mapping` is `{ fromRequirement, toControl, direction, completeness, relation, rationale, provenance?, validFor? }`.
   - `direction`: `forward` \| `reverse` \| `bidirectional`
   - `completeness`: `full` \| `partial` \| `related`
   - `relation`: `Equivalent` \| `Satisfies` \| `PartiallySatisfies` \| `Supports` \| `EvidenceFor` \| `SupersetOf` \| `SubsetOf` \| `Related`
-  - Mapping is never identity. Partial does not become `full`. `relation` defaults from completeness (`full` → `Satisfies`, `partial` → `PartiallySatisfies`, `related` → `Related`). Material mappings carry rationale and provenance. `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot fully satisfy a requirement.
+  - `provenance.source`: `BuiltIn` \| `UserDefined` \| `LicensedFrameworkContent` (optional author/reference)
+  - `validFor`: optional `{ from, to }` framework-version constraint
+  - Mapping is never identity. Partial does not become `full`. `relation` defaults from completeness (`full` → `Satisfies`, `partial` → `PartiallySatisfies`, `related` → `Related`). Material mappings carry rationale and provenance. `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot fully satisfy a requirement. `Equivalent` is never a convenience.
 
 `ComplianceGraph::equivalent(a, b)` is true only when both `a→b` and `b→a` exist with `completeness = full`. A partial path `A → B → C` is never `A ≡ C`. Reverse edges are not invented. `Supports` never upgrades to `Satisfies`.
 
@@ -80,8 +85,9 @@ Rules:
 - Public ISO pack is `StructuralOnly` — identifiers and mappings, no protected ISO normative wording.
 - `FrameworkPackDigest` is computed over canonical pack content and recorded on snapshots.
 - Old pack versions migrate explicitly or fail with guidance; they are never silently reinterpreted.
-- Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`); the pack loader fails closed on unknown catalog targets and retired slivers.
-- Reports pin `frameworkPackDigest` and `catalogDigest`. SoA consumes generic three-state applicability (`Applicable` / `NotApplicable` / `Unresolved`).
+- Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`); the pack loader fails closed on unknown catalog targets and retired slivers. The ISO pack is a projection over the catalog, not a second control library (`metadata.toml` must not declare `access.*` / `source.*` slivers).
+- Reports pin `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on `AssessmentReport` / `AssessmentRun`; `catalogDigest` on readiness JSON). Serialize uses carried pins — no `load_framework_pack("iso-27001", "2022")` literal.
+- SoA consumes generic three-state applicability (`Applicable` / `NotApplicable` / `Unresolved`). `Unresolved` is the SoA spelling of `ManualDeterminationRequired`. Not-applicable is justified by organization context, never by missing evidence.
 
 Content modes: `StructuralOnly` | `LicensedContent` | `UserSuppliedContent`.
 
@@ -100,14 +106,17 @@ catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
 - Provider/framework segments (`github`, `iso27001`, …) fail closed at the catalog boundary
 - Digest display: `wa:canonical-catalog:weeping-angel/canonical-catalog/v1:<hex>` over parsed documents, not raw bytes
 - Infrastructure ships fixture IDs `control.source.protected-branch` / `evidence.source.protected-branch` / `test.source.protected-branch`. Domain files are added via the manifest without changing the loader.
-- IAM family (Prompt 04): 23 `control.identity.*` controls, 12 `evidence.identity.*` fact types, 23 `test.identity.*` tests in `catalog/canonical/v1/{controls,evidence,tests}/identity.toml`. Tests are population predicates (`coverage-at-least` / `all-subjects` / `none-subjects`), not existence of one envelope. Access-approval, SoD, and periodic review stay hybrid/manual. ISO pack `access.*` ids are **not** remapped here.
+- IAM family (Prompt 04): 23 `control.identity.*` controls, 12 `evidence.identity.*` fact types, 23 `test.identity.*` tests in `catalog/canonical/v1/{controls,evidence,tests}/identity.toml`. Tests are population predicates (`coverage-at-least` / `all-subjects` / `none-subjects`), not existence of one envelope. Access-approval, SoD, and periodic review stay hybrid/manual. Prompt 12 remaps ISO Annex A identity/SDLC rows onto these IDs ([`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) §13).
 - Fixtures: `fixtures/assurance/canonical/v1/identity/` (`healthy-org`, `privileged-without-mfa`, `inactive-admin-active`, `terminated-employee-active`, `service-account-without-owner`, `partial-inventory`, `stale-access-review`, `break-glass-approved-exception`).
+- SDLC family (Prompt 05): 26 independently assessable `control.source.*` / `control.cicd.*` / `control.release.*` / `control.supply-chain.*` controls, 20 fact types (`evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*`), and 26 population tests in `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml`. Population default-branch id is `control.source.default-branch-protection` (the exists-only fixture `control.source.protected-branch` remains). Release authorization, authority separation, security review, and secure-development policy stay hybrid/manual. Missing scan evidence is `InsufficientEvidence`. SSOT: [`docs/sdd/sdlc-canonical-assurance-catalog.md`](../sdd/sdlc-canonical-assurance-catalog.md). Fixtures: `fixtures/assurance/canonical/v1/sdlc/` (`healthy-org`, `degraded-org`, `partial-coverage`, `unprotected-default-branch`, `missing-scan-evidence`, `stale-dependency-scan`, `approved-exception`).
+- Infrastructure family (Prompt 07): 43 independently assessable `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` controls in `catalog/canonical/v1/{controls,evidence,tests}/{network,crypto,data,database,logging,backup,resilience}.toml` (`control.secret.*` and `evidence.secret.storage-configuration` live in `crypto.toml`; no `secret.toml`). Sixteen required evidence contracts: `evidence.network.{exposure,firewall-policy,tls-configuration}`, `evidence.data.{encryption-at-rest,encryption-in-transit}`, `evidence.crypto.key-state`, `evidence.secret.storage-configuration`, `evidence.database.{inventory,access-configuration}`, `evidence.logging.{configuration,retention,alerting}`, `evidence.backup.{configuration,run,restore-test}`, `evidence.resilience.recovery-plan`. Tests are population predicates (`all-subjects` / `none-subjects` / `coverage-at-least`), not existence of one envelope. DR exercise, recovery objectives, and network-segmentation rationale stay hybrid/manual and cannot auto-pass from one technical flag. ISO pack `logging.*` / `encryption.*` / `backup.*` / `security.tls` ids are **not** remapped here.
+- Fixtures: `fixtures/assurance/canonical/v1/network`, `fixtures/assurance/canonical/v1/crypto`, `fixtures/assurance/canonical/v1/data`, `fixtures/assurance/canonical/v1/database`, `fixtures/assurance/canonical/v1/logging`, `fixtures/assurance/canonical/v1/backup`, `fixtures/assurance/canonical/v1/resilience` (healthy / partial / stale / missing / failing / exception-approved cases).
 - Vulnerability family (Prompt 06): 20 `control.vulnerability.*` controls, evidence types `evidence.vulnerability.*` / `evidence.secret.exposure` / `evidence.dependency.*` / `evidence.asset.software-inventory`, and population tests including `test.vulnerability.{scan-current,scan-coverage,no-critical-over-sla,no-high-over-sla,findings-have-owner}`, `test.secret.no-active-exposure`, and `test.dependency.no-critical-over-sla` in `catalog/canonical/v1/{controls,evidence,tests}/vulnerability.toml`. A scanner finding is evidence, not a compliance result. Accepted-risk and approved-exception are not remediation. Empty findings plus unknown coverage are never Effective. SSOT: [`docs/sdd/vulnerability-canonical-assurance-catalog.md`](../sdd/vulnerability-canonical-assurance-catalog.md).
 - Fixtures: `fixtures/assurance/canonical/v1/vulnerability/` (`complete-clean-scan`, `critical-inside-sla`, `critical-overdue`, `critical-approved-exception`, `critical-expired-exception`, `incomplete-scan-coverage`, `stale-scan`, `unresolved-secret-exposure`, `duplicate-superseded`, `zero-findings-unknown-coverage`). Clock `2026-08-19T12:00:00Z`; SLA critical 7d / high 30d.
 - No Entra / Okta / Google Workspace collector. GitHub still emits `source.*` only.
 - Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind.
 
-See [`docs/sdd/canonical-assurance-catalog-v1.md`](../sdd/canonical-assurance-catalog-v1.md), [`docs/sdd/iam-canonical-assurance-catalog.md`](../sdd/iam-canonical-assurance-catalog.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), and [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md).
+See [`docs/sdd/canonical-assurance-catalog-v1.md`](../sdd/canonical-assurance-catalog-v1.md), [`docs/sdd/iam-canonical-assurance-catalog.md`](../sdd/iam-canonical-assurance-catalog.md), [`docs/sdd/vulnerability-canonical-assurance-catalog.md`](../sdd/vulnerability-canonical-assurance-catalog.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), and [`docs/adr/0003-vulnerability-canonical-assurance-catalog.md`](../adr/0003-vulnerability-canonical-assurance-catalog.md).
 
 ## Compile
 
@@ -147,9 +156,42 @@ Pipeline (recorded on `CompiledFramework.validation.stages`, exact keys):
 
 `CompiledFramework` **must** include: `applicableRequirements`, `controls`, `tests`, `evidenceRequirements`, `validation`, `digest`.
 
-Without an organization context, `resolve_applicability` still keeps a requirement unless `statically_applicable() == Some(false)`. With a context, `weeping-angel-assurance::applicability` evaluates IR `ApplicabilityRule` trees in Kleene three-state (`Applicable` / `NotApplicable` / `ManualDeterminationRequired`). Unknown facts are never false. Compile (or the caller immediately after) drops only `NotApplicable`; `ManualDeterminationRequired` stays in scope. `evaluate_assessment_applicability` returns an in-memory `ApplicabilitySnapshot` for lineage persist; this engine does not persist or explain.
+Without an organization context, `resolve_applicability` still keeps a requirement unless `statically_applicable() == Some(false)`. With a context, callers consume `weeping-angel-assurance::applicability` (see below) and drop only `NotApplicable`.
 
 Additional compile errors from packs: `UnknownPack`, `UnknownRequirement`, dangling / unsupported / empty-rationale mappings.
+
+## Applicability engine
+
+Generic, network-free Kleene evaluator in `weeping-angel-assurance::applicability`. No provider or framework branches. IR `ApplicabilityRule` stays declarative (`statically_applicable` is the no-context fold). Tiny IR addition: `Control::subjects()`.
+
+```text
+build_applicability_context(definition, extras) → ApplicabilityContext
+evaluate_applicability(rule, context) → ApplicabilityOutcome
+evaluate_assessment_applicability(definition, context) → ApplicabilitySnapshot
+```
+
+`ApplicabilityContext` is a **derived view** of IR inventories + `AssessmentScope` / exclusions + optional `ContextExtras` (explicit `FactValue`, per-family `InventoryCompleteness`, pack-entry artifacts). Empty unmarked inventory is `Unknown`, not authoritative false. Explicit facts win over inference.
+
+```text
+FactValue             = true | false | unknown
+ApplicabilityDecision = applicable | notApplicable | manualDeterminationRequired
+```
+
+`Not(unknown)` stays `unknown`. Unknown facts are never treated as false. `ApplicabilityDecision::remains_in_compiled_set` is false only for `notApplicable`. SoA `Applicability::unresolved` is the projection alias of `manualDeterminationRequired`. `project_soa(framework, version)` consumes pack applicability rows as generic three-state results (not a boolean copy).
+
+`ApplicabilityOutcome` carries ordered rationale, predicate traces, named unknown facts, lex-sorted `selectedSubjects`, and `excludedSubjects` (`id`, `reason`, `exclusionIndex`). Zero selected subjects does **not** flip the decision to `notApplicable`. Hand selected ids to population evaluation via `EvidenceSet::set_population`.
+
+Snapshot schema `weeping-angel/applicability-snapshot/v1` (`APPLICABILITY_SNAPSHOT_SCHEMA`):
+
+```text
+schema, assessmentId, scope,
+requirementDecisions[], controlDecisions[],
+packEntries[], digest
+```
+
+`packEntries` are artifacts, not Kleene inputs. Digest is IR `canonical_digest` over the body excluding `digest`. This engine **produces** the snapshot; lineage persist/explain is Prompt 11.
+
+See [`docs/sdd/applicability-engine.md`](../sdd/applicability-engine.md) and [ADR 0003 applicability engine](../adr/0003-applicability-engine.md).
 
 ## Evidence
 
@@ -312,7 +354,7 @@ Owned by `weeping-angel-assurance::bridge`. Does **not** rewrite `EngineHit::to_
 
 `canonical_type` is one of: `security.finding`, `security.vulnerability.present`, `security.exposure.present`, `security.authz.weakness`, `security.secret.exposure`, `security.tls.misconfiguration`, `security.header.misconfiguration`, `security.dependency_confusion_risk`.
 
-One-way. Observations do not write back onto findings. Empty scan ≠ Effective control. Do not emit `security.no_vulnerabilities` as a passable fact.
+One-way. Observations do not write back onto findings. Empty scan ≠ Effective control. Do not emit `security.no_vulnerabilities` as a passable fact. Bridge `security_*` types are **not** the catalog library; catalog evaluation consumes `evidence.vulnerability.*` / `evidence.secret.exposure` / `evidence.dependency.*` (Prompt 06). A later adapter may emit those types from engine hits. Accepted-risk and approved-exception are not remediation.
 
 Security types that remain valid and uncollapsed: `EngineHit`, `SemanticFinding`, `Candidate`, `ArtifactRecord`, `CoverageDocument`. They must not grow `iso27001` / `gdpr` / `soc2` (or siblings).
 
@@ -325,11 +367,11 @@ AssuranceEngine::builder()
     .assess(AssessmentScope) → AssessmentReport | AssuranceError
 ```
 
-`AssessmentReport` rust fields remain `{ assessmentId, profile, digest, results, evidenceCount }`. Serialization also writes `disclaimer`, `banner`, `frameworkPackDigest`, control/requirement summaries, and coverage counts. No `compilerTopology` / `collectorGraph`.
+`AssessmentReport` rust fields remain `{ assessmentId, profile, digest, results, evidenceCount }` plus carried `run`, `summary`, `coverageMetrics`, `frameworkPackDigest`, and `canonicalCatalogDigest`. Serialization also writes `disclaimer`, `banner`, control/requirement summaries, and the five coverage metrics. No `compilerTopology` / `collectorGraph`. No `compliancePercent` / `isoCompliant`.
 
-For `FrameworkProfile::Iso27001` + version `2022`, `assess` loads the ISO pack. Other profiles still compile the canonical stub assessment (one partial mapping, `branch_protection` evidence) so ACT spine tests stay honest.
+`assess` loads the pack for the assessed `(profile, version)` via `load_framework_pack`. Missing pack falls back to the canonical stub assessment (one partial mapping, `branch_protection` evidence) so ACT spine tests stay honest. Callers must not branch on ISO vs GDPR vs SOC 2 implementations to run a generic assess.
 
-Callers must not branch on ISO vs GDPR vs SOC 2 implementations to run a generic assess.
+`AssessmentRun` pins `frameworkPackDigest` and `canonicalCatalogDigest`.
 
 Projections (not certificates):
 
@@ -339,7 +381,7 @@ project_soa(framework, version) → StatementOfApplicability
 compare(previous, next) → SnapshotDiff
 ```
 
-A requirement mapped only with `PartiallySatisfies` / `Supports` cannot become fully `effective` even if every mapped control is `Effective` (`partially covered`).
+A requirement mapped only with `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot become fully `effective` even if every mapped control is `Effective` (`partially covered`). Coverage metrics are separate counts: automation, evidence, subject, control, framework-requirement.
 
 ## CLI
 
@@ -372,7 +414,8 @@ canonical-catalog   ↛ framework / collector / control-test / evidence / networ
 evidence            ↛ control effectiveness
 control-test        ↛ network I/O / collector
 scanner types       ↛ ISO / GDPR / SOC statuses
-assurance           = composition authority
+assurance           = composition authority (includes applicability engine)
+applicability eval  ↛ collector / framework adapter / IR fact evaluation / pack-TOML as Kleene input
 ```
 
 ## Tests
@@ -383,6 +426,8 @@ assurance           = composition authority
 | Spine baseline (historical) | `sdd_assurance_runtime_baseline` | superseded / ignored |
 | ISO target (normative) | `sdd_iso27001_assurance_target` | GREEN — ISO-001…010, EVD-001…010, CTL-001…012, GH-001…012 + MVP assess |
 | ISO baseline (historical) | `sdd_iso27001_assurance_baseline` | superseded / ignored |
+| ISO remap target (normative) | `sdd_iso27001_remap_target` | GREEN — ISO-R-001…020, catalog-targeted mappings, generic SoA, dual digests |
+| ISO remap baseline (historical) | `sdd_iso27001_remap_baseline` | superseded / ignored |
 | Catalog target (normative) | `sdd_canonical_assurance_catalog_target` | GREEN — CAT-001…016 |
 | Catalog baseline (historical) | `sdd_canonical_assurance_catalog_baseline` | absence asserts superseded / ignored |
 | Typed evidence target (normative) | `sdd_typed_evidence_target` | GREEN — digest order, nested objects, typed compare, type-mismatch, credentials, codec, string-fixture compat, ledger |
@@ -391,6 +436,12 @@ assurance           = composition authority
 | Population baseline (historical) | `sdd_population_runtime_baseline` | placeholder characterization superseded / ignored |
 | IAM catalog target (normative) | `sdd_iam_catalog_target` | GREEN — IAM-001…016 (`control.identity.*`, population fixtures) |
 | IAM catalog baseline (historical) | `sdd_iam_catalog_baseline` | absence characterization superseded / ignored |
+| SDLC catalog target (normative) | `sdd_sdlc_catalog_target` | GREEN — SDLC-001…016 (`control.source|cicd|release|supply-chain.*`, population fixtures) |
+| SDLC catalog baseline (historical) | `sdd_sdlc_catalog_baseline` | absence characterization superseded / ignored |
+| Infrastructure catalog target (normative) | `sdd_infrastructure_catalog_target` | GREEN — INFRA-001…016 (`control.network.*` / `evidence.database.*`, population fixtures) |
+| Infrastructure catalog baseline (historical) | `sdd_infrastructure_catalog_baseline` | absence characterization superseded / ignored |
+| Applicability engine target (normative) | `sdd_applicability_engine_target` | GREEN — P10-T01…T16 (Kleene three-state, unknown≠false, snapshot shape) |
+| Applicability engine baseline (historical) | `sdd_applicability_engine_baseline` | static-only / IR-declarative characterization; B06/B07/B09 absence asserts superseded / ignored |
 
 `cargo test --workspace --features demo` must keep scanner tests green.
 

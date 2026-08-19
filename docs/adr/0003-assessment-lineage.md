@@ -12,7 +12,7 @@
 | Prompt | [`docs/prompts/canonical-assurance-v1/11-assessment-lineage.md`](../prompts/canonical-assurance-v1/11-assessment-lineage.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests | Dual-suite **registered**. Baseline GREEN on current shortcuts. Target LIN-001–008 and LIN-010–014 authored so suite is RED on CURRENT **before** product feature code (LIN-009 / LIN-015 still PASS); then GREEN after implement. |
-| Collision fence | Do not edit Prompt 09 GitHub collector files; do not add Prompt 10 `OrgContext` / `ManualDeterminationRequired` / `evaluate_org_context`; do not rewrite catalog domain TOML or ISO pack IDs (Prompt 12). |
+| Collision fence | Do not edit Prompt 09 GitHub collector files; do not reimplement Prompt 10 Kleene evaluation (`OrgContext` / `evaluate_org_context` remain unused names). Persist `weeping-angel-assurance::applicability::ApplicabilitySnapshot`. Do not rewrite catalog domain TOML or ISO pack IDs (Prompt 12). |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
@@ -29,7 +29,7 @@ On SHA `e430980…` those seams are MVP shortcuts:
 5. `project_soa` rereads current `applicability.toml` from disk.
 6. CLI has no `explain`; non-catalog assurance commands banner-and-exit-0.
 7. Ledger has lineage tables and **no** persist/load APIs for them.
-8. Prompt 10 applicability engine is not landed — only IR `ApplicabilityRule` + `statically_applicable`.
+8. Prompt 10 applicability engine **has landed** (`weeping-angel-assurance::applicability`); lineage still does not persist the snapshot. Characterization SHA had only IR `ApplicabilityRule` + `statically_applicable`.
 
 Canonical Catalog v1 Prompt 11 requires assessments to be reproducible immutable execution artifacts, explainable to evidence digest / test version / exception / mapping, with pure serialization and one framework loader path.
 
@@ -40,7 +40,7 @@ Questions this decision answers:
 1. What is the persisted lineage chain and which crate owns storage?
 2. May serialization resolve current framework/catalog files?
 3. How are non-ISO frameworks assessed without a production stub?
-4. How do we persist applicability before Prompt 10?
+4. How do we persist the Prompt 10 `ApplicabilitySnapshot` without reimplementing the evaluator?
 5. What is the public explain contract?
 6. How are coverage metrics exposed without a fake compliance score?
 
@@ -99,15 +99,11 @@ Remove the production stub assessment. Test fixtures may construct in-memory ass
 
 Missing pack fails closed.
 
-### 5. ApplicabilitySnapshot from existing rule/scope data
+### 5. Persist Prompt 10 `ApplicabilitySnapshot`
 
-Prompt 10 is **out of this ADR**. Persist:
+Prompt 10 evaluation is **out of this ADR**. Persist the in-memory document already produced by `evaluate_assessment_applicability` (`schema`, `assessment_id`, `scope`, requirement/control decisions with rationale and unknown facts, `pack_entries`, `digest`).
 
-- IR `AssessmentScope` when present;
-- each requirement/control `ApplicabilityRule` (or its digest) plus `statically_applicable` outcome;
-- pack `applicability.toml` rows actually used.
-
-Unknown predicates stay unresolved (not false). Prompt 10 may later fill the same snapshot shape with three-state org-context results.
+Unknown predicates stay unresolved (not false). Do not re-evaluate pack `applicability.toml` as Kleene truth.
 
 ### 6. Explain projection and CLI
 

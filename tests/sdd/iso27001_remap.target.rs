@@ -357,6 +357,7 @@ fn serialize_empty_iso_report() -> Value {
         digest: "digest".into(),
         results: Vec::new(),
         evidence_count: 0,
+        ..Default::default()
     };
     serde_json::to_value(&report).expect("serialize AssessmentReport")
 }
@@ -880,6 +881,7 @@ fn iso_r_008_generic_serialize_and_assess_have_no_iso_pack_literal() {
         digest: "other".into(),
         results: Vec::new(),
         evidence_count: 0,
+        ..Default::default()
     };
     let value = serde_json::to_value(&other).expect("serialize non-ISO report");
     assert_ne!(
@@ -997,6 +999,7 @@ fn iso_r_010_lineage_pins_pack_digest_and_catalog_digest() {
         evidence_snapshot_digest: "ev".into(),
         result_digest: "res".into(),
         status: "completed".into(),
+        ..Default::default()
     };
     let run_json = serde_json::to_value(&run).expect("serialize AssessmentRun");
     assert_eq!(

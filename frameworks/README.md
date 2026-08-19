@@ -2,7 +2,7 @@
 
 Versioned, deterministic, network-free **regime** packs (requirements + mappings).
 
-They are **not** the reusable control library. Canonical controls, evidence, and tests live in `catalog/canonical/v1` (`weeping-angel/canonical-catalog/v1`; see [`docs/sdd/canonical-assurance-catalog-v1.md`](../docs/sdd/canonical-assurance-catalog-v1.md)). The IAM family (`control.identity.*`) is catalog content ([`docs/sdd/iam-canonical-assurance-catalog.md`](../docs/sdd/iam-canonical-assurance-catalog.md)); packs still map ISO onto pack-local stubs such as `source.branch-protection` and `access.mfa.privileged` until Prompt 12 remaps.
+They are **not** the reusable control library. Canonical controls, evidence, and tests live in `catalog/canonical/v1` (`weeping-angel/canonical-catalog/v1`; see [`docs/sdd/canonical-assurance-catalog-v1.md`](../docs/sdd/canonical-assurance-catalog-v1.md)). ISO 27001:2022 mappings target catalog IDs (`control.identity.*`, landed `control.source.*`); pack-local slivers are retired ([`docs/sdd/iso-27001-canonical-remap.md`](../docs/sdd/iso-27001-canonical-remap.md) §13, [ADR](../docs/adr/0003-iso27001-canonical-remap.md)).
 
 Schema: `weeping-angel/framework-pack/v1`
 
@@ -16,7 +16,7 @@ frameworks/<id>/<version>/
   requirements.toml
   mappings.toml
   applicability.toml   # optional
-  metadata.toml        # canonical controls + tests
+  metadata.toml        # pack annotations only (not a control library)
 ```
 
 A structural pack must compile and assess. Licensed or user-supplied

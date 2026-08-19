@@ -207,7 +207,7 @@ compile_framework(assessment, target) → CompiledFramework | FrameworkCompileEr
 Pipeline (fixed order):
 
 1. **normalize** assessment + target
-2. **resolve applicability**
+2. **resolve applicability** — without org context, keep a requirement unless `statically_applicable() == Some(false)`. With context, `weeping-angel-assurance::applicability` evaluates IR rules in Kleene three-state and callers drop only `NotApplicable` ([ADR 0003 applicability engine](../adr/0003-applicability-engine.md)).
 3. **validate capabilities** (fail-closed)
 4. **resolve control mappings**
 5. **resolve evidence requirements**

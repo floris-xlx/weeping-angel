@@ -1,0 +1,38 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.backup.enabled"
+title = "Backup enabled"
+description = "Required data stores have backup enabled."
+objective = "Enable backup on required stores."
+domains = ["resilience"]
+evidence = ["evidence.backup.configuration"]
+tests = ["test.backup.enabled"]
+automation = "automated"
+[[control]]
+id = "control.backup.population-coverage"
+title = "Backup population coverage"
+description = "Required stores have a current successful backup run."
+objective = "Cover the required store population with current backups."
+domains = ["resilience"]
+evidence = ["evidence.backup.configuration", "evidence.backup.run"]
+tests = ["test.backup.required-stores-current"]
+automation = "automated"
+[[control]]
+id = "control.backup.retention"
+title = "Backup retention"
+description = "Backup retention meets the catalog-configured threshold."
+objective = "Retain backups at or above the configured threshold."
+domains = ["resilience"]
+evidence = ["evidence.backup.configuration"]
+tests = ["test.backup.retention-meets-threshold"]
+automation = "automated"
+[[control]]
+id = "control.backup.restore-testing"
+title = "Restore testing"
+description = "Restore tests succeed inside the configured freshness window."
+objective = "Prove restores with current tests."
+domains = ["resilience"]
+evidence = ["evidence.backup.restore-test"]
+tests = ["test.backup.restore-test-fresh"]
+automation = "automated"

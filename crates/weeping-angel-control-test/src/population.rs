@@ -645,6 +645,17 @@ pub fn evaluate_coverage(
         effectiveness = Effectiveness::ExceptionApproved;
         rationale = "approved break-glass exception for failing privileged subjects".into();
     }
+    if effectiveness == Effectiveness::Effective
+        && !parts.excepted.is_empty()
+        && parts.failing.is_empty()
+        && parts.missing.is_empty()
+        && parts.stale.is_empty()
+        && parts.technical.is_empty()
+    {
+        effectiveness = Effectiveness::ExceptionApproved;
+        rationale =
+            "approved unexpired exception bound to excepted subjects; not silent Effective".into();
+    }
     PopulationOutcome {
         effectiveness,
         rationale,

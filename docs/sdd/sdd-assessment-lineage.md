@@ -13,7 +13,7 @@
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Dual-suite | `tests/sdd/assessment_lineage.baseline.rs` · `tests/sdd/assessment_lineage.target.rs` → `sdd_assessment_lineage_baseline` / `sdd_assessment_lineage_target` |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update on implement, not this phase |
-| Collision fence | Prompt 09 GitHub collector · Prompt 10 applicability evaluator · Prompt 12 ISO remap / catalog domain TOML |
+| Collision fence | Prompt 09 GitHub collector · Prompt 10 evaluator reimplementation · Prompt 12 ISO remap / catalog domain TOML |
 
 Durable proof for this SDD run. Product spec lives in the linked SDD; this file records protocol evidence and gates.
 
@@ -23,7 +23,7 @@ Durable proof for this SDD run. Product spec lives in the linked SDD; this file 
 
 - **Title:** Immutable Assessment Lineage, Explainability, and Report Cleanup
 - **Problem:** An assessment is a current-state report, not a reproducible execution artifact. `AssessmentRun` is built and dropped; serialize re-loads ISO 27001:2022; non-ISO profiles compile a production stub; there is no explain CLI; compare only flips effectiveness/stale.
-- **Current behavior (SHA `e430980c…`):** Encoded by `sdd_assessment_lineage_baseline`. Facade `assess` uses `let _run` with empty `collector_runs` and reused compile digest for definition / evidence-snapshot / result identity. `AssessmentReport::serialize` calls `load_framework_pack("iso-27001", "2022")` and invents `automationCoverage` / `evidenceCoverage` percent strings. `assessment_for_target` / `normalize` / `stub_catalog` special-case ISO. `compare` fills only effective/ineffective/stale. `project_soa` reads live `applicability.toml`. CLI has no `Explain`; non-catalog arms banner-and-exit-0. Ledger has lineage tables without persist/load APIs. No `ControlExplanation` / `CoverageMetrics` / snapshot persist types. Prompt 10 org-context evaluator is absent.
+- **Current behavior (SHA `e430980c…`):** Encoded by `sdd_assessment_lineage_baseline`. Facade `assess` uses `let _run` with empty `collector_runs` and reused compile digest for definition / evidence-snapshot / result identity. `AssessmentReport::serialize` calls `load_framework_pack("iso-27001", "2022")` and invents `automationCoverage` / `evidenceCoverage` percent strings. `assessment_for_target` / `normalize` / `stub_catalog` special-case ISO. `compare` fills only effective/ineffective/stale. `project_soa` reads live `applicability.toml`. CLI has no `Explain`; non-catalog arms banner-and-exit-0. Ledger has lineage tables without persist/load APIs. No `ControlExplanation` / `CoverageMetrics` / snapshot persist types. Prompt 10 evaluator has since landed — persist its snapshot; do not re-evaluate.
 - **Desired behavior:** Persist the immutable chain (pack, catalog, definition, applicability, collection runs, envelopes, evidence snapshot, control-test runs, assessment run, readiness, SoA). Return and persist `AssessmentRun`. Replay from pins; digest mismatch if current files are consulted. Generic `ControlExplanation` + `weeping-angel assurance explain --assessment <id> --control <id>`. Pure serialize. One pack loader path; no production stub. Separate `CoverageMetrics` families. Compare fills subjects, applicability, evidence, exceptions, digest changes. SHA-256 canonical JSON result/snapshot digests exclude wall-clock `duration` / `evaluatedAt`.
 - **ADR:** needed — draft at [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md)
 
@@ -48,7 +48,7 @@ Durable proof for this SDD run. Product spec lives in the linked SDD; this file 
 - New frameworks
 - Domain catalog redesign / `catalog/canonical/v1` TOML rewrite
 - Prompt 09 GitHub collector files
-- Prompt 10 `OrgContext` / `ManualDeterminationRequired` / `evaluate_org_context`
+- Prompt 10 evaluator reimplementation (`OrgContext` / `evaluate_org_context`); persist the landed `ApplicabilitySnapshot` instead
 - Prompt 12 ISO pack ID remap
 - IR schema fork
 - Certification claims
@@ -60,7 +60,7 @@ Durable proof for this SDD run. Product spec lives in the linked SDD; this file 
 | --- | --- |
 | Spine ACT depends on production stub | Fail-closed production; test fixtures only |
 | ISO `iso_007` pack-digest / serialize needles | Carry digest on snapshot; load at assess time |
-| Concurrent Prompt 10 | Persist static rule + pack rows only |
+| Concurrent Prompt 10 | Persist landed `ApplicabilitySnapshot`; do not reimplement Kleene |
 | `INSERT OR REPLACE` on collection_runs | Lineage persist is append-only / digest-keyed |
 | Wall-clock in result digest | Exclude `duration` / `evaluatedAt` |
 | Neighbor suite red if stub removed early | Fixtures first; neighbor GREEN is a hard gate |
@@ -75,9 +75,9 @@ Durable proof for this SDD run. Product spec lives in the linked SDD; this file 
 | Spec | written before product feature code | [`docs/sdd/assessment-lineage.md`](assessment-lineage.md) — SSOT re-characterized against HEAD `e430980c…` + existing baseline |
 | ADR draft | written (architecture/contract) | [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) |
 | Dual-suite register | `[[test]]` in root `Cargo.toml` | **done** — `sdd_assessment_lineage_baseline` / `sdd_assessment_lineage_target` |
-| Baseline | PASS on current shortcuts | Encoded in `tests/sdd/assessment_lineage.baseline.rs` (must stay GREEN until skip-supersede) |
-| Target | RED on CURRENT for LIN-001–008, LIN-010–014 | **proven RED** — `cargo test --test sdd_assessment_lineage_baseline --test sdd_assessment_lineage_target`: baseline 14 passed; target 2 passed (LIN-009, LIN-015) / 13 failed (LIN-001–008, LIN-010–014). Failures cite missing snapshot types, DigestMismatch, ControlExplanation, load_framework_pack in Serialize, CollectionRun/partial, compare subjects/exceptions, compile-digest reuse, production stub, ISO hardcoded loader, explain CLI, CoverageMetrics, persist/load APIs. |
-| Implement | product feature code | **not started** |
+| Baseline | skip-supersede after target GREEN | `#[ignore = "superseded by sdd_assessment_lineage_target"]` — 14 ignored |
+| Target | GREEN after implement | **GREEN** — 15 passed (LIN-001–015) |
+| Implement | product feature code | landed: persistable `AssessmentRun`, snapshot types, `ControlExplanation` + `assurance explain`, pure serialize, generic pack loader, compare/diff, ledger persist/load |
 | Neighbors | stay GREEN | Required after implement; this phase does not edit their suites |
 | Contract | update on accept | Deferred to implement |
 

@@ -1,0 +1,99 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+# Shared attestation shape (facts, not conclusions). Store via with_value.
+# subject_id, attested_by, attested_at, kind, artifact_ref, review_state, valid_until, current
+# kind in {attestation, document-reference, approval, meeting-record,
+# auditor-observation, training-record, exercise-record, risk-acceptance,
+# policy-acknowledgement}
+# review_state in {draft, submitted, reviewed, accepted, rejected}
+
+[[evidence]]
+id = "evidence.manual.attestation"
+title = "Manual attestation fact"
+evidence_type = "manual.attestation"
+collection = "manual"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.governance.policy"
+title = "Policy document reference"
+evidence_type = "governance.policy"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.governance.policy-review"
+title = "Policy review record"
+evidence_type = "governance.policy-review"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.governance.management-review"
+title = "Management review record"
+evidence_type = "governance.management-review"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.governance.internal-audit"
+title = "Internal audit record"
+evidence_type = "governance.internal-audit"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.risk.assessment"
+title = "Organizational risk assessment record"
+evidence_type = "risk.assessment"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.risk.treatment"
+title = "Risk treatment record"
+evidence_type = "risk.treatment"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.personnel.training"
+title = "Personnel training record"
+evidence_type = "personnel.training"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.personnel.acknowledgement"
+title = "Personnel acknowledgement record"
+evidence_type = "personnel.acknowledgement"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.vendor.inventory"
+title = "Supplier inventory fact"
+evidence_type = "vendor.inventory"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.vendor.risk-review"
+title = "Supplier risk-review record"
+evidence_type = "vendor.risk-review"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.incident.exercise"
+title = "Incident exercise record"
+evidence_type = "incident.exercise"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.resilience.continuity-plan"
+title = "Continuity-plan governance record"
+evidence_type = "resilience.continuity-plan"
+collection = "hybrid"
+criticality = "required"

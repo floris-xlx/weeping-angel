@@ -1,0 +1,17 @@
+{
+  "fixture": "missing-documents",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "id": "org:acme" }
+    }
+  ]
+}

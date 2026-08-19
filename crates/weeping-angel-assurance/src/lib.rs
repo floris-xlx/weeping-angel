@@ -1,5 +1,6 @@
 //! Public assurance facade. Callers select a profile + capabilities, not an adapter.
 
+pub mod applicability;
 pub mod bridge;
 pub mod lineage;
 pub mod readiness;
@@ -20,17 +21,17 @@ use weeping_angel_control_test::{
     EvidenceSet, evaluate,
 };
 use weeping_angel_evidence::CollectionRun;
+use weeping_angel_framework::pack::{PackError, resolve_pack_dir};
 use weeping_angel_framework::{
     Assessment, CompiledFramework, FrameworkCompileError, FrameworkTarget, compile_framework,
     load_framework_pack,
 };
-use weeping_angel_framework::pack::{PackError, resolve_pack_dir};
 
 pub use lineage::{
-    ApplicabilitySnapshot, AssessmentDefinitionSnapshot, AssessmentSummary, CanonicalCatalogSnapshot,
-    ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch, EvidenceSnapshot,
-    FrameworkPackSnapshot, LineageBundle, StatementOfApplicabilitySnapshot, assessment_result_digest,
-    explain_control, load_lineage, reconstruct, replay_assessment,
+    ApplicabilitySnapshot, AssessmentDefinitionSnapshot, AssessmentSummary,
+    CanonicalCatalogSnapshot, ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch,
+    EvidenceSnapshot, FrameworkPackSnapshot, LineageBundle, StatementOfApplicabilitySnapshot,
+    assessment_result_digest, explain_control, load_lineage, reconstruct, replay_assessment,
 };
 pub use readiness::FrameworkReadinessSnapshot;
 pub use snapshot::{AssessmentRun, SnapshotDiff, compare, compare_lineage, compare_runs};
@@ -139,7 +140,7 @@ impl Default for AssessmentReport {
 impl Serialize for AssessmentReport {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let projections = report_projections(self);
-        let mut state = serializer.serialize_struct("AssessmentReport", 18)?;
+        let mut state = serializer.serialize_struct("AssessmentReport", 24)?;
         state.serialize_field("assessmentId", &self.assessment_id)?;
         state.serialize_field("profile", &self.profile)?;
         state.serialize_field("digest", &self.digest)?;
@@ -158,7 +159,10 @@ impl Serialize for AssessmentReport {
         state.serialize_field("readiness", &projections.readiness)?;
         state.serialize_field("requirements", &projections.requirement_ids)?;
         state.serialize_field("controls", &projections.controls)?;
-        state.serialize_field("insufficientEvidence", &projections.summary.insufficient_evidence)?;
+        state.serialize_field(
+            "insufficientEvidence",
+            &projections.summary.insufficient_evidence,
+        )?;
         state.serialize_field("manualReview", &projections.summary.manual_review)?;
         state.serialize_field("effective", &projections.summary.effective)?;
         state.serialize_field("ineffective", &projections.summary.ineffective)?;
@@ -176,6 +180,7 @@ struct ReportProjections {
     readiness: FrameworkReadinessSnapshot,
     requirement_ids: Vec<String>,
     controls: Vec<serde_json::Value>,
+    evidence_refs: Vec<String>,
 }
 
 fn report_projections(report: &AssessmentReport) -> ReportProjections {
@@ -269,6 +274,11 @@ fn report_projections(report: &AssessmentReport) -> ReportProjections {
         readiness,
         requirement_ids,
         controls,
+        evidence_refs: report
+            .results
+            .iter()
+            .flat_map(|r| r.evidence_refs.iter().cloned())
+            .collect(),
     }
 }
 
@@ -366,12 +376,14 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
         } else {
             "completed"
         };
-        let loaded_pack = load_framework_pack(target.profile.as_selector(), target.version.as_str());
+        let loaded_pack =
+            load_framework_pack(target.profile.as_selector(), target.version.as_str());
         let pack_digest = loaded_pack
             .as_ref()
             .map(|p| p.digest.0.clone())
             .unwrap_or_else(|_| "unpinned".into());
-        let catalog_digest = load_catalog_pin();
+        let canonical_catalog_digest = load_catalog_pin();
+        let catalog_digest = canonical_catalog_digest.clone();
         let definition_digest = definition_snapshot(&assessment).digest;
         let evidence_snapshot = seal_evidence_snapshot(
             envelopes.iter().map(|e| e.digest().to_string()),
@@ -379,10 +391,9 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
         );
         let result_digest = assessment_result_digest(&results);
         let mut applicability = snapshot_applicability(&assessment, &scope.describe());
-        if let Ok(entries) = load_pack_applicability_rows(
-            target.profile.as_selector(),
-            target.version.as_str(),
-        ) {
+        if let Ok(entries) =
+            load_pack_applicability_rows(target.profile.as_selector(), target.version.as_str())
+        {
             applicability.pack_entries = entries;
         }
         let collector_runs = vec![collection_run.run_id.clone()];

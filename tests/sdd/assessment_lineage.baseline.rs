@@ -199,11 +199,13 @@ fn assert_current_assurance_command(command: &AssuranceCommand) {
         | AssuranceCommand::Result(_)
         | AssuranceCommand::Compare(_)
         | AssuranceCommand::Soa(_)
-        | AssuranceCommand::Catalog(_) => {}
+        | AssuranceCommand::Catalog(_)
+        | AssuranceCommand::Explain(_) => {}
     }
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
@@ -216,6 +218,7 @@ fn dual_suite_is_registered() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assess_builds_then_drops_run_with_empty_collector_runs() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/lib.rs");
     let assess = fn_assess(&src);
@@ -237,6 +240,7 @@ fn assess_builds_then_drops_run_with_empty_collector_runs() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assessment_run_reuses_compile_digest_for_three_identities() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/lib.rs");
     let assess = fn_assess(&src);
@@ -261,6 +265,7 @@ fn assessment_run_reuses_compile_digest_for_three_identities() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assessment_report_serialize_loads_iso_pack_and_formats_percentages() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/lib.rs");
     let ser = impl_serialize_assessment_report(&src);
@@ -287,6 +292,7 @@ fn assessment_report_serialize_loads_iso_pack_and_formats_percentages() {
         digest: "compile-digest".into(),
         results: vec![sample_result(Effectiveness::Effective)],
         evidence_count: 0,
+        ..Default::default()
     };
     let json = serde_json::to_value(&report).expect("serialize current AssessmentReport");
     let automation = json
@@ -320,6 +326,7 @@ fn assessment_report_serialize_loads_iso_pack_and_formats_percentages() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assessment_for_target_uses_production_stub_and_iso_only_branch() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/lib.rs");
     let body = fn_assessment_for_target(&src);
@@ -344,6 +351,7 @@ fn assessment_for_target_uses_production_stub_and_iso_only_branch() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn stub_catalog_and_normalize_special_case_iso_27001() {
     let framework = crate_sources_joined("weeping-angel-framework");
     let stub = fn_stub_catalog(&framework);
@@ -376,6 +384,7 @@ fn stub_catalog_and_normalize_special_case_iso_27001() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn compare_only_fills_effective_ineffective_stale() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/snapshot.rs");
     let body = fn_compare_body(&src);
@@ -438,6 +447,7 @@ fn compare_only_fills_effective_ineffective_stale() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn project_soa_reads_live_pack_applicability_toml() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/soa.rs");
     let body = fn_project_soa(&src);
@@ -475,6 +485,7 @@ fn project_soa_reads_live_pack_applicability_toml() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assurance_command_has_no_explain_variant() {
     let cli_src = read_repo_file("src/cli.rs");
     assert!(
@@ -530,6 +541,7 @@ fn assurance_command_has_no_explain_variant() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn non_catalog_assurance_arms_print_banner_and_return_zero() {
     let main = read_repo_file("src/main.rs");
     assert!(
@@ -551,6 +563,7 @@ fn non_catalog_assurance_arms_print_banner_and_return_zero() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn ledger_creates_lineage_tables_without_persist_load_apis() {
     let src = read_repo_file("crates/weeping-angel-evidence/src/ledger.rs");
     for table in [
@@ -583,6 +596,7 @@ fn ledger_creates_lineage_tables_without_persist_load_apis() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn product_crates_lack_explanation_and_snapshot_types() {
     let crates = product_crates_joined();
     for needle in [
@@ -605,6 +619,7 @@ fn product_crates_lack_explanation_and_snapshot_types() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn applicability_rule_is_static_only_prompt_10_absent() {
     let ir = crate_sources_joined("weeping-angel-assurance-ir");
     assert!(
@@ -641,6 +656,7 @@ fn applicability_rule_is_static_only_prompt_10_absent() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_assessment_lineage_target"]
 fn assessment_run_serde_shape_is_the_current_camel_case_record() {
     let run = AssessmentRun {
         id: AssessmentId::new("assess-runtime-1"),
@@ -654,6 +670,7 @@ fn assessment_run_serde_shape_is_the_current_camel_case_record() {
         evidence_snapshot_digest: "same".into(),
         result_digest: "same".into(),
         status: "completed".into(),
+        ..Default::default()
     };
     let json = serde_json::to_value(&run).unwrap();
     for key in [

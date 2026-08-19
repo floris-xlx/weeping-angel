@@ -1,0 +1,63 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.resilience.recovery-procedure-present"
+control = "control.resilience.recovery-procedure"
+kind = "hybrid"
+required_evidence = ["evidence.resilience.recovery-plan"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.resilience.recovery-plan"
+field = "procedure_present"
+
+[[test.subjects]]
+kind = "organization"
+[[test]]
+id = "test.resilience.dr-exercise-recorded"
+control = "control.resilience.disaster-recovery-exercise"
+kind = "manual"
+required_evidence = ["evidence.resilience.recovery-plan"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+[[test]]
+id = "test.resilience.redundancy-where-required"
+control = "control.resilience.redundancy"
+kind = "hybrid"
+required_evidence = ["evidence.resilience.recovery-plan"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.resilience.recovery-plan"
+field = "redundant"
+
+[[test.subjects]]
+kind = "organization"
+[[test]]
+id = "test.resilience.recovery-objectives-documented"
+control = "control.resilience.recovery-objectives"
+kind = "manual"
+required_evidence = ["evidence.resilience.recovery-plan"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+[[test]]
+id = "test.resilience.recovery-evidence-fresh"
+control = "control.resilience.recovery-evidence-freshness"
+kind = "automated"
+required_evidence = ["evidence.resilience.recovery-plan", "evidence.backup.restore-test"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.resilience.recovery-plan"
+field = "reviewed_at"
+window = "24h"
+
+[[test.subjects]]
+kind = "organization"

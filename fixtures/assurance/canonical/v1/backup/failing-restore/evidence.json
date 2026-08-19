@@ -1,0 +1,129 @@
+{
+  "fixture": "failing-restore",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "store:orders",
+      "facts": {
+        "id": "store:orders",
+        "kind": "dataStore"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "store:billing",
+      "facts": {
+        "id": "store:billing",
+        "kind": "dataStore"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "store:catalog",
+      "facts": {
+        "id": "store:catalog",
+        "kind": "dataStore"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "dataStore",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.backup.configuration",
+      "subject_id": "store:orders",
+      "facts": {
+        "subject_id": "store:orders",
+        "backup_enabled": true,
+        "encrypted": true,
+        "retention_days": 90,
+        "required": true,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.backup.configuration",
+      "subject_id": "store:billing",
+      "facts": {
+        "subject_id": "store:billing",
+        "backup_enabled": true,
+        "encrypted": true,
+        "retention_days": 90,
+        "required": true,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.backup.configuration",
+      "subject_id": "store:catalog",
+      "facts": {
+        "subject_id": "store:catalog",
+        "backup_enabled": true,
+        "encrypted": true,
+        "retention_days": 90,
+        "required": true,
+        "meets_threshold": true
+      }
+    },
+    {
+      "type": "evidence.backup.run",
+      "subject_id": "store:orders",
+      "facts": {
+        "subject_id": "store:orders",
+        "ran_at": "2026-08-19T11:00:00Z",
+        "success": true
+      }
+    },
+    {
+      "type": "evidence.backup.run",
+      "subject_id": "store:billing",
+      "facts": {
+        "subject_id": "store:billing",
+        "ran_at": "2026-08-19T11:00:00Z",
+        "success": true
+      }
+    },
+    {
+      "type": "evidence.backup.run",
+      "subject_id": "store:catalog",
+      "facts": {
+        "subject_id": "store:catalog",
+        "ran_at": "2026-08-19T11:00:00Z",
+        "success": true
+      }
+    },
+    {
+      "type": "evidence.backup.restore-test",
+      "subject_id": "store:orders",
+      "facts": {
+        "subject_id": "store:orders",
+        "tested_at": "2026-08-19T11:00:00Z",
+        "success": true
+      }
+    },
+    {
+      "type": "evidence.backup.restore-test",
+      "subject_id": "store:billing",
+      "facts": {
+        "subject_id": "store:billing",
+        "tested_at": "2026-08-19T11:00:00Z",
+        "success": true
+      }
+    },
+    {
+      "type": "evidence.backup.restore-test",
+      "subject_id": "store:catalog",
+      "facts": {
+        "subject_id": "store:catalog",
+        "tested_at": "2026-08-19T11:00:00Z",
+        "success": false
+      }
+    }
+  ]
+}

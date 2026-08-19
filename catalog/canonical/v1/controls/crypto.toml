@@ -1,0 +1,74 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.crypto.encryption-at-rest"
+title = "Encryption at rest"
+description = "In-scope data stores record that data at rest is encrypted."
+objective = "Encrypt stored data using managed keys where required."
+domains = ["cryptography", "dataProtection"]
+evidence = ["evidence.data.encryption-at-rest", "evidence.crypto.key-state"]
+tests = ["test.crypto.encryption-at-rest-enabled"]
+automation = "automated"
+[[control]]
+id = "control.crypto.encryption-in-transit"
+title = "Encryption in transit"
+description = "In-scope endpoints record that traffic is encrypted in transit."
+objective = "Encrypt sensitive traffic in transit."
+domains = ["cryptography"]
+evidence = ["evidence.data.encryption-in-transit"]
+tests = ["test.crypto.encryption-in-transit-enabled"]
+automation = "automated"
+[[control]]
+id = "control.crypto.key-lifecycle"
+title = "Managed key lifecycle"
+description = "Key custody and lifecycle quality are hybrid; managed-key facts are supporting."
+objective = "Operate keys under a managed lifecycle."
+domains = ["cryptography"]
+evidence = ["evidence.crypto.key-state"]
+tests = ["test.crypto.key-lifecycle-managed"]
+automation = "hybrid"
+[[control]]
+id = "control.secret.storage"
+title = "Secret storage"
+description = "Required secrets use an approved storage class from catalog configuration."
+objective = "Store secrets in approved storage, not ad-hoc files."
+domains = ["cryptography", "accessControl"]
+evidence = ["evidence.secret.storage-configuration"]
+tests = ["test.secret.approved-storage"]
+automation = "automated"
+[[control]]
+id = "control.secret.credential-storage"
+title = "Credential storage"
+description = "Required credentials use the same approved storage evidence as other secrets."
+objective = "Store credentials in approved storage."
+domains = ["cryptography", "accessControl"]
+evidence = ["evidence.secret.storage-configuration"]
+tests = ["test.secret.credentials-approved-storage"]
+automation = "automated"
+[[control]]
+id = "control.crypto.key-rotation"
+title = "Key and secret rotation"
+description = "Rotation timestamps are observed; ceremony quality remains hybrid."
+objective = "Rotate keys and secrets inside the configured window."
+domains = ["cryptography"]
+evidence = ["evidence.crypto.key-state"]
+tests = ["test.crypto.keys-rotated"]
+automation = "hybrid"
+[[control]]
+id = "control.crypto.certificate-validity"
+title = "Certificate validity and rotation"
+description = "Certificates on in-scope subjects carry a valid state fact."
+objective = "Keep certificates valid and rotated."
+domains = ["cryptography"]
+evidence = ["evidence.crypto.key-state"]
+tests = ["test.crypto.certificates-valid"]
+automation = "automated"
+[[control]]
+id = "control.crypto.backup-encryption"
+title = "Sensitive backup encryption"
+description = "Backup copies of sensitive stores record encryption at rest."
+objective = "Encrypt sensitive backups."
+domains = ["cryptography", "resilience"]
+evidence = ["evidence.data.encryption-at-rest", "evidence.backup.configuration"]
+tests = ["test.crypto.backups-encrypted"]
+automation = "automated"

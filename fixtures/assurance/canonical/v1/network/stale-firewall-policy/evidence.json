@@ -1,0 +1,69 @@
+{
+  "fixture": "stale-firewall-policy",
+  "collectedAt": "2026-08-17T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:admin",
+      "facts": {
+        "id": "net:admin",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:bastion",
+      "facts": {
+        "id": "net:bastion",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "net:console",
+      "facts": {
+        "id": "net:console",
+        "kind": "network"
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "network",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:admin",
+      "facts": {
+        "subject_id": "net:admin",
+        "policy_present": true,
+        "reviewed_at": "2026-08-01T11:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:bastion",
+      "facts": {
+        "subject_id": "net:bastion",
+        "policy_present": true,
+        "reviewed_at": "2026-08-01T11:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.network.firewall-policy",
+      "subject_id": "net:console",
+      "facts": {
+        "subject_id": "net:console",
+        "policy_present": true,
+        "reviewed_at": "2026-08-01T11:00:00Z",
+        "current": true
+      }
+    }
+  ]
+}

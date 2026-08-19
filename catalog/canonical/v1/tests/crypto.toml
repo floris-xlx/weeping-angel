@@ -1,0 +1,116 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.crypto.encryption-at-rest-enabled"
+control = "control.crypto.encryption-at-rest"
+kind = "automated"
+required_evidence = ["evidence.data.encryption-at-rest", "evidence.crypto.key-state"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.data.encryption-at-rest"
+field = "encrypted"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.crypto.encryption-in-transit-enabled"
+control = "control.crypto.encryption-in-transit"
+kind = "automated"
+required_evidence = ["evidence.data.encryption-in-transit"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.data.encryption-in-transit"
+field = "encrypted"
+
+[[test.subjects]]
+kind = "endpoint"
+[[test]]
+id = "test.crypto.key-lifecycle-managed"
+control = "control.crypto.key-lifecycle"
+kind = "hybrid"
+required_evidence = ["evidence.crypto.key-state"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.crypto.key-state"
+field = "managed"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.secret.approved-storage"
+control = "control.secret.storage"
+kind = "automated"
+required_evidence = ["evidence.secret.storage-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.secret.storage-configuration"
+field = "approved_storage"
+approved_backends = ["vault", "kms"]
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.secret.credentials-approved-storage"
+control = "control.secret.credential-storage"
+kind = "automated"
+required_evidence = ["evidence.secret.storage-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.secret.storage-configuration"
+field = "approved_storage"
+approved_backends = ["vault", "kms"]
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.crypto.keys-rotated"
+control = "control.crypto.key-rotation"
+kind = "hybrid"
+required_evidence = ["evidence.crypto.key-state"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.crypto.key-state"
+field = "rotated_at"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.crypto.certificates-valid"
+control = "control.crypto.certificate-validity"
+kind = "automated"
+required_evidence = ["evidence.crypto.key-state"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.crypto.key-state"
+field = "valid"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.crypto.backups-encrypted"
+control = "control.crypto.backup-encryption"
+kind = "automated"
+required_evidence = ["evidence.data.encryption-at-rest", "evidence.backup.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.data.encryption-at-rest"
+field = "encrypted"
+
+[[test.subjects]]
+kind = "dataStore"

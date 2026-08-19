@@ -61,7 +61,8 @@ fn assert_current_assurance_command(command: &AssuranceCommand) {
         | AssuranceCommand::Result(_)
         | AssuranceCommand::Compare(_)
         | AssuranceCommand::Soa(_)
-        | AssuranceCommand::Catalog(_) => {}
+        | AssuranceCommand::Catalog(_)
+        | AssuranceCommand::Explain(_) => {}
     }
 }
 

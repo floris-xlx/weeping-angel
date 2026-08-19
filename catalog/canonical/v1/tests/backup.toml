@@ -1,0 +1,61 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.backup.enabled"
+control = "control.backup.enabled"
+kind = "automated"
+required_evidence = ["evidence.backup.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.backup.configuration"
+field = "backup_enabled"
+
+[[test.subjects]]
+kind = "dataStore"
+[[test]]
+id = "test.backup.required-stores-current"
+control = "control.backup.population-coverage"
+kind = "automated"
+required_evidence = ["evidence.backup.configuration", "evidence.backup.run"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.backup.run"
+field = "success"
+window = "24h"
+
+[[test.subjects]]
+kind = "dataStore"
+[[test]]
+id = "test.backup.retention-meets-threshold"
+control = "control.backup.retention"
+kind = "automated"
+required_evidence = ["evidence.backup.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.backup.configuration"
+field = "meets_threshold"
+min_days = 90
+
+[[test.subjects]]
+kind = "dataStore"
+[[test]]
+id = "test.backup.restore-test-fresh"
+control = "control.backup.restore-testing"
+kind = "automated"
+required_evidence = ["evidence.backup.restore-test"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.backup.restore-test"
+field = "success"
+window = "24h"
+
+[[test.subjects]]
+kind = "dataStore"

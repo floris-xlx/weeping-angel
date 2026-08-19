@@ -7,17 +7,17 @@
 | Slice | Prompt 12 — ISO 27001:2022 framework pack remaps onto the completed canonical catalog |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/12-iso27001-remap.md`](../prompts/canonical-assurance-v1/12-iso27001-remap.md) |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) — re-read and verified on this HEAD |
-| Dual-suite | **Already registered** in root `Cargo.toml`: `sdd_iso27001_remap_baseline` → `tests/sdd/iso27001_remap.baseline.rs` (**12 GREEN** characterization tests); `sdd_iso27001_remap_target` → `tests/sdd/iso27001_remap.target.rs` (**registration stub only**) |
-| Do **not** reuse | `tests/sdd/iso27001_assurance.{baseline,target}.rs` (MVP dual-suite ISO-001…010 / EVD / CTL / GH; freezes pack-local slivers) |
-| Transition | **replacement** of pack-local control library + ISO special-case load/serialize |
-| ADR | Draft [`docs/adr/0003-iso27001-canonical-remap-draft.md`](../adr/0003-iso27001-canonical-remap-draft.md) — **accept after target GREEN** (drop `-draft`) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update in implement, not this spec-only phase |
+| Dual-suite | `sdd_iso27001_remap_target` GREEN (ISO-R-001…020); `sdd_iso27001_remap_baseline` skip-superseded |
+| Do **not** reuse | `tests/sdd/iso27001_assurance.{baseline,target}.rs` (MVP dual-suite ISO-001…010 / EVD / CTL / GH) |
+| Transition | **replacement** of pack-local control library + ISO special-case load/serialize — landed |
+| ADR | Accepted [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | MVP SSOT (still law for spine/legal/CLI) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), [ADR 0002](../adr/0002-iso-27001-assurance-vertical.md) |
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | IAM family (landed) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) — 23 `control.identity.*` |
 | Fixture (landed, exists-only) | `control.source.protected-branch` / `test.source.protected-branch` (`op = exists`) |
 | SDLC / vuln / infra / governance | Specified; **product unlanded** on this SHA. Map IDs only if present at implement time. Do not invent them. |
-| Concurrent (do not collide) | Prompt 09 [`github-collector.md`](github-collector.md); Prompt 10 applicability engine (consume generic `Applicable` / `NotApplicable` / `Unresolved`); Prompt 11 [`assessment-lineage.md`](assessment-lineage.md) |
+| Concurrent (do not collide) | Prompt 09 [`github-collector.md`](github-collector.md); Prompt 10 applicability engine (**landed** — consume `weeping-angel-assurance::applicability`, map SoA `Unresolved` ↔ `ManualDeterminationRequired`); Prompt 11 [`assessment-lineage.md`](assessment-lineage.md) |
 | Workspace verify | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`; `cargo test --workspace --features demo`; `weeping-angel assurance catalog validate`; `weeping-angel assurance framework validate frameworks/iso-27001/2022`; `cargo test --test sdd_iso27001_remap_target --offline` |
 
 This document is the durable SSOT for **Prompt 12**. It owns ISO 27001:2022 **framework content**, **mappings**, **applicability references**, and **projection integration**. It must **not** redesign canonical controls, provider collectors, the catalog loader, or the control-test evaluator.
@@ -78,7 +78,7 @@ The MVP dual-suite (`sdd_iso27001_assurance_*`) remains the historical ISO-001�
 | 04 IAM | 23 `control.identity.*` | **Landed.** | Remap ISO IAM slivers onto these IDs. **Supersede IAM-008** in the same implement cut. |
 | 05–08 domain catalogs | `control.source.*` / `vulnerability.*` / infra / governance | **Specified; product unlanded** except fixture `control.source.protected-branch`. | Map **as comprehensively as the catalog present at implement time permits**. Do not invent missing catalog IDs. Do not grow pack-local stubs to fill gaps. |
 | 09 collectors | GitHub / local / manual | GitHub emits `source.*`; no ISO IDs in collector crate. Dual-suite `sdd_github_collector_*` in flight. | **Do not add ISO requirement IDs to collectors.** Do not edit `tests/sdd/github_collector.*` or collector product code. |
-| 10 applicability | org-context three-state evaluator | **Not landed** (`ApplicabilityRule::statically_applicable` only; SoA reads pack TOML). | Integrate the **generic** engine when present. If still absent, SoA must still consume a generic result type (`Applicable` / `NotApplicable` / `Unresolved` / `ManualDeterminationRequired`) rather than a boolean from `applicability.toml`. Do not implement a second ISO-only evaluator. |
+| 10 applicability | org-context three-state evaluator | **Landed.** `weeping-angel-assurance::applicability` (Kleene `Applicable` / `NotApplicable` / `ManualDeterminationRequired`, snapshot `weeping-angel/applicability-snapshot/v1`). SoA `project_soa` still reads pack TOML until this slice / Prompt 11 switch. | Consume the generic engine. Do not implement a second ISO-only evaluator. Map SoA `Unresolved` to engine `ManualDeterminationRequired`. |
 | 11 lineage | persistable run, pure serialize, generic facade, catalog digest pin | **Specified; product unlanded.** Facade still hard-codes ISO pack load. Dual-suite `sdd_assessment_lineage_*` in flight. | Consume Prompt 11 types if they landed. If still in flight, this slice **must not** leave ISO special-cases in generic serialize/test runtime; it must use the same `(id, version) → load_framework_pack` path Prompt 11 specifies. Do not invent a competing lineage model. Do not edit `tests/sdd/assessment_lineage.*`. |
 
 Rebase rule: follow landed catalog IDs and Prompt 11 field names. Prefer adapting pack mappings to those contracts over extending this slice’s scope.
@@ -645,7 +645,7 @@ Testable. Product implementation is out of this spec phase.
 
 `adr_needed = true`. Public contracts change: mapping targets, pack metadata role, loader relation set, SoA input type, lineage catalog digest, generic (non-ISO-special) resolution.
 
-Draft: [`docs/adr/0003-iso27001-canonical-remap-draft.md`](../adr/0003-iso27001-canonical-remap-draft.md). Accept after target GREEN; update `docs/contracts/assurance-runtime.md` in implement.
+Accepted: [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md). Public contract updated with the eight relations, catalog-targeted mappings, dual digests, and generic SoA semantics.
 
 ---
 
@@ -684,5 +684,5 @@ ISO 27001:2022 is a clean **framework projection** over the canonical assurance 
 
 ## 13. Implement log
 
-- 2026-08-19: remapped `frameworks/iso-27001/2022` onto landed catalog IDs (`control.identity.*` plus landed `control.source.*` SDLC). Pack slivers retired. Loader accepts all eight IR relations + provenance/`valid_for`. Generic `(id, version)` load/serialize; `catalogDigest` pinned. SoA is three-state. IAM-008 / IAM-016 / EXPECTED_CANONICAL_CONTROLS / CANONICAL_CONTROL_PREFIXES superseded. Remap baseline skip-superseded.
+- 2026-08-19: remapped `frameworks/iso-27001/2022` onto landed catalog IDs (`control.identity.*` plus landed `control.source.*` SDLC). Pack slivers retired. Loader accepts all eight IR relations + provenance/`valid_for`. Generic `(id, version)` load/serialize; `catalogDigest` / `canonicalCatalogDigest` pinned. SoA is three-state. IAM-008 / IAM-016 / EXPECTED_CANONICAL_CONTROLS / CANONICAL_CONTROL_PREFIXES superseded. Remap baseline skip-superseded. ADR accepted (dropped `-draft`).
 - Catalog families mapped: identity (required remaps) + SDLC (A.8.25 / A.8.26). Unlanded vuln/infra/governance remain unmapped.

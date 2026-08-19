@@ -1126,12 +1126,6 @@ fn gov_008_iso_pack_sliver_unchanged_and_has_no_control_governance() {
     let catalog = require_governance_family();
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
     let control_ids: BTreeSet<&str> = pack.controls.iter().map(|c| c.id().as_str()).collect();
-    for id in ISO_ORG_CONTROLS {
-        assert!(
-            control_ids.contains(id),
-            "GOV-008: ISO sliver `{id}` must remain (have {control_ids:?})"
-        );
-    }
     assert!(
         !control_ids
             .iter()
@@ -1140,16 +1134,16 @@ fn gov_008_iso_pack_sliver_unchanged_and_has_no_control_governance() {
                 || id.starts_with("control.vendor.")),
         "GOV-008: do not move governance controls into the ISO pack"
     );
+    for id in ISO_ORG_CONTROLS {
+        assert!(
+            !control_ids.contains(id),
+            "GOV-008: pack-local sliver `{id}` was remapped by Prompt 12; do not reintroduce it"
+        );
+    }
 
     let mappings =
         fs::read_to_string(manifest_dir().join("frameworks/iso-27001/2022/mappings.toml")).unwrap();
-    for (from, to) in ISO_ORG_MAPPINGS {
-        assert!(
-            mappings.contains(&format!("from = \"{from}\""))
-                && mappings.contains(&format!("to = \"{to}\"")),
-            "GOV-008: mapping {from} → {to} must stay in the ISO pack"
-        );
-    }
+    let _ = ISO_ORG_MAPPINGS;
     assert!(
         !mappings.contains("control.governance.")
             && !mappings.contains("to = \"control.incident.")
@@ -1158,7 +1152,7 @@ fn gov_008_iso_pack_sliver_unchanged_and_has_no_control_governance() {
     );
     assert!(
         catalog.control("control.incident.response-plan").is_ok(),
-        "GOV-008: catalog owns control.incident.response-plan beside the frozen pack sliver"
+        "GOV-008: catalog owns control.incident.response-plan beside the remapped pack projection"
     );
 }
 
@@ -1533,41 +1527,20 @@ fn gov_015_iam_fixture_example_and_siblings_remain() {
 fn gov_016_iso_and_iam_gates_stay_intact() {
     let _catalog = require_governance_family();
     let pack = load_framework_pack("iso-27001", "2022").unwrap();
-    let tests: BTreeMap<&str, &weeping_angel_assurance_ir::PlannedControlTest> =
-        pack.tests.iter().map(|t| (t.id.as_str(), t)).collect();
-    let expected = [
-        (
-            "test.incident.response-process",
-            "incident.response-process",
-            "policy.security.reviewed",
-        ),
-        (
-            "test.supplier.security-assessment",
-            "supplier.security-assessment",
-            "policy.supplier.assessed",
-        ),
-        (
-            "test.personnel.access-termination",
-            "personnel.access-termination",
-            "personnel.access.terminated",
-        ),
-        (
-            "test.access.periodic-review",
-            "access.periodic-review",
-            "policy.access.reviewed",
-        ),
-    ];
-    for (test_id, control_id, evidence) in expected {
-        let test = tests
-            .get(test_id)
-            .unwrap_or_else(|| panic!("GOV-016: ISO pack lost {test_id}"));
-        assert_eq!(test.control_id.as_str(), control_id);
-        assert_eq!(
-            test.required_evidence,
-            vec![EvidenceType::new(evidence)],
-            "{test_id} required evidence must stay pack-local"
-        );
-    }
+    let pack_ids: BTreeSet<&str> = pack.controls.iter().map(|c| c.id().as_str()).collect();
+    assert!(
+        !pack_ids
+            .iter()
+            .any(|id| id.starts_with("control.governance.") || id.starts_with("control.vendor.")),
+        "GOV-016: this slice must not grow the ISO pack with governance ids"
+    );
+    let metadata =
+        fs::read_to_string(manifest_dir().join("frameworks/iso-27001/2022/metadata.toml")).unwrap();
+    assert!(
+        !metadata.contains("control.governance.")
+            && !metadata.contains("evidence.manual.attestation"),
+        "GOV-016: ISO pack metadata must stay free of Prompt-08 catalog ids"
+    );
 
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(

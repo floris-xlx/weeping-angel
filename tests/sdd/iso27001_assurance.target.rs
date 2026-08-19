@@ -1032,6 +1032,7 @@ fn assessment_report_carries_not_certification_banner() {
         digest: "0".repeat(64),
         results: vec![],
         evidence_count: 0,
+        ..Default::default()
     };
     let json = serde_json::to_value(&report).unwrap();
     let blob = json.to_string().to_ascii_lowercase();

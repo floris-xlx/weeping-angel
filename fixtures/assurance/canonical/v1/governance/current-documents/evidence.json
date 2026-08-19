@@ -1,0 +1,200 @@
+{
+  "fixture": "current-documents",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "id": "org:acme" }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:alice",
+      "facts": { "kind": "user", "id": "user:alice" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:bob",
+      "facts": { "kind": "user", "id": "user:bob" }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "vendor", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "vendor:alpha",
+      "facts": { "kind": "vendor", "id": "vendor:alpha" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "vendor:beta",
+      "facts": { "kind": "vendor", "id": "vendor:beta" }
+    },
+    {
+      "type": "evidence.governance.policy",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2026-08-01T12:00:00Z",
+        "kind": "document-reference",
+        "artifact_ref": "doc:isp-2026",
+        "review_state": "accepted",
+        "valid_until": "2027-08-01T12:00:00Z",
+        "policy_kind": "information-security",
+        "reviewed_at": "2026-08-01T12:00:00Z",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.governance.policy-review",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2026-08-01T12:00:00Z",
+        "kind": "meeting-record",
+        "review_state": "accepted",
+        "reviewed_at": "2026-08-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.governance.management-review",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ceo",
+        "attested_at": "2026-07-15T12:00:00Z",
+        "kind": "meeting-record",
+        "review_state": "accepted",
+        "reviewed_at": "2026-07-15T12:00:00Z",
+        "period": "2026-h1"
+      }
+    },
+    {
+      "type": "evidence.governance.internal-audit",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "auditor-1",
+        "attested_at": "2026-06-01T12:00:00Z",
+        "kind": "auditor-observation",
+        "review_state": "accepted",
+        "audited_at": "2026-06-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.incident.exercise",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ir-lead",
+        "attested_at": "2026-05-01T12:00:00Z",
+        "kind": "exercise-record",
+        "review_state": "accepted",
+        "exercised_at": "2026-05-01T12:00:00Z",
+        "exercise_kind": "tabletop"
+      }
+    },
+    {
+      "type": "evidence.resilience.continuity-plan",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "coo",
+        "attested_at": "2026-04-01T12:00:00Z",
+        "kind": "document-reference",
+        "review_state": "accepted",
+        "reviewed_at": "2026-04-01T12:00:00Z",
+        "plan_kind": "bcp"
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:alice",
+      "facts": {
+        "subject_id": "user:alice",
+        "attested_by": "hr",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "review_state": "accepted",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:bob",
+      "facts": {
+        "subject_id": "user:bob",
+        "attested_by": "hr",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "review_state": "accepted",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.vendor.inventory",
+      "subject_id": "vendor:alpha",
+      "facts": {
+        "subject_id": "vendor:alpha",
+        "critical": true,
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.vendor.inventory",
+      "subject_id": "vendor:beta",
+      "facts": {
+        "subject_id": "vendor:beta",
+        "critical": true,
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.vendor.risk-review",
+      "subject_id": "vendor:alpha",
+      "facts": {
+        "subject_id": "vendor:alpha",
+        "attested_by": "procurement",
+        "attested_at": "2026-07-01T12:00:00Z",
+        "kind": "attestation",
+        "review_state": "accepted",
+        "reviewed_at": "2026-07-01T12:00:00Z",
+        "critical": true,
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.vendor.risk-review",
+      "subject_id": "vendor:beta",
+      "facts": {
+        "subject_id": "vendor:beta",
+        "attested_by": "procurement",
+        "attested_at": "2026-07-01T12:00:00Z",
+        "kind": "attestation",
+        "review_state": "accepted",
+        "reviewed_at": "2026-07-01T12:00:00Z",
+        "critical": true,
+        "current": true
+      }
+    }
+  ]
+}

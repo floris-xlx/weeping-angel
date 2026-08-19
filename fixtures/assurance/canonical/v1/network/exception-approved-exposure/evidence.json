@@ -1,0 +1,108 @@
+{
+  "fixture": "exception-approved-exposure",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:orders",
+      "facts": {
+        "id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:billing",
+      "facts": {
+        "id": "db:billing",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:billing",
+      "facts": {
+        "subject_id": "db:billing",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:public",
+      "facts": {
+        "id": "db:public",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:public",
+      "facts": {
+        "subject_id": "db:public",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:infra",
+      "facts": {
+        "kind": "database",
+        "authoritative": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "publicly_accessible": false,
+        "restricted": true,
+        "audit_enabled": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:billing",
+      "facts": {
+        "subject_id": "db:billing",
+        "publicly_accessible": false,
+        "restricted": true,
+        "audit_enabled": true
+      }
+    },
+    {
+      "type": "evidence.database.access-configuration",
+      "subject_id": "db:public",
+      "facts": {
+        "subject_id": "db:public",
+        "publicly_accessible": true,
+        "restricted": false,
+        "audit_enabled": true
+      }
+    }
+  ]
+}

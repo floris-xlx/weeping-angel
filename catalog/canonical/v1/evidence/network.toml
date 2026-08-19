@@ -1,0 +1,20 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.network.exposure"
+title = "Network exposure fact"
+evidence_type = "network.exposure"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.network.firewall-policy"
+title = "Firewall policy fact"
+evidence_type = "network.firewall-policy"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.network.tls-configuration"
+title = "TLS configuration fact"
+evidence_type = "network.tls-configuration"
+collection = "automated"
+criticality = "required"

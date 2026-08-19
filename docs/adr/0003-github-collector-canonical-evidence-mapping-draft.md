@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** (accept after `sdd_github_collector_target` is GREEN) |
+| Status | **Accepted** (`sdd_github_collector_target` GREEN) |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “GitHub evidence types are canonical (`source.branch.protection`, …)” clause of [ADR 0002](0002-iso-27001-assurance-vertical.md) §6 **for newly emitted collector observations**. Does **not** replace the ISO pack `source.*` sliver, Prompt 12 remap, or ISO GH-007/GH-009 fail-closed/redaction law. |
@@ -12,7 +12,7 @@
 | Prompt | [`docs/prompts/canonical-assurance-v1/09-github-collector.md`](../prompts/canonical-assurance-v1/09-github-collector.md) |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 
-> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. **Keep Draft** until the Prompt 09 target suite is GREEN.
+> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. Accepted after Prompt 09 target GREEN.
 
 ## Context
 

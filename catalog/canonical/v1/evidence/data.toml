@@ -1,0 +1,14 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.data.encryption-at-rest"
+title = "Encryption at rest fact"
+evidence_type = "data.encryption-at-rest"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.data.encryption-in-transit"
+title = "Encryption in transit fact"
+evidence_type = "data.encryption-in-transit"
+collection = "automated"
+criticality = "required"

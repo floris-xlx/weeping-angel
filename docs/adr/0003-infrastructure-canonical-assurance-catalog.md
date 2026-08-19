@@ -1,8 +1,8 @@
-# ADR 0003 — Infrastructure family in the canonical assurance catalog (DRAFT)
+# ADR 0003 — Infrastructure family in the canonical assurance catalog
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** (accept after implement) |
+| Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md) or the ISO pack logging/crypto/backup/TLS sliver. |
@@ -12,7 +12,7 @@
 | Prompt | [`docs/prompts/canonical-assurance-v1/07-infrastructure-catalog.md`](../prompts/canonical-assurance-v1/07-infrastructure-catalog.md) |
 | Planning baseline | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 
-> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. Accept and drop `-draft` after the target suite is GREEN.
+> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. Accepted after `sdd_infrastructure_catalog_target` GREEN.
 
 ## Context
 
@@ -34,7 +34,7 @@ Questions this decision answers:
 6. Do we fork the catalog loader, evidence values, or population evaluator?
 7. How do we avoid colliding with Prompt 06 `evidence.secret.exposure`?
 
-## Decision (proposed)
+## Decision
 
 ### 1. Infrastructure is canonical catalog content, not a pack and not a collector
 
@@ -122,9 +122,9 @@ In-scope “critical” / “public” / “required” subsets are the **kind i
 
 `AllSubjects` / `NoneSubjects` classify only truthy/falsey fields (and temporal `*_at`). Integer `retention_days` and string `min_protocol` are not compared by the evaluator. Threshold tests bind boolean facts (`meets_threshold`, `meets_policy`, `approved_storage`) whose values fixtures compute from catalog `[test.expression]` keys (`min_days`, `acceptable_min_protocol`, `approved_backends`) or `AssessmentContext.max_age`.
 
-### 6. Coexist with the ISO sliver until Prompt 12 remaps
+### 6. ISO sliver coexistence (Prompt 12 retired unmapped)
 
-ISO mappings still target `logging.security-events`, `backup.recovery-testing`, `encryption.data-at-rest`, `encryption.data-in-transit`, and `security.tls`. This slice does not retarget those mappings. Two libraries coexist until Prompt 12.
+This slice does not retarget ISO mappings. **Later:** [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired pack `logging.*` / `backup.*` / `encryption.*` / `security.tls` slivers and left A.8.13 / A.8.15 / A.8.24 unmapped rather than claiming catalog equivalence. See [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) §13.
 
 ### 7. Do not add cloud collectors
 
@@ -146,13 +146,13 @@ Provider details belong only in future collectors that **emit** canonical facts.
 **Positive**
 
 - Future cloud/database/network collectors have a stable emit contract.
-- Prompt 12 can map `iso27001:a.8.24` → `control.crypto.encryption-at-rest` (and siblings) without rewriting collectors.
+- Prompt 12 retired pack infra slivers and left A.8.13 / A.8.15 / A.8.24 unmapped; a later honest remap can still target `control.crypto.*` / `control.logging.*` ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Population tests are explainable using the Prompt 03 evaluation object.
 - Prompt 06 can land `evidence.secret.exposure` without a file conflict.
 
 **Negative / cost**
 
-- Two infrastructure libraries until remap (pack `logging.*` / `encryption.*` vs catalog `control.logging.*` / `control.crypto.*`).
+- Annex A infra clauses remain unmapped after sliver retirement; catalog `control.logging.*` / `control.crypto.*` are not yet an ISO projection.
 - Hybrid/manual tests will not auto-pass from technical facts alone; assessments need attestations for DR, objectives, and segmentation.
 - Collectors are still future work; catalog evaluation of live cloud populations is fixture-only until later prompts.
 

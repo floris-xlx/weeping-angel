@@ -23,7 +23,7 @@ pub struct AssessmentRun {
     /// Pinned canonical catalog identity. JSON name is `canonicalCatalogDigest`.
     #[serde(default, rename = "canonicalCatalogDigest")]
     pub canonical_catalog_pin: String,
-    #[serde(default)]
+    #[serde(default, rename = "applicabilitySnapshotId")]
     pub applicability_snapshot_id: String,
 }
 
@@ -116,9 +116,7 @@ pub fn compare(
             None if next_applicable => {
                 diff.requirement_became_applicable.push(req.id.to_string());
             }
-            Some(prev)
-                if prev.status.eq_ignore_ascii_case("not applicable") && next_applicable =>
-            {
+            Some(prev) if prev.status.eq_ignore_ascii_case("not applicable") && next_applicable => {
                 diff.requirement_became_applicable.push(req.id.to_string());
             }
             Some(prev)
@@ -129,9 +127,7 @@ pub fn compare(
             }
             _ => {}
         }
-        if prior
-            .is_some_and(|p| p.status.contains("manual") && !req.status.contains("manual"))
-        {
+        if prior.is_some_and(|p| p.status.contains("manual") && !req.status.contains("manual")) {
             diff.manual_review_resolved.push(req.id.to_string());
         }
     }
@@ -162,11 +158,7 @@ pub fn compare(
 }
 
 fn subject_ids(snapshot: &FrameworkReadinessSnapshot) -> Vec<String> {
-    snapshot
-        .controls
-        .iter()
-        .map(|c| c.id.to_string())
-        .collect()
+    snapshot.controls.iter().map(|c| c.id.to_string()).collect()
 }
 
 /// Compare two execution records for catalog/pack digest and collector lineage.

@@ -1,0 +1,43 @@
+{
+  "fixture": "manual-review-despite-evidence",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "id": "org:acme" }
+    },
+    {
+      "type": "evidence.governance.policy",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2026-08-01T12:00:00Z",
+        "kind": "document-reference",
+        "artifact_ref": "doc:roles-matrix",
+        "review_state": "submitted",
+        "policy_kind": "information-security",
+        "reviewed_at": "2026-08-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.manual.attestation",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2026-08-01T12:00:00Z",
+        "kind": "attestation",
+        "artifact_ref": "doc:roles-matrix",
+        "review_state": "submitted"
+      }
+    }
+  ]
+}

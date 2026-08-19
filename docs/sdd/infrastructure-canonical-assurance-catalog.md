@@ -2,13 +2,13 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified — no product implementation yet** |
+| Status | **Implemented** |
 | Program | Canonical Assurance Catalog v1 |
 | Slice | Prompt 07 — network / cryptography / secrets / data / database / logging / backup / resilience |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/07-infrastructure-catalog.md`](../prompts/canonical-assurance-v1/07-infrastructure-catalog.md) |
 | Planning baseline SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
 | Dual-suite (register at implement) | `sdd_infrastructure_catalog_baseline` · `sdd_infrastructure_catalog_target` |
-| ADR | Draft [`docs/adr/0003-infrastructure-canonical-assurance-catalog-draft.md`](../adr/0003-infrastructure-canonical-assurance-catalog-draft.md) — accept after target GREEN |
+| ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
@@ -54,7 +54,7 @@ The canonical catalog at `catalog/canonical/v1/` lists only `fixture.example.tom
 
 **User-visible goal:** a coherent infrastructure catalog (35–50 independently assessable controls) that future cloud, database, and network collectors can populate **without framework knowledge**, produce deterministic explainable results (missing ≠ stale ≠ failure ≠ manual review ≠ approved exception), and pass catalog validation plus full workspace verification.
 
-This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12. This slice does **not** implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service.
+This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12 — pack infra slivers retired and A.8.13 / A.8.15 / A.8.24 left unmapped; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13. This slice does **not** implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service.
 
 ---
 
@@ -704,7 +704,7 @@ Testable. Implementation is out of this spec phase.
 ## 6. Out of scope
 
 - AWS, Azure, GCP, Cloudflare, on-prem firewall, or database-engine collectors.
-- Remapping ISO 27001 (or SOC 2 / NIS 2 / PCI) onto `control.network.*` / `control.crypto.*` / … (Prompt 12).
+- Remapping ISO 27001 (or SOC 2 / NIS 2 / PCI) onto `control.network.*` / `control.crypto.*` / … (Prompt 12 — slivers retired, infra Annex A still unmapped; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
 - Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
 - Redesign of typed evidence / digest canonicalization (Prompt 02).
 - Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes, or adding `resolve_database_inventory` (Prompt 03 owns them).
@@ -761,7 +761,7 @@ This spec write does **not** register the suites or add product TOML.
 
 Architecture / public-contract decision: infrastructure content is a **canonical catalog family** (`control.network.*`, `control.crypto.*`, `control.secret.*`, `control.data.*`, `control.database.*`, `control.logging.*`, `control.backup.*`, `control.resilience.*`) consumed later by framework mappings, not an ISO-pack extension and not provider-prefixed checks.
 
-Draft: [`docs/adr/0003-infrastructure-canonical-assurance-catalog-draft.md`](../adr/0003-infrastructure-canonical-assurance-catalog-draft.md). Accept after target GREEN.
+Accepted: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md).
 
 ---
 
@@ -815,7 +815,14 @@ Baseline asserts (found case):
 
 ## 13. Landed record
 
-*Empty until implement.* Product infrastructure TOML, fixtures, dual-suite registration, and ADR acceptance are out of this spec write.
+Implemented 2026-08-19 on working-tree HEAD `f46cc4690ca131e5eaa932adea1b31fbc3de9965` (planning SHA `e430980c0d27a8138a153d49b62ddf3c57827891`).
+
+- Catalog: `catalog/canonical/v1/{controls,evidence,tests}/{network,crypto,data,database,logging,backup,resilience}.toml` listed in `manifest.toml` `[files]`. `control.secret.*` / `evidence.secret.storage-configuration` live in `crypto.toml`.
+- Forty-three independently assessable controls; sixteen required evidence contracts; eight Prompt-07 population tests plus one test per remaining control.
+- Fixtures: `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/`.
+- Dual-suite registered; baseline `#[ignore = "superseded by sdd_infrastructure_catalog_target"]` after target GREEN.
+- ADR accepted: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md).
+- Public contract names the family.
 
 Protocol:
 

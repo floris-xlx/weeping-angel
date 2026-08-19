@@ -17,7 +17,7 @@
 
 This document is the durable SSOT for the ISO 27001 **MVP** program. The vertical has landed: versioned structural pack, immutable ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA projections, and clap `assurance` family. Later work must not invent a competing IR, a GitHub→ISO shortcut, or certification claims.
 
-**Prompt 12 remapping** (canonical catalog projection; pack-local slivers retired) is specified separately: [`docs/sdd/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
+**Prompt 12 remapping** (canonical catalog projection; pack-local slivers retired) is specified separately and **implemented**: [`docs/sdd/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13, [ADR](../adr/0003-iso27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
 
 ---
 

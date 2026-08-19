@@ -1,0 +1,47 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.resilience.recovery-procedure"
+title = "Recovery procedure evidence"
+description = "A recovery procedure is attested; effectiveness of the procedure stays hybrid."
+objective = "Hold recovery procedure evidence."
+domains = ["resilience"]
+evidence = ["evidence.resilience.recovery-plan"]
+tests = ["test.resilience.recovery-procedure-present"]
+automation = "hybrid"
+[[control]]
+id = "control.resilience.disaster-recovery-exercise"
+title = "Disaster-recovery exercise"
+description = "A DR exercise is a governed event. A timestamp is supporting, not proof of exercise quality."
+objective = "Record disaster-recovery exercises with attestation."
+domains = ["resilience"]
+evidence = ["evidence.resilience.recovery-plan"]
+tests = ["test.resilience.dr-exercise-recorded"]
+automation = "manual"
+[[control]]
+id = "control.resilience.redundancy"
+title = "Redundancy / high availability"
+description = "Redundancy where required is an applicability question plus observed flags."
+objective = "Provide redundancy where policy requires it."
+domains = ["resilience"]
+evidence = ["evidence.resilience.recovery-plan"]
+tests = ["test.resilience.redundancy-where-required"]
+automation = "hybrid"
+[[control]]
+id = "control.resilience.recovery-objectives"
+title = "Recovery objectives documented"
+description = "Recovery objectives are documented policy, not a collector conclusion."
+objective = "Document recovery objectives."
+domains = ["resilience", "governance"]
+evidence = ["evidence.resilience.recovery-plan"]
+tests = ["test.resilience.recovery-objectives-documented"]
+automation = "manual"
+[[control]]
+id = "control.resilience.recovery-evidence-freshness"
+title = "Recovery evidence freshness"
+description = "Recovery-plan review timestamps stay inside the assessment freshness window."
+objective = "Keep recovery evidence current."
+domains = ["resilience"]
+evidence = ["evidence.resilience.recovery-plan", "evidence.backup.restore-test"]
+tests = ["test.resilience.recovery-evidence-fresh"]
+automation = "automated"

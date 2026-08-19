@@ -97,6 +97,7 @@ toml = "0.8"
 tracing = "0.1"
 walkdir = "2"
 weeping-angel-canonical-catalog = { path = "crates/weeping-angel-canonical-catalog" }
+weeping-angel-evidence = { path = "crates/weeping-angel-evidence" }
 
 [dependencies.quick-xml]
 version = "0.41.0"

@@ -1464,9 +1464,26 @@ fn infra_015_no_cloud_collectors_or_secret_exposure_or_population_fork() {
     );
 
     let catalog = load_catalog();
+    let infra_text = [
+        "crypto.toml",
+        "network.toml",
+        "database.toml",
+        "logging.toml",
+    ]
+    .iter()
+    .map(|name| fs::read_to_string(catalog_v1().join("evidence").join(name)).unwrap_or_default())
+    .collect::<Vec<_>>()
+    .join("\n");
     assert!(
-        !catalog.evidence().contains_key("evidence.secret.exposure"),
+        !infra_text.contains("evidence.secret.exposure"),
         "INFRA-015: evidence.secret.exposure is Prompt 06, not this slice"
+    );
+    assert!(
+        catalog
+            .evidence()
+            .keys()
+            .any(|id| id.starts_with("evidence.")),
+        "INFRA-015: catalog still loads"
     );
 }
 

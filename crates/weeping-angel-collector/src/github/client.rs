@@ -111,6 +111,7 @@ impl GitHubClient {
                 ))));
             };
             if fx.status == 429 && self.match_fixture(path, attempt + 1).is_some() {
+                // Only advance when a later fixture exists (not a reused last page).
                 attempt += 1;
                 continue;
             }
@@ -215,7 +216,7 @@ impl GitHubClient {
         let mut best_len = 0usize;
         let mut matched: Vec<&Fixture> = Vec::new();
         for fx in &self.fixtures {
-            if path == fx.path || path.starts_with(&fx.path) {
+            if fixture_matches(path, &fx.path) {
                 let len = fx.path.len();
                 if len > best_len {
                     best_len = len;
@@ -233,9 +234,33 @@ impl GitHubClient {
         if idx < matched.len() {
             Some(matched[idx])
         } else {
-            matched.last().copied()
+            None
         }
     }
+}
+
+fn fixture_matches(request: &str, fixture: &str) -> bool {
+    if request == fixture {
+        return true;
+    }
+    if !request.starts_with(fixture) {
+        return false;
+    }
+    let rest = &request[fixture.len()..];
+    if rest.starts_with('/') {
+        return true;
+    }
+    if rest.starts_with('?') {
+        if !fixture.contains("page=")
+            && rest.contains("page=")
+            && !rest.contains("page=1")
+            && !rest.contains("page=1&")
+        {
+            return false;
+        }
+        return true;
+    }
+    false
 }
 
 fn split_fixture_body(body: &str) -> (String, Option<String>) {

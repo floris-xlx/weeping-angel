@@ -1,0 +1,18 @@
+[
+  {
+    "id": "exc:store-catalog-rto",
+    "controlId": "control.backup.restore-testing",
+    "rationale": "approved unexpired restore-freshness exception",
+    "status": "approved",
+    "expiresAt": "2026-08-20T12:30:00Z",
+    "subjects": [
+      {
+        "kind": "dataStore",
+        "ids": [
+          "store:catalog"
+        ],
+        "scope": "anyOf"
+      }
+    ]
+  }
+]

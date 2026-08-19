@@ -1,0 +1,46 @@
+{
+  "fixture": "vendor-review-gaps",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "vendor", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "vendor:alpha",
+      "facts": { "kind": "vendor", "id": "vendor:alpha" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "vendor:gap",
+      "facts": { "kind": "vendor", "id": "vendor:gap" }
+    },
+    {
+      "type": "evidence.vendor.inventory",
+      "subject_id": "vendor:alpha",
+      "facts": { "subject_id": "vendor:alpha", "critical": true, "authoritative": true }
+    },
+    {
+      "type": "evidence.vendor.inventory",
+      "subject_id": "vendor:gap",
+      "facts": { "subject_id": "vendor:gap", "critical": true, "authoritative": true }
+    },
+    {
+      "type": "evidence.vendor.risk-review",
+      "subject_id": "vendor:alpha",
+      "facts": {
+        "subject_id": "vendor:alpha",
+        "attested_by": "procurement",
+        "attested_at": "2026-07-01T12:00:00Z",
+        "kind": "attestation",
+        "review_state": "accepted",
+        "reviewed_at": "2026-07-01T12:00:00Z",
+        "critical": true,
+        "current": true
+      }
+    }
+  ]
+}

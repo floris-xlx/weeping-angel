@@ -1,0 +1,72 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.database.inventoried"
+control = "control.database.inventory"
+kind = "automated"
+required_evidence = ["evidence.database.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.inventory"
+field = "critical"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.database.access-restricted"
+control = "control.database.access-restriction"
+kind = "automated"
+required_evidence = ["evidence.database.access-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.access-configuration"
+field = "restricted"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.database.critical-encrypt-at-rest"
+control = "control.database.encryption"
+kind = "automated"
+required_evidence = ["evidence.data.encryption-at-rest", "evidence.database.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.data.encryption-at-rest"
+field = "encrypted"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.database.backup-enabled"
+control = "control.database.backup-enabled"
+kind = "automated"
+required_evidence = ["evidence.backup.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.backup.configuration"
+field = "backup_enabled"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.database.auditing-enabled"
+control = "control.database.auditing"
+kind = "hybrid"
+required_evidence = ["evidence.logging.configuration", "evidence.database.access-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.access-configuration"
+field = "audit_enabled"
+
+[[test.subjects]]
+kind = "database"

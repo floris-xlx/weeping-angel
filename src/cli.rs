@@ -157,6 +157,9 @@ pub enum AssuranceCommand {
     Soa(AssuranceSoaArgs),
     /// Offline canonical assurance catalog
     Catalog(AssuranceCatalogArgs),
+    /// Explain a control result from a pinned assessment
+    #[command(name = "explain")]
+    Explain(AssuranceExplainArgs),
 }
 
 #[derive(Debug, Clone, clap::Args)]
@@ -272,6 +275,14 @@ pub struct AssuranceCompareArgs {
 pub struct AssuranceSoaArgs {
     #[arg(default_value = "latest")]
     pub assessment: String,
+}
+
+#[derive(Debug, Clone, clap::Args)]
+pub struct AssuranceExplainArgs {
+    #[arg(long)]
+    pub assessment: String,
+    #[arg(long)]
+    pub control: String,
 }
 
 impl Cli {

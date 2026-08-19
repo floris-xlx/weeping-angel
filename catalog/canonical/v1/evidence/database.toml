@@ -1,0 +1,14 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.database.inventory"
+title = "Database inventory fact"
+evidence_type = "database.inventory"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.database.access-configuration"
+title = "Database access configuration fact"
+evidence_type = "database.access-configuration"
+collection = "automated"
+criticality = "required"

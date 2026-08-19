@@ -415,41 +415,42 @@ impl GitHubCollector {
                     }
                 }
             }
-            Fetch::Absent => match self.fetch(&format!("/repos/{owner}/{name}/contents/CODEOWNERS"))
-            {
-                Fetch::Json(json) if looks_like_contents(&json, "CODEOWNERS") => {
-                    if let Ok(env) = emit(
-                        "evidence.repository.review-ownership",
-                        vec![
-                            ("subject_id", EvidenceValue::string(&subject)),
-                            ("ownership_defined", EvidenceValue::from_bool(true)),
-                        ],
-                        "CODEOWNERS presence observation",
-                        ctx,
-                    ) {
-                        envelopes.push(env);
-                    }
-                }
-                Fetch::Absent => {
-                    if let Ok(env) = emit(
-                        "evidence.repository.review-ownership",
-                        vec![
-                            ("subject_id", EvidenceValue::string(&subject)),
-                            ("ownership_defined", EvidenceValue::from_bool(false)),
-                        ],
-                        "CODEOWNERS absent observation",
-                        ctx,
-                    ) {
-                        if !envelopes.iter().any(|e| {
-                            e.observation().evidence_type().as_str()
-                                == "evidence.repository.review-ownership"
-                        }) {
+            Fetch::Absent => {
+                match self.fetch(&format!("/repos/{owner}/{name}/contents/CODEOWNERS")) {
+                    Fetch::Json(json) if looks_like_contents(&json, "CODEOWNERS") => {
+                        if let Ok(env) = emit(
+                            "evidence.repository.review-ownership",
+                            vec![
+                                ("subject_id", EvidenceValue::string(&subject)),
+                                ("ownership_defined", EvidenceValue::from_bool(true)),
+                            ],
+                            "CODEOWNERS presence observation",
+                            ctx,
+                        ) {
                             envelopes.push(env);
                         }
                     }
+                    Fetch::Absent => {
+                        if let Ok(env) = emit(
+                            "evidence.repository.review-ownership",
+                            vec![
+                                ("subject_id", EvidenceValue::string(&subject)),
+                                ("ownership_defined", EvidenceValue::from_bool(false)),
+                            ],
+                            "CODEOWNERS absent observation",
+                            ctx,
+                        ) {
+                            if !envelopes.iter().any(|e| {
+                                e.observation().evidence_type().as_str()
+                                    == "evidence.repository.review-ownership"
+                            }) {
+                                envelopes.push(env);
+                            }
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
-            },
+            }
             Fetch::Json(_) | Fetch::Empty => {}
             Fetch::Denied { status, body } => {
                 *hole = true;
@@ -527,7 +528,7 @@ impl GitHubCollector {
                 *hole = true;
                 errors.push(format!("429 rate limited on environments {owner}/{name}"));
             }
-            Fetch::Absent | Fetch::Empty | Fetch::Missing | Fetch::Json(_) => {}
+            Fetch::Absent | Fetch::Empty | Fetch::Missing => {}
         }
 
         match self.fetch(&format!("/repos/{owner}/{name}/collaborators")) {

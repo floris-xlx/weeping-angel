@@ -1,0 +1,47 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.database.inventory"
+title = "Production databases inventoried"
+description = "Production databases are enumerated from inventory facts."
+objective = "Maintain a production database inventory."
+domains = ["dataProtection"]
+evidence = ["evidence.database.inventory"]
+tests = ["test.database.inventoried"]
+automation = "automated"
+[[control]]
+id = "control.database.access-restriction"
+title = "Database access restricted"
+description = "In-scope databases record restricted access rather than prohibited public reachability."
+objective = "Restrict database access."
+domains = ["dataProtection", "accessControl"]
+evidence = ["evidence.database.access-configuration"]
+tests = ["test.database.access-restricted"]
+automation = "automated"
+[[control]]
+id = "control.database.encryption"
+title = "Database encryption enabled"
+description = "Every in-scope critical database encrypts data at rest."
+objective = "Encrypt all in-scope critical databases at rest."
+domains = ["dataProtection", "cryptography"]
+evidence = ["evidence.data.encryption-at-rest", "evidence.database.inventory"]
+tests = ["test.database.critical-encrypt-at-rest"]
+automation = "automated"
+[[control]]
+id = "control.database.backup-enabled"
+title = "Database backup enabled"
+description = "In-scope databases have backup enabled."
+objective = "Enable backup on production databases."
+domains = ["dataProtection", "resilience"]
+evidence = ["evidence.backup.configuration"]
+tests = ["test.database.backup-enabled"]
+automation = "automated"
+[[control]]
+id = "control.database.auditing"
+title = "Database auditing enabled"
+description = "Database audit flags are observed; audit-quality remains hybrid."
+objective = "Enable auditing on production databases where applicable."
+domains = ["dataProtection", "loggingMonitoring"]
+evidence = ["evidence.logging.configuration", "evidence.database.access-configuration"]
+tests = ["test.database.auditing-enabled"]
+automation = "hybrid"

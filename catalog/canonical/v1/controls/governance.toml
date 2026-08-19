@@ -1,0 +1,341 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.governance.information-security-policy"
+title = "Information-security policy"
+description = "The organization maintains a current information-security policy record."
+objective = "Require a versioned policy envelope inside its review window, not a lone document-present flag."
+domains = ["governance"]
+evidence = ["evidence.governance.policy"]
+tests = ["test.governance.policy-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.policy-review"
+title = "Policy review cadence"
+description = "Required policies are reviewed on a defined cadence."
+objective = "Date the review act; quality of the review remains a governance act."
+domains = ["governance"]
+evidence = ["evidence.governance.policy-review"]
+tests = ["test.governance.policy-review-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.roles-and-responsibilities"
+title = "Security roles and responsibilities"
+description = "Security roles and responsibilities are attested with a named principal."
+objective = "Keep role assignment a manual governance act even when a supporting document exists."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.roles-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.governance.security-objectives"
+title = "Security objectives"
+description = "Security objectives are recorded as an attestation, not inferred from a score."
+objective = "Require an attested objective set for the in-scope organization."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.objectives-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.governance.documented-scope"
+title = "Documented assurance scope"
+description = "The in-scope organization and activities are documented and attested."
+objective = "Bind scope to a policy record plus a scope attestation."
+domains = ["governance"]
+evidence = ["evidence.governance.policy", "evidence.manual.attestation"]
+tests = ["test.governance.scope-documented"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.internal-audit"
+title = "Internal audit"
+description = "An internal-audit record exists inside the required window."
+objective = "Freshness of the audit record is assessable; independence is not inferred from a file."
+domains = ["governance"]
+evidence = ["evidence.governance.internal-audit"]
+tests = ["test.governance.internal-audit-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.management-review"
+title = "Management review"
+description = "Management review occurs inside the policy period."
+objective = "Require a dated management-review record, not a document-present flag."
+domains = ["governance"]
+evidence = ["evidence.governance.management-review"]
+tests = ["test.governance.management-review-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.corrective-action"
+title = "Corrective action handling"
+description = "Nonconformities have recorded corrective-action attestations."
+objective = "Do not treat a ticket identifier as proof of correction."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.corrective-action-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.continual-improvement"
+title = "Continual improvement"
+description = "Continual improvement is attested as an organizational act."
+objective = "Keep improvement a manual record, not an inferred trend."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.improvement-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.governance.data-classification-policy"
+title = "Data classification policy"
+description = "A current data-classification policy record exists."
+objective = "Freshness of the classification policy is assessable; labeling quality is not."
+domains = ["governance", "dataProtection"]
+evidence = ["evidence.governance.policy"]
+tests = ["test.governance.classification-policy-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.acceptable-use-policy"
+title = "Acceptable-use policy"
+description = "A current acceptable-use policy record exists."
+objective = "Require a dated acceptable-use policy envelope."
+domains = ["governance"]
+evidence = ["evidence.governance.policy"]
+tests = ["test.governance.acceptable-use-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.asset-ownership"
+title = "Asset ownership"
+description = "In-scope assets have an attested owner."
+objective = "Ownership is a governance attestation, not a directory dump."
+domains = ["governance", "assetManagement"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.asset-ownership-attested"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.document-control"
+title = "Document-control governance"
+description = "Document control is attested as an organizational process."
+objective = "A single file path is not document-control effectiveness."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.document-control-attested"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.evidence-retention"
+title = "Evidence collection and retention governance"
+description = "Evidence collection and retention rules are attested."
+objective = "Retention is a governance record, not an inferred archive size."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.governance.retention-attested"]
+automation = "hybrid"
+
+[[control]]
+id = "control.governance.audit-program"
+title = "Internal audit program"
+description = "The internal-audit program is attested in addition to a current audit record."
+objective = "A single audit file does not prove a program exists."
+domains = ["governance"]
+evidence = ["evidence.governance.internal-audit", "evidence.manual.attestation"]
+tests = ["test.governance.audit-program-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.risk.assessment"
+title = "Organizational risk assessment"
+description = "An organizational risk assessment record exists inside the required window."
+objective = "Attest that assessment work happened; do not invent residual scores as conclusions."
+domains = ["governance"]
+evidence = ["evidence.risk.assessment"]
+tests = ["test.risk.assessment-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.risk.treatment"
+title = "Risk treatment"
+description = "Risk treatment records exist inside the required window."
+objective = "Treatment is a dated record, not a claim that risks are closed."
+domains = ["governance"]
+evidence = ["evidence.risk.treatment"]
+tests = ["test.risk.treatment-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.risk.ownership"
+title = "Risk ownership"
+description = "Assessed risks have assigned owners via attestation."
+objective = "Ownership is attested; an empty owner field is missing evidence."
+domains = ["governance"]
+evidence = ["evidence.risk.assessment", "evidence.manual.attestation"]
+tests = ["test.risk.owners-assigned"]
+automation = "hybrid"
+
+[[control]]
+id = "control.risk.acceptance"
+title = "Organizational risk-acceptance attestation"
+description = "Organizational risk acceptance is an attested act bound to a risk record."
+objective = "Never convert an approved exception into a silent pass."
+domains = ["governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.risk.acceptance-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.incident.response-plan"
+title = "Incident-response plan"
+description = "An incident-response plan is attested as a current governance artifact."
+objective = "An exercise record is not a substitute for a plan attestation."
+domains = ["incidentResponse", "governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.incident.plan-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.incident.exercise"
+title = "Incident exercises"
+description = "An incident exercise occurred inside the required window."
+objective = "Date the tabletop or simulation; do not infer capability from a plan file."
+domains = ["incidentResponse"]
+evidence = ["evidence.incident.exercise"]
+tests = ["test.incident.exercise-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.incident.postmortem"
+title = "Incident postmortem review"
+description = "Incident reviews are recorded as attestations."
+objective = "A ticket close event is not a postmortem."
+domains = ["incidentResponse", "governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.incident.postmortem-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.security-awareness"
+title = "Security awareness"
+description = "Required personnel have current awareness training evidence."
+objective = "Every in-scope person, not one training envelope."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.training"]
+tests = ["test.personnel.awareness-current-all"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.role-specific-training"
+title = "Role-specific training"
+description = "Required personnel have current role-specific training evidence."
+objective = "Partial training populations cannot be treated as complete."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.training"]
+tests = ["test.personnel.training-current-all"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.onboarding-offboarding"
+title = "Onboarding and offboarding governance"
+description = "Join and leave process evidence is attested."
+objective = "Process evidence only; account disablement facts belong to the identity family."
+domains = ["personnelSecurity", "governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.personnel.jml-process-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.personnel.confidentiality-commitment"
+title = "Confidentiality commitments"
+description = "Required personnel have current confidentiality acknowledgements."
+objective = "Cover the population; one signed file is not the population."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.acknowledgement"]
+tests = ["test.personnel.confidentiality-acknowledged-all"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.policy-acknowledgement"
+title = "Policy acknowledgement"
+description = "Required personnel have current policy acknowledgements."
+objective = "Population completeness is assessable; legal effect is not."
+domains = ["personnelSecurity", "governance"]
+evidence = ["evidence.personnel.acknowledgement"]
+tests = ["test.personnel.policy-acknowledged-all"]
+automation = "hybrid"
+
+[[control]]
+id = "control.vendor.inventory"
+title = "Supplier inventory"
+description = "Critical suppliers are enumerated in an authoritative inventory."
+objective = "Unknown supplier populations cannot yield a complete inventory result."
+domains = ["supplierManagement"]
+evidence = ["evidence.vendor.inventory"]
+tests = ["test.vendor.inventory-authoritative"]
+automation = "hybrid"
+
+[[control]]
+id = "control.vendor.risk-review"
+title = "Supplier risk review"
+description = "Every critical supplier has a current risk review."
+objective = "One review envelope is not coverage of the critical population."
+domains = ["supplierManagement"]
+evidence = ["evidence.vendor.risk-review"]
+tests = ["test.vendor.critical-risk-review-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.vendor.security-requirements"
+title = "Supplier security requirements"
+description = "Supplier security requirements are attested."
+objective = "Requirement quality stays a manual governance act."
+domains = ["supplierManagement"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.vendor.requirements-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.vendor.reassessment"
+title = "Supplier reassessment"
+description = "Critical suppliers are reassessed on a defined cadence."
+objective = "Reassessment uses the same current-review population predicate."
+domains = ["supplierManagement"]
+evidence = ["evidence.vendor.risk-review"]
+tests = ["test.vendor.reassessment-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.vendor.cloud-governance"
+title = "Hosted-service vendor governance"
+description = "Use of hosted third-party services is attested as a governance act."
+objective = "Do not encode a product name as the control."
+domains = ["supplierManagement", "governance"]
+evidence = ["evidence.manual.attestation"]
+tests = ["test.vendor.cloud-governance-attested"]
+automation = "manual"
+
+[[control]]
+id = "control.resilience.business-continuity-plan"
+title = "Business continuity plan"
+description = "A current business-continuity plan record exists."
+objective = "Plan governance only; operational restore results are out of this family."
+domains = ["resilience", "governance"]
+evidence = ["evidence.resilience.continuity-plan"]
+tests = ["test.resilience.continuity-plan-current"]
+automation = "hybrid"
+
+[[control]]
+id = "control.resilience.disaster-recovery-governance"
+title = "Disaster-recovery governance"
+description = "Disaster-recovery governance is attested in addition to a continuity plan record."
+objective = "A plan file does not prove recovery governance."
+domains = ["resilience", "governance"]
+evidence = ["evidence.resilience.continuity-plan", "evidence.manual.attestation"]
+tests = ["test.resilience.dr-governance-attested"]
+automation = "manual"

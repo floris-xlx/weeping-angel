@@ -1,0 +1,37 @@
+{
+  "fixture": "partial-inventory",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "db:orders",
+      "facts": {
+        "id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production"
+      }
+    },
+    {
+      "type": "evidence.database.inventory",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "kind": "database",
+        "critical": true,
+        "environment": "production",
+        "classified": true
+      }
+    },
+    {
+      "type": "evidence.data.encryption-at-rest",
+      "subject_id": "db:orders",
+      "facts": {
+        "subject_id": "db:orders",
+        "encrypted": true,
+        "key_managed": true
+      }
+    }
+  ]
+}

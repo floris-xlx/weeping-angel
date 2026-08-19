@@ -368,6 +368,7 @@ fn assessment_report_type_has_no_readiness_or_soa_fields() {
         digest: "0".repeat(64),
         results: vec![],
         evidence_count: 0,
+        ..Default::default()
     };
     let json = serde_json::to_value(&report).unwrap();
     assert_eq!(

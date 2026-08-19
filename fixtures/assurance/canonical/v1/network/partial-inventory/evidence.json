@@ -1,0 +1,34 @@
+{
+  "fixture": "partial-inventory",
+  "collectedAt": "2026-08-19T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.subject",
+      "subject_id": "ep:web",
+      "facts": {
+        "id": "ep:web",
+        "kind": "endpoint"
+      }
+    },
+    {
+      "type": "evidence.network.tls-configuration",
+      "subject_id": "ep:web",
+      "facts": {
+        "subject_id": "ep:web",
+        "min_protocol": "1.2",
+        "meets_policy": true,
+        "insecure_protocol": false
+      }
+    },
+    {
+      "type": "evidence.data.encryption-in-transit",
+      "subject_id": "ep:web",
+      "facts": {
+        "subject_id": "ep:web",
+        "encrypted": true,
+        "min_protocol": "1.2"
+      }
+    }
+  ]
+}

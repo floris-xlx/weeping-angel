@@ -1,0 +1,436 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.governance.policy-current"
+control = "control.governance.information-security-policy"
+kind = "hybrid"
+required_evidence = ["evidence.governance.policy"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.policy"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.policy-review-current"
+control = "control.governance.policy-review"
+kind = "hybrid"
+required_evidence = ["evidence.governance.policy-review"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.policy-review"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.roles-attested"
+control = "control.governance.roles-and-responsibilities"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.objectives-attested"
+control = "control.governance.security-objectives"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.scope-documented"
+control = "control.governance.documented-scope"
+kind = "hybrid"
+required_evidence = ["evidence.governance.policy", "evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.internal-audit-current"
+control = "control.governance.internal-audit"
+kind = "hybrid"
+required_evidence = ["evidence.governance.internal-audit"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.internal-audit"
+field = "audited_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.management-review-current"
+control = "control.governance.management-review"
+kind = "hybrid"
+required_evidence = ["evidence.governance.management-review"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.management-review"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.corrective-action-recorded"
+control = "control.governance.corrective-action"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.improvement-attested"
+control = "control.governance.continual-improvement"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.classification-policy-current"
+control = "control.governance.data-classification-policy"
+kind = "hybrid"
+required_evidence = ["evidence.governance.policy"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.policy"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.acceptable-use-current"
+control = "control.governance.acceptable-use-policy"
+kind = "hybrid"
+required_evidence = ["evidence.governance.policy"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.governance.policy"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.governance.asset-ownership-attested"
+control = "control.governance.asset-ownership"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.document-control-attested"
+control = "control.governance.document-control"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.retention-attested"
+control = "control.governance.evidence-retention"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.governance.audit-program-attested"
+control = "control.governance.audit-program"
+kind = "manual"
+required_evidence = ["evidence.governance.internal-audit", "evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.risk.assessment-current"
+control = "control.risk.assessment"
+kind = "hybrid"
+required_evidence = ["evidence.risk.assessment"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.risk.assessment"
+field = "assessed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.risk.treatment-current"
+control = "control.risk.treatment"
+kind = "hybrid"
+required_evidence = ["evidence.risk.treatment"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.risk.treatment"
+field = "treated_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.risk.owners-assigned"
+control = "control.risk.ownership"
+kind = "hybrid"
+required_evidence = ["evidence.risk.assessment", "evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.risk.acceptance-attested"
+control = "control.risk.acceptance"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.incident.plan-current"
+control = "control.incident.response-plan"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.incident.exercise-current"
+control = "control.incident.exercise"
+kind = "hybrid"
+required_evidence = ["evidence.incident.exercise"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.incident.exercise"
+field = "exercised_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.incident.postmortem-recorded"
+control = "control.incident.postmortem"
+kind = "hybrid"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.personnel.awareness-current-all"
+control = "control.personnel.security-awareness"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.training"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.training"
+field = "current"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.training-current-all"
+control = "control.personnel.role-specific-training"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.training"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.training"
+field = "current"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.jml-process-attested"
+control = "control.personnel.onboarding-offboarding"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.personnel.confidentiality-acknowledged-all"
+control = "control.personnel.confidentiality-commitment"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.acknowledgement"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.acknowledgement"
+field = "current"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.policy-acknowledged-all"
+control = "control.personnel.policy-acknowledgement"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.acknowledgement"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.acknowledgement"
+field = "current"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.vendor.inventory-authoritative"
+control = "control.vendor.inventory"
+kind = "hybrid"
+required_evidence = ["evidence.vendor.inventory"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.vendor.inventory"
+field = "authoritative"
+
+[[test.subjects]]
+kind = "vendor"
+
+[[test]]
+id = "test.vendor.critical-risk-review-current"
+control = "control.vendor.risk-review"
+kind = "hybrid"
+required_evidence = ["evidence.vendor.risk-review"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.vendor.risk-review"
+field = "current"
+
+[[test.subjects]]
+kind = "vendor"
+
+[[test]]
+id = "test.vendor.requirements-attested"
+control = "control.vendor.security-requirements"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.vendor.reassessment-current"
+control = "control.vendor.reassessment"
+kind = "hybrid"
+required_evidence = ["evidence.vendor.risk-review"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.vendor.risk-review"
+field = "current"
+
+[[test.subjects]]
+kind = "vendor"
+
+[[test]]
+id = "test.vendor.cloud-governance-attested"
+control = "control.vendor.cloud-governance"
+kind = "manual"
+required_evidence = ["evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+
+[[test]]
+id = "test.resilience.continuity-plan-current"
+control = "control.resilience.business-continuity-plan"
+kind = "hybrid"
+required_evidence = ["evidence.resilience.continuity-plan"]
+break_on = []
+
+[test.expression]
+op = "fresh-within"
+evidence = "evidence.resilience.continuity-plan"
+field = "reviewed_at"
+duration = "365d"
+
+[[test.subjects]]
+kind = "organization"
+
+[[test]]
+id = "test.resilience.dr-governance-attested"
+control = "control.resilience.disaster-recovery-governance"
+kind = "manual"
+required_evidence = ["evidence.resilience.continuity-plan", "evidence.manual.attestation"]
+break_on = []
+
+[test.expression]
+op = "manual-review"

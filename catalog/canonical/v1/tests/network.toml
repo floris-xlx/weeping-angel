@@ -1,0 +1,106 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.network.admin-interfaces-restricted"
+control = "control.network.admin-interface-restriction"
+kind = "automated"
+required_evidence = ["evidence.network.exposure"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.network.exposure"
+field = "restricted"
+
+[[test.subjects]]
+kind = "network"
+[[test]]
+id = "test.network.public-exposure-governed"
+control = "control.network.public-exposure-governance"
+kind = "hybrid"
+required_evidence = ["evidence.network.exposure"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+[[test]]
+id = "test.network.segmentation-rationale"
+control = "control.network.segmentation"
+kind = "manual"
+required_evidence = ["evidence.network.exposure"]
+break_on = []
+
+[test.expression]
+op = "manual-review"
+[[test]]
+id = "test.network.firewall-policy-current"
+control = "control.network.firewall-policy-current"
+kind = "automated"
+required_evidence = ["evidence.network.firewall-policy"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.network.firewall-policy"
+field = "current"
+
+[[test.subjects]]
+kind = "network"
+[[test]]
+id = "test.network.no-prohibited-public-databases"
+control = "control.network.no-unnecessary-public-databases"
+kind = "automated"
+required_evidence = ["evidence.network.exposure", "evidence.database.inventory", "evidence.database.access-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.database.access-configuration"
+field = "restricted"
+
+[[test.subjects]]
+kind = "database"
+[[test]]
+id = "test.network.management-access-protected"
+control = "control.network.management-access-protection"
+kind = "automated"
+required_evidence = ["evidence.network.exposure"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.network.exposure"
+field = "restricted"
+
+[[test.subjects]]
+kind = "network"
+[[test]]
+id = "test.network.public-endpoints-acceptable-tls"
+control = "control.network.tls-sensitive-traffic"
+kind = "automated"
+required_evidence = ["evidence.network.tls-configuration", "evidence.data.encryption-in-transit"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.network.tls-configuration"
+field = "meets_policy"
+acceptable_min_protocol = "1.2"
+
+[[test.subjects]]
+kind = "endpoint"
+[[test]]
+id = "test.network.insecure-protocols-restricted"
+control = "control.network.insecure-protocol-restriction"
+kind = "automated"
+required_evidence = ["evidence.network.tls-configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.network.tls-configuration"
+field = "meets_policy"
+acceptable_min_protocol = "1.2"
+
+[[test.subjects]]
+kind = "endpoint"

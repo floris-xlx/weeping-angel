@@ -1,0 +1,38 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.data.production-inventory"
+title = "Production data stores inventoried"
+description = "Production data stores appear in inventory observations."
+objective = "Know which production stores exist."
+domains = ["dataProtection"]
+evidence = ["evidence.database.inventory"]
+tests = ["test.data.production-stores-inventoried"]
+automation = "automated"
+[[control]]
+id = "control.data.access-restriction"
+title = "Data-store access restricted"
+description = "Access restriction facts are observed; least-privilege quality stays hybrid."
+objective = "Restrict access to production data stores."
+domains = ["dataProtection", "accessControl"]
+evidence = ["evidence.database.access-configuration"]
+tests = ["test.data.access-restricted"]
+automation = "hybrid"
+[[control]]
+id = "control.data.retention-policy"
+title = "Data retention policy represented"
+description = "Retention vs catalog threshold is observed; legal-hold quality stays hybrid."
+objective = "Represent retention policy as comparable facts."
+domains = ["dataProtection", "governance"]
+evidence = ["evidence.logging.retention"]
+tests = ["test.data.retention-policy-represented"]
+automation = "hybrid"
+[[control]]
+id = "control.data.sensitive-classification"
+title = "Sensitive-data classification"
+description = "Classification presence is observed; scheme quality stays hybrid."
+objective = "Record a classification on sensitive stores."
+domains = ["dataProtection"]
+evidence = ["evidence.database.inventory"]
+tests = ["test.data.sensitive-classification-present"]
+automation = "hybrid"

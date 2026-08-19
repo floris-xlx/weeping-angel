@@ -1,0 +1,129 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.logging.critical-assets-audit-current"
+control = "control.logging.audit-enabled"
+kind = "automated"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "audit_enabled"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.admin-events-recorded"
+control = "control.logging.admin-events"
+kind = "automated"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "admin_events"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.auth-security-events-recorded"
+control = "control.logging.auth-security-events"
+kind = "automated"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "auth_events"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.retention-meets-threshold"
+control = "control.logging.retention-meets-policy"
+kind = "automated"
+required_evidence = ["evidence.logging.retention"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.retention"
+field = "meets_threshold"
+min_days = 90
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.time-synchronized"
+control = "control.logging.time-synchronization"
+kind = "hybrid"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "time_synchronized"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.alerting-configured"
+control = "control.logging.security-alerting"
+kind = "automated"
+required_evidence = ["evidence.logging.alerting"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.alerting"
+field = "alerting_configured"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.privileged-actions-observable"
+control = "control.logging.privileged-actions-observable"
+kind = "hybrid"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "privileged_actions"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.integrity-protected"
+control = "control.logging.integrity-protected-storage"
+kind = "hybrid"
+required_evidence = ["evidence.logging.configuration"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.configuration"
+field = "integrity_protected"
+
+[[test.subjects]]
+kind = "asset"
+[[test]]
+id = "test.logging.monitoring-coverage"
+control = "control.logging.monitoring-coverage"
+kind = "automated"
+required_evidence = ["evidence.logging.configuration", "evidence.logging.alerting"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.logging.alerting"
+field = "coverage"
+
+[[test.subjects]]
+kind = "asset"

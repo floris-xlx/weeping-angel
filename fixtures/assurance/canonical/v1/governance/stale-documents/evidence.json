@@ -1,0 +1,67 @@
+{
+  "fixture": "stale-documents",
+  "collectedAt": "2024-08-01T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "org:acme",
+      "facts": { "kind": "organization", "id": "org:acme" }
+    },
+    {
+      "type": "evidence.governance.policy",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2024-07-01T12:00:00Z",
+        "kind": "document-reference",
+        "review_state": "accepted",
+        "policy_kind": "information-security",
+        "reviewed_at": "2024-07-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.governance.management-review",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ceo",
+        "attested_at": "2024-07-01T12:00:00Z",
+        "kind": "meeting-record",
+        "review_state": "accepted",
+        "reviewed_at": "2024-07-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.governance.internal-audit",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "auditor-1",
+        "attested_at": "2024-07-01T12:00:00Z",
+        "kind": "auditor-observation",
+        "review_state": "accepted",
+        "audited_at": "2024-07-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.incident.exercise",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ir-lead",
+        "attested_at": "2024-07-01T12:00:00Z",
+        "kind": "exercise-record",
+        "review_state": "accepted",
+        "exercised_at": "2024-07-01T12:00:00Z",
+        "exercise_kind": "tabletop"
+      }
+    }
+  ]
+}

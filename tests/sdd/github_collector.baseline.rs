@@ -173,6 +173,7 @@ const PROTECTION_HEALTHY: &str = r#"{
 
 // ── Scope ──────────────────────────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b001_collects_only_repo_owner_name_labels() {
     let collector = GitHubCollector::new(None);
@@ -185,6 +186,7 @@ fn ghc_b001_collects_only_repo_owner_name_labels() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b002_bare_owner_name_label_rebuilds_repo_prefixed_asset_and_misses_scope() {
     let scope = CollectorScope::new().allow_asset(AssetId::new("acme/app"));
@@ -197,6 +199,7 @@ fn ghc_b002_bare_owner_name_label_rebuilds_repo_prefixed_asset_and_misses_scope(
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b003_no_org_inventory_or_archived_selector_in_sources() {
     let src = github_sources_joined();
@@ -216,6 +219,7 @@ fn ghc_b003_no_org_inventory_or_archived_selector_in_sources() {
 
 // ── Emitted source.* facts ─────────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b004_normalize_emits_four_repository_string_facts() {
     let scope = repo_scope("acme", "app");
@@ -250,6 +254,7 @@ fn ghc_b004_normalize_emits_four_repository_string_facts() {
     all_facts_are_strings(&envelopes);
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b005_visibility_falls_back_to_private_flag_then_unknown() {
     let scope = repo_scope("acme", "app");
@@ -296,6 +301,7 @@ fn ghc_b005_visibility_falls_back_to_private_flag_then_unknown() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b006_archived_repo_is_collected_like_any_other() {
     let scope = repo_scope("acme", "legacy");
@@ -316,6 +322,7 @@ fn ghc_b006_archived_repo_is_collected_like_any_other() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b007_protection_hardcodes_main_not_default_branch() {
     let src = github_file("mod.rs");
@@ -355,6 +362,7 @@ fn ghc_b007_protection_hardcodes_main_not_default_branch() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b008_protection_404_is_enabled_false_not_a_diagnostic() {
     let scope = repo_scope("acme", "app");
@@ -380,6 +388,7 @@ fn ghc_b008_protection_404_is_enabled_false_not_a_diagnostic() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b009_protection_200_inverts_force_push_and_deletion() {
     let scope = repo_scope("acme", "app");
@@ -445,6 +454,7 @@ fn ghc_b009_protection_200_inverts_force_push_and_deletion() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b010_emitted_types_are_source_star_only() {
     let scope = repo_scope("acme", "app");
@@ -478,6 +488,7 @@ fn ghc_b010_emitted_types_are_source_star_only() {
 
 // ── Stubs ──────────────────────────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b011_feature_modules_are_module_const_stubs() {
     for (file, module) in STUB_MODULES {
@@ -500,6 +511,7 @@ fn ghc_b011_feature_modules_are_module_const_stubs() {
 
 // ── Descriptor advertised-vs-collected gap ─────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b012_descriptor_advertises_types_and_pagination_it_does_not_collect() {
     let collector = GitHubCollector::new(None);
@@ -572,6 +584,7 @@ fn ghc_b012_descriptor_advertises_types_and_pagination_it_does_not_collect() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b013_descriptor_has_no_structured_failure_behavior() {
     let desc = GitHubCollector::new(None).descriptor();
@@ -584,6 +597,7 @@ fn ghc_b013_descriptor_has_no_structured_failure_behavior() {
 
 // ── Permission / error abort ───────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b014_repo_403_aborts_collect_as_permission_denied() {
     let scope = repo_scope("acme", "app");
@@ -607,6 +621,7 @@ fn ghc_b014_repo_403_aborts_collect_as_permission_denied() {
     }
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b015_protection_403_aborts_whole_collect() {
     let scope = repo_scope("acme", "app");
@@ -630,6 +645,7 @@ fn ghc_b015_protection_403_aborts_whole_collect() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b016_403_on_second_repo_discards_first_repo_envelopes() {
     let scope = multi_repo_scope(&[("acme", "app"), ("acme", "other")]);
@@ -647,6 +663,7 @@ fn ghc_b016_403_on_second_repo_discards_first_repo_envelopes() {
     assert!(matches!(err, CollectorError::PermissionDenied { .. }));
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b017_repo_404_and_other_errors_are_insufficient_evidence_and_abort() {
     let scope = repo_scope("acme", "app");
@@ -695,6 +712,7 @@ fn ghc_b017_repo_404_and_other_errors_are_insufficient_evidence_and_abort() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b018_collect_does_not_retry_429() {
     let src = github_file("mod.rs");
@@ -723,6 +741,7 @@ fn ghc_b018_collect_does_not_retry_429() {
 
 // ── Client / transport ─────────────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b019_client_is_fixture_only() {
     let bare = GitHubClient::new(None);
@@ -751,6 +770,7 @@ fn ghc_b019_client_is_fixture_only() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b020_fixture_prefix_match_first_wins() {
     let client = client_with(&[
@@ -771,6 +791,7 @@ fn ghc_b020_fixture_prefix_match_first_wins() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b021_authorization_header_never_returns_the_token() {
     let client = GitHubClient::new(Some("super-secret-token".into()));
@@ -783,6 +804,7 @@ fn ghc_b021_authorization_header_never_returns_the_token() {
 
 // ── CollectionRun ──────────────────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b022_collect_batch_wraps_empty_collection_run() {
     let scope = repo_scope("acme", "app");
@@ -816,6 +838,7 @@ fn ghc_b022_collect_batch_wraps_empty_collection_run() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b023_collect_batch_propagates_collect_errors_without_a_run() {
     let err = GitHubCollector::with_client(client_with(&[(
@@ -832,6 +855,7 @@ fn ghc_b023_collect_batch_propagates_collect_errors_without_a_run() {
 
 // ── Security already present ───────────────────────────────────────────────
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b024_redact_covers_existing_github_token_needles() {
     assert_eq!(
@@ -849,6 +873,7 @@ fn ghc_b024_redact_covers_existing_github_token_needles() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b025_collect_403_uses_fixed_permission_strings_not_response_bodies() {
     let scope = repo_scope("acme", "app");
@@ -916,6 +941,7 @@ fn ghc_b025_collect_403_uses_fixed_permission_strings_not_response_bodies() {
     }
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b026_iso_gh007_gh009_needles_remain() {
     let src = collector_sources_joined();
@@ -934,6 +960,7 @@ fn ghc_b026_iso_gh007_gh009_needles_remain() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b027_github_module_has_no_framework_ids_or_effectiveness() {
     let src = github_sources_joined().to_ascii_lowercase();
@@ -954,6 +981,7 @@ fn ghc_b027_github_module_has_no_framework_ids_or_effectiveness() {
     }
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b028_no_canonical_github_goldens_or_sdlc_catalog_rows() {
     let root = manifest_dir();
@@ -973,6 +1001,7 @@ fn ghc_b028_no_canonical_github_goldens_or_sdlc_catalog_rows() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b029_no_token_without_fixture_is_permission_denied() {
     let err = GitHubCollector::new(None)
@@ -988,6 +1017,7 @@ fn ghc_b029_no_token_without_fixture_is_permission_denied() {
     );
 }
 
+#[ignore = "superseded by sdd_github_collector_target"]
 #[test]
 fn ghc_b030_token_without_fixture_is_insufficient_evidence_transport() {
     let err = GitHubCollector::with_client(GitHubClient::new(Some("test-token".into())))

@@ -1,0 +1,20 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[evidence]]
+id = "evidence.backup.configuration"
+title = "Backup configuration fact"
+evidence_type = "backup.configuration"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.backup.run"
+title = "Backup run fact"
+evidence_type = "backup.run"
+collection = "automated"
+criticality = "required"
+[[evidence]]
+id = "evidence.backup.restore-test"
+title = "Backup restore-test fact"
+evidence_type = "backup.restore-test"
+collection = "automated"
+criticality = "required"

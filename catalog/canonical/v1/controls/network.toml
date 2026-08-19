@@ -1,0 +1,74 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.network.admin-interface-restriction"
+title = "Administrative interfaces restricted"
+description = "Administrative interfaces are not left on an unrestricted public path."
+objective = "Restrict administrative interfaces to the intended management population."
+domains = ["networkSecurity"]
+evidence = ["evidence.network.exposure"]
+tests = ["test.network.admin-interfaces-restricted"]
+automation = "automated"
+[[control]]
+id = "control.network.public-exposure-governance"
+title = "Public exposure governed"
+description = "Public exposure is an attested risk decision, not an unreviewed default."
+objective = "Govern which endpoints may be public and record that decision."
+domains = ["networkSecurity", "governance"]
+evidence = ["evidence.network.exposure"]
+tests = ["test.network.public-exposure-governed"]
+automation = "hybrid"
+[[control]]
+id = "control.network.segmentation"
+title = "Network segmentation"
+description = "Trust-zone segmentation and its rationale are attested; exposure facts are supporting only."
+objective = "Do not treat a single exposure flag as proof of segmentation design."
+domains = ["networkSecurity"]
+evidence = ["evidence.network.exposure"]
+tests = ["test.network.segmentation-rationale"]
+automation = "hybrid"
+[[control]]
+id = "control.network.firewall-policy-current"
+title = "Firewall policy present and current"
+description = "A firewall policy exists and its review timestamp is inside the freshness window."
+objective = "Keep firewall policy current for in-scope networks."
+domains = ["networkSecurity"]
+evidence = ["evidence.network.firewall-policy"]
+tests = ["test.network.firewall-policy-current"]
+automation = "automated"
+[[control]]
+id = "control.network.no-unnecessary-public-databases"
+title = "Databases not unnecessarily public"
+description = "In-scope databases are restricted so they are not prohibited-public."
+objective = "Prevent unnecessary public database exposure."
+domains = ["networkSecurity", "dataProtection"]
+evidence = ["evidence.network.exposure", "evidence.database.inventory"]
+tests = ["test.network.no-prohibited-public-databases"]
+automation = "automated"
+[[control]]
+id = "control.network.management-access-protection"
+title = "Management access protected"
+description = "Management-plane access is restricted rather than openly reachable."
+objective = "Protect management access paths."
+domains = ["networkSecurity", "accessControl"]
+evidence = ["evidence.network.exposure"]
+tests = ["test.network.management-access-protected"]
+automation = "automated"
+[[control]]
+id = "control.network.tls-sensitive-traffic"
+title = "TLS for sensitive traffic"
+description = "Public-facing endpoints enforce the catalog TLS policy."
+objective = "Require acceptable TLS on the public endpoint population."
+domains = ["networkSecurity", "cryptography"]
+evidence = ["evidence.network.tls-configuration", "evidence.data.encryption-in-transit"]
+tests = ["test.network.public-endpoints-acceptable-tls"]
+automation = "automated"
+[[control]]
+id = "control.network.insecure-protocol-restriction"
+title = "Insecure protocols restricted"
+description = "Endpoints do not present protocols below the catalog TLS policy."
+objective = "Restrict insecure protocols on in-scope endpoints."
+domains = ["networkSecurity", "cryptography"]
+evidence = ["evidence.network.tls-configuration"]
+tests = ["test.network.insecure-protocols-restricted"]
+automation = "automated"

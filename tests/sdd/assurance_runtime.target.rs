@@ -1092,6 +1092,7 @@ fn act_014_facade_assess_does_not_branch_on_framework_implementations() {
         let report = AssuranceEngine::builder()
             .collector(collector.clone())
             .framework(target)
+            .definition(stub_assessment(false))
             .assess(scope.clone())
             .expect("ACT-014: generic assess(scope) must run for every profile selector");
         let json = serde_json::to_value(&report).unwrap();

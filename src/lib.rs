@@ -1,6 +1,7 @@
 //! weeping-angel — authorized dual-domain security toolchain (web + code).
 
 pub mod assurance_catalog;
+pub mod assurance_explain;
 pub mod authz;
 pub mod checks;
 pub mod cli;

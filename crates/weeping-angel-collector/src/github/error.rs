@@ -27,6 +27,6 @@ fn fold_prefix(out: &mut String, needle: &str) {
         let cut = rest
             .find(|c: char| c.is_whitespace() || c == '"' || c == '\'')
             .unwrap_or(rest.len());
-        out.replace_range(idx + needle.len()..idx + needle.len() + cut, "[redacted]");
+        out.replace_range(idx..idx + needle.len() + cut, "[redacted]");
     }
 }

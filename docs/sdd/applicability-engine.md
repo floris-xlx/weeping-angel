@@ -560,3 +560,5 @@ Prior session attempt for this prompt never started (4-run cap). Treat implement
 - IR: `Control::subjects()` getter only; `statically_applicable` unchanged
 - Compile: still static `!= Some(false)` without a context; callers filter `NotApplicable` via `ApplicabilityDecision::remains_in_compiled_set`
 - Dual-suite: target GREEN; baseline B06/B07/B09 skip-superseded
+- ADR: accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
+- Contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) § Applicability engine

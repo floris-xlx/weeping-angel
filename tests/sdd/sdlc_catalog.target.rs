@@ -568,6 +568,12 @@ fn inventory_complete(set: &mut EvidenceSet) {
         &[("kind", "repository"), ("authoritative", "true")],
         collected(1),
     ));
+    set.insert(seal(
+        "inventory.complete",
+        "org:acme:deployment",
+        &[("kind", "deployment"), ("authoritative", "true")],
+        collected(1),
+    ));
 }
 
 fn branch_protection(set: &mut EvidenceSet, id: &str, protected: bool, hours_ago: i64) {
@@ -674,6 +680,12 @@ fn workflow_permissions(set: &mut EvidenceSet, id: &str, minimized: bool) {
 }
 
 fn env_protection(set: &mut EvidenceSet, id: &str, required: bool) {
+    set.insert(seal(
+        "inventory.subject",
+        &format!("deploy:{id}"),
+        &[("id", id), ("kind", "deployment")],
+        collected(1),
+    ));
     set.insert(seal(
         "evidence.deployment.environment-protection",
         id,

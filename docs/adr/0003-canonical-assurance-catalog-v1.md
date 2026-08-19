@@ -177,12 +177,12 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 
 - Downstream prompts add TOML + a manifest entry; loader source stays unchanged.
 - Prompt 11 can persist `CanonicalCatalogSnapshot` using the catalog digest display string.
-- Prompt 12 remaps ISO `to =` onto `control.*` IDs; until then both ID styles coexist.
+- Prompt 12 remaps ISO `to =` onto `control.*` IDs ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Architecture tests (CAT-012…014) keep framework SDK-free and collector framework-blind.
 
 **Negative / cost**
 
-- Two public ID styles until remap (`source.branch-protection` in packs vs `control.source.*` in the catalog).
+- IR `ControlId` stays permissive so historical sliver strings still parse; live ISO mappings target `control.*`.
 - Manifest `[digest]` is not enforced; changing algorithm requires a code change, not just TOML.
 - Expression ops are a string allow-list, not the control-test AST — drift is possible until a later slice binds them.
 
