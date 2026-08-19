@@ -7,11 +7,11 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md), the ISO pack source sliver, [catalog infrastructure](0003-canonical-assurance-catalog-v1.md), or [IAM](0003-iam-canonical-assurance-catalog.md). |
 | Extends | Catalog infrastructure, typed evidence, subject-population coverage, IAM family placement pattern |
-| Spec | [`docs/sdd/sdd-sdd-088983da-389f66a4fd/spec.md`](../sdd/sdd-sdd-088983da-389f66a4fd/spec.md) |
+| Spec | [`docs/sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md`](../sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt | [`docs/prompts/canonical-assurance-v1/05-sdlc-catalog.md`](../prompts/canonical-assurance-v1/05-sdlc-catalog.md) |
-| Planning baseline | `e2def07ee4c3ec265a6b5fee116931f0b2c9ce94` |
-| Snapshot | tree `a6a5eaa1600e4a0e1021598e30ade749aa7ac8da` · commit `ab39c458567270aafc2e3283c28307d0cc551dea` |
+| Planning baseline | `f6eb344cacefe44f398730c7e963c98887427f1b` |
+| Snapshot | tree `35de6aa30ef5b7fc0019a4f99841306ea3af406b` · commit `f6eb344cacefe44f398730c7e963c98887427f1b` |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
