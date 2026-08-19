@@ -1,0 +1,16 @@
+[package]
+name = "xtask"
+version = "0.2.0"
+edition = "2024"
+description = "Repository health command (cargo xtask guard)"
+license = "MIT"
+publish = false
+
+[package.metadata.dist]
+dist = false
+
+[dependencies]
+toml = "0.8"
+
+[dev-dependencies]
+tempfile = "3"

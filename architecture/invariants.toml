@@ -1,0 +1,24 @@
+schema = "weeping-angel/architecture-invariants/v1"
+
+# Declared this increment. Evaluating these rows is guard check 04 (stub).
+# Presence of this file is not a claim that all invariants hold.
+
+[[invariant]]
+id = "INV-OWNERSHIP-LIVE-CRATES"
+summary = "Ownership table names live workspace packages and existing paths only"
+guard_check = "02"
+
+[[invariant]]
+id = "INV-NO-HYPOTHETICAL-PACKAGES"
+summary = "Packages weeping-angel-catalog and weeping-angel-assurance-cli must not exist"
+guard_check = "02"
+
+[[invariant]]
+id = "INV-DEBT-RESOLVED-HAS-PROOF"
+summary = "status=resolved requires regression_tests or repository_guard"
+guard_check = "13"
+
+[[invariant]]
+id = "INV-INVARIANTS-EVALUATED"
+summary = "Evaluating this file against the tree is remaining_backlog"
+guard_check = "04"

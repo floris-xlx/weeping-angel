@@ -8,6 +8,7 @@ members = [
     "crates/weeping-angel-control-test",
     "crates/weeping-angel-assurance",
     "crates/weeping-angel-canonical-catalog",
+    "xtask",
 ]
 
 [package]
@@ -509,3 +510,11 @@ path = "tests/contracts/scope_engine.baseline.rs"
 [[test]]
 name = "sdd_scope_engine_target"
 path = "tests/contracts/scope_engine.target.rs"
+
+[[test]]
+name = "sdd_repository_integrity_baseline"
+path = "tests/contracts/repository_integrity.baseline.rs"
+
+[[test]]
+name = "sdd_repository_integrity_target"
+path = "tests/contracts/repository_integrity.target.rs"

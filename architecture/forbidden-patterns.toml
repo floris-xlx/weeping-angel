@@ -1,0 +1,21 @@
+schema = "weeping-angel/forbidden-patterns/v1"
+
+# File presence is guard check 03. Enforcing grep/AST matches is remaining_backlog.
+
+[[pattern]]
+id = "FORBID-HYPOTHETICAL-CATALOG"
+kind = "package"
+value = "weeping-angel-catalog"
+rationale = "Live catalog crate is weeping-angel-canonical-catalog"
+
+[[pattern]]
+id = "FORBID-HYPOTHETICAL-ASSURANCE-CLI"
+kind = "package"
+value = "weeping-angel-assurance-cli"
+rationale = "Assurance CLI is the root weeping-angel package (src/main.rs, src/cli.rs)"
+
+[[pattern]]
+id = "FORBID-TESTS-SDD"
+kind = "path"
+value = "tests/sdd/"
+rationale = "ADR 0004: executable contracts live under tests/contracts/"

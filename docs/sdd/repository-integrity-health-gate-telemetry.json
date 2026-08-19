@@ -1,0 +1,816 @@
+{
+  "telemetry_run_id": "sdd-f0d2a357dd63",
+  "run_id": "sdd-f0d2a357dd63",
+  "workflow": "spec-driven-development",
+  "objective_fp": "f0d2a357dd63c911",
+  "reason": "pre_finalize",
+  "report_path": "docs/sdd/repository-integrity-health-gate.md",
+  "telemetry_path": "docs/sdd/repository-integrity-health-gate-telemetry.json",
+  "verify_ok": true,
+  "supersede_kind": "skip",
+  "baseline_retired": true,
+  "additive_baseline": false,
+  "baseline_not_green": true,
+  "target_still_green": true,
+  "agents_ok": 8,
+  "agents_fail": 0,
+  "agents_total": 8,
+  "tokens_used_sum": 4568838,
+  "duration_ms_sum": 2448452,
+  "event_count": 29,
+  "max_iters": 3,
+  "iters_used": 0,
+  "no_delta": false,
+  "dry_run": false,
+  "budget": {
+    "remaining": 40,
+    "spent": 8,
+    "total": 48
+  },
+  "gates": {
+    "baseline_green": true,
+    "baseline_superseded": true,
+    "dry_run": false,
+    "no_delta": false,
+    "target_green": true,
+    "target_red": true
+  },
+  "events": [
+    {
+      "agents_fail": 0,
+      "agents_ok": 0,
+      "agents_total": 0,
+      "budget": { "remaining": 48, "spent": 0, "total": 48 },
+      "detail": {
+        "await_user": false,
+        "dry_run": false,
+        "max_iters": 3,
+        "objective_fp": "f0d2a357dd63c911",
+        "root": "."
+      },
+      "duration_ms_sum": 0,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "run_start",
+      "phase": "Scope",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 1,
+      "tokens_used_sum": 0,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b64-10ef-7f62-b9ae-bcdb1ae73629",
+        "duration_ms": 342803,
+        "label": "sdd-scope",
+        "success": true,
+        "tokens_used": 232906
+      },
+      "duration_ms_sum": 342803,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Scope",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 2,
+      "tokens_used_sum": 232906,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "baseline_path": "tests/contracts/repository_integrity.baseline.rs",
+        "report_dir": "docs/sdd",
+        "root": ".",
+        "target_path": "tests/contracts/repository_integrity.target.rs",
+        "test_command": "cargo test --test sdd_repository_integrity_baseline --test sdd_repository_integrity_target"
+      },
+      "duration_ms_sum": 342803,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase",
+      "phase": "Scope",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 3,
+      "tokens_used_sum": 232906,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 342803,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Spec",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 4,
+      "tokens_used_sum": 232906,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b69-57c1-7ec0-9e50-d0cea56f91c9",
+        "duration_ms": 477246,
+        "label": "sdd-spec",
+        "success": true,
+        "tokens_used": 815153
+      },
+      "duration_ms_sum": 820049,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Spec",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 5,
+      "tokens_used_sum": 1048059,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "adr_needed": true,
+        "spec_path": "docs/specs/repository-integrity.md",
+        "title": "Repository Integrity increment 1 — executable architecture health gate"
+      },
+      "duration_ms_sum": 820049,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Spec",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 6,
+      "tokens_used_sum": 1048059,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 820049,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 7,
+      "tokens_used_sum": 1048059,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b70-ae44-7850-9603-e18354b26369",
+        "duration_ms": 426682,
+        "label": "sdd-baseline-green",
+        "success": true,
+        "tokens_used": 766225
+      },
+      "duration_ms_sum": 1246731,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 8,
+      "tokens_used_sum": 1814284,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --test sdd_repository_integrity_baseline",
+        "passed": true
+      },
+      "duration_ms_sum": 1246731,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "gate",
+      "phase": "baseline_green",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 9,
+      "tokens_used_sum": 1814284,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "command": "cargo test --test sdd_repository_integrity_baseline",
+        "ok": true,
+        "test_files": [
+          "tests/contracts/repository_integrity.baseline.rs",
+          "tests/contracts/repository_integrity.target.rs"
+        ]
+      },
+      "duration_ms_sum": 1246731,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 10,
+      "tokens_used_sum": 1814284,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1246731,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "TargetRed",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 11,
+      "tokens_used_sum": 1814284,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b77-3e9d-7da2-b6ba-028b46b80154",
+        "duration_ms": 279690,
+        "label": "sdd-target-red",
+        "success": true,
+        "tokens_used": 702059
+      },
+      "duration_ms_sum": 1526421,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "TargetRed",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 12,
+      "tokens_used_sum": 2516343,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --test sdd_repository_integrity_baseline --test sdd_repository_integrity_target",
+        "passed": true
+      },
+      "duration_ms_sum": 1526421,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_red",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 13,
+      "tokens_used_sum": 2516343,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "command": "cargo test --test sdd_repository_integrity_baseline --test sdd_repository_integrity_target",
+        "ok": true,
+        "test_files": [
+          "tests/contracts/repository_integrity.target.rs",
+          "tests/contracts/repository_integrity.baseline.rs"
+        ]
+      },
+      "duration_ms_sum": 1526421,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "TargetRed",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 14,
+      "tokens_used_sum": 2516343,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1526421,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Implement",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 15,
+      "tokens_used_sum": 2516343,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b7b-8f30-7c53-9be0-5bb0fe5f292c",
+        "duration_ms": 476738,
+        "label": "sdd-implement",
+        "success": true,
+        "tokens_used": 1070272
+      },
+      "duration_ms_sum": 2003159,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Implement",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 16,
+      "tokens_used_sum": 3586615,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "baseline_status": "pass",
+        "files_changed": [
+          ".cargo/config.toml",
+          ".github/workflows/ci.yml",
+          "Cargo.lock",
+          "Cargo.toml",
+          "architecture/architecture.toml",
+          "architecture/forbidden-patterns.toml",
+          "architecture/invariants.toml",
+          "docs/adr/0009-repository-health-gate.md",
+          "docs/debt/README.md",
+          "docs/debt/baseline-2026-08.md",
+          "docs/debt/register.toml",
+          "docs/sdd/repository-integrity.md",
+          "docs/specs/repository-integrity.md",
+          "tests/contracts/documentation_layout.rs",
+          "tests/contracts/repository_integrity.baseline.rs",
+          "xtask/Cargo.toml",
+          "xtask/src/lib.rs",
+          "xtask/src/main.rs",
+          "xtask/tests/debt_register.rs"
+        ],
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 2003159,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Implement",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 17,
+      "tokens_used_sum": 3586615,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": { "adr_needed": true },
+      "duration_ms_sum": 2003159,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "DocsAdr",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 18,
+      "tokens_used_sum": 3586615,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b82-e2da-7e31-bc46-8a79dbf25cf2",
+        "duration_ms": 298849,
+        "label": "sdd-docs-adr",
+        "success": true,
+        "tokens_used": 751719
+      },
+      "duration_ms_sum": 2302008,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "DocsAdr",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 19,
+      "tokens_used_sum": 4338334,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "adr_paths": ["docs/adr/0009-repository-health-gate.md"],
+        "docs_updated": [
+          "docs/adr/0009-repository-health-gate.md",
+          "docs/specs/repository-integrity.md",
+          "docs/sdd/repository-integrity.md",
+          "docs/README.md",
+          "docs/contracts/README.md",
+          "docs/debt/README.md",
+          "README.md",
+          "tests/contracts/documentation_layout.rs"
+        ]
+      },
+      "duration_ms_sum": 2302008,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "DocsAdr",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 20,
+      "tokens_used_sum": 4338334,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": { "max_iters": 3 },
+      "duration_ms_sum": 2302008,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Iterate",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 21,
+      "tokens_used_sum": 4338334,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask: test result: ok. 6 passed (lib) + 5 passed (tests/debt_register.rs).\n\ncargo xtask guard:\n01  architecture-manifest  pass\n02  canonical-ownership  pass\n03  forbidden-patterns  pass\n13  debt-register  pass\n04  architecture-invariants  skip(DEBT-GUARD-04)\n...\n15  spec-lifecycle  skip(DEBT-GUARD-15)\nexit 0\n\ncargo test --test sdd_repository_integrity_baseline --test sdd_repository_integrity_target:\nbaseline: ok. 0 passed; 0 failed; 12 ignored (superseded by sdd_repository_integrity_target)\ntarget: ok. 18 passed; 0 failed; 0 ignored\n\ncargo test --test sdd_documentation_layout: ok. 5 passed.\ncargo fmt --all -- --check: exit 0\ncargo check --workspace --offline: exit 0",
+        "passed": true
+      },
+      "duration_ms_sum": 2302008,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_green",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 22,
+      "tokens_used_sum": 4338334,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "baseline_status": "pass",
+        "iters_used": 0,
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 2302008,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Iterate",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 23,
+      "tokens_used_sum": 4338334,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b87-7fb2-72d0-9a9a-a423720d1735",
+        "duration_ms": 86024,
+        "label": "sdd-baseline-post-check",
+        "success": true,
+        "tokens_used": 117369
+      },
+      "duration_ms_sum": 2388032,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Iterate",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 24,
+      "tokens_used_sum": 4455703,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2388032,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Supersede",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 25,
+      "tokens_used_sum": 4455703,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "agent_id": "01a01b88-de22-7cb2-822c-8ff12fc9c3a5",
+        "duration_ms": 60420,
+        "label": "sdd-supersede",
+        "success": true,
+        "tokens_used": 113135
+      },
+      "duration_ms_sum": 2448452,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Supersede",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 26,
+      "tokens_used_sum": 4568838,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "evidence": "skip: Skip-supersede baseline: keep repository_integrity.baseline.rs with #[ignore = \"superseded by sdd_repository_integrity_target\"]; target remains the gate.",
+        "passed": true
+      },
+      "duration_ms_sum": 2448452,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "baseline_superseded",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 27,
+      "tokens_used_sum": 4568838,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "action": "Skip-supersede baseline: keep repository_integrity.baseline.rs with #[ignore = \"superseded by sdd_repository_integrity_target\"]; target remains the gate.",
+        "additive_baseline": false,
+        "baseline_not_green": true,
+        "baseline_retired": true,
+        "super_ok": true,
+        "supersede_kind": "skip",
+        "target_still_green": true
+      },
+      "duration_ms_sum": 2448452,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Supersede",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 28,
+      "tokens_used_sum": 4568838,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2448452,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Finalize",
+      "run_id": "sdd-f0d2a357dd63",
+      "seq": 29,
+      "tokens_used_sum": 4568838,
+      "workflow": "spec-driven-development"
+    }
+  ]
+}

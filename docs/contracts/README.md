@@ -2,6 +2,8 @@
 
 The human assurance contract is [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md).
 
+Repository integrity (increment 1 health gate): [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md), [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md), `tests/contracts/repository_integrity.{baseline,target}.rs`. Command: `cargo xtask guard`. Ownership SSOT: `architecture/architecture.toml`. Debt SSOT: [`docs/debt/register.toml`](../debt/register.toml).
+
 ISMS context IR: [`docs/specs/isms-context.md`](../specs/isms-context.md), [`docs/adr/0008-isms-context.md`](../adr/0008-isms-context.md), `tests/contracts/isms_context.{baseline,target}.rs`.
 
 Organizational scope engine: [`docs/specs/scope-engine.md`](../specs/scope-engine.md), [`docs/adr/0008-scope-engine.md`](../adr/0008-scope-engine.md), `tests/contracts/scope_engine.{baseline,target}.rs`. Snapshot schema `weeping-angel/scope-resolution/v1`.

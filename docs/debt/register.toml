@@ -1,0 +1,169 @@
+schema = "weeping-angel/debt-register/v1"
+
+[[finding]]
+id = "DEBT-DUP-ADR"
+title = "Duplicate ADR ID prefixes"
+status = "confirmed"
+summary = "docs/adr reuses prefixes 0003 (25), 0005 (5), 0007 (2), and 0008 (4). Next unique number is 0009. Check 14 will enforce uniqueness; do not renumber existing files in increment 1."
+source = "docs/adr/"
+
+[[finding]]
+id = "DEBT-UNWRAP"
+title = "High unwrap/expect volume"
+status = "open"
+summary = "Large .unwrap() / .expect( volume across *.rs (including tests). Counted excluding target/ and node_modules/."
+source = "workspace *.rs"
+
+[[finding]]
+id = "DEBT-IGNORE"
+title = "Large ignored baseline surface"
+status = "open"
+summary = "Many #[ignore attributes remain on superseded dual-suite baselines. Deleting obsolete suites is remaining_backlog."
+source = "tests/contracts/*.baseline.rs"
+
+[[finding]]
+id = "DEBT-SCHEMA-DUP"
+title = "Duplicated Codex Security JSON schemas"
+status = "open"
+summary = "schemas/codex-security/ and codex-security/schemas/ both ship coverage, findings, and scan-manifest JSON Schema files."
+source = "schemas/codex-security, codex-security/schemas"
+
+[[finding]]
+id = "DEBT-P0-FRAMEWORK-EXPRESSION"
+title = "P0 framework expression preservation"
+status = "confirmed"
+summary = "Framework pack expression preservation is remaining_backlog; not implemented in increment 1."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-PACK-PARSE"
+title = "Fail-closed framework pack parsing"
+status = "confirmed"
+summary = "Pack parse fail-closed is remaining_backlog (guard check 06 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-CATALOG-SSOT"
+title = "Catalog SSOT migration"
+status = "confirmed"
+summary = "Catalog SSOT migration is remaining_backlog (guard check 05 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-FRAMEWORK-DIGEST"
+title = "Framework digest redesign"
+status = "confirmed"
+summary = "Framework digest redesign is remaining_backlog (guard check 07 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-READINESS-SSOT"
+title = "Readiness projection SSOT"
+status = "confirmed"
+summary = "Readiness SSOT is remaining_backlog (guard check 08 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-LINEAGE-REBUILD"
+title = "Assessment lineage rebuild"
+status = "confirmed"
+summary = "Lineage rebuild is remaining_backlog (guard check 10 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-EVIDENCE-LATEST"
+title = "Evidence latest vs current"
+status = "confirmed"
+summary = "Evidence ledger latest-vs-current is remaining_backlog (guard check 11 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-SOA"
+title = "Statement of Applicability invariants"
+status = "confirmed"
+summary = "SoA invariants are remaining_backlog (guard check 12 stub)."
+source = "docs/specs/repository-integrity.md remaining_backlog"
+
+[[finding]]
+id = "DEBT-P0-PERSISTENCE"
+title = "Evidence persistence invariants"
+status = "confirmed"
+summary = "Persistence invariants in weeping-angel-evidence are remaining_backlog."
+source = "crates/weeping-angel-evidence"
+
+[[finding]]
+id = "DEBT-GUARD-04"
+title = "Guard check 04 not implemented"
+status = "open"
+summary = "Architecture invariants.toml is declared but not evaluated. Check 04 is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-05"
+title = "Guard check 05 not implemented"
+status = "open"
+summary = "Catalog SSOT (no dual catalog sources) is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-06"
+title = "Guard check 06 not implemented"
+status = "open"
+summary = "Framework pack parse fail-closed is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-07"
+title = "Guard check 07 not implemented"
+status = "open"
+summary = "Framework digest redesign is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-08"
+title = "Guard check 08 not implemented"
+status = "open"
+summary = "Readiness projection SSOT is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-09"
+title = "Guard check 09 not implemented"
+status = "open"
+summary = "Temporal evidence selection law is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-10"
+title = "Guard check 10 not implemented"
+status = "open"
+summary = "Assessment lineage rebuild is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-11"
+title = "Guard check 11 not implemented"
+status = "open"
+summary = "Evidence latest vs current is a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-12"
+title = "Guard check 12 not implemented"
+status = "open"
+summary = "Statement of Applicability invariants are a stub this increment."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-14"
+title = "Guard check 14 not implemented"
+status = "open"
+summary = "ADR graph / unique ADR IDs is a stub this increment. Do not renumber existing 0003-* files here."
+source = "cargo xtask guard"
+
+[[finding]]
+id = "DEBT-GUARD-15"
+title = "Guard check 15 not implemented"
+status = "open"
+summary = "Spec lifecycle states / crate dependency graph policy is a stub this increment."
+source = "cargo xtask guard"
