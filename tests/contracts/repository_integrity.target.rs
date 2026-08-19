@@ -43,7 +43,7 @@ const OWNERSHIP_KINDS: [&str; 5] = [
 const ADR_IDENTITY_SCHEMA: &str = "weeping-angel/adr-identity/v1";
 const SPEC_LIFECYCLE_SCHEMA: &str = "weeping-angel/spec-lifecycle/v1";
 const GUARD_REPORT_SCHEMA: &str = "weeping-angel/guard-report/v1";
-const GRANDFATHERED_ADR_PREFIXES: [&str; 4] = ["0003", "0005", "0007", "0008"];
+
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
