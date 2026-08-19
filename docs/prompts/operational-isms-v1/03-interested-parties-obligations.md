@@ -3,7 +3,9 @@
 Repository: `floris-xlx/weeping-angel`
 Base: latest `main`
 Program: Operational ISMS v1
-Dependencies: Prompt 01
+Batch: 01/06 — Foundation (Prompts 01–04)
+Execution: implement after Prompts 01–02 against the same branch/worktree
+Dependencies: Prompt 01, Prompt 02 scope references
 
 ## Mission
 
@@ -21,9 +23,21 @@ Mappings must support obligation -> risk, obligation -> canonical control, oblig
 
 Provide deterministic validation and explainability. An obligation that no longer applies should be retired/superseded, not deleted from history. Conflicting or overlapping obligations may coexist.
 
+## Implementation constraints
+
+Treat obligations as durable governance inputs, not assessment results. Mapping direction and semantic strength must be explicit and preserved during serialization. Applicability must use canonical scope references from Prompt 02 rather than free-form provider filters. Historical/superseded obligations must remain addressable for lineage and replay.
+
 ## Tests
 
 Fixtures should include a customer security commitment, employment confidentiality obligation, regulatory retention requirement, and supplier contractual requirement. Cover supersession, expired applicability, dangling mappings, duplicate stable IDs, and partial mapping semantics.
+
+## Acceptance gates
+
+- `why does this control exist?` resolves through deterministic obligation lineage.
+- Superseded obligations remain replayable but no longer contribute as current obligations.
+- Partial/supporting mappings cannot be promoted to equivalence through projection.
+- Scope-limited obligations resolve against the Prompt 02 scope engine.
+- No collector or framework pack can mutate obligation satisfaction directly.
 
 ## Non-goals
 

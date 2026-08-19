@@ -3,6 +3,8 @@
 Repository: `floris-xlx/weeping-angel`
 Base: latest `main`
 Program: Operational ISMS v1
+Batch: 01/06 — Foundation (Prompts 01–04)
+Execution: implement after Prompt 01 against the same branch/worktree
 Dependencies: Prompt 01
 
 ## Mission
@@ -27,9 +29,21 @@ Generate an explain trace such as:
 
 `repo:payments -> business-unit:finance -> service:payments -> ISMS scope -> InScope`
 
+## Implementation constraints
+
+Scope resolution must be a pure deterministic operation over canonical inputs. Do not let collectors mutate scope state. Preserve explicit lineage for every rule that influenced a decision. Define precedence once and test it directly; do not rely on iteration order. Unknown or contradictory scope data must never become positive in-scope evidence implicitly.
+
 ## Tests
 
 Cover nested inclusion, exclusion precedence, expired exclusion, unresolved subject, duplicate selectors, conflicting rules, organization-wide inclusion, and population selection. Prove that out-of-scope subjects cannot accidentally contribute positive assurance evidence to an in-scope assessment.
+
+## Acceptance gates
+
+- The same canonical inputs always produce the same resolution and explain trace.
+- Expired exclusions fail closed and are visible in the trace.
+- Conflicting equal-precedence rules produce `Unknown`/error rather than arbitrary selection.
+- Collector planning can consume the resolved subject set without framework-specific logic.
+- Existing `AssessmentScope` consumers remain compatible or receive an explicit migration adapter.
 
 ## Non-goals
 
