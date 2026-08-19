@@ -8,11 +8,11 @@
 | Status | **Implemented** — target GREEN; baseline absence tests skip-superseded; IR remains declarative |
 | Slice | Prompt 10: make IR `ApplicabilityRule` / `ApplicabilityPredicate` operational via a generic Kleene evaluator + snapshot |
 | Spec | [`docs/sdd/applicability-engine.md`](applicability-engine.md) |
-| Draft ADR | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
+| ADR | Accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Dual-suite (at implement) | `tests/sdd/applicability_engine.baseline.rs` · `tests/sdd/applicability_engine.target.rs` → `sdd_applicability_engine_baseline` / `sdd_applicability_engine_target` |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update on implement |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Consumes | Prompts 01–08 + population runtime. IR inventories + `AssessmentScope`. Prompt 11 reserved snapshot shape (fill, do not persist). |
 | Collision fence (Prompt 09) | Do not touch `crates/weeping-angel-collector/**`, `tests/sdd/github_collector.*`, `docs/sdd/github-collector.md`, `GITHUB_EVIDENCE_TYPES` |
 | Collision fence (Prompt 11) | Do not implement explain/ledger. Own only engine / evaluator / snapshot paths. |
@@ -29,7 +29,7 @@ Treat the prior Prompt 10 session (never started; 4-run cap) as abandoned. This 
 - **Problem:** IR `ApplicabilityRule` / `ApplicabilityPredicate` trees exist on every control and requirement but nothing evaluates them against organization or assessment scope. Compile only drops static `Never`. SoA rereads ISO pack booleans. Unknown facts are never resolved; reviewers cannot explain why a control applied, did not apply, which fact was unknown, or which exclusion removed a subject.
 - **Current behavior (SHA `e430980c…`):** IR module is declarative (`does not evaluate platform facts`). `statically_applicable` is `Some(true/false)` for `Always`/`Never` and boolean combos, `None` for every predicate (`Not(None)` stays `None`). `resolve_applicability` keeps a requirement unless `statically_applicable() == Some(false)`. SoA `project_soa` copies `applicability.toml` `applicable: bool`. No evaluator module, no `ApplicabilitySnapshot`, no org-context builder. Inventories (`Asset`, `Identity`, `Vendor`, `ProcessingActivity`, `Risk`, `AssessmentScope`) exist and are unused for applicability. Facade `AssessmentScope` is a collector allow-set. Population runtime injects subjects via `EvidenceSet::set_population` and does not walk IR inventories. `Control.subjects` is a private field with no getter. Prompt 11 baseline asserts Prompt 10 absent.
 - **Desired behavior:** A network-free generic evaluator in `weeping-angel-assurance` (applicability engine / evaluator / snapshot) builds a **derived** `ApplicabilityContext` from existing IR inventories + scope + explicit tri-state facts (not a second inventory). Kleene evaluation of `Always` / `Never` / `All` / `Any` / `Not` / `Predicate` yields `Applicable` \| `NotApplicable` \| `ManualDeterminationRequired` plus ordered rationale, contributing predicates, unknown facts, selected subjects, and exclusion reasons. Unknown ≠ false; `Not(Unknown)` stays unknown. Zero selected subjects ≠ `NotApplicable` unless the rule is false. Same engine for controls and requirements. `evaluate_assessment_applicability` fills Prompt 11’s reserved `ApplicabilitySnapshot` shape. Compile may drop only `NotApplicable` when a context is supplied. No framework/provider branches, no pack-TOML evaluator, no IR fact engine.
-- **ADR:** needed — draft at [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
+- **ADR:** accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
 
 ### Acceptance criteria (this slice)
 
@@ -78,13 +78,13 @@ Treat the prior Prompt 10 session (never started; 4-run cap) as abandoned. This 
 | Step | Expected | Actual |
 | --- | --- | --- |
 | Spec | written | [`docs/sdd/applicability-engine.md`](applicability-engine.md) — SSOT |
-| ADR draft | written (architecture/contract) | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) — accept |
+| ADR draft | written (architecture/contract) | [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) — **Accepted** (signatures frozen) |
 | Baseline | PASS on old | **GREEN** on static-only HEAD (then B06/B07/B09 skip-superseded after implement) |
 | Target pre | FAIL on old | **RED** on current-code-without-engine (import/module missing) |
 | Implement | target PASS | **GREEN** — 17 passed (`P10-T01`–`T16` + registration) |
 | Baseline post | FAIL or skip-supersede | **GREEN** — 14 passed, 4 ignored (B06/B07/B09 + neighbor SoA B05) |
 | Supersede | target still PASS | **yes** |
-| Docs/ADR | updated | Spec §11, this report, ADR accept, public contract note |
+| Docs/ADR | updated | Spec §11, this report, ADR accepted, public contract section |
 | Workspace verify | after implement | IR clippy `-D warnings` clean; collector tree concurrently broken (Prompt 09 fence — not touched) |
 
 `verify_ok` is **true** for this slice’s files. Neighbor Prompt 09 collector WIP can fail workspace-wide `cargo test --workspace`.

@@ -7,8 +7,8 @@
 | Source prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
 | Slice | Deterministic organization-context + Kleene three-state evaluator over existing IR `ApplicabilityRule` / `ApplicabilityPredicate`; applicability snapshot for lineage; population scope constraint |
 | Dual-suite (register at implement) | `sdd_applicability_engine_baseline` · `sdd_applicability_engine_target` |
-| ADR | Draft [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) — finalize when the evaluator + snapshot types land |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update in implement, not this spec-only phase |
+| ADR | Accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
@@ -539,7 +539,7 @@ Protocol: write the failing target test first (RED) → implement → GREEN. One
 
 ## 9. ADR
 
-This is an architecture/contract decision (Kleene law, crate home, derived context, snapshot contract). Draft: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md). Accept when the public types land.
+This is an architecture/contract decision (Kleene law, crate home, derived context, snapshot contract). Accepted: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md).
 
 ---
 

@@ -2,22 +2,22 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Accepted** — `sdd_applicability_engine_target` GREEN; public types frozen in `weeping-angel-assurance::applicability` |
+| Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “`resolve_applicability` is a static `Never` filter and SoA is pack-boolean” *operational* reading of [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) compile stage 2 **for org-context evaluation**. Does **not** supercede IR declarativeness, pack schema, collector blindness, or Prompt 11 persist/explain ownership. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [population](0003-subject-population-runtime-and-coverage-semantics.md), [catalog](0003-canonical-assurance-catalog-v1.md) |
 | Spec | [`docs/sdd/applicability-engine.md`](../sdd/applicability-engine.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update on accept |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
-| Tests (planned) | `sdd_applicability_engine_baseline` GREEN on static-only behavior; `sdd_applicability_engine_target` RED then GREEN |
+| Tests | `sdd_applicability_engine_target` GREEN (P10-T01–T16, 17 passed). `sdd_applicability_engine_baseline` GREEN after skip-superseding absence tests B06/B07/B09 (14 passed, 4 ignored). |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
 ## Context
 
-ADR 0001 put `resolve_applicability` in the compile pipeline. The IR grew `ApplicabilityRule` / `ApplicabilityPredicate` on every `Requirement` and `Control`. Prompt 03 shipped subject populations. Prompt 11 reserved `ApplicabilitySnapshot` persist shape and currently characterizes Prompt 10 as absent.
+ADR 0001 put `resolve_applicability` in the compile pipeline. The IR grew `ApplicabilityRule` / `ApplicabilityPredicate` on every `Requirement` and `Control`. Prompt 03 shipped subject populations. Prompt 11 reserved `ApplicabilitySnapshot` persist shape and characterized Prompt 10 as absent.
 
 On SHA `e430980c…`:
 
@@ -37,13 +37,15 @@ Questions this decision answers:
 4. How do applicability and population compose, including the empty-set case?
 5. What snapshot does lineage persist, and who writes vs stores it?
 
-## Decision (draft — implement will freeze signatures)
+## Decision
 
-### 1. IR stays declarative; the engine lives beside it
+This is what shipped.
 
-`weeping-angel-assurance-ir` does **not** evaluate platform facts. `statically_applicable` remains the no-context Kleene fold over `Always`/`Never`/combinators.
+### 1. IR stays declarative; the engine lives in assurance
 
-The product home is a new applicability module in `weeping-angel-assurance` (`applicability/{context,evaluator,snapshot}` or equivalent). It **consumes** IR types. Control-test may apply the selected subject set through existing `Population` / `EvidenceSet::set_population`. It must not grow `TestExpr` arms for predicates.
+`weeping-angel-assurance-ir` does **not** evaluate platform facts. `statically_applicable` remains the no-context Kleene fold over `Always`/`Never`/combinators. Tiny IR change: public `Control::subjects() -> &[SubjectSelector]`.
+
+Product home: `weeping-angel-assurance::applicability` (`context.rs`, `evaluator.rs`, `snapshot.rs`). Network-free. No `FrameworkProfile`, collector id, or annex branch. Control-test does not grow `TestExpr` arms; selected ids are handed through existing `Population` / `EvidenceSet::set_population`.
 
 Incorrect: turning IR into a fact engine; a parallel org-graph crate; ISO-only `resolve_iso_applicability`.
 
@@ -54,54 +56,74 @@ FactValue              = True | False | Unknown
 ApplicabilityDecision  = Applicable | NotApplicable | ManualDeterminationRequired
 ```
 
-`All` / `Any` / `Not` follow Kleene K3. **`Not(Unknown)` remains `Unknown`.** A missing personal-data fact makes `ProcessesPersonalData(true)` `ManualDeterminationRequired`, never `NotApplicable`.
+`Not(Unknown)` remains `Unknown`. Empty `All` is `True`; empty `Any` is `False`.
 
-Empty `All` is `True`; empty `Any` is `False` (same as today’s static fold).
+| Node | Result |
+| --- | --- |
+| `Always` | `True` → `Applicable` |
+| `Never` | `False` → `NotApplicable` |
+| `Predicate` | inferred or explicit fact; missing fact is `Unknown`, never coerced to `False` |
+| `All` | `False` if any child is `False`; `True` iff every child is `True`; else `Unknown` |
+| `Any` | `True` if any child is `True`; `False` iff every child is `False`; else `Unknown` |
+| `Not` | swap True/False; **Unknown stays Unknown** |
+
+`ProcessesPersonalData(true)` with no personal-data fact is `ManualDeterminationRequired`, never `NotApplicable`.
+
+`ApplicabilityDecision::remains_in_compiled_set` is true unless the decision is `NotApplicable`. SoA’s `Applicability::Unresolved` is the projection alias of `ManualDeterminationRequired`; pack `project_soa` is unchanged in this slice.
 
 ### 3. Context is a derived view of existing IR inventory
 
-`ApplicabilityContext` is built from `AssessmentDefinition` (`assets`, `identities`, `vendors`, `processing_activities`, `risks`) + IR `AssessmentScope` / `ScopeExclusion` + optional explicit tri-state facts for attributes thin records cannot store (`Risk` has no level; `ProcessingActivity` has no category).
+```text
+build_applicability_context(definition, extras) -> ApplicabilityContext
+```
 
-Use `Asset.tags` and explicit facts. Do not invent a competing inventory if those types can express the fact. Per-family completeness defaults to **Unknown** when a list is empty and unmarked — empty is not authoritative false.
+`ApplicabilityContext` is sliced from `AssessmentDefinition` inventories (`assets`, `identities`, `vendors`, `processing_activities`, `risks`) plus IR `AssessmentScope` / `ScopeExclusion`. `ContextExtras` supplies explicit `FactValue`s, per-family `InventoryCompleteness`, and optional pack-entry artifacts.
 
-No collector calls. No pack-TOML fact loading.
+Empty family + unmarked completeness is **Unknown**, not authoritative false. Explicit facts win over inferred presence. No collector calls. No pack-TOML fact loading.
 
 ### 4. Selected scope constrains populations; cardinality is not the decision
 
-A control may apply to a subset of subjects. Preserve reasons and the selected id list (lex-sorted). Hand the set to Prompt 03 via `set_population`.
+`evaluate_applicability(rule, context) -> ApplicabilityOutcome` returns decision, ordered rationale, predicate traces, named unknown facts, lex-sorted selected subject ids, and exclusion reasons (`id`, `reason`, `exclusion_index`).
 
-**Zero selected subjects ≠ `NotApplicable`** unless a predicate/rule evaluates false. `Always` on an empty inventory is still `Applicable` with an empty selected set. Downstream tests stay fail-closed (never `Effective` on empty authoritative populations).
+Control evaluation intersects `Control.subjects()`. **Zero selected subjects ≠ `NotApplicable`.** `Always` on an empty inventory is `Applicable` with `selected_subjects = []`. Downstream tests stay fail-closed (empty authoritative population is never `Effective`).
 
 ### 5. One engine; snapshot is the lineage handoff
 
-The same `evaluate_applicability` runs on `Requirement.applicability` and `Control.applicability`. No `FrameworkProfile`, collector id, or annex branch.
+The same evaluator runs on `Requirement.applicability` and `Control.applicability`.
 
-`evaluate_assessment_applicability` fills Prompt 11’s reserved document:
+```text
+evaluate_assessment_applicability(definition, context) -> ApplicabilitySnapshot
+```
+
+Schema `weeping-angel/applicability-snapshot/v1` (`APPLICABILITY_SNAPSHOT_SCHEMA`):
 
 ```text
 ApplicabilitySnapshot {
-  schema, assessment_id, scope,
-  requirement_decisions[], control_decisions[],
-  pack_entries[], digest
+  schema, assessmentId, scope,
+  requirementDecisions[], controlDecisions[],
+  packEntries[], digest
 }
 ```
 
-This slice **produces** the snapshot. Prompt 11 **persists** it and projects explain. `pack_entries` may carry pack rows as artifacts; they are not Kleene inputs.
+Walks requirements and controls in id lexicographic order. Digest is IR `canonical_digest` over the body excluding the digest field. `pack_entries` are artifacts, not Kleene inputs.
 
-Compile, when given a context, drops only `NotApplicable` requirements. `ManualDeterminationRequired` stays in-scope for review. Without a context, today’s `statically_applicable != Some(false)` filter remains.
+This slice **produces** the snapshot. Prompt 11 **persists** it and projects explain. Without a context, compile keeps `statically_applicable != Some(false)`. With a context, callers drop only `NotApplicable`.
 
 ### 6. Rationale is deterministic
 
-Outcomes carry ordered rationale, predicate traces, unknown facts, selected subjects, and exclusion reasons sufficient to answer why X applied, why Y did not, which fact was unknown, and which exclusion removed Z. Ordering is preorder + lexicographic ids. Digest uses existing IR canonical digest helpers.
+Preorder walk of the rule tree, then lexicographic unknown-fact keys and excluded subject ids. Same `(rule, context)` yields the same JSON (ignore wall-clock).
 
 ## Consequences
 
-- Reviewers can explain applicability without reading compile filters or pack TOML.
-- Prompt 12 / SoA can consume a generic three-state instead of inventing an ISO evaluator.
-- Prompt 11 baseline absence asserts (`struct ApplicabilitySnapshot`, `ManualDeterminationRequired`) will fail once this lands — the lineage run skip-supersedes those characterization tests and persists the snapshot this engine produces.
+- Reviewers can explain why control X applied, why Y did not, which fact was unknown, and which exclusion removed Z.
+- Prompt 12 / SoA consume a generic three-state instead of inventing an ISO evaluator. Pack boolean `project_soa` remains until those slices switch to the snapshot.
+- Prompt 11 persist/explain consumes this snapshot; lineage absence asserts for `ApplicabilitySnapshot` / `ManualDeterminationRequired` are skip-superseded by the lineage run, not avoided by renaming types.
 - Prompt 09 collector work stays isolated; this engine never calls providers.
-- SoA boolean projection remains until Prompt 11/12 switch to the snapshot — two paths exist briefly; only the engine is normative for IR rules.
 
 ## Non-goals (this ADR)
 
 Framework-specific branches; provider APIs; ontology engines; catalog redesign; explain CLI; ledger APIs; collapsing facade vs IR `AssessmentScope`.
+
+## Status
+
+Accepted after target GREEN. Public types are frozen in `weeping-angel-assurance::applicability`. Baseline absence characterization for B06/B07/B09 is ignored so CI does not require the pre-engine HEAD.
