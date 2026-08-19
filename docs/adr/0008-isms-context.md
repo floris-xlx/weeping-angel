@@ -21,7 +21,7 @@ depends_on = []
 | Characterization | `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` |
 | Tests | `sdd_isms_context_target` GREEN (`tests/contracts/isms_context.target.rs`). `sdd_isms_context_baseline` `#[ignore = "superseded by sdd_isms_context_target"]`. Neighbor IsmsContext-absence found-cases skip-superseded (`scp_b09`, IPO baseline comment). |
 
-> Filename **`0008-*`**. Cite **this file by path**. Do **not** add a `0003-isms-context.md` sibling. Concurrent Operational ISMS drafts also use `0008-*` ([interested parties](0008-interested-parties-obligations.md), [scope engine](0008-scope-engine.md), [security objectives](0008-security-objectives.md)).
+> Filename **`0008-*`**. Cite **this file by path**. Do **not** add a `0003-isms-context.md` sibling. Concurrent Operational ISMS drafts also use `0008-*` ([interested parties](0043-interested-parties-obligations.md), [scope engine](0044-scope-engine.md), [security objectives](0045-security-objectives.md)).
 
 ## Context
 
@@ -126,6 +126,6 @@ UI, persistence, policy editor, workflow engine, ISO mapping, risk scoring, audi
 - Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - Spine: [ADR 0001](0001-inwardly-extensible-assurance-runtime.md)
 - Docs layout: [ADR 0004](0004-documentation-architecture.md)
-- Risk methodology (scoring, not this root): [ADR 0005-risk-methodology](0005-risk-methodology.md)
-- Typed evidence (facts ≠ conclusions): [ADR 0003 typed evidence](0003-typed-evidence-canonical-serialization.md)
-- Obligation registry (later engine, shared ids): [ADR 0008 interested parties](0008-interested-parties-obligations.md)
+- Risk methodology (scoring, not this root): [ADR 0005-risk-methodology](0041-risk-methodology.md)
+- Typed evidence (facts ≠ conclusions): [ADR 0003 typed evidence](0036-typed-evidence-canonical-serialization.md)
+- Obligation registry (later engine, shared ids): [ADR 0008 interested parties](0043-interested-parties-obligations.md)

@@ -6,14 +6,14 @@
 | Program | Canonical Assurance Catalog v1 — applicability engine |
 | Slice | Deterministic organization-context + Kleene three-state evaluator over existing IR `ApplicabilityRule` / `ApplicabilityPredicate`; applicability snapshot for lineage; population scope constraint |
 | Dual-suite (register at implement) | `sdd_applicability_engine_baseline` · `sdd_applicability_engine_target` |
-| ADR | Accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
+| ADR | Accepted [`docs/adr/0014-applicability-engine.md`](../adr/0014-applicability-engine.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Catalog infra | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence | [`docs/specs/typed-evidence.md`](typed-evidence.md) |
-| Population (consumed) | [`docs/specs/population-runtime.md`](population-runtime.md), ADR [`0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
-| Lineage (neighbor, persist landed) | [`docs/specs/assessment-lineage.md`](assessment-lineage.md), [ADR](../adr/0003-assessment-lineage.md) — Kleene snapshot stays in this module; lineage persist/explain is assessment lineage |
+| Population (consumed) | [`docs/specs/population-runtime.md`](population-runtime.md), ADR [`0034-subject-population-runtime-and-coverage-semantics.md`](../adr/0034-subject-population-runtime-and-coverage-semantics.md) |
+| Lineage (neighbor, persist landed) | [`docs/specs/assessment-lineage.md`](assessment-lineage.md), [ADR](../adr/0015-assessment-lineage.md) — Kleene snapshot stays in this module; lineage persist/explain is assessment lineage |
 | Scope engine (neighbor, landed) | [`docs/specs/scope-engine.md`](scope-engine.md) — `ScopeResolution` is the ISMS boundary SSOT; this crate no longer synthesizes `excluded by assessment scope[{index}]`. Kleene `All`/`Any`/`Not` is unchanged. |
 | GitHub collector (collision fence) | [`docs/specs/github-collector.md`](github-collector.md) — do not touch |
 | Repository | `floris-xlx/weeping-angel` |
@@ -539,7 +539,7 @@ Protocol: write the failing target test first (RED) → implement → GREEN. One
 
 ## 9. ADR
 
-This is an architecture/contract decision (Kleene law, crate home, derived context, snapshot contract). Accepted: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md).
+This is an architecture/contract decision (Kleene law, crate home, derived context, snapshot contract). Accepted: [`docs/adr/0014-applicability-engine.md`](../adr/0014-applicability-engine.md).
 
 ---
 
@@ -560,5 +560,5 @@ Prior session attempt for this slice never started (4-run cap). Treat implement 
 - IR: `Control::subjects()` getter only; `statically_applicable` unchanged
 - Compile: still static `!= Some(false)` without a context; callers filter `NotApplicable` via `ApplicabilityDecision::remains_in_compiled_set`
 - Dual-suite: target GREEN; baseline B06/B07/B09 skip-superseded
-- ADR: accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
+- ADR: accepted [`docs/adr/0014-applicability-engine.md`](../adr/0014-applicability-engine.md)
 - Contract: [`docs/specs/assurance-runtime.md`](assurance-runtime.md) § Applicability engine

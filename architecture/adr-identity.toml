@@ -1,46 +1,4 @@
 schema = "weeping-angel/adr-identity/v1"
 grandfathered_debt = "DEBT-DUP-ADR"
-grandfathered_prefixes = ["0003", "0005", "0007", "0008", "0011"]
-# Historical (and increment-2 concurrent) colliding files. A new path that
-# reuses one of these prefixes but is not listed here fails Guard 14.
-grandfathered_files = [
-  "0003-applicability-engine.md",
-  "0003-assessment-lineage.md",
-  "0003-canonical-assurance-catalog-v1.md",
-  "0003-control-implementation-registry.md",
-  "0003-controlled-documents.md",
-  "0003-evidence-validity-temporal-assurance.md",
-  "0003-github-collector-canonical-evidence-mapping-draft.md",
-  "0003-github-collector-canonical-evidence-mapping.md",
-  "0003-governance-canonical-assurance-catalog.md",
-  "0003-iam-canonical-assurance-catalog.md",
-  "0003-incident-governance.md",
-  "0003-infrastructure-canonical-assurance-catalog.md",
-  "0003-internal-audit.md",
-  "0003-isms-events-drift.md",
-  "0003-iso27001-canonical-remap.md",
-  "0003-nonconformity-capa.md",
-  "0003-operational-soa.md",
-  "0003-personnel-security-lifecycle.md",
-  "0003-remediation-engine.md",
-  "0003-residual-risk.md",
-  "0003-sdlc-canonical-assurance-catalog.md",
-  "0003-subject-population-runtime-and-coverage-semantics.md",
-  "0003-temporal-assurance.md",
-  "0003-typed-evidence-canonical-serialization.md",
-  "0003-vulnerability-canonical-assurance-catalog.md",
-  "0005-continuity-resilience.md",
-  "0005-continuous-assurance-scheduler.md",
-  "0005-isms-events-drift.md",
-  "0005-operational-risk-register.md",
-  "0005-risk-methodology.md",
-  "0007-risk-identification-candidate-correlation.md",
-  "0007-supplier-risk.md",
-  "0008-interested-parties-obligations.md",
-  "0008-isms-context.md",
-  "0008-scope-engine.md",
-  "0008-security-objectives.md",
-  "0011-catalog-framework-digest-and-pin-ownership.md",
-  "0011-repository-guard-governance.md",
-  "0011-temporal-lineage-evidence-soa-integrity.md",
-]
+grandfathered_prefixes = []
+grandfathered_files = []

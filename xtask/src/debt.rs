@@ -20,7 +20,7 @@ const ALLOWED_STATUS: [&str; 6] = [
 const ALLOWED_SEVERITY: [&str; 4] = ["low", "medium", "high", "critical"];
 
 /// Product-semantic stub checks that still skip-with-debt.
-pub const STUB_EXEMPTION_CHECKS: [&str; 8] = ["05", "06", "07", "08", "09", "10", "11", "12"];
+pub const STUB_EXEMPTION_CHECKS: [&str; 0] = [];
 
 pub const KNOWN_CHECK_IDS: [&str; 15] = [
     "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15",
@@ -199,6 +199,10 @@ fn validate_check_refs(finding: &toml::Value, id: &str) -> Result<(), String> {
 }
 
 fn is_live_exemption(finding: &toml::Value, id: &str) -> bool {
+    let status = finding.get("status").and_then(|v| v.as_str()).unwrap_or("");
+    if status == "resolved" {
+        return false;
+    }
     if id == "DEBT-DUP-ADR" {
         return true;
     }

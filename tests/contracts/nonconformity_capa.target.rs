@@ -1105,8 +1105,8 @@ fn nc_011_flags_and_catalog_fence() {
 fn nc_012_dual_suite_registration() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
-        cargo.contains("name = \"sdd_nonconformity_capa_baseline\"")
-            && cargo.contains("path = \"tests/contracts/nonconformity_capa.baseline.rs\"")
+        !cargo.contains("name = \"sdd_nonconformity_capa_baseline\"")
+            && !cargo.contains("path = \"tests/contracts/nonconformity_capa.baseline.rs\"")
             && cargo.contains("name = \"sdd_nonconformity_capa_target\"")
             && cargo.contains("path = \"tests/contracts/nonconformity_capa.target.rs\"")
     );
@@ -1117,7 +1117,7 @@ fn nc_012_dual_suite_registration() {
     );
     assert!(
         manifest_dir()
-            .join("docs/adr/0003-nonconformity-capa.md")
+            .join("docs/adr/0028-nonconformity-capa.md")
             .is_file()
     );
     let layout = read_repo_file("tests/contracts/documentation_layout.rs");

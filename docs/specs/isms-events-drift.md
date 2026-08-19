@@ -7,7 +7,7 @@
 | Slice | Canonical observation stream of management-system state changes + deterministic, order-insensitive snapshot drift |
 | Dual-suite (registered) | `sdd_isms_events_drift_baseline` (GREEN additive compare; 3 absence/temporal found cases skip-superseded) · `sdd_isms_events_drift_target` (GREEN) |
 | Dual-suite paths | `tests/contracts/isms_events_drift.{baseline,target}.rs` |
-| ADR | **Accepted** [`docs/adr/0003-isms-events-drift.md`](../adr/0003-isms-events-drift.md) — public event/drift contract as shipped. Filename `0003-*` is a program sibling; cite by **path**. Sibling notes (same contract): [`docs/adr/0005-isms-events-drift.md`](../adr/0005-isms-events-drift.md). |
+| ADR | **Accepted** [`docs/adr/0026-isms-events-drift.md`](../adr/0026-isms-events-drift.md) — public event/drift contract as shipped. Filename `0003-*` is a program sibling; cite by **path**. Sibling notes (same contract): [`docs/adr/0039-isms-events-drift.md`](../adr/0039-isms-events-drift.md). |
 | Layout law | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) — this file is the human SSOT; `docs/sdd/` is a stub pointer; traces go to `.sdd/runs/` |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — event stream + `detect_events` |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
@@ -456,7 +456,7 @@ until then, library callers invoke detect directly.
 
 Done after target GREEN:
 
-1. [`docs/adr/0003-isms-events-drift.md`](../adr/0003-isms-events-drift.md) **Accepted** (sibling [`0005-isms-events-drift.md`](../adr/0005-isms-events-drift.md) restates the same contract).
+1. [`docs/adr/0026-isms-events-drift.md`](../adr/0026-isms-events-drift.md) **Accepted** (sibling [`0039-isms-events-drift.md`](../adr/0039-isms-events-drift.md) restates the same contract).
 2. [`docs/specs/assurance-runtime.md`](assurance-runtime.md) records `detect_events` / `detect_isms_drift` and that `compare` / `SnapshotDiff` stay readiness helpers.
 3. This path is in `CANONICAL_SPECS` (`tests/contracts/documentation_layout.rs`).
 4. Status **Implemented**; baseline skip-superseded.
@@ -572,7 +572,7 @@ Landed target tests (`tests/contracts/isms_events_drift.target.rs`). Found-case 
 
 ## 9. ADR
 
-**Required and Accepted.** Public contract: `IsmsEvent`, `EventId`, `detect_events` / `detect_isms_drift`. Decision: [`docs/adr/0003-isms-events-drift.md`](../adr/0003-isms-events-drift.md). Sibling notes: [`docs/adr/0005-isms-events-drift.md`](../adr/0005-isms-events-drift.md) (same contract; cite `0003-*` as SSOT). Filename `0003-*` follows catalog-program sibling numbering.
+**Required and Accepted.** Public contract: `IsmsEvent`, `EventId`, `detect_events` / `detect_isms_drift`. Decision: [`docs/adr/0026-isms-events-drift.md`](../adr/0026-isms-events-drift.md). Sibling notes: [`docs/adr/0039-isms-events-drift.md`](../adr/0039-isms-events-drift.md) (same contract; cite `0003-*` as SSOT). Filename `0003-*` follows catalog-program sibling numbering.
 
 ---
 

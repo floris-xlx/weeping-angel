@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — scope engine |
 | Slice | Turn ISMS scope from descriptive text into an **executable, explainable boundary**. Every candidate subject resolves to `InScope` \| `OutOfScope` \| `Conditional` \| `Unknown` with rationale and lineage. |
 | Dual-suite | `sdd_scope_engine_baseline` (skip-superseded) · `sdd_scope_engine_target` GREEN (`tests/contracts/scope_engine.{baseline,target}.rs`) — **not** auto-discovered; listed in root [`Cargo.toml`](../../Cargo.toml). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
-| ADR | Accepted [`docs/adr/0008-scope-engine.md`](../adr/0008-scope-engine.md). Cite by **path**. Concurrent sibling: [`0008-isms-context.md`](../adr/0008-isms-context.md). |
+| ADR | Accepted [`docs/adr/0044-scope-engine.md`](../adr/0044-scope-engine.md). Cite by **path**. Concurrent sibling: [`0008-isms-context.md`](../adr/0008-isms-context.md). |
 | Depends on | [`isms-context.md`](isms-context.md) (ISMS context IR — landed). Reuse `IsmsContext` / `Organization` / `BusinessUnit` / `ManagementSystemScope` / existing `AssessmentScope`. Do **not** invent a parallel GRC graph. |
 | Seed (not SSOT) | [`docs/prompts/operational-isms-v1/02-scope-engine.md`](../prompts/operational-isms-v1/02-scope-engine.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (Organizational scope engine) |

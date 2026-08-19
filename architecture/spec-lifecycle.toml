@@ -57,6 +57,14 @@ supersedes = []
 successor = ""
 
 [[spec]]
+path = "docs/specs/collector-hexagonal.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/github-collector.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
 path = "docs/specs/continuity-resilience.md"
 state = "active"
 ownership = ["catalog"]

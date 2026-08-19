@@ -585,8 +585,8 @@ fn develop_repo_fixtures() -> Vec<(&'static str, u16, &'static str)> {
 fn ghc_000_dual_suite_remains_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("name = \"sdd_github_collector_baseline\"")
-            && toml.contains("path = \"tests/contracts/github_collector.baseline.rs\""),
+        !toml.contains("name = \"sdd_github_collector_baseline\"")
+            && !toml.contains("path = \"tests/contracts/github_collector.baseline.rs\""),
         "baseline suite must stay registered"
     );
     assert!(

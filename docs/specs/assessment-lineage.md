@@ -6,7 +6,7 @@
 | Program | Canonical Assurance Catalog v1 — assessment lineage |
 | Slice | Persistable execution lineage, explanation projection, pure report serialization, generic framework facade, snapshot compare |
 | Dual-suite | `sdd_assessment_lineage_baseline` · `sdd_assessment_lineage_target` (`tests/contracts/assessment_lineage.{baseline,target}.rs`) — **already registered** in root `Cargo.toml` |
-| ADR | Accepted [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) |
+| ADR | Accepted [`docs/adr/0015-assessment-lineage.md`](../adr/0015-assessment-lineage.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Protocol report | [`.sdd/runs/sdd-assessment-lineage.md`](../../.sdd/runs/sdd-assessment-lineage.md) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
@@ -37,7 +37,7 @@ An assessment is a **reproducible immutable execution artifact**, not a current-
 
 ### Remaining increment (Prompt 3 — do not fork this spec)
 
-LIN-001–015 and `sdd_assessment_lineage_*` remain lineage SSOT (GREEN / skip-superseded). Fail-closed `replay_assessment`, independent JSON `asOf`, and reconstructable pin equalities: [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+LIN-001–015 and `sdd_assessment_lineage_*` remain lineage SSOT (GREEN / skip-superseded). Fail-closed `replay_assessment`, independent JSON `asOf`, and reconstructable pin equalities: [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0047-temporal-lineage-evidence-soa-integrity.md`](../adr/0047-temporal-lineage-evidence-soa-integrity.md).
 
 ---
 
@@ -623,7 +623,7 @@ One regression test per later review comment must be titled `P?: <exact subject>
 
 ## 8. ADR
 
-**Accepted.** [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) (`0003-*` catalog-program numbering; cite by path).
+**Accepted.** [`docs/adr/0015-assessment-lineage.md`](../adr/0015-assessment-lineage.md) (`0003-*` catalog-program numbering; cite by path).
 
 ---
 
@@ -638,7 +638,7 @@ Frozen after target GREEN. Public composition:
 | Persist/load opaque JSON | `EvidenceLedger::{persist,load}_{assessment_run,control_test_run,framework_snapshot}` |
 | CLI | `src/cli.rs` `AssuranceCommand::Explain` → `src/assurance_explain.rs` |
 
-`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `asOf` (JSON from the `as_of` field; live `assess` may default it to `startedAt`), `scope`, `status` (`completed` \| `partial` \| `failed`). Historical replay uses evidence that was a candidate at that `asOf` ([`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md)).
+`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `asOf` (JSON from the `as_of` field; live `assess` may default it to `startedAt`), `scope`, `status` (`completed` \| `partial` \| `failed`). Historical replay uses evidence that was a candidate at that `asOf` ([`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md)).
 
 `assess` returns `AssessmentReport.run`; it does not open a ledger. Replay is `replay_assessment` (fail-closed pin verification) / `reconstruct` (trusted clone) from a `LineageBundle`. Current-file consult is `verify_current_against_pins` → `DigestMismatch`.
 

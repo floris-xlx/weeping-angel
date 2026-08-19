@@ -128,9 +128,22 @@ guard_check = "04"
 "#,
     )
     .unwrap();
+    fs::create_dir_all(root.join("crates/weeping-angel-canonical-catalog/src")).unwrap();
+    fs::create_dir_all(root.join("crates/weeping-angel-framework/src")).unwrap();
+    fs::create_dir_all(root.join("crates/weeping-angel-evidence/src")).unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-canonical-catalog/src/lib.rs"),
+        "pub struct CanonicalCatalog;\nimpl CanonicalCatalog { pub fn load() {} }\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-framework/src/lib.rs"),
+        "pub enum PackError {}\npub struct FrameworkPackDigest;\n",
+    )
+    .unwrap();
     fs::write(
         root.join("crates/weeping-angel-assurance/src/readiness.rs"),
-        "",
+        "pub fn project_readiness() {}\n",
     )
     .unwrap();
     fs::write(
@@ -140,7 +153,17 @@ guard_check = "04"
     .unwrap();
     fs::write(
         root.join("crates/weeping-angel-assurance/src/lineage.rs"),
-        "",
+        "pub fn replay_assessment() {}\npub fn project_soa_from_snapshot() {}\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-assurance/src/lib.rs"),
+        "pub fn project_readiness() {}\npub fn replay_assessment() {}\npub fn project_soa_from_snapshot() {}\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-evidence/src/lib.rs"),
+        "pub fn current() {}\npub fn as_of() {}\npub fn latest() {}\n",
     )
     .unwrap();
     fs::write(root.join("src/main.rs"), "").unwrap();
@@ -169,8 +192,8 @@ depends_on = []
     fs::write(
         root.join("architecture/adr-identity.toml"),
         r#"schema = "weeping-angel/adr-identity/v1"
-grandfathered_debt = "DEBT-DUP-ADR"
-grandfathered_prefixes = ["0003", "0005", "0007", "0008"]
+grandfathered_debt = ""
+grandfathered_prefixes = []
 grandfathered_files = []
 "#,
     )
@@ -209,16 +232,15 @@ fn seed_findings() -> String {
             r#"
 [[finding]]
 id = "{id}"
-title = "stub"
-status = "open"
-summary = "stub skip"
+title = "implemented"
+status = "resolved"
+summary = "product-law check is real"
 owner = "fixture"
 introduced = "2026-08-19"
 severity = "medium"
-remediation = "product-semantic stub"
+remediation = "Guard {nn} evaluates product surfaces"
 repository_guard = "{nn}"
-skip_check = "{nn}"
-expires = "2027-12-31"
+regression_tests = ["sdd_architectural_cleanup_target"]
 "#
         ));
     }
@@ -326,8 +348,8 @@ fn guard_on_fixture_repo_runs_implemented_checks_and_skips_stubs() {
     );
     for id in ["05", "06", "07", "08", "09", "10", "11", "12"] {
         assert!(
-            rendered.contains(&format!("skip(DEBT-GUARD-{id})")),
-            "stub {id} must skip-with-debt: {rendered}"
+            rendered.contains(&format!("{id}  ")) && rendered.contains("pass"),
+            "product-law check {id} must pass: {rendered}"
         );
     }
     for id in ["14", "15"] {
@@ -339,7 +361,7 @@ fn guard_on_fixture_repo_runs_implemented_checks_and_skips_stubs() {
 }
 
 #[test]
-fn stub_without_debt_finding_fails_closed() {
+fn product_law_checks_pass_without_skip_debt() {
     let dir = tempdir().unwrap();
     write_minimal_repo(
         dir.path(),
@@ -350,21 +372,28 @@ schema = "weeping-angel/debt-register/v1"
 id = "DEBT-ONLY"
 title = "unrelated"
 status = "open"
-summary = "does not cover stubs"
+summary = "does not cover product-law checks"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "unrelated"
+review_by = "2027-12-31"
 "#,
     );
     let report = run_guard(dir.path());
     let rendered = report.render();
     assert!(
-        report.failed(),
-        "stubs without debt must fail closed: {rendered}"
+        !report.failed(),
+        "05–12 must pass without skip-debt: {rendered}"
     );
-    assert!(
-        rendered.contains("not-yet-implemented: check 05"),
-        "{rendered}"
-    );
-    assert!(
-        rendered.contains("04  architecture-invariants  pass"),
-        "Guard 04 is real and must evaluate even when remaining stubs fail closed: {rendered}"
-    );
+    for id in ["05", "06", "07", "08", "09", "10", "11", "12"] {
+        assert!(
+            rendered.contains(&format!("{id}  ")) && rendered.contains("pass"),
+            "{id} must pass: {rendered}"
+        );
+        assert!(
+            !rendered.contains(&format!("skip(DEBT-GUARD-{id})")),
+            "{id} must not skip: {rendered}"
+        );
+    }
 }

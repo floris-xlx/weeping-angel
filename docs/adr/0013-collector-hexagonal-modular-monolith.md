@@ -2,19 +2,19 @@
 
 <!-- weeping-angel-adr-meta
 id = "0013"
-status = "draft"
+status = "accepted"
 supersedes = []
 superseded_by = []
-depends_on = ["0001-inwardly-extensible-assurance-runtime", "0002-iso-27001-assurance-vertical", "0003-github-collector-canonical-evidence-mapping", "0004-documentation-architecture", "0005-continuous-assurance-scheduler", "0010-architecture-as-law"]
+depends_on = ["0001-inwardly-extensible-assurance-runtime", "0002-iso-27001-assurance-vertical", "0020-github-collector-canonical-evidence-mapping", "0004-documentation-architecture", "0005-continuous-assurance-scheduler", "0010-architecture-as-law"]
 -->
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** — specified with increment 1; accept when `sdd_collector_hexagonal_target` is GREEN |
+| Status | **Accepted** — increment 1 (`sdd_collector_hexagonal_target` GREEN) |
 | Date | 2026-08-20 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing in GitHub evidence mapping, envelope digest law, or scheduler job semantics. **Amends operational practice** that provider adapters construct `EvidenceProvenance` and call `EvidenceEnvelope::seal`. |
-| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [ADR 0003 GitHub mapping](0003-github-collector-canonical-evidence-mapping.md), [ADR 0004](0004-documentation-architecture.md), [ADR 0005 scheduler](0005-continuous-assurance-scheduler.md), [ADR 0010](0010-architecture-as-law.md) |
+| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [ADR 0003 GitHub mapping](0020-github-collector-canonical-evidence-mapping.md), [ADR 0004](0004-documentation-architecture.md), [ADR 0005 scheduler](0005-continuous-assurance-scheduler.md), [ADR 0010](0010-architecture-as-law.md) |
 | Spec | [`docs/specs/collector-hexagonal.md`](../specs/collector-hexagonal.md) |
 | Evidence-contract SSOT (unchanged) | [`docs/specs/github-collector.md`](../specs/github-collector.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
@@ -25,7 +25,7 @@ depends_on = ["0001-inwardly-extensible-assurance-runtime", "0002-iso-27001-assu
 
 ## Context
 
-The collector crate is one Cargo package that already emits canonical GitHub evidence ([ADR 0003 GitHub mapping](0003-github-collector-canonical-evidence-mapping.md)). On characterization HEAD, that package is a **monolith**:
+The collector crate is one Cargo package that already emits canonical GitHub evidence ([ADR 0003 GitHub mapping](0020-github-collector-canonical-evidence-mapping.md)). On characterization HEAD, that package is a **monolith**:
 
 1. Domain types (`CollectorCapabilities` eight fields, `CollectorDescriptor`, `CollectorScope`, `CollectionRequest`, `CollectionBatch { errors: Vec<String> }`, `EvidenceCollector`) live in `src/lib.rs`.
 2. `github/normalize.rs`, `LocalCollector`, `FixtureCollector`, and `ManualEvidence` construct `EvidenceProvenance` and seal `EvidenceEnvelope`. Adapters invent provenance.
@@ -41,7 +41,7 @@ Questions this decision answers:
 4. How is instance distinct from type, and where do credentials live?
 5. Does increment 1 rewrite `AssuranceScheduler`?
 
-## Decision (to accept at implement)
+## Decision
 
 ### 1. One crate, hexagonal modules
 
@@ -118,13 +118,21 @@ No change to mappings, evidence IDs, `GITHUB_EVIDENCE_TYPES`, 403/404 semantics,
 
 ## Consequences
 
+Increment 1 is **shipped** (`sdd_collector_hexagonal_target` GREEN; baseline skip-superseded). Neighbor `sdd_github_collector_target` stays GREEN.
+
+- One package `weeping-angel-collector`. `lib.rs` is a facade. Directories: `src/domain/`, `src/application/`, `src/ports/`, `src/adapters/`. GitHub implementation remains `src/github/` (`github_src()`).
+- Adapter output is `ObservationCandidate` / `ObservationBatch`. The only `EvidenceProvenance {` / `EvidenceEnvelope::seal` site in this crate is `src/application/envelope.rs`.
+- Default compatibility instances: GitHub `github:default` / type `collector.github`; local `local:default`; manual `manual:default`; fixture `fixture:{id}`. Tokens are not fields of `CollectorInstance`. `GitHubCollector::new(token)` still stores material on `GitHubClient` until Phase 13+.
+- Public names `EvidenceCollector`, `GitHubCollector`, `LocalCollector`, `GitHubCollector::collect_batch` remain compile-stable. Scheduler still calls `EvidenceCollector` (Phase 27 adopts `CollectionEngine`).
+- Provenance `collector_id` remains the collector **type** so evidence IDs do not change.
 - Hexagonal dual-suite `sdd_collector_hexagonal_{baseline,target}` under `tests/contracts/` (never `tests/sdd/`).
-- Architecture IDs COL-001…015 are **declared** in the spec; xtask guards are Prompt 1 Phases 24–25.
+- Architecture IDs COL-001…015 are **declared** in the spec; xtask guards are Prompt 1 Phases 24–25. They are not a second copy of assurance-runtime COL-001…006.
 - Adding `docs/specs/collector-hexagonal.md` fails Guard 15 until Prompt 1 lists it in `architecture/spec-lifecycle.toml`.
 - Remaining backlog (typed diagnostics, public coverage, SubjectSelector, live transport split, API shrink, scheduler engine, ledger/hosted) stays out of increment 1.
 
 ## Related
 
 - Program spec: [`docs/specs/collector-hexagonal.md`](../specs/collector-hexagonal.md)
-- GitHub mapping: [ADR 0003](0003-github-collector-canonical-evidence-mapping.md)
-- Envelope seal: [ADR 0011 temporal/lineage/evidence/SoA](0011-temporal-lineage-evidence-soa-integrity.md) (Prompt 3; consume, do not edit)
+- GitHub mapping (unchanged): [ADR 0003](0020-github-collector-canonical-evidence-mapping.md), [`docs/specs/github-collector.md`](../specs/github-collector.md)
+- Envelope seal: [ADR 0011 temporal/lineage/evidence/SoA](0047-temporal-lineage-evidence-soa-integrity.md) (Prompt 3; consume, do not edit)
+- Scheduler (still `EvidenceCollector`): [ADR 0005](0005-continuous-assurance-scheduler.md)

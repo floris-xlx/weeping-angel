@@ -7,39 +7,39 @@ Decisions:
 - Spine: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md)
 - ISO vertical: [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md)
 - Canonical catalog: [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md)
-- Typed evidence: [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md)
-- Population / coverage: [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md)
-- IAM catalog family: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md)
-- SDLC catalog family: [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md)
-- Vulnerability catalog family: [`docs/adr/0003-vulnerability-canonical-assurance-catalog.md`](../adr/0003-vulnerability-canonical-assurance-catalog.md)
-- Infrastructure catalog family: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md)
-- Governance catalog family: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md)
-- Personnel security lifecycle: [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md) — additive `personnel.toml` population tests; not an HRIS; `active`/`excessive` are defect flags
-- Applicability engine: [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
-- Assessment lineage: [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md)
+- Typed evidence: [`docs/adr/0036-typed-evidence-canonical-serialization.md`](../adr/0036-typed-evidence-canonical-serialization.md)
+- Population / coverage: [`docs/adr/0034-subject-population-runtime-and-coverage-semantics.md`](../adr/0034-subject-population-runtime-and-coverage-semantics.md)
+- IAM catalog family: [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md)
+- SDLC catalog family: [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md)
+- Vulnerability catalog family: [`docs/adr/0037-vulnerability-canonical-assurance-catalog.md`](../adr/0037-vulnerability-canonical-assurance-catalog.md)
+- Infrastructure catalog family: [`docs/adr/0024-infrastructure-canonical-assurance-catalog.md`](../adr/0024-infrastructure-canonical-assurance-catalog.md)
+- Governance catalog family: [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md)
+- Personnel security lifecycle: [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md) — additive `personnel.toml` population tests; not an HRIS; `active`/`excessive` are defect flags
+- Applicability engine: [`docs/adr/0014-applicability-engine.md`](../adr/0014-applicability-engine.md)
+- Assessment lineage: [`docs/adr/0015-assessment-lineage.md`](../adr/0015-assessment-lineage.md)
 - Continuous assurance scheduler: [`docs/adr/0005-continuous-assurance-scheduler.md`](../adr/0005-continuous-assurance-scheduler.md) — library `tick` (not clap); failed collect does not erase ledger evidence
-- Evidence validity / temporal assurance: [`docs/adr/0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md), [`docs/adr/0003-temporal-assurance.md`](../adr/0003-temporal-assurance.md)
-- Residual risk: [`docs/adr/0003-residual-risk.md`](../adr/0003-residual-risk.md)
-- Control implementation registry: [`docs/adr/0003-control-implementation-registry.md`](../adr/0003-control-implementation-registry.md) — IR `ControlImplementation` organizational state (not `Effectiveness`)
-- Controlled documents: [`docs/adr/0003-controlled-documents.md`](../adr/0003-controlled-documents.md), spec [`controlled-documents.md`](controlled-documents.md) — standalone `ControlledDocument` registry; immutable versions; eval-at-T (not `Effectiveness`, not a DMS)
-- ISMS events / drift: [`docs/adr/0003-isms-events-drift.md`](../adr/0003-isms-events-drift.md) (sibling notes [`docs/adr/0005-isms-events-drift.md`](../adr/0005-isms-events-drift.md)) — `detect_events` / `detect_isms_drift` observations; not `SnapshotDiff` and not a notification bus
-- Incident governance: [`docs/adr/0003-incident-governance.md`](../adr/0003-incident-governance.md) — IR `Incident` on `AssessmentDefinition.incidents` (not SIEM, not catalog `control.incident.*`)
-- Internal audit: [`docs/adr/0003-internal-audit.md`](../adr/0003-internal-audit.md) — IR `AuditProgram` / `Audit` on `AssessmentDefinition.audit_programs` / `audits`; machine prepare only; humans accept samples and sign (not “audit passed”)
-- Nonconformity / CAPA: [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md) — IR `Nonconformity` / `CorrectiveAction` on `AssessmentDefinition.nonconformities` / `corrective_actions`; one green test is not closure; catalog `control.governance.corrective-action` stays attestation
+- Evidence validity / temporal assurance: [`docs/adr/0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md), [`docs/adr/0035-temporal-assurance.md`](../adr/0035-temporal-assurance.md)
+- Residual risk: [`docs/adr/0032-residual-risk.md`](../adr/0032-residual-risk.md)
+- Control implementation registry: [`docs/adr/0016-control-implementation-registry.md`](../adr/0016-control-implementation-registry.md) — IR `ControlImplementation` organizational state (not `Effectiveness`)
+- Controlled documents: [`docs/adr/0017-controlled-documents.md`](../adr/0017-controlled-documents.md), spec [`controlled-documents.md`](controlled-documents.md) — standalone `ControlledDocument` registry; immutable versions; eval-at-T (not `Effectiveness`, not a DMS)
+- ISMS events / drift: [`docs/adr/0026-isms-events-drift.md`](../adr/0026-isms-events-drift.md) (sibling notes [`docs/adr/0039-isms-events-drift.md`](../adr/0039-isms-events-drift.md)) — `detect_events` / `detect_isms_drift` observations; not `SnapshotDiff` and not a notification bus
+- Incident governance: [`docs/adr/0023-incident-governance.md`](../adr/0023-incident-governance.md) — IR `Incident` on `AssessmentDefinition.incidents` (not SIEM, not catalog `control.incident.*`)
+- Internal audit: [`docs/adr/0025-internal-audit.md`](../adr/0025-internal-audit.md) — IR `AuditProgram` / `Audit` on `AssessmentDefinition.audit_programs` / `audits`; machine prepare only; humans accept samples and sign (not “audit passed”)
+- Nonconformity / CAPA: [`docs/adr/0028-nonconformity-capa.md`](../adr/0028-nonconformity-capa.md) — IR `Nonconformity` / `CorrectiveAction` on `AssessmentDefinition.nonconformities` / `corrective_actions`; one green test is not closure; catalog `control.governance.corrective-action` stays attestation
 - ISMS context IR: [`docs/adr/0008-isms-context.md`](../adr/0008-isms-context.md), spec [`isms-context.md`](isms-context.md) — durable `IsmsContext` root (not an assessment result, not a parallel GRC schema)
-- Organizational scope engine: [`docs/adr/0008-scope-engine.md`](../adr/0008-scope-engine.md), spec [`scope-engine.md`](scope-engine.md) — `ScopeResolution` (`weeping-angel/scope-resolution/v1`); four-state boundary; not crawl URL scope and not facade `AssessmentScope`
-- Interested parties / obligations: [`docs/adr/0008-interested-parties-obligations.md`](../adr/0008-interested-parties-obligations.md), spec [`interested-parties-obligations.md`](interested-parties-obligations.md) — standalone `ObligationRegistry` (why a control/policy exists; not a framework `Requirement`, not collector satisfaction)
-- Security objectives: [`docs/adr/0008-security-objectives.md`](../adr/0008-security-objectives.md), spec [`security-objectives.md`](security-objectives.md) — `objectives::SecurityObjective` + `evaluate_objective` over pinned evidence (`weeping-angel/objective-evaluation/v1`); not `Control.objective` prose, not crate-root `isms::SecurityObjective`, and not catalog attestation
-- Risk methodology: [`docs/adr/0005-risk-methodology.md`](../adr/0005-risk-methodology.md) — IR `score_risk` / `RiskMethodology` (not Kleene, not collector evidence)
-- Operational risk register: [`docs/adr/0005-operational-risk-register.md`](../adr/0005-operational-risk-register.md) — additive `Risk` record, status machine, graph integrity, Prompt 05 / `score_inherent` adapter (not treatment workflow, not control-derived residual)
+- Organizational scope engine: [`docs/adr/0044-scope-engine.md`](../adr/0044-scope-engine.md), spec [`scope-engine.md`](scope-engine.md) — `ScopeResolution` (`weeping-angel/scope-resolution/v1`); four-state boundary; not crawl URL scope and not facade `AssessmentScope`
+- Interested parties / obligations: [`docs/adr/0043-interested-parties-obligations.md`](../adr/0043-interested-parties-obligations.md), spec [`interested-parties-obligations.md`](interested-parties-obligations.md) — standalone `ObligationRegistry` (why a control/policy exists; not a framework `Requirement`, not collector satisfaction)
+- Security objectives: [`docs/adr/0045-security-objectives.md`](../adr/0045-security-objectives.md), spec [`security-objectives.md`](security-objectives.md) — `objectives::SecurityObjective` + `evaluate_objective` over pinned evidence (`weeping-angel/objective-evaluation/v1`); not `Control.objective` prose, not crate-root `isms::SecurityObjective`, and not catalog attestation
+- Risk methodology: [`docs/adr/0041-risk-methodology.md`](../adr/0041-risk-methodology.md) — IR `score_risk` / `RiskMethodology` (not Kleene, not collector evidence)
+- Operational risk register: [`docs/adr/0040-operational-risk-register.md`](../adr/0040-operational-risk-register.md) — additive `Risk` record, status machine, graph integrity, Prompt 05 / `score_inherent` adapter (not treatment workflow, not control-derived residual)
 - Risk treatment: [`docs/adr/0006-risk-treatment-engine.md`](../adr/0006-risk-treatment-engine.md) — IR `RiskTreatmentDecision` / immutable `RiskAcceptance` (not compile, not `RiskStatus::Accepted` as evidence)
 - Supplier risk: [`docs/adr/0007-supplier-risk.md`](../adr/0007-supplier-risk.md) — operational IR `Vendor` lifecycle (not catalog `control.vendor.*`, not Kleene `HasVendor` criticality)
-- Remediation engine: [`docs/adr/0003-remediation-engine.md`](../adr/0003-remediation-engine.md) — IR `Remediation` / `create_from_control_regression` (adapter ticket refs only; not workbench `RemediationRequest`)
-- ISO remap onto catalog: [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md)
-- Operational Statement of Applicability: [`docs/adr/0003-operational-soa.md`](../adr/0003-operational-soa.md) — graph projection, NA governance, immutable snapshots/diffs (not pack-TOML `assessed` copy)
-- GitHub collector mapping: [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md)
-- Risk identification (candidates, not register rows): [`docs/adr/0007-risk-identification-candidate-correlation.md`](../adr/0007-risk-identification-candidate-correlation.md) — `RiskCandidate` + deterministic correlate; `promote_candidate` is the only insert into `AssessmentDefinition.risks`
-- Continuity / resilience capability: [`docs/adr/0005-continuity-resilience.md`](../adr/0005-continuity-resilience.md), spec [`continuity-resilience.md`](continuity-resilience.md) — `evaluate_continuity_resilience` over `AssetKind::Service` profiles; a plan document is not demonstrated recovery
+- Remediation engine: [`docs/adr/0031-remediation-engine.md`](../adr/0031-remediation-engine.md) — IR `Remediation` / `create_from_control_regression` (adapter ticket refs only; not workbench `RemediationRequest`)
+- ISO remap onto catalog: [`docs/adr/0027-iso27001-canonical-remap.md`](../adr/0027-iso27001-canonical-remap.md)
+- Operational Statement of Applicability: [`docs/adr/0029-operational-soa.md`](../adr/0029-operational-soa.md) — graph projection, NA governance, immutable snapshots/diffs (not pack-TOML `assessed` copy)
+- GitHub collector mapping: [`docs/adr/0020-github-collector-canonical-evidence-mapping.md`](../adr/0020-github-collector-canonical-evidence-mapping.md)
+- Risk identification (candidates, not register rows): [`docs/adr/0042-risk-identification-candidate-correlation.md`](../adr/0042-risk-identification-candidate-correlation.md) — `RiskCandidate` + deterministic correlate; `promote_candidate` is the only insert into `AssessmentDefinition.risks`
+- Continuity / resilience capability: [`docs/adr/0038-continuity-resilience.md`](../adr/0038-continuity-resilience.md), spec [`continuity-resilience.md`](continuity-resilience.md) — `evaluate_continuity_resilience` over `AssetKind::Service` profiles; a plan document is not demonstrated recovery
 
 Public composition root is `weeping-angel-assurance`. Callers select a profile + capabilities; they do not import per-regime adapters.
 
@@ -122,7 +122,7 @@ Rules:
 - `FrameworkPackDigest` is IR `canonical_digest` over **pack-authored** semantics (schema, id, version, content mode, capabilities, requirements, mappings including relation/completeness/direction/rationale/provenance/`validFor`, applicability). It is insensitive to whitespace, comments, TOML key order, and path enumeration. It does **not** include catalog control injection. Catalog identity is a separate pin (`CanonicalCatalog::digest`).
 - Old pack versions migrate explicitly or fail with guidance; they are never silently reinterpreted.
 - Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`) resolved against an IR `CatalogProjection` supplied by `CanonicalCatalog::projection` (named load uses the workspace `inventory` adapter; `load_framework_pack_from_with` takes an explicit projection). Unknown catalog targets, unknown completeness/direction/provenance source, and `metadata.toml` `[[control]]` / `[[test]]` library rows fail closed (`PackError`). The framework crate does not parse catalog TOML and does not depend on `weeping-angel-canonical-catalog`. The ISO pack is a projection over the catalog, not a second control library.
-- Reports pin `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on `AssessmentReport` / `AssessmentRun`; `catalogDigest` on readiness JSON). Serialize and readiness/scheduler project emit **stored** pins — no pack load, network, or filesystem lookup inside `Serialize`. See [ADR 0011](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+- Reports pin `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on `AssessmentReport` / `AssessmentRun`; `catalogDigest` on readiness JSON). Serialize and readiness/scheduler project emit **stored** pins — no pack load, network, or filesystem lookup inside `Serialize`. See [ADR 0011](../adr/0046-catalog-framework-digest-and-pin-ownership.md).
 - SoA consumes generic three-state applicability (`Applicable` / `NotApplicable` / `Unresolved`). `Unresolved` is the SoA spelling of `ManualDeterminationRequired`. Not-applicable is justified by organization context, never by missing evidence. Pack `applicability.toml` is default/structural flags only. Operational projection, NA approval, and snapshot history: [`docs/specs/operational-soa.md`](operational-soa.md).
 
 Content modes: `StructuralOnly` | `LicensedContent` | `UserSuppliedContent`.
@@ -149,13 +149,13 @@ catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
 - Fixtures: `fixtures/assurance/canonical/v1/network`, `fixtures/assurance/canonical/v1/database`, plus `crypto`, `data`, `logging`, `backup`, `resilience` under the same `canonical/v1` root — `network/{healthy,public-db-exposed,insecure-tls,partial-inventory,stale-firewall-policy,exception-approved-exposure}`, `crypto/{healthy,unapproved-secret-storage,stale-certificate}`, `data/{healthy,partial-classification}`, `database/{healthy,unencrypted-critical-db,partial-inventory,missing-encryption}`, `logging/{healthy,retention-below-threshold,stale-audit-log,missing-alerting,partial-coverage,partial-inventory}`, `backup/{healthy,missing-backup,stale-restore-test,failing-restore}`, `resilience/{healthy,stale-recovery-plan,missing-dr-exercise,exception-approved-rto}`. Clock `2026-08-19T12:00:00Z` on healthy sets.
 - Vulnerability family (vulnerability catalog): 20 `control.vulnerability.*` controls, evidence types `evidence.vulnerability.*` / `evidence.secret.exposure` / `evidence.dependency.*` / `evidence.asset.software-inventory`, and population tests including `test.vulnerability.{scan-current,scan-coverage,no-critical-over-sla,no-high-over-sla,findings-have-owner}`, `test.secret.no-active-exposure`, and `test.dependency.no-critical-over-sla` in `catalog/canonical/v1/{controls,evidence,tests}/vulnerability.toml`. A scanner finding is evidence, not a compliance result. Accepted-risk and approved-exception are not remediation. Empty findings plus unknown coverage are never Effective. SSOT: [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md).
 - Fixtures: `fixtures/assurance/canonical/v1/vulnerability/` (`complete-clean-scan`, `critical-inside-sla`, `critical-overdue`, `critical-approved-exception`, `critical-expired-exception`, `incomplete-scan-coverage`, `stale-scan`, `unresolved-secret-exposure`, `duplicate-superseded`, `zero-findings-unknown-coverage`). Clock `2026-08-19T12:00:00Z`; SLA critical 7d / high 30d.
-- Personnel security lifecycle (Prompt 17): six additive controls / four evidence types / six tests in `catalog/canonical/v1/{controls,evidence,tests}/personnel.toml` listed in the canonical manifest. The five governance `control.personnel.*` rows stay in `governance.toml` (GOV-003 family count 40, still 30–45). Lifecycle tests are population predicates (`all-subjects` / `none-subjects`) over `evidence.personnel.{screening,joiner-grace,population-membership,asset-return}` plus reused `evidence.identity.{lifecycle-event,account-status,role-membership}`. Fixture facts `account-status.active` and `role-membership.excessive` are **defect flags** (truthy → fail on `none-subjects`). `Identity` / `SubjectKind` stay thin (no Employee/Contractor). Resolution stays `resolve_population` (no `resolve_personnel_inventory`). Joiner grace is a `within_grace` fact, not an IR Exception. Eight fixtures: `fixtures/assurance/canonical/v1/personnel/{complete-training-population,one-overdue-user,new-joiner-grace,leaver-with-active-access,mover-retaining-excessive-privileges,expired-exception,missing-personnel-source,manual-screening-evidence}/`. Dual-suite `sdd_personnel_security_target` GREEN. SSOT: [`docs/specs/personnel-security.md`](personnel-security.md). ADR: [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md).
-- Governance family (governance catalog): 34 `control.{governance,risk,personnel,vendor,incident,resilience}` controls (25 Hybrid / 9 Manual; continuity/DR **governance** only; operational restore stays infrastructure catalog), 13 first-class evidence types (`evidence.manual.attestation` plus `evidence.governance.{policy,policy-review,management-review,internal-audit}`, `evidence.risk.{assessment,treatment}`, `evidence.personnel.{training,acknowledgement}`, `evidence.vendor.{inventory,risk-review}`, `evidence.incident.exercise`, `evidence.resilience.continuity-plan`), and 34 freshness/population/manual-review tests in `catalog/canonical/v1/{controls,evidence,tests}/governance.toml`. Manual evidence is immutable fact, not a boolean bypass. Missing evidence is `InsufficientEvidence`. Partial training/vendor populations cannot be `Effective`. Approved unexpired IR exceptions are `ExceptionApproved`, never silent `Effective`. This family does not remap ISO. SSOT: [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md). ADR: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md).
+- Personnel security lifecycle (Prompt 17): six additive controls / four evidence types / six tests in `catalog/canonical/v1/{controls,evidence,tests}/personnel.toml` listed in the canonical manifest. The five governance `control.personnel.*` rows stay in `governance.toml` (GOV-003 family count 40, still 30–45). Lifecycle tests are population predicates (`all-subjects` / `none-subjects`) over `evidence.personnel.{screening,joiner-grace,population-membership,asset-return}` plus reused `evidence.identity.{lifecycle-event,account-status,role-membership}`. Fixture facts `account-status.active` and `role-membership.excessive` are **defect flags** (truthy → fail on `none-subjects`). `Identity` / `SubjectKind` stay thin (no Employee/Contractor). Resolution stays `resolve_population` (no `resolve_personnel_inventory`). Joiner grace is a `within_grace` fact, not an IR Exception. Eight fixtures: `fixtures/assurance/canonical/v1/personnel/{complete-training-population,one-overdue-user,new-joiner-grace,leaver-with-active-access,mover-retaining-excessive-privileges,expired-exception,missing-personnel-source,manual-screening-evidence}/`. Dual-suite `sdd_personnel_security_target` GREEN. SSOT: [`docs/specs/personnel-security.md`](personnel-security.md). ADR: [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md).
+- Governance family (governance catalog): 34 `control.{governance,risk,personnel,vendor,incident,resilience}` controls (25 Hybrid / 9 Manual; continuity/DR **governance** only; operational restore stays infrastructure catalog), 13 first-class evidence types (`evidence.manual.attestation` plus `evidence.governance.{policy,policy-review,management-review,internal-audit}`, `evidence.risk.{assessment,treatment}`, `evidence.personnel.{training,acknowledgement}`, `evidence.vendor.{inventory,risk-review}`, `evidence.incident.exercise`, `evidence.resilience.continuity-plan`), and 34 freshness/population/manual-review tests in `catalog/canonical/v1/{controls,evidence,tests}/governance.toml`. Manual evidence is immutable fact, not a boolean bypass. Missing evidence is `InsufficientEvidence`. Partial training/vendor populations cannot be `Effective`. Approved unexpired IR exceptions are `ExceptionApproved`, never silent `Effective`. This family does not remap ISO. SSOT: [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md). ADR: [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md).
 - Fixtures: `fixtures/assurance/canonical/v1/governance/` (`current-documents`, `stale-documents`, `missing-documents`, `incomplete-training-population`, `vendor-review-gaps`, `approved-exception`, `expired-exception`, `manual-review-despite-evidence`). Clock `2026-08-18T12:00:00Z` (`stale-documents` uses `2024-08-01T12:00:00Z`).
 - No Entra / Okta / Google Workspace collector. GitHub is the first reference-grade provider collector and emits IAM/SDLC catalogs canonical types (`evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.identity.privileged-membership` / `external-access` plus `inventory.subject` / `inventory.complete`). It does not emit `source.*` envelopes. Historical `source.*` strings remain in `GITHUB_EVIDENCE_TYPES` as the ISO GH-012 / IAM-015 mapping table. SSOT: [`docs/specs/github-collector.md`](github-collector.md). Goldens: `fixtures/assurance/canonical/v1/github/`.
-- Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind. Packs consume `CatalogProjection` ([ADR 0011](../adr/0011-catalog-framework-digest-and-pin-ownership.md)); they must not grow a second catalog TOML parser.
+- Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind. Packs consume `CatalogProjection` ([ADR 0011](../adr/0046-catalog-framework-digest-and-pin-ownership.md)); they must not grow a second catalog TOML parser.
 
-See [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md), [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md), [`docs/specs/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md), [`docs/specs/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md), [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md), [`docs/specs/personnel-security.md`](personnel-security.md), [`docs/specs/github-collector.md`](github-collector.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md), [`docs/adr/0003-vulnerability-canonical-assurance-catalog.md`](../adr/0003-vulnerability-canonical-assurance-catalog.md), [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md), [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md), and [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md).
+See [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md), [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md), [`docs/specs/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md), [`docs/specs/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md), [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md), [`docs/specs/personnel-security.md`](personnel-security.md), [`docs/specs/github-collector.md`](github-collector.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md), [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md), [`docs/adr/0037-vulnerability-canonical-assurance-catalog.md`](../adr/0037-vulnerability-canonical-assurance-catalog.md), [`docs/adr/0024-infrastructure-canonical-assurance-catalog.md`](../adr/0024-infrastructure-canonical-assurance-catalog.md), [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md), and [`docs/adr/0020-github-collector-canonical-evidence-mapping.md`](../adr/0020-github-collector-canonical-evidence-mapping.md).
 
 ## Compile
 
@@ -230,7 +230,7 @@ packEntries[], digest
 
 `packEntries` are artifacts, not Kleene inputs. Digest is IR `canonical_digest` over the body excluding `digest`. This engine **produces** the Kleene snapshot. Lineage persist/explain is landed (see below); crate-root `ApplicabilitySnapshot` is the lineage persist document, not this type.
 
-See [`docs/specs/applicability-engine.md`](applicability-engine.md) and [ADR 0003 applicability engine](../adr/0003-applicability-engine.md).
+See [`docs/specs/applicability-engine.md`](applicability-engine.md) and [ADR 0003 applicability engine](../adr/0014-applicability-engine.md).
 
 ## Evidence
 
@@ -278,7 +278,7 @@ retention_days     = Integer(365)
 privileged_roles   = StringList(["owner", "admin"])
 ```
 
-The evaluator compares stored types (`typed_eq` / `cmp_numeric` / `list_contains`) and fails closed on a `type mismatch`. It does not reparse `"01"` / `"1.0"` / `"true"`. Integer↔Decimal numeric compare is exact decimal-string scale-align, never IEEE-754. Same semantic facts + provenance ⇒ same `canonical_digest` regardless of map insertion order. See [`docs/specs/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md).
+The evaluator compares stored types (`typed_eq` / `cmp_numeric` / `list_contains`) and fails closed on a `type mismatch`. It does not reparse `"01"` / `"1.0"` / `"true"`. Integer↔Decimal numeric compare is exact decimal-string scale-align, never IEEE-754. Same semantic facts + provenance ⇒ same `canonical_digest` regardless of map insertion order. See [`docs/specs/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0036-typed-evidence-canonical-serialization.md).
 
 ### Ledger
 
@@ -306,7 +306,7 @@ Half-open window: `validFrom <= T` and (`validUntil` omitted or `T < validUntil`
 
 `within_window` remains inclusive `collected_at`. `valid_during` / `as_of` / `latest_as_of` / `select_latest_as_of` apply the candidate filter (no future, no expired, no revoked-at-T). Digest-order first-hit over the unbounded bag is not an evaluation selector.
 
-The four ledger clocks are **not** aliases: `latest` is record-order (`collected_at DESC`, no validity); `current` is the valid evaluation leaf at live `Utc::now()`; `valid_at(t)` is the membership set at `t`; `as_of(t)` is the evaluation leaf at pinned `t`. `latest_as_of` is an alias of `as_of` only. Callers must not use `latest` for current assessment. See [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) and [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+The four ledger clocks are **not** aliases: `latest` is record-order (`collected_at DESC`, no validity); `current` is the valid evaluation leaf at live `Utc::now()`; `valid_at(t)` is the membership set at `t`; `as_of(t)` is the evaluation leaf at pinned `t`. `latest_as_of` is an alias of `as_of` only. Callers must not use `latest` for current assessment. See [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) and [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md).
 
 `AssessmentContext` is `{ now, maxAge }`. `now` is the injected assessment clock (`as_of()`). That injected clock is distinct from ledger `current()`. `weeping-angel-control-test::FreshnessPolicy { maxAge, asOf, period }` is the scheduler handoff (cadence is not this contract; do not confuse with `scheduler::FreshnessPolicy`, which is `maxAge` only). Live `assess` still uses `Utc::now()` + 24h.
 
@@ -316,7 +316,7 @@ Defects are disjoint: missing → `insufficientEvidence`; future/expired → exc
 
 `project_timeline` / `compare_temporal` / `TemporalDiff` (`observationGaps`, `expiredAt`, `revoked`, `superseded`, `intermittentControls`, `coverageInsufficient`) serve readiness and audit library exports; pairwise `compare` / `SnapshotDiff` is unchanged. Catalog fact fields named `valid_until` remain observation facts.
 
-SSOT: [`docs/specs/evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [`docs/specs/temporal-assurance.md`](temporal-assurance.md). ADRs: [`0003-temporal-assurance.md`](../adr/0003-temporal-assurance.md), [`0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md).
+SSOT: [`docs/specs/evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [`docs/specs/temporal-assurance.md`](temporal-assurance.md). ADRs: [`0035-temporal-assurance.md`](../adr/0035-temporal-assurance.md), [`0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md).
 
 Lineage persist APIs store **opaque JSON**. A second write of different bytes for the same assessment / control-test / snapshot key is `LedgerError::Immutable`. Identical bytes are idempotent. `framework_snapshots` is digest-keyed and may hold pack, catalog, definition, applicability, evidence, readiness, or SoA payloads. `record_collection_run` is idempotent on identical bytes; a **completed** payload with different bytes is `LedgerError::Immutable`; in-flight (non-completed) identity may still update. Malformed envelope JSON or digest/key mismatch surfaces as typed `Corrupt` (mapped onto `LedgerError::Path`). Incompatible `schemaVersion` surfaces as typed `IncompatibleSchema` (also via `Path`).
 
@@ -336,6 +336,8 @@ trait EvidenceCollector {
 ```
 
 The trait is synchronous. `CollectionRequest` / `CollectionBatch` exist for run provenance. Do not add mandatory `Send + Sync` bounds for WASM/runtime compatibility.
+
+Internal crate layout (increment 1, [ADR 0013](../adr/0013-collector-hexagonal-modular-monolith.md), spec [`collector-hexagonal.md`](collector-hexagonal.md)): adapters implement `CollectorAdapter` and emit `ObservationCandidate` / `ObservationBatch`. `CollectionEngine` runs `ObservationGate` then `EnvelopeFactory` (the only collector-crate seal of `EvidenceEnvelope`). Scheduler and `AssuranceEngineBuilder` still take `EvidenceCollector`; they do **not** call `CollectionEngine` in this increment. Collector **type** (`collector.github`) is distinct from **instance** (`github:default` compatibility id). Hexagonal architecture IDs COL-001…015 in that spec are later xtask guards — they are not a second copy of the table below.
 
 `CollectorDescriptor = { id, version, evidenceTypes, providerFamily, subjectTypes, capabilities, requiredPermissions }`. **`frameworks` is invalid** — the field must not exist.
 
@@ -361,7 +363,7 @@ Shipped implementations:
 | `LocalCollector` | `collector.local` | Structural files only (`CODEOWNERS`, policy, workflow presence). Presence ≠ effectiveness. |
 | `ManualEvidence` | `collector.manual` | Requires `--attested-by` / `attested_by`. Never synthesized. Emits legacy `manual_attestation`, not catalog `evidence.manual.attestation`. |
 
-GitHub (`collector.github`, [ADR](../adr/0003-github-collector-canonical-evidence-mapping.md)):
+GitHub (`collector.github`, [ADR](../adr/0020-github-collector-canonical-evidence-mapping.md)):
 
 - Emitted evidence types (`CollectorDescriptor.evidence_types` / `GITHUB_CANONICAL_EVIDENCE_TYPES`): `evidence.repository.{inventory,visibility,default-branch,branch-protection,review-policy,review-ownership,security-scanning,dependency-scanning,commit-signing}`, `evidence.cicd.{status-checks,workflow-permissions}`, `evidence.deployment.environment-protection`, `evidence.identity.{privileged-membership,external-access}`, `inventory.subject`, `inventory.complete`. Typed facts via `with_value`. No `evidence.github.*`.
 - Compatibility table `GITHUB_EVIDENCE_TYPES` still lists historical ADR 0002 `source.*` names (ISO GH-012 needles; IAM-015 forbids `evidence.identity.*` on that const). Those names are **not** emitted types.
@@ -516,7 +518,7 @@ Crate-root `ApplicabilitySnapshot` is the persist document (static IR fold + `pa
 
 Result identity (`assessment_result_digest`) is SHA-256 of canonical JSON over test id, control id, effectiveness, evidence refs, missing evidence, test version, input digest, and population. Wall-clock `duration` / `evaluatedAt` are excluded.
 
-See [`docs/specs/assessment-lineage.md`](assessment-lineage.md) and [ADR 0003 assessment lineage](../adr/0003-assessment-lineage.md).
+See [`docs/specs/assessment-lineage.md`](assessment-lineage.md) and [ADR 0003 assessment lineage](../adr/0015-assessment-lineage.md).
 
 ## Operational Statement of Applicability
 
@@ -528,7 +530,7 @@ Treatment-driven inclusion/exclusion fail-closes on missing `RiskTreatmentRef` /
 
 `pin_soa_snapshot` seals `StatementOfApplicabilitySnapshot` (`typed_canonical_digest("soa-snapshot", …)`). Reconstruct with `project_soa_from_snapshot`. `diff_soa_snapshots` classifies `soaCauses`: applicability, implementation, effectiveness regression, exception expiry, mapping, treatment. Live `project_soa` is not history.
 
-See [`docs/specs/operational-soa.md`](operational-soa.md) and [ADR 0003 operational SoA](../adr/0003-operational-soa.md).
+See [`docs/specs/operational-soa.md`](operational-soa.md) and [ADR 0003 operational SoA](../adr/0029-operational-soa.md).
 
 ## ISMS context
 
@@ -587,7 +589,7 @@ Rules:
 - `ControlExplanation.obligations` is additive default-empty. `explain_control` does not populate it; use the dedicated helpers. Digests stay `canon/v1`.
 - Collectors and framework packs must not write obligation lifecycle or satisfaction.
 
-See [`docs/specs/interested-parties-obligations.md`](interested-parties-obligations.md) and [ADR 0008 interested parties / obligations](../adr/0008-interested-parties-obligations.md).
+See [`docs/specs/interested-parties-obligations.md`](interested-parties-obligations.md) and [ADR 0008 interested parties / obligations](../adr/0043-interested-parties-obligations.md).
 
 ## Organizational scope engine
 
@@ -617,7 +619,7 @@ Rules:
 - Collectors must not mutate IR scope. No ISO types in this module.
 - Additive generic kinds only: `businessUnit`, `location`, `dataDomain`, `personnelPopulation`. No AWS / GitHub / Entra kinds.
 
-See [`docs/specs/scope-engine.md`](scope-engine.md) and [ADR 0008 scope engine](../adr/0008-scope-engine.md).
+See [`docs/specs/scope-engine.md`](scope-engine.md) and [ADR 0008 scope engine](../adr/0044-scope-engine.md).
 
 ## Security objectives
 
@@ -644,7 +646,7 @@ Rules:
 - Collectors emit facts only. Crate-root `continuity::ObjectiveStatus` is a different type.
 - Golden: `tests/fixtures/assurance-ir/v1/security-objective-vuln-sla.json` (critical-vuln 7-day SLA, target ≥ 98% — fixture data, not an evaluator constant).
 
-See [`docs/specs/security-objectives.md`](security-objectives.md) and [ADR 0008 security objectives](../adr/0008-security-objectives.md).
+See [`docs/specs/security-objectives.md`](security-objectives.md) and [ADR 0008 security objectives](../adr/0045-security-objectives.md).
 
 ## Risk methodology
 
@@ -667,7 +669,7 @@ Rules:
 - Appetite / tolerance / acceptance thresholds are stored and validated; this slice does not accept a risk.
 - `IsmsContext.riskMethodologyId` is a typed reference. Register / residual slices call `score_risk`; they do not reimplement matrices.
 
-See [`docs/specs/risk-methodology.md`](risk-methodology.md) and [ADR 0005 risk methodology](../adr/0005-risk-methodology.md).
+See [`docs/specs/risk-methodology.md`](risk-methodology.md) and [ADR 0005 risk methodology](../adr/0041-risk-methodology.md).
 
 ## Risk register
 
@@ -693,7 +695,7 @@ Rules:
 - Clockless `validate()` fail-closes on duplicate `RiskId`, dangling asset / process / vendor / control / identity-owner / evidence-requirement / supersession refs, malformed evidence digests, illegal recorded transitions, and derived inherent fields without a version pin and raw inputs. `Some(treatmentId)` resolves through `validate_treatment_inventory`. Overdue `nextReview` is `validate_risk_reviews_at` only (terminal `Closed`/`Retired` spared; unscheduled is not overdue).
 - Owner is `PrincipalRef`. Crate-root `ReviewCadence` uses `intervalSeconds` and is not `implementation::ReviewCadence`.
 
-See [`docs/specs/risk-register.md`](risk-register.md) and [ADR 0005 operational risk register](../adr/0005-operational-risk-register.md).
+See [`docs/specs/risk-register.md`](risk-register.md) and [ADR 0005 operational risk register](../adr/0040-operational-risk-register.md).
 
 ## Risk identification
 
@@ -719,7 +721,7 @@ Rules:
 - `looks_like_compliance_claim` rejects `risk accepted` / `ISO control failed`. Identify drops matching narratives. Scanners cannot author `RiskStatus::Accepted` or control-test `Effectiveness`.
 - Score suggestion is optional and omitted by identify. No second scoring matrix. Clustered category disagreement uses `SuggestedRiskCategory::Other("mixed")`.
 
-See [`docs/specs/risk-identification.md`](risk-identification.md) and [ADR 0007](../adr/0007-risk-identification-candidate-correlation.md).
+See [`docs/specs/risk-identification.md`](risk-identification.md) and [ADR 0007](../adr/0042-risk-identification-candidate-correlation.md).
 
 ## Residual risk
 
@@ -740,7 +742,7 @@ Rules:
 - `NotTested` / `InsufficientEvidence` / `StaleEvidence` / dangling relevant control / missing pin versions fail closed. `NotApplicable` on a relevant control is contradiction. `ExceptionApproved` is governance evidence, not a Low floor.
 - Identity is `residual:{sha256}` over semantic fields including caller `projectedAt`. `ResidualRiskStore` is first-write-wins; control regression writes a **new** projection.
 
-See [`docs/specs/residual-risk.md`](residual-risk.md) and [ADR 0003 residual risk](../adr/0003-residual-risk.md).
+See [`docs/specs/residual-risk.md`](residual-risk.md) and [ADR 0003 residual risk](../adr/0032-residual-risk.md).
 
 ## Risk treatment
 
@@ -808,7 +810,7 @@ One `control_id` may have several rows. Empty `applies_to` is a universal popula
 
 Queries: `implementations_for`, `current_implementations_for`, `implementation_by_id`, `overlap_report`. Lineage still first-matches one `ControlExplanation.implementation` by `control_id`. Evidence crate stays conclusion-free.
 
-See [`docs/specs/control-implementation-registry.md`](control-implementation-registry.md) and [ADR 0003 control implementation registry](../adr/0003-control-implementation-registry.md).
+See [`docs/specs/control-implementation-registry.md`](control-implementation-registry.md) and [ADR 0003 control implementation registry](../adr/0016-control-implementation-registry.md).
 
 ## ISMS events and drift
 
@@ -829,7 +831,7 @@ Rules:
 - Semantically equal inventories, including Vec reorder, emit nothing. Repeated detect on the same pair yields the same `eventId` set.
 - `compare` / `SnapshotDiff` remain readiness helpers; `newSubjects` are still control ids. Scheduler Drift may still call `compare`; semantic events are this API (`tick` does not call `detect_events` in v1). No Slack / notification bus.
 
-See [`docs/specs/isms-events-drift.md`](isms-events-drift.md) and [ADR 0003 ISMS events/drift](../adr/0003-isms-events-drift.md).
+See [`docs/specs/isms-events-drift.md`](isms-events-drift.md) and [ADR 0003 ISMS events/drift](../adr/0026-isms-events-drift.md).
 
 ## Remediation engine
 
@@ -854,7 +856,7 @@ Rules:
 - Clockless `validate_assessment_ir` walks remediation graph integrity. Closed records reject mutation (`ImmutableClosure`). Frozen closed `canonical_digest` is stable.
 - Incident `correctiveActionIds` are `RemediationRef`. When `remediations` is non-empty, dangling ids fail closed. Incident close does not close remediations.
 
-See [`docs/specs/remediation-engine.md`](remediation-engine.md) and [ADR 0003 remediation engine](../adr/0003-remediation-engine.md).
+See [`docs/specs/remediation-engine.md`](remediation-engine.md) and [ADR 0003 remediation engine](../adr/0031-remediation-engine.md).
 
 ## Incident governance
 
@@ -862,7 +864,7 @@ Canonical organizational information-security incident record in `weeping-angel-
 
 `validate_assessment_ir` fail-closes on duplicate ids, dangling graph refs, unordered timelines, illegal status transitions, Real recovered/closed without recovery evidence, and Real closed without `PostIncidentReview`. PIR may propose risk/control/remediation ids; it does not mutate those inventories. When `assessment.remediations` is non-empty, dangling `correctiveActionIds` fail closed. Closed incidents with open corrective-action refs are valid. Audit/management-review **preparation** helpers: `weeping-angel-assurance::{incidents_in_period, incident_postmortem_missing, closed_incidents_with_open_corrective_actions, real_incidents, exercise_incidents}`. No SIEM, pager, forensics, or breach-notification legal engine.
 
-See [`docs/specs/incident-governance.md`](incident-governance.md) and [ADR 0003 incident governance](../adr/0003-incident-governance.md).
+See [`docs/specs/incident-governance.md`](incident-governance.md) and [ADR 0003 incident governance](../adr/0023-incident-governance.md).
 
 ## Continuity / resilience
 
@@ -882,7 +884,7 @@ Rules:
 - `validate_assessment_ir` fail-closes on duplicate profile/objective/exercise ids, non-Service profile subjects, dangling graph refs, zero RTO, and MissionCritical/High without cadence. Staleness is clocked evaluation, not `validate()`.
 - No `BusinessService` inventory. No catalog ID rewrite. No backup-vendor types. Durations are integer seconds.
 
-See [`docs/specs/continuity-resilience.md`](continuity-resilience.md) and [ADR 0005 continuity/resilience](../adr/0005-continuity-resilience.md).
+See [`docs/specs/continuity-resilience.md`](continuity-resilience.md) and [ADR 0005 continuity/resilience](../adr/0038-continuity-resilience.md).
 
 ## Internal audit
 
@@ -908,7 +910,7 @@ Rules:
 - `IndependenceRecord.accepted` is never machine-set. Conflict flags persist (`auditorOwnsControl`); absence of flags is not independence.
 - `AuditFinding.nonconformityId` remains an opaque `NonconformityRef` (`String`). This slice does not start CAPA; Prompt 22 `propose_from_audit_finding` is the only open path. Optional catalog fact projection (`evidence.governance.internal-audit`) is not landed. `Iso27007` remains a pack-less compile selector.
 
-See [`docs/specs/internal-audit.md`](internal-audit.md) and [ADR 0003 internal audit](../adr/0003-internal-audit.md).
+See [`docs/specs/internal-audit.md`](internal-audit.md) and [ADR 0003 internal audit](../adr/0025-internal-audit.md).
 
 ## Nonconformity and CAPA
 
@@ -932,7 +934,7 @@ Rules:
 - `Incident.correctiveActionIds` stay `RemediationRef`. `requests.nonconformities` / `supports_nonconformities` stay fail-closed. Catalog `control.governance.corrective-action` remains an attestation fact.
 - `NonconformityRef` on audit findings remains `String`. `ComplianceNodeRef` has no CAPA variants. `IsmsSnapshot` CAPA bags stay empty no-ops unless a caller fills them.
 
-See [`docs/specs/nonconformity-capa.md`](nonconformity-capa.md) and [ADR 0003 nonconformity/CAPA](../adr/0003-nonconformity-capa.md).
+See [`docs/specs/nonconformity-capa.md`](nonconformity-capa.md) and [ADR 0003 nonconformity/CAPA](../adr/0028-nonconformity-capa.md).
 
 ## Controlled documents
 
@@ -951,7 +953,7 @@ Artifact identity is `EvidenceEnvelope.content_digest`. `approve` requires non-e
 
 `DocumentControlRegistry::validate(&DocumentLinkUniverse)` fail-closes on dangling `ControlId` / `ObligationId` / `RiskId` / subject ids, duplicate ids, empty artifact digest, missing approval on approved versions, and supersession cycles. `ObligationId` is shared with the obligation registry.
 
-See [`docs/specs/controlled-documents.md`](controlled-documents.md) and [ADR 0003 controlled documents](../adr/0003-controlled-documents.md).
+See [`docs/specs/controlled-documents.md`](controlled-documents.md) and [ADR 0003 controlled documents](../adr/0017-controlled-documents.md).
 
 ## CLI
 

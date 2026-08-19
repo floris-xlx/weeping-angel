@@ -288,9 +288,9 @@ fn registry_query_src() -> String {
 fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_control_implementation_registry_baseline")
+        !toml.contains("sdd_control_implementation_registry_baseline")
             && toml.contains("sdd_control_implementation_registry_target")
-            && toml.contains("tests/contracts/control_implementation_registry.baseline.rs")
+            && !toml.contains("tests/contracts/control_implementation_registry.baseline.rs")
             && toml.contains("tests/contracts/control_implementation_registry.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

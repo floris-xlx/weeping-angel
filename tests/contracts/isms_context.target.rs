@@ -810,8 +810,8 @@ fn ctx_t13_existing_spine_types_are_not_renamed() {
 fn ctx_t14_dual_suite_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("name = \"sdd_isms_context_baseline\"")
-            && toml.contains("path = \"tests/contracts/isms_context.baseline.rs\"")
+        !toml.contains("name = \"sdd_isms_context_baseline\"")
+            && !toml.contains("path = \"tests/contracts/isms_context.baseline.rs\"")
             && toml.contains("name = \"sdd_isms_context_target\"")
             && toml.contains("path = \"tests/contracts/isms_context.target.rs\""),
         "ISMS context IR dual-suite must be explicitly listed (not auto-discovered)"

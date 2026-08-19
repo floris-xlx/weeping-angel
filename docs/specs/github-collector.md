@@ -7,16 +7,17 @@
 | Slice | GitHub collector — first reference-grade provider collector |
 | Planning / characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
 | Dual-suite | **Registered** in root `Cargo.toml`: `sdd_github_collector_baseline` superseded (`#[ignore]`); `sdd_github_collector_target` `ghc_000`–`ghc_024` GREEN. |
-| ADR | [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md) (accepted; draft filename dropped) |
+| ADR | [`docs/adr/0020-github-collector-canonical-evidence-mapping.md`](../adr/0020-github-collector-canonical-evidence-mapping.md) (accepted; draft filename dropped) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Collector crate layout (do **not** treat as evidence-contract SSOT) | [`collector-hexagonal.md`](collector-hexagonal.md), [ADR 0013](../adr/0013-collector-hexagonal-modular-monolith.md) — adapters emit observations; `EnvelopeFactory` seals. This file still owns GitHub mappings, 403/404, `GITHUB_EVIDENCE_TYPES`, goldens. |
 | Consumes | catalog infrastructure and domain families contracts, especially typed evidence, population completeness, IAM `evidence.identity.*`, landed SDLC [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*` |
 | Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | typed evidence / population runtime / 04 (consumed) | [`typed-evidence.md`](typed-evidence.md), [`population-runtime.md`](population-runtime.md), [`iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
-| SDLC catalog contracts (landed catalog TOML) | Spec [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), accepted ADR [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md), `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` |
+| SDLC catalog contracts (landed catalog TOML) | Spec [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), accepted ADR [`0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md), `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` |
 | Spine / ISO law | [`assurance-runtime-spine.md`](assurance-runtime-spine.md), [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify (after implement) | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for the **GitHub collector slice**. It does not replace catalog-infrastructure, typed-evidence, population, IAM, or SDLC SSOTs. SDLC catalog SDLC catalog TOML is **landed**; this slice **emits** those evidence contracts. It must **not** invent catalog IDs, write vulnerability, infrastructure, and governance catalogs TOML, or calculate control effectiveness.
+This document is the durable SSOT for the **GitHub collector evidence contract** (IDs, mappings, 403/404, goldens, `GITHUB_EVIDENCE_TYPES`). Crate hexagonal layout (who emits observations vs who seals envelopes) lives in [`collector-hexagonal.md`](collector-hexagonal.md). It does not replace catalog-infrastructure, typed-evidence, population, IAM, or SDLC SSOTs. SDLC catalog SDLC catalog TOML is **landed**; this slice **emits** those evidence contracts. It must **not** invent catalog IDs, write vulnerability, infrastructure, and governance catalogs TOML, or calculate control effectiveness.
 
 This file supersedes the interrupted Scope-only planning attempt. Characterization was re-read against workspace HEAD `e430980c…` and the uncommitted baseline suite (`ghc_b001`–`ghc_b030`).
 
@@ -180,7 +181,7 @@ tests/contracts/github_collector.baseline.rs
 tests/contracts/github_collector.target.rs
 docs/specs/github-collector.md
 .sdd/runs/sdd-github-collector.md
-docs/adr/0003-github-collector-canonical-evidence-mapping-draft.md
+docs/adr/0019-github-collector-canonical-evidence-mapping-draft.md
 ```
 
 Dual-suite `[[test]]` entries already exist. Do **not** rewrite them into other crates.
@@ -453,7 +454,7 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 
 ## 8. ADR
 
-**Accepted.** [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md) (draft filename dropped). ADR 0002 `source.*` types are no longer the emitted taxonomy. Mapping-table strings remain for ISO GH-012 / IAM-015. No `evidence.github.*` in tests. Failure behavior stays GitHub-owned (`GITHUB_FAILURE_BEHAVIOR`); shared `CollectorDescriptor` has no `failure_behavior` field.
+**Accepted.** [`docs/adr/0020-github-collector-canonical-evidence-mapping.md`](../adr/0020-github-collector-canonical-evidence-mapping.md) (draft filename dropped). ADR 0002 `source.*` types are no longer the emitted taxonomy. Mapping-table strings remain for ISO GH-012 / IAM-015. No `evidence.github.*` in tests. Failure behavior stays GitHub-owned (`GITHUB_FAILURE_BEHAVIOR`); shared `CollectorDescriptor` has no `failure_behavior` field.
 
 ---
 
@@ -466,10 +467,12 @@ Module fill:
 - `security.rs` — secret/code/dependency scanning
 - `workflows.rs` — Actions default permissions + environment protection
 - `collaborators.rs` — admins, outside collaborators, deploy keys (no key material)
-- `normalize.rs` — GitHub JSON → canonical `EvidenceValue` facts
+- `normalize.rs` — GitHub JSON → canonical `EvidenceValue` facts as `ObservationCandidate` (not envelopes)
 - `descriptor.rs` — honest advertisement + `SOURCE_TO_CANONICAL` + `GITHUB_FAILURE_BEHAVIOR`
 - `client.rs` — fixture transport; longest-prefix match; `get_pages`; 429 fixture advance
 - `error.rs` — `sanitize_diagnostic` folds `ghs_` / `ghu_` / `ghr_` after shared `redact`
+
+`GitHubCollector` implements `CollectorAdapter` and returns an `ObservationBatch`. Public `EvidenceCollector::collect` / `collect_batch` go through `CollectionEngine` → `ObservationGate` → `EnvelopeFactory`. Mapping, 403/404, and `GITHUB_EVIDENCE_TYPES` are unchanged. Crate module law: [`collector-hexagonal.md`](collector-hexagonal.md).
 
 Goldens stay fixture-based. Live HTTP and `octocrab` remain out of scope.
 

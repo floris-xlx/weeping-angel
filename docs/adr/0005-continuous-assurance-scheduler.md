@@ -14,8 +14,8 @@ depends_on = []
 | Status | **Accepted** — `sdd_continuous_assurance_scheduler_target` GREEN (CAS-001…016); baseline skip-superseded |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | Nothing. Does **not** replace ADR 0001 compile pipeline, ADR 0002 ISO vertical, or ADR 0003 assessment-lineage snapshot law. One-shot `assess` remains; collector `Err` reattach on that path is [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md) (`prior_valid_envelopes`), not this ADR. |
-| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) (facade orchestrates collectors + evaluate), [ADR 0003 assessment lineage](0003-assessment-lineage.md) (failed collection is representable; this ADR **reattaches** prior ledger evidence on scheduled ticks) |
+| Supercedes | Nothing. Does **not** replace ADR 0001 compile pipeline, ADR 0002 ISO vertical, or ADR 0003 assessment-lineage snapshot law. One-shot `assess` remains; collector `Err` reattach on that path is [ADR 0011](0047-temporal-lineage-evidence-soa-integrity.md) (`prior_valid_envelopes`), not this ADR. |
+| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) (facade orchestrates collectors + evaluate), [ADR 0003 assessment lineage](0015-assessment-lineage.md) (failed collection is representable; this ADR **reattaches** prior ledger evidence on scheduled ticks) |
 | Spec | [`docs/specs/continuous-assurance-scheduler.md`](../specs/continuous-assurance-scheduler.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Characterization | `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a` |
@@ -99,7 +99,7 @@ Collect → Normalize → Seal → Ledger → Evaluate → Project → Snapshot 
 | Projection | `project_soa` / `project_readiness` |
 | Snapshot | Persist `AssessmentRun`; Drift via existing `compare` (`SnapshotDiff`) |
 
-Scheduler Drift does **not** invent ISMS event types. Typed observations are [ADR 0003 ISMS events/drift](0003-isms-events-drift.md) (`detect_events` / `detect_isms_drift`). `tick` may keep calling `compare` only.
+Scheduler Drift does **not** invent ISMS event types. Typed observations are [ADR 0003 ISMS events/drift](0026-isms-events-drift.md) (`detect_events` / `detect_isms_drift`). `tick` may keep calling `compare` only.
 
 ### 5. Stable run identity and resume
 
@@ -113,7 +113,7 @@ A failed or timed-out collect records the `CollectionRun` (`failed` / `timed_out
 
 Evaluate for the slot loads ledger envelopes for the scheduled collectors. Freshness (`max_age` vs `Clock::now()` and `collected_at`) decides usability: fresh prior evidence may yield `Effective`; stale prior evidence yields existing `StaleEvidence`. Temporal `valid_from` / `valid_until` windows are **not** invented here.
 
-One-shot `assess` collector `Err` reattaches process-local prior valid envelopes ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)). Scheduler-path reattach stays ledger-backed for the tick.
+One-shot `assess` collector `Err` reattaches process-local prior valid envelopes ([ADR 0011](0047-temporal-lineage-evidence-soa-integrity.md)). Scheduler-path reattach stays ledger-backed for the tick.
 
 ### 7. Retry, backoff, timeout
 
@@ -138,4 +138,5 @@ Jobs key off existing assessment/collector/scope identities. This slice does not
 - Spec: [`docs/specs/continuous-assurance-scheduler.md`](../specs/continuous-assurance-scheduler.md)
 - Stub: [`docs/sdd/continuous-assurance-scheduler.md`](../sdd/continuous-assurance-scheduler.md)
 - Layout: [ADR 0004](0004-documentation-architecture.md)
-- One-shot collection-vs-erasure / four-clock ledger: [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)
+- One-shot collection-vs-erasure / four-clock ledger: [ADR 0011](0047-temporal-lineage-evidence-soa-integrity.md)
+- Collector hexagonal layout (scheduler still uses `EvidenceCollector`; engine adoption is later): [ADR 0013](0013-collector-hexagonal-modular-monolith.md)

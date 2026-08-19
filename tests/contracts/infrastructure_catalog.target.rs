@@ -667,8 +667,8 @@ fn bound_exception(control: &str, kind: SubjectKind, subject: &str) -> Exception
 fn infra_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_infrastructure_catalog_baseline")
-            && toml.contains("tests/contracts/infrastructure_catalog.baseline.rs")
+        !toml.contains("sdd_infrastructure_catalog_baseline")
+            && !toml.contains("tests/contracts/infrastructure_catalog.baseline.rs")
             && toml.contains("sdd_infrastructure_catalog_target")
             && toml.contains("tests/contracts/infrastructure_catalog.target.rs"),
         "dual-suite sdd_infrastructure_catalog_baseline + sdd_infrastructure_catalog_target must be listed in root Cargo.toml"

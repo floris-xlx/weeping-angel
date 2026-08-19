@@ -876,9 +876,9 @@ fn rr_014_owner_is_principal_ref_and_dangling_identity_fails_closed() {
 fn rr_015_dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_risk_register_baseline")
+        !toml.contains("sdd_risk_register_baseline")
             && toml.contains("sdd_risk_register_target")
-            && toml.contains("tests/contracts/risk_register.baseline.rs")
+            && !toml.contains("tests/contracts/risk_register.baseline.rs")
             && toml.contains("tests/contracts/risk_register.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

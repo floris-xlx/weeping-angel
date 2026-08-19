@@ -587,8 +587,8 @@ fn expression_is_existence_only(window: &str) -> bool {
 fn iam_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_iam_catalog_baseline")
-            && toml.contains("tests/contracts/iam_catalog.baseline.rs")
+        !toml.contains("sdd_iam_catalog_baseline")
+            && !toml.contains("tests/contracts/iam_catalog.baseline.rs")
             && toml.contains("sdd_iam_catalog_target")
             && toml.contains("tests/contracts/iam_catalog.target.rs"),
         "dual-suite sdd_iam_catalog_baseline + sdd_iam_catalog_target must be listed in root Cargo.toml"

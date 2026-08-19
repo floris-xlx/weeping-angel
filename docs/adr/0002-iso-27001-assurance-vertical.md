@@ -69,7 +69,7 @@ Content modes exist as `FrameworkContentProvider`: `StructuralOnly` | `LicensedC
 
 Reusable library originally shipped as pack-local slivers (`source.branch-protection`, `access.mfa.privileged`, `security.tls`, … in `metadata.toml`). ISO requirement ids (`iso27001:4.1`, `iso27001:a.8.25`, …) mapped **into** that library.
 
-**Superseded for the control library:** ISO remap / [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired those slivers. Mapping `to` values are now catalog IDs (`control.identity.*`, landed `control.source.*`). Pack `metadata.toml` is annotations only.
+**Superseded for the control library:** ISO remap / [ADR 0003 remap](0027-iso27001-canonical-remap.md) retired those slivers. Mapping `to` values are now catalog IDs (`control.identity.*`, landed `control.source.*`). Pack `metadata.toml` is annotations only.
 
 `Mapping` on `assurance-ir/v1` carries:
 
@@ -93,7 +93,7 @@ Every envelope traces to a `CollectionRun`. Artifacts are digest-addressed (`Evi
 
 `TestExpr` is a closed AST (exists/missing/compare/count/freshness/coverage/boolean combinators/`ManualReview`). No JS/Lua/Python/shell/Rhai/WASM.
 
-Facts are typed `EvidenceValue` on `EvidenceObservation` ([ADR 0003](0003-typed-evidence-canonical-serialization.md)). String `with_fact` remains for collector compatibility and historical digest-stable JSON strings. The evaluator compares stored types (`Integer(2)` is not the string `"2"`). Selectors name evidence type + subject + field + freshness — never a collector id.
+Facts are typed `EvidenceValue` on `EvidenceObservation` ([ADR 0003](0036-typed-evidence-canonical-serialization.md)). String `with_fact` remains for collector compatibility and historical digest-stable JSON strings. The evaluator compares stored types (`Integer(2)` is not the string `"2"`). Selectors name evidence type + subject + field + freshness — never a collector id.
 
 `Effectiveness` is specific: `Effective` | `Ineffective` | `PartiallyEffective` | `NotApplicable` | `NotTested` | `InsufficientEvidence` | `StaleEvidence` | `ManualReviewRequired` | `ExceptionApproved` | `Inconclusive`. Missing/stale/manual-without-attestation still cannot be `Effective`.
 
@@ -114,7 +114,7 @@ Shipped collectors:
 | `LocalCollector` | `collector.local` | Structural local files (`CODEOWNERS`, policy, workflow presence) |
 | `ManualEvidence` | `collector.manual` | Explicit attestation (`attested-by` required; never synthesized) |
 
-**Superseded for newly emitted observations:** [GitHub collector mapping](0003-github-collector-canonical-evidence-mapping.md). `GitHubCollector` now emits IAM/SDLC catalogs `evidence.*` types (plus `inventory.subject` / `inventory.complete`). Historical `source.*` names remain as a mapping-table const for ISO GH-012 / IAM-015; they are not sealed envelopes. HTTP 403 remains `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
+**Superseded for newly emitted observations:** [GitHub collector mapping](0020-github-collector-canonical-evidence-mapping.md). `GitHubCollector` now emits IAM/SDLC catalogs `evidence.*` types (plus `inventory.subject` / `inventory.complete`). Historical `source.*` names remain as a mapping-table const for ISO GH-012 / IAM-015; they are not sealed envelopes. HTTP 403 remains `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
 
 Required GitHub permissions advertised by the descriptor after GitHub collector: `contents:read`, `metadata:read`, `administration:read`, `actions:read`, `members:read`, `security_events:read`.
 
@@ -195,9 +195,9 @@ ACT-001…015 and COL-001…006 remain the spine contract.
 - Spec SSOT: [`docs/specs/iso-27001-automated-assurance-mvp.md`](../specs/iso-27001-automated-assurance-mvp.md)
 - Remap SSOT: [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md)
 - Canonical catalog (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
-- ISO remap onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)
+- ISO remap onto catalog (accepted): [`docs/adr/0027-iso27001-canonical-remap.md`](0027-iso27001-canonical-remap.md)
 - Spine SDD: [`docs/specs/assurance-runtime-spine.md`](../specs/assurance-runtime-spine.md)
 - ADR 0001: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
-- Typed evidence (accepted; supersedes string-only facts): [`docs/adr/0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
+- Typed evidence (accepted; supersedes string-only facts): [`docs/adr/0036-typed-evidence-canonical-serialization.md`](0036-typed-evidence-canonical-serialization.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
 - Concurrent IR (do not own): [`.sdd/artifacts/xylex/weeping-angel-assurance-ir/`](../../.sdd/artifacts/xylex/weeping-angel-assurance-ir/)

@@ -59,44 +59,6 @@ fn check_named<'a>(report: &'a xtask::GuardReport, id: &str) -> &'a xtask::Check
         .unwrap_or_else(|| panic!("missing check {id} in {:?}", report.checks))
 }
 
-fn remaining_stub_debt() -> String {
-    let mut body = String::from("schema = \"weeping-angel/debt-register/v1\"\n");
-    for id in REMAINING_STUBS {
-        body.push_str(&format!(
-            r#"
-[[finding]]
-id = "DEBT-GUARD-{id}"
-title = "stub"
-status = "open"
-summary = "skip with live debt"
-owner = "fixture"
-introduced = "2026-08-19"
-severity = "medium"
-remediation = "product-semantic check owned by Prompts 2/3"
-repository_guard = "{id}"
-skip_check = "{id}"
-expires = "2027-12-31"
-"#
-        ));
-    }
-    body.push_str(
-        r#"
-[[finding]]
-id = "DEBT-DUP-ADR"
-title = "duplicate adr prefixes"
-status = "confirmed"
-summary = "historical prefix collisions"
-owner = "fixture"
-introduced = "2026-08-19"
-severity = "medium"
-remediation = "pin historical files"
-repository_guard = "14"
-review_by = "2027-12-31"
-"#,
-    );
-    body
-}
-
 fn architecture_toml_with_kinds() -> &'static str {
     r#"schema = "weeping-angel/architecture/v1"
 
@@ -260,21 +222,7 @@ edition = "2024"
         forbidden_patterns_toml(),
     )
     .unwrap();
-    fs::write(
-        root.join("crates/weeping-angel-assurance/src/readiness.rs"),
-        "",
-    )
-    .unwrap();
-    fs::write(
-        root.join("crates/weeping-angel-assurance/src/temporal.rs"),
-        "",
-    )
-    .unwrap();
-    fs::write(
-        root.join("crates/weeping-angel-assurance/src/lineage.rs"),
-        "",
-    )
-    .unwrap();
+    seed_product_law_sources(root);
     fs::write(root.join("src/main.rs"), "").unwrap();
     fs::write(root.join("src/cli.rs"), "").unwrap();
     fs::write(
@@ -299,8 +247,8 @@ depends_on = []
     fs::write(
         root.join("architecture/adr-identity.toml"),
         r#"schema = "weeping-angel/adr-identity/v1"
-grandfathered_debt = "DEBT-DUP-ADR"
-grandfathered_prefixes = ["0003", "0005", "0007", "0008"]
+grandfathered_debt = ""
+grandfathered_prefixes = []
 grandfathered_files = []
 "#,
     )
@@ -321,7 +269,74 @@ successor = ""
     .unwrap();
     fs::write(root.join("frameworks/iso-27001/2022/pack.toml"), "").unwrap();
     fs::write(root.join("catalog/canonical/v1/catalog.toml"), "").unwrap();
-    fs::write(root.join("docs/debt/register.toml"), remaining_stub_debt()).unwrap();
+    fs::write(
+        root.join("docs/debt/register.toml"),
+        resolved_product_debt(),
+    )
+    .unwrap();
+}
+
+fn seed_product_law_sources(root: &Path) {
+    fs::create_dir_all(root.join("crates/weeping-angel-canonical-catalog/src")).unwrap();
+    fs::create_dir_all(root.join("crates/weeping-angel-framework/src")).unwrap();
+    fs::create_dir_all(root.join("crates/weeping-angel-evidence/src")).unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-canonical-catalog/src/lib.rs"),
+        "pub struct CanonicalCatalog;\nimpl CanonicalCatalog { pub fn load() {} }\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-framework/src/lib.rs"),
+        "pub enum PackError {}\npub struct FrameworkPackDigest;\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-assurance/src/readiness.rs"),
+        "pub fn project_readiness() {}\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-assurance/src/temporal.rs"),
+        "",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-assurance/src/lineage.rs"),
+        "pub fn replay_assessment() {}\npub fn project_soa_from_snapshot() {}\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-assurance/src/lib.rs"),
+        "pub fn project_readiness() {}\npub fn replay_assessment() {}\npub fn project_soa_from_snapshot() {}\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("crates/weeping-angel-evidence/src/lib.rs"),
+        "pub fn current() {}\npub fn as_of() {}\npub fn latest() {}\n",
+    )
+    .unwrap();
+}
+
+fn resolved_product_debt() -> String {
+    let mut body = String::from("schema = \"weeping-angel/debt-register/v1\"\n");
+    for id in REMAINING_STUBS {
+        body.push_str(&format!(
+            r#"
+[[finding]]
+id = "DEBT-GUARD-{id}"
+title = "implemented"
+status = "resolved"
+summary = "product-law check is a real ArchitectureCheck"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "Guard {id} evaluates product surfaces"
+repository_guard = "{id}"
+regression_tests = ["sdd_architectural_cleanup_target"]
+"#
+        ));
+    }
+    body
 }
 
 fn xtask_bin() -> Command {
@@ -425,7 +440,7 @@ fn acp_t03_guard_04_evaluates_every_invariant_and_passes_on_valid_fixture() {
     let rendered = report.render();
     assert!(
         !report.failed(),
-        "increment-2 fixture must be green (04/14/15 pass, remaining stubs skip): {rendered}"
+        "increment-2 fixture must be green (01–15 pass): {rendered}"
     );
     assert_eq!(
         check_named(&report, "04").status,
@@ -441,12 +456,11 @@ fn acp_t03_guard_04_evaluates_every_invariant_and_passes_on_valid_fixture() {
         );
     }
     for id in REMAINING_STUBS {
-        match &check_named(&report, id).status {
-            CheckStatus::Skip { debt_id } => {
-                assert_eq!(debt_id, &format!("DEBT-GUARD-{id}"));
-            }
-            other => panic!("remaining stub {id} must skip-with-debt, got {other:?}"),
-        }
+        assert_eq!(
+            check_named(&report, id).status,
+            CheckStatus::Pass,
+            "product-law check {id} must pass on the seeded fixture: {rendered}"
+        );
     }
 }
 
@@ -708,9 +722,10 @@ fn acp_t11_guard_report_is_structured() {
     let report = run_guard(dir.path());
     let rendered = report.render();
     for id in REMAINING_STUBS {
-        assert!(
-            rendered.contains(&format!("skip(DEBT-GUARD-{id})")),
-            "skip must cite live debt id DEBT-GUARD-{id}: {rendered}"
+        assert_eq!(
+            check_named(&report, id).status,
+            CheckStatus::Pass,
+            "product-law check {id} must pass: {rendered}"
         );
     }
 }
@@ -751,10 +766,10 @@ fn acp_t13_cli_check_09_runs_named_check() {
         "--check 09 must run check 09: {combined}"
     );
     assert!(
-        combined.contains("skip(DEBT-GUARD-09)")
-            || combined.contains("DEBT-GUARD-09")
-            || combined.contains("not-yet-implemented: check 09"),
-        "check 09 must skip-with-debt or fail closed, never silent: {combined}"
+        output.status.success()
+            && (combined.contains("09  temporal-evidence-selection  pass")
+                || combined.contains("\"id\":\"09\"")),
+        "check 09 must pass as a real ArchitectureCheck: {combined}"
     );
     assert!(
         !combined.contains("01  architecture-manifest  pass")
@@ -802,12 +817,11 @@ fn acp_t15_live_guard_04_passes_remaining_stubs_skip() {
         "check 04 must be evaluated pass, not skip(DEBT-GUARD-04): {rendered}"
     );
     for id in REMAINING_STUBS {
-        match &check_named(&report, id).status {
-            CheckStatus::Skip { debt_id } => {
-                assert_eq!(debt_id, &format!("DEBT-GUARD-{id}"));
-            }
-            other => panic!("live stub {id} must skip(DEBT-GUARD-{id}), got {other:?}"),
-        }
+        assert_eq!(
+            check_named(&report, id).status,
+            CheckStatus::Pass,
+            "live product-law check {id} must pass: {rendered}"
+        );
     }
     for id in ["01", "02", "03", "13", "14", "15"] {
         assert_eq!(check_named(&report, id).status, CheckStatus::Pass);
@@ -855,9 +869,10 @@ fn acp_t16_debt_guard_04_resolved_with_proof() {
 fn acp_t17_dual_suite_lives_under_xtask_tests() {
     let xtask_tests = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
     assert!(
-        xtask_tests
+        !xtask_tests
             .join("sdd_architectural_cleanup_baseline.rs")
-            .is_file()
+            .exists(),
+        "superseded xtask baseline suite must be deleted"
     );
     assert!(
         xtask_tests

@@ -848,11 +848,11 @@ fn sdlc_001_catalog_tree_lists_and_loads_sdlc_files() {
     let baseline = harness_relpath("baseline");
     let target = harness_relpath("target");
     assert!(
-        text_has(&cargo, "sdd_sdlc_catalog_baseline")
-            && text_has(&cargo, &baseline)
+        !text_has(&cargo, "sdd_sdlc_catalog_baseline")
+            && !text_has(&cargo, &baseline)
             && text_has(&cargo, "sdd_sdlc_catalog_target")
             && text_has(&cargo, &target),
-        "SDLC-001: dual-suite must be listed in root Cargo.toml"
+        "SDLC-001: target suite listed; superseded baseline deleted"
     );
 }
 

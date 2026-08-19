@@ -10,11 +10,11 @@
 | Prior abort notes | [`.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md`](../../.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md) |
 | Dual-suite | `sdd_sdlc_catalog_target` GREEN (SDLC-001…016); `sdd_sdlc_catalog_baseline` superseded (`#[ignore]`) |
 | Transition | **replacement** (IAM pattern): baseline `#[ignore = "superseded by sdd_sdlc_catalog_target"]` |
-| ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — pointer-only |
 | Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
-| IAM pattern (do not overwrite) | [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) + [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) + `tests/contracts/iam_catalog.{baseline,target}.rs` |
+| IAM pattern (do not overwrite) | [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) + [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md) + `tests/contracts/iam_catalog.{baseline,target}.rs` |
 | Spine / ISO law | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | Product manager | Cargo (`pnpm` is `apps/docs` only) |
@@ -486,7 +486,7 @@ Suggested target assertion clusters (titles include the id):
 ### 4.10 Documentation after implement
 
 - This file’s landed-record section (§12).
-- Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired).
+- Accepted [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md) (draft filename retired).
 - Pointer on [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (family exists after TOML lands).
 - Pointer-only mention on catalog infrastructure SSOT. Do not overwrite catalog infrastructure / 04 SSOTs.
 
@@ -515,7 +515,7 @@ Testable. Implementation is out of this spec phase.
 15. IAM family and catalog-infrastructure fixture IDs remain; `sdd_iam_catalog_target` and `sdd_canonical_assurance_catalog_target` stay green.
 16. catalog infrastructure SSOT `docs/specs/canonical-assurance-catalog-v1.md` is pointer-only (not overwritten as domain SSOT); this file is the SDLC slice SSOT.
 17. A GitHub, GitLab, or Bitbucket collector could independently populate the same evidence contracts and receive the same control results (no GitHub-native object names in canonical IDs).
-18. After implement, public contract `docs/specs/assurance-runtime.md` names the landed SDLC family; ADR is accepted at [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (no `-draft`).
+18. After implement, public contract `docs/specs/assurance-runtime.md` names the landed SDLC family; ADR is accepted at [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md) (no `-draft`).
 
 ---
 
@@ -592,7 +592,7 @@ cargo test --workspace --features demo
 
 Architecture / public-contract decision: SDLC content is a **canonical catalog family** (`control.source.*` / `control.cicd.*` / `control.release.*` / `control.supply-chain.*`) consumed later by framework mappings, not an ISO-pack extension and not a GitHub-specific catalog.
 
-Accepted: [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md).
+Accepted: [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md).
 
 ---
 
@@ -651,7 +651,7 @@ note         = catalog infrastructure through IAM landed (catalog fixture + IAM 
 | Loader / digest | catalog infrastructure crate; no SDLC-specific load path |
 | Target suite | `tests/contracts/sdlc_catalog.target.rs` (`sdd_sdlc_catalog_target`) GREEN SDLC-001…016 |
 | Baseline suite | `tests/contracts/sdlc_catalog.baseline.rs` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired) |
+| ADR | Accepted [`docs/adr/0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md) (draft filename retired) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) names the family and evidence types |
 | ISO pack | This slice did not rewrite pack-local `source.*` rows. ISO remap remapped A.8.25 / A.8.26 onto catalog `control.source.*` ([remap §13](iso-27001-canonical-remap.md#13-implement-log)). |
 | Collectors | This slice did not expand GitHub/GitLab/Bitbucket. GitHub collector later emits these contracts ([`github-collector.md`](github-collector.md)). |

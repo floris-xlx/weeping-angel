@@ -875,9 +875,9 @@ fn p09_t16_fail_closed_missing_control_test_snapshot() {
 fn p09_t17_dual_suite_binaries_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_residual_risk_baseline")
+        !toml.contains("sdd_residual_risk_baseline")
             && toml.contains("sdd_residual_risk_target")
-            && toml.contains("tests/contracts/residual_risk.baseline.rs")
+            && !toml.contains("tests/contracts/residual_risk.baseline.rs")
             && toml.contains("tests/contracts/residual_risk.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

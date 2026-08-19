@@ -898,8 +898,8 @@ fn scp_t14_additive_generic_kinds_without_provider_schemas() {
 fn scp_t15_dual_suite_and_spec_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("name = \"sdd_scope_engine_baseline\"")
-            && toml.contains("path = \"tests/contracts/scope_engine.baseline.rs\"")
+        !toml.contains("name = \"sdd_scope_engine_baseline\"")
+            && !toml.contains("path = \"tests/contracts/scope_engine.baseline.rs\"")
             && toml.contains("name = \"sdd_scope_engine_target\"")
             && toml.contains("path = \"tests/contracts/scope_engine.target.rs\""),
         "scope engine dual-suite must be explicitly listed (tests/contracts is not auto-discovered)"

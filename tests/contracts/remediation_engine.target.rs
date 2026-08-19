@@ -608,8 +608,8 @@ fn re_011_additive_assessment() {
 fn re_012_dual_suite_registered() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
-        cargo.contains("sdd_remediation_engine_baseline")
-            && cargo.contains("tests/contracts/remediation_engine.baseline.rs"),
+        !cargo.contains("sdd_remediation_engine_baseline")
+            && !cargo.contains("tests/contracts/remediation_engine.baseline.rs"),
         "baseline suite must stay listed"
     );
     assert!(

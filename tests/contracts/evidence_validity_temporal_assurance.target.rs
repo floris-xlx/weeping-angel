@@ -21,9 +21,9 @@ fn dual_suite_target_is_registered() {
         "target suite must be listed in root Cargo.toml"
     );
     assert!(
-        manifest_dir()
+        !manifest_dir()
             .join("tests/contracts/evidence_validity_temporal_assurance.baseline.rs")
-            .is_file(),
-        "baseline characterization file must exist beside this target harness"
+            .exists(),
+        "superseded baseline must be deleted"
     );
 }

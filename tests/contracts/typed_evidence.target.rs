@@ -1,7 +1,7 @@
 //! Target suite for typed evidence + canonical serialization (typed evidence).
 //!
 //! Encodes DESIRED behavior in `docs/specs/typed-evidence.md` §4 / §6.2 and
-//! `docs/adr/0003-typed-evidence-canonical-serialization.md`. Must stay RED on
+//! `docs/adr/0036-typed-evidence-canonical-serialization.md`. Must stay RED on
 //! the current string-bag / `parse_fact` HEAD. Do not weaken these assertions
 //! to match today's model, and do not implement the feature in this suite.
 

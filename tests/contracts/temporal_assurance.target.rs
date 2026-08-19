@@ -216,15 +216,15 @@ fn dual_suite_target_is_registered() {
         "target suite must be listed in root Cargo.toml"
     );
     assert!(
-        toml.contains("sdd_temporal_assurance_baseline")
-            && toml.contains("tests/contracts/temporal_assurance.baseline.rs"),
-        "baseline suite must remain registered beside the target"
+        !toml.contains("sdd_temporal_assurance_baseline")
+            && !toml.contains("tests/contracts/temporal_assurance.baseline.rs"),
+        "superseded baseline must be deleted from Cargo.toml"
     );
     assert!(
-        manifest_dir()
+        !manifest_dir()
             .join("tests/contracts/temporal_assurance.baseline.rs")
-            .is_file(),
-        "baseline characterization file must exist beside this target harness"
+            .exists(),
+        "superseded baseline file must be deleted"
     );
 }
 

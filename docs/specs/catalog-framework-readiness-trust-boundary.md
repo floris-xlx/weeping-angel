@@ -10,8 +10,8 @@
 | Extends (do **not** fork) | [`canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md), [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md), [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md) |
 | Program law | [`architectural-cleanup-program.md`](architectural-cleanup-program.md) phases 2, 3, 7, 21 |
 | Documentation architecture | [ADR 0004](../adr/0004-documentation-architecture.md) — this file is the human increment SSOT under `docs/specs/`. Generated traces go to `.sdd/runs/` and `.sdd/artifacts/`. `docs/sdd/` is a stub |
-| ADR | **Accepted** [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) (cite **by path**; unique number **0011**, not another `0003-*`) |
-| Predecessor ADRs (still law) | [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](../adr/0002-iso-27001-assurance-vertical.md), [ADR 0003 catalog](../adr/0003-canonical-assurance-catalog-v1.md), [ADR 0003 remap](../adr/0003-iso27001-canonical-remap.md), [ADR 0010](../adr/0010-architecture-as-law.md) |
+| ADR | **Accepted** [`docs/adr/0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md) (cite **by path**; unique number **0011**, not another `0003-*`) |
+| Predecessor ADRs (still law) | [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](../adr/0002-iso-27001-assurance-vertical.md), [ADR 0003 catalog](../adr/0003-canonical-assurance-catalog-v1.md), [ADR 0003 remap](../adr/0027-iso27001-canonical-remap.md), [ADR 0010](../adr/0010-architecture-as-law.md) |
 | Public contract | [`assurance-runtime.md`](assurance-runtime.md) (untouched unless a documented breaking change is required to close a correctness hole) |
 | IR schema (do not fork) | `assurance-ir/v1` |
 | Catalog schema (do not fork) | `weeping-angel/canonical-catalog/v1` |
@@ -488,7 +488,7 @@ Must prove failure, not degradation:
 
 ## 9. ADR
 
-`adr_needed = true`. **Accepted:** [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+`adr_needed = true`. **Accepted:** [`docs/adr/0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md).
 
 Decisions landed:
 

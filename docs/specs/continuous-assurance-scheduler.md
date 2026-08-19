@@ -76,7 +76,7 @@ Assurance today is a **one-shot** library call (`AssuranceEngineBuilder::assess`
 
 That means:
 
-- a collector failure on the one-shot path used to evaluate an **empty** `EvidenceSet` even when prior valid envelopes existed in-process (closed by [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md); tick reattach was already ledger-backed);
+- a collector failure on the one-shot path used to evaluate an **empty** `EvidenceSet` even when prior valid envelopes existed in-process (closed by [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md); tick reattach was already ledger-backed);
 - `CollectionRun.run_id` is derived from `Utc::now()`, so crash/retry invents a new identity and cannot deduplicate;
 - there is no due/not-due clock, no next-run, no job dependencies, no timeout/jitter contract;
 - CLI has `weeping-angel assurance …` (mostly banner stubs) and **no** `weeping-angel isms` family;
@@ -105,7 +105,7 @@ Pinned at characterization SHA `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a`.
 | `AssessmentContext` | control-test | `{ now, max_age }`. Scheduler supplies `now` from `Clock` and `max_age` from the job freshness policy. Control-test stays network-free and provider-blind. |
 | `evaluate` / `Effectiveness` | control-test | Collectors **never** write these. Stale prior evidence already maps to `StaleEvidence` when age `> max_age`. |
 | `compare` / `SnapshotDiff` | assurance snapshot | Scheduler Drift step **calls** existing compare on consecutive snapshots. Semantic observations are Prompt 15 `detect_events` / `detect_isms_drift` — do not invent a second catalog here. |
-| `EvidenceCollector` | collector crate | `collect(&scope) -> Result<Vec<EvidenceEnvelope>, _>`. Scheduler calls this. Do not reverse the edge (collectors must not depend on scheduler). |
+| `EvidenceCollector` | collector crate | `collect(&scope) -> Result<Vec<EvidenceEnvelope>, _>`. Scheduler calls this. Do not reverse the edge (collectors must not depend on scheduler). Hexagonal `CollectionEngine` exists in the collector crate ([ADR 0013](../adr/0013-collector-hexagonal-modular-monolith.md)); **do not** rewrite this scheduler onto it (collector Phase 27). |
 | `GitHubCollector::collect_batch` / `backoff` | github module | Collision fence. Scheduler treats GitHub as one `EvidenceCollector`. Do not rewrite mapping or wire HTTP retry as the scheduler contract. |
 | CLI `Commands` / `AssuranceCommand` | `src/cli.rs` | No `Isms` command today. Implement may add `weeping-angel isms run` as a **thin** library call. Cadence, backoff, jitter, next-run **must not** be clap-defined. |
 | Framework crate | `weeping-angel-framework` | Network-free; no scheduler, no collectors. |

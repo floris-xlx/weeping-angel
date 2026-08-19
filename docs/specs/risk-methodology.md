@@ -7,7 +7,7 @@
 | Slice | Canonical risk-methodology IR + deterministic scoring/validation primitives |
 | Dual-suite | `sdd_risk_methodology_baseline` · `sdd_risk_methodology_target` (registered in root [`Cargo.toml`](../../Cargo.toml); directory is **not** auto-discovered) |
 | Contract files | `tests/contracts/risk_methodology.{baseline,target}.rs` |
-| ADR | Accepted [`docs/adr/0005-risk-methodology.md`](../adr/0005-risk-methodology.md) (next unused numeric prefix after 0004; **not** a `0003-*` sibling). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0041-risk-methodology.md`](../adr/0041-risk-methodology.md) (next unused numeric prefix after 0004; **not** a `0003-*` sibling). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (landed Risk methodology section) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md) |
 | Typed evidence | [`docs/specs/typed-evidence.md`](typed-evidence.md) — collectors still emit facts, never ratings |
@@ -632,7 +632,7 @@ After implement: workspace verify GREEN; neighbor targets (`sdd_compliance_ir_ta
 
 ## 9. ADR
 
-This is an architecture/contract decision (crate home, no hardcoded matrix, input/rating split, lock/supersede, decimal law). Accepted: [`docs/adr/0005-risk-methodology.md`](../adr/0005-risk-methodology.md).
+This is an architecture/contract decision (crate home, no hardcoded matrix, input/rating split, lock/supersede, decimal law). Accepted: [`docs/adr/0041-risk-methodology.md`](../adr/0041-risk-methodology.md).
 
 Do not add a `0003-risk-methodology.md` sibling. Catalog-program ADRs share `0003-*`; documentation architecture is `0004`; this is the next unused numeric prefix.
 

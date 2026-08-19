@@ -2,14 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified** — increment 1 not implemented. Baseline `sdd_collector_hexagonal_baseline` characterizes CURRENT monolith (must stay GREEN). Target suite not registered in this characterization slice. This file is the human SSOT. |
+| Status | **Implemented** — increment 1 (Phases 1–6 + facade) GREEN. `sdd_collector_hexagonal_target` is SSOT; baseline skip-superseded. This file is the human SSOT. |
 | Program | Collector hexagonal architecture (30 phases). One coordinated modular-monolith refactor of `weeping-angel-collector`. **Not** a crate split. |
 | Slice | **Increment 1** = Phases **1–6** plus a compile-stable public facade. **Not** phases 7–30. |
 | Characterization | Workspace HEAD `0015f6395e7ead042e3cfd3066fefde3d39aa36b` (`main`, 2026-08-20) plus current collector crate sources (inspected before any hexagonal product change). |
-| Dual-suite | `sdd_collector_hexagonal_baseline` at `tests/contracts/collector_hexagonal.baseline.rs` (registered; GREEN on current monolith). Register `sdd_collector_hexagonal_target` at **implement** (`tests/contracts/collector_hexagonal.target.rs`). **Do not** create `tests/sdd/`. |
+| Dual-suite | `sdd_collector_hexagonal_target` GREEN. `sdd_collector_hexagonal_baseline` skip-superseded. **Do not** create `tests/sdd/`. |
 | Neighbor (must stay GREEN throughout) | `sdd_github_collector_target` (`ghc_000`–`ghc_024`). Do **not** weaken `ghc_*`. Baseline `sdd_github_collector_baseline` stays superseded/`#[ignore]`. |
-| ADR | **Draft** [`docs/adr/0013-collector-hexagonal-modular-monolith.md`](../adr/0013-collector-hexagonal-modular-monolith.md). Unique number **0013** (0011/0012 already used). Do **not** mint `0011-*`. Do **not** add another `0003-*`. Accept at implement when target is GREEN. |
-| Evidence-contract SSOT (do **not** overwrite) | [`github-collector.md`](github-collector.md) + [ADR 0003 GitHub mapping](../adr/0003-github-collector-canonical-evidence-mapping.md) |
+| ADR | **Accepted** [`docs/adr/0013-collector-hexagonal-modular-monolith.md`](../adr/0013-collector-hexagonal-modular-monolith.md). Unique number **0013** (0011/0012 already used). Do **not** mint `0011-*`. Do **not** add another `0003-*`. |
+| Evidence-contract SSOT (do **not** overwrite) | [`github-collector.md`](github-collector.md) + [ADR 0003 GitHub mapping](../adr/0020-github-collector-canonical-evidence-mapping.md) |
 | Public collector trait contract | [`assurance-runtime.md`](assurance-runtime.md) (COL-001…006 remain law). This spec does not rewrite that table. |
 | Spine / ISO law | [`assurance-runtime-spine.md`](assurance-runtime-spine.md), [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Scheduler (consume, do not rewrite) | [`continuous-assurance-scheduler.md`](continuous-assurance-scheduler.md), [ADR 0005](../adr/0005-continuous-assurance-scheduler.md) |
@@ -20,7 +20,7 @@
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Crate | one Cargo package: `crates/weeping-angel-collector` (`publish = false`) |
-| `adr_needed` | **true** — observation vs envelope ownership, instance vs type, hexagonal module law inside one crate |
+| `adr_needed` | **landed** — [`0013-collector-hexagonal-modular-monolith.md`](../adr/0013-collector-hexagonal-modular-monolith.md) **Accepted** (observation vs envelope ownership, instance vs type, hexagonal module law inside one crate) |
 | Workspace verify (after implement) | `cargo test -p weeping-angel-collector`; `cargo test --test sdd_github_collector_target`; `cargo test --test sdd_collector_hexagonal_target`; `cargo fmt --all -- --check`; `cargo check -p weeping-angel-collector --all-targets`; `cargo check --workspace` |
 
 This document is the durable human SSOT for the **full hexagonal collector program** and for **increment 1 acceptance**. It owns:
@@ -54,7 +54,7 @@ Prompts 1–4 run concurrently. This increment may change **only** the trees bel
 | --- | --- |
 | Collector crate internals | `crates/weeping-angel-collector/**` |
 | This program spec | `docs/specs/collector-hexagonal.md` (**new**; do not overwrite `github-collector.md`) |
-| Draft → accepted ADR 0013 | `docs/adr/0013-collector-hexagonal-modular-monolith.md` |
+| Accepted ADR 0013 | `docs/adr/0013-collector-hexagonal-modular-monolith.md` |
 | Hexagonal dual-suite (new files) | `tests/contracts/collector_hexagonal.{baseline,target}.rs` + root `Cargo.toml` `[[test]]` rows `sdd_collector_hexagonal_{baseline,target}` |
 | Tiny re-exports | only if scheduler/assurance need **compile-stable public names** (`EvidenceCollector`, `GitHubCollector`, `LocalCollector`, `CollectorScope`, `CollectionRequest`, `CollectionBatch`, `CollectorError`, `CollectorDescriptor`, `CollectorCapabilities`) |
 
@@ -127,9 +127,9 @@ Assurance-runtime executable tests **COL-001…006** (`sdd_assurance_runtime_tar
 
 ---
 
-## 3. Current behavior (baseline — GREEN on CURRENT code)
+## 3. Characterization (pre-increment 1)
 
-§3 is characterization of HEAD `0015f63…` **before hexagonal product changes**. Executable characterization must live in `sdd_collector_hexagonal_baseline` and **PASS on current sources**. Target suite is **RED** on the same tree.
+§3 is characterization of HEAD `0015f63…` **before hexagonal product changes**. It is not a description of the crate after increment 1. Executable characterization lived in `sdd_collector_hexagonal_baseline` (now skip-superseded). `sdd_collector_hexagonal_target` is SSOT for the hexagonal layout.
 
 ### 3.1 Package and layout
 
@@ -359,6 +359,32 @@ Failures become `CollectorError` and/or `CollectionBatch.errors` strings **compa
 
 Protocol: spec (this file, no product feature code) → baseline GREEN on current code → target RED → implement → ADR 0013 accept → target GREEN → supersede baseline (`#[ignore]`) → target still GREEN. `sdd_github_collector_target` GREEN **throughout**.
 
+### 4.9 As implemented (increment 1)
+
+Shipped in `crates/weeping-angel-collector` as **one** Cargo package. `src/lib.rs` is a facade (`pub mod` + `pub use`). GitHub sources stay under `src/github/` (`github_src()`). `src/adapters/` re-exports GitHub, local, and fixture.
+
+| Layer | On disk | Role |
+| --- | --- | --- |
+| Domain | `src/domain/{capabilities,descriptor,scope,collector,observation,coverage,diagnostic,batch,cursor,instance}.rs` | Types only. `CollectorCapabilities` eight bools and `CollectorDescriptor` fields preserved. No `CollectorId` newtype. |
+| Ports | `src/ports/adapter.rs` | `CollectorAdapter::collect_observations` → `ObservationBatch`. Never seals. |
+| Application | `src/application/{engine,registry,gate,envelope}.rs` | `CollectionRequest` → registry/adapter → `ObservationGate` → `EnvelopeFactory` → `CollectionBatch`. |
+| Adapters | `src/github/`, `src/local/`, `src/adapters/fixture.rs` | Emit `ObservationCandidate`. `normalize.rs::emit` returns a candidate. |
+
+**Seal site:** only `EnvelopeFactory` constructs `EvidenceProvenance { collector_id, collected_at, scope, asset }` and calls `EvidenceEnvelope::seal`. Provenance `collector_id` is the **type** id (`collector.github` / `collector.local` / `collector.manual`), not the instance id.
+
+**Instance vs type (compatibility constructors):**
+
+| Adapter | Type id | Default instance id | Credential |
+| --- | --- | --- | --- |
+| `GitHubCollector` | `collector.github` | `github:default` | `CredentialRef("github:default")` on the instance. `GitHubCollector::new(token)` still wires `GitHubClient.token` (Phase 13+). |
+| `LocalCollector` | `collector.local` | `local:default` | `CredentialRef("local:default")` |
+| `ManualEvidence` | `collector.manual` | `manual:default` | Builds a candidate, then `EnvelopeFactory::seal_candidate`. |
+| `FixtureCollector` | caller `id` | `fixture:{id}` | `CredentialRef("fixture:{id}")`. Fixed collected_at `(2026, 8, 18, 12, 0, 0)` (COL-004). |
+
+Public facade still compiles: `use weeping_angel_collector::{EvidenceCollector, GitHubCollector, LocalCollector}`. `GitHubCollector::collect_batch` delegates to `CollectionEngine`. `CollectionBatch.errors` remains `Vec<String>`. `ObservationBatch.diagnostics` is also `Vec<String>` this increment (`CollectionDiagnostic` exists internally, unused on the public batch). `CollectionCoverage { hole, strict_scope }` is internal to observation batches; it does not change public `CollectionBatch`.
+
+`ObservationGate` rejects undeclared types, `control_test_result` / effectiveness types, compliance-claim narratives, credential-shaped fact keys, and out-of-scope assets when `coverage.strict_scope`. 403≠false remains GitHub adapter law (diagnostics, not `protected=false`).
+
 ---
 
 ## 5. Hard invariants (collectors MAY / MUST NOT)
@@ -456,8 +482,8 @@ These IDs are for later `architecture.toml` + xtask (Phases 24–25). They must 
 2. Write `tests/contracts/collector_hexagonal.baseline.rs` + register `sdd_collector_hexagonal_baseline`. **GREEN on current monolith.**
 3. Write `tests/contracts/collector_hexagonal.target.rs` + register `sdd_collector_hexagonal_target`. **RED on current code.**
 4. Implement Phases 1–6 + facade in `crates/weeping-angel-collector` only.
-5. Accept ADR 0013.
-6. Target GREEN. Supersede baseline with `#[ignore = "superseded by sdd_collector_hexagonal_target"]`.
+5. Accept ADR 0013 — **done** (`docs/adr/0013-collector-hexagonal-modular-monolith.md`).
+6. Target GREEN. Supersede baseline with `#[ignore = "superseded by sdd_collector_hexagonal_target"]` — **done**.
 7. Re-run target; still GREEN. `sdd_github_collector_target` GREEN throughout.
 
 Do not rewrite `github_collector.target.rs` semantics. New hexagonal assertions belong in the new files.
@@ -516,29 +542,29 @@ Do not rewrite `github_collector.target.rs` semantics. New hexagonal assertions 
 
 Testable:
 
-- [ ] Crate is still one Cargo package `weeping-angel-collector`.
-- [ ] `domain/`, `application/`, `ports/`, `adapters/` exist; `lib.rs` is a facade.
-- [ ] Domain modules listed in Phase 1 exist; capabilities 8 fields and descriptor fields preserved; no forced `CollectorId` newtypes.
-- [ ] GitHubCollector / normalizer does not construct `EvidenceEnvelope` or `EvidenceProvenance`.
-- [ ] GitHubCollector does not know ISO 27001 (existing `ghc_024` source law).
-- [ ] GitHubCollector returns observation candidates internally; `CollectionEngine` / `EnvelopeFactory` seal envelopes.
-- [ ] `ObservationGate` validates adapter output (defense in depth with `EvidenceEnvelope::seal`).
-- [ ] Collector instance distinct from collector type; credentials on the instance are refs, not secrets.
-- [ ] `use weeping_angel_collector::{EvidenceCollector, GitHubCollector, LocalCollector}` still works; `GitHubCollector::collect_batch` compile-stable.
-- [ ] `sdd_github_collector_target` GREEN; no evidence ID / mapping / behavior change.
-- [ ] `sdd_collector_hexagonal_target` GREEN; baseline superseded after target GREEN.
-- [ ] `cargo fmt --all -- --check`
-- [ ] `cargo test -p weeping-angel-collector`
-- [ ] `cargo test --test sdd_github_collector_target`
-- [ ] `cargo test --test sdd_collector_hexagonal_target`
-- [ ] `cargo check --workspace`
+- [x] Crate is still one Cargo package `weeping-angel-collector`.
+- [x] `domain/`, `application/`, `ports/`, `adapters/` exist; `lib.rs` is a facade.
+- [x] Domain modules listed in Phase 1 exist; capabilities 8 fields and descriptor fields preserved; no forced `CollectorId` newtypes.
+- [x] GitHubCollector / normalizer does not construct `EvidenceEnvelope` or `EvidenceProvenance`.
+- [x] GitHubCollector does not know ISO 27001 (existing `ghc_024` source law).
+- [x] GitHubCollector returns observation candidates internally; `CollectionEngine` / `EnvelopeFactory` seal envelopes.
+- [x] `ObservationGate` validates adapter output (defense in depth with `EvidenceEnvelope::seal`).
+- [x] Collector instance distinct from collector type; credentials on the instance are refs, not secrets.
+- [x] `use weeping_angel_collector::{EvidenceCollector, GitHubCollector, LocalCollector}` still works; `GitHubCollector::collect_batch` compile-stable.
+- [x] `sdd_github_collector_target` GREEN; no evidence ID / mapping / behavior change.
+- [x] `sdd_collector_hexagonal_target` GREEN; baseline superseded after target GREEN.
+- [x] `cargo fmt --all -- --check`
+- [x] `cargo test -p weeping-angel-collector`
+- [x] `cargo test --test sdd_github_collector_target`
+- [x] `cargo test --test sdd_collector_hexagonal_target`
+- [x] `cargo check --workspace`
 
 ---
 
 ## 14. Related
 
 - Evidence contract: [`github-collector.md`](github-collector.md)
-- Draft decision: [`docs/adr/0013-collector-hexagonal-modular-monolith.md`](../adr/0013-collector-hexagonal-modular-monolith.md)
+- Decision: Accepted [`docs/adr/0013-collector-hexagonal-modular-monolith.md`](../adr/0013-collector-hexagonal-modular-monolith.md)
 - Public trait: [`assurance-runtime.md`](assurance-runtime.md)
 - Scheduler: [`continuous-assurance-scheduler.md`](continuous-assurance-scheduler.md)
 - Docs layout: [ADR 0004](../adr/0004-documentation-architecture.md)

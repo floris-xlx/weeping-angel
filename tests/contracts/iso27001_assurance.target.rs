@@ -319,8 +319,8 @@ fn report_contains_forbidden_claim(text: &str) -> bool {
 fn dual_suite_is_registered_in_root_cargo_toml() {
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        cargo.contains("sdd_iso27001_assurance_baseline")
-            && cargo.contains("tests/contracts/iso27001_assurance.baseline.rs")
+        !cargo.contains("sdd_iso27001_assurance_baseline")
+            && !cargo.contains("tests/contracts/iso27001_assurance.baseline.rs")
             && cargo.contains("sdd_iso27001_assurance_target")
             && cargo.contains("tests/contracts/iso27001_assurance.target.rs"),
         "root Cargo.toml must register the dual-suite (tests/contracts is not auto-discovered)"

@@ -21,3 +21,13 @@ guard_check = "13"
 id = "INV-INVARIANTS-EVALUATED"
 summary = "Every [[invariant]] is evaluated against RepositoryModel; skip is illegal without a live debt id"
 guard_check = "04"
+
+[[invariant]]
+id = "INV-ADR-NAMESPACE-UNIQUE"
+summary = "Every ADR markdown file has a unique NNNN prefix"
+guard_check = "14"
+
+[[invariant]]
+id = "INV-NO-SUPERSEDED-BASELINES"
+summary = "Superseded *.baseline.rs suites are deleted, not ignored"
+guard_check = "13"

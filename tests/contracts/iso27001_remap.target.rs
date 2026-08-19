@@ -439,15 +439,15 @@ rationale = "target-suite mapping row"
 fn iso_r_000_dual_suite_remains_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_iso27001_remap_baseline")
+        !toml.contains("sdd_iso27001_remap_baseline")
             && toml.contains("sdd_iso27001_remap_target")
-            && toml.contains("tests/contracts/iso27001_remap.baseline.rs")
+            && !toml.contains("tests/contracts/iso27001_remap.baseline.rs")
             && toml.contains("tests/contracts/iso27001_remap.target.rs"),
         "ISO-R: dual-suite sdd_iso27001_remap_{{baseline,target}} must stay registered"
     );
     assert!(
         toml.contains("sdd_iso27001_assurance_target")
-            && toml.contains("sdd_iso27001_assurance_baseline"),
+            && !toml.contains("sdd_iso27001_assurance_baseline"),
         "ISO-R: must not reuse or delete the MVP iso27001_assurance dual-suite"
     );
     assert!(

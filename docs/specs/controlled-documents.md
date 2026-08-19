@@ -7,7 +7,7 @@
 | Source prompt | [`docs/prompts/operational-isms-v1/12-controlled-documents.md`](../prompts/operational-isms-v1/12-controlled-documents.md) |
 | Slice | Immutable versioned `ControlledDocument` registry with governance metadata and evaluation-at-time-T helpers. No document editor. |
 | Dual-suite | `sdd_controlled_documents_baseline` · `sdd_controlled_documents_target` (`tests/contracts/controlled_documents.{baseline,target}.rs`) — **not auto-discovered**; listed `[[test]]` in root [`Cargo.toml`](../../Cargo.toml). Target CD-001–014 GREEN; baseline CD-B001/B002 skip-superseded. |
-| ADR | Accepted [`docs/adr/0003-controlled-documents.md`](../adr/0003-controlled-documents.md) (`0003-*` sibling; **0004** is documentation architecture). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0017-controlled-documents.md`](../adr/0017-controlled-documents.md) (`0003-*` sibling; **0004** is documentation architecture). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (pointer only; do not fork the spine) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -511,7 +511,7 @@ Traces only under `.sdd/runs/` and `.sdd/artifacts/`.
 
 ## 9. ADR
 
-**Accepted:** [`docs/adr/0003-controlled-documents.md`](../adr/0003-controlled-documents.md). Filename `0003-*` is shared with catalog-program siblings; **0004** remains documentation architecture. Cite by path.
+**Accepted:** [`docs/adr/0017-controlled-documents.md`](../adr/0017-controlled-documents.md). Filename `0003-*` is shared with catalog-program siblings; **0004** remains documentation architecture. Cite by path.
 
 ---
 
@@ -529,7 +529,7 @@ Tests/docs:
 - `tests/contracts/controlled_documents.target.rs`
 - root `Cargo.toml` `[[test]]` rows
 - `tests/contracts/documentation_layout.rs` `CANONICAL_SPECS`
-- [`docs/adr/0003-controlled-documents.md`](../adr/0003-controlled-documents.md)
+- [`docs/adr/0017-controlled-documents.md`](../adr/0017-controlled-documents.md)
 - public-contract pointer in [`docs/specs/assurance-runtime.md`](assurance-runtime.md)
 
 Do **not** edit catalog TOML, `soa.rs`, residual-risk, control-implementation-registry, GitHub collector, or Kleene evaluator.

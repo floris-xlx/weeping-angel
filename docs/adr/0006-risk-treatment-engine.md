@@ -14,7 +14,7 @@ depends_on = []
 | Status | **Accepted** — `sdd_risk_treatment_target` GREEN (P08-T01–T16); baseline skip-superseded (`#[ignore = "superseded by target suite"]`) |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | The operational reading “`supports_risk_treatment` is only a compile capability and `RiskStatus::Accepted` is a free enum with no evidence.” Does **not** supercede IR schema `assurance-ir/v1`, canonical digest `canon/v1`, ADR 0001 spine, Kleene applicability, [risk methodology scoring](0005-risk-methodology.md), [risk register](0005-operational-risk-register.md) ownership of `Risk`, or residual-risk projection math. |
+| Supercedes | The operational reading “`supports_risk_treatment` is only a compile capability and `RiskStatus::Accepted` is a free enum with no evidence.” Does **not** supercede IR schema `assurance-ir/v1`, canonical digest `canon/v1`, ADR 0001 spine, Kleene applicability, [risk methodology scoring](0041-risk-methodology.md), [risk register](0040-operational-risk-register.md) ownership of `Risk`, or residual-risk projection math. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0004](0004-documentation-architecture.md) |
 | Spec | [`docs/specs/risk-treatment.md`](../specs/risk-treatment.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
@@ -89,7 +89,7 @@ Clockless `AssessmentDefinition::validate()` rejects `Accepted` with **no** acce
 
 v1 stores `TargetResidualRisk::VersionedPlaceholder { methodologyVersion, inputNote? }`. `methodologyVersion` is a non-empty pin string, **not** a rating enum. `score_risk` remains risk methodology; this slice does **not** store `MethodologyScored` and does **not** recompute residual from control tests.
 
-At `Proposed → Approved` the engine records `approved_target_residual_digest`. Completing with a different `canonical_digest` of `targetResidual` fails `TargetResidualMismatch`. Completed ≠ residual zero ([ADR 0003 residual risk](0003-residual-risk.md)).
+At `Proposed → Approved` the engine records `approved_target_residual_digest`. Completing with a different `canonical_digest` of `targetResidual` fails `TargetResidualMismatch`. Completed ≠ residual zero ([ADR 0003 residual risk](0032-residual-risk.md)).
 
 No crate-wide `enum RiskRating { High }`. Collectors must not emit treatment types.
 
@@ -134,7 +134,7 @@ Root `Cargo.toml` lists `sdd_risk_treatment_baseline` / `sdd_risk_treatment_targ
 ## Related
 
 - Spec: [`docs/specs/risk-treatment.md`](../specs/risk-treatment.md)
-- Methodology: [`docs/adr/0005-risk-methodology.md`](0005-risk-methodology.md)
-- Register: [`docs/adr/0005-operational-risk-register.md`](0005-operational-risk-register.md)
-- Residual: [`docs/adr/0003-residual-risk.md`](0003-residual-risk.md)
+- Methodology: [`docs/adr/0041-risk-methodology.md`](0041-risk-methodology.md)
+- Register: [`docs/adr/0040-operational-risk-register.md`](0040-operational-risk-register.md)
+- Residual: [`docs/adr/0032-residual-risk.md`](0032-residual-risk.md)
 - Layout: [ADR 0004](0004-documentation-architecture.md)

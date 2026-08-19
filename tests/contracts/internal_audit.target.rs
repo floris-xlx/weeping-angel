@@ -375,8 +375,8 @@ fn ia_dual_suite_is_registered_and_specified() {
     assert!(
         toml.contains("sdd_internal_audit_target")
             && toml.contains("tests/contracts/internal_audit.target.rs")
-            && toml.contains("sdd_internal_audit_baseline")
-            && toml.contains("tests/contracts/internal_audit.baseline.rs"),
+            && !toml.contains("sdd_internal_audit_baseline")
+            && !toml.contains("tests/contracts/internal_audit.baseline.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );
     let spec = read_repo_file("docs/specs/internal-audit.md");

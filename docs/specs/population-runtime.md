@@ -5,7 +5,7 @@
 | Status | **Implemented** (target GREEN; baseline superseded) |
 | Program | Canonical Assurance Catalog v1 — population runtime |
 | Dual-suite | `sdd_population_runtime_baseline` (superseded placeholder; `#[ignore]`) · `sdd_population_runtime_target` (normative coverage semantics) |
-| ADR | Accepted [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
+| ADR | Accepted [`docs/adr/0034-subject-population-runtime-and-coverage-semantics.md`](../adr/0034-subject-population-runtime-and-coverage-semantics.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (do not fork) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |

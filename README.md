@@ -227,6 +227,8 @@ Start here if you are reading architecture, not running scans:
 - [Assurance runtime](docs/specs/assurance-runtime.md)
 - [Canonical catalog](docs/specs/canonical-assurance-catalog-v1.md)
 - [ISO 27001 vertical](docs/adr/0002-iso-27001-assurance-vertical.md)
+- [Collector hexagonal modular monolith](docs/specs/collector-hexagonal.md) ([ADR 0013](docs/adr/0013-collector-hexagonal-modular-monolith.md))
+- [GitHub collector evidence contract](docs/specs/github-collector.md)
 - [Documentation layout](docs/adr/0004-documentation-architecture.md)
 - [Repository health gate](docs/adr/0009-repository-health-gate.md)
 - [Repository hygiene](docs/specs/repository-hygiene.md)

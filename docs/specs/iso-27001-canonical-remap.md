@@ -9,7 +9,7 @@
 | Dual-suite | `sdd_iso27001_remap_target` GREEN (ISO-R-001…020); `sdd_iso27001_remap_baseline` skip-superseded |
 | Do **not** reuse | `tests/contracts/iso27001_assurance.{baseline,target}.rs` (MVP dual-suite ISO-001…010 / EVD / CTL / GH) |
 | Transition | **replacement** of pack-local control library + ISO special-case load/serialize — landed |
-| ADR | Accepted [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md) |
+| ADR | Accepted [`docs/adr/0027-iso27001-canonical-remap.md`](../adr/0027-iso27001-canonical-remap.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | MVP SSOT (still law for spine/legal/CLI) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), [ADR 0002](../adr/0002-iso-27001-assurance-vertical.md) |
 | Catalog infra | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
@@ -18,7 +18,7 @@
 | SDLC / vuln / infra / governance | Product landed after this SHA. ISO remap mapped identity + landed `control.source.*` only. Governance / vuln / infra catalog IDs exist and stay **unmapped** here (governance catalog does not remap ISO). |
 | Concurrent (do not collide) | GitHub collector [`github-collector.md`](github-collector.md); applicability engine applicability engine (**landed** — consume `weeping-angel-assurance::applicability`, map SoA `Unresolved` ↔ `ManualDeterminationRequired`); assessment lineage [`assessment-lineage.md`](assessment-lineage.md) |
 | Workspace verify | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`; `cargo test --workspace --features demo`; `weeping-angel assurance catalog validate`; `weeping-angel assurance framework validate frameworks/iso-27001/2022`; `cargo test --test sdd_iso27001_remap_target --offline` |
-| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — pack parse / digest / expression / pins; does not remap new Annex A. ADR: [`0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) |
+| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — pack parse / digest / expression / pins; does not remap new Annex A. ADR: [`0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md) |
 
 This document is the durable SSOT for **ISO remap**. It owns ISO 27001:2022 **framework content**, **mappings**, **applicability references**, and **projection integration**. It must **not** redesign canonical controls, provider collectors, the catalog loader, or the control-test evaluator.
 
@@ -442,7 +442,7 @@ Integrate the **generic** applicability engine. Annex A / SoA-oriented output mu
 
 Zero subjects ≠ not applicable unless the rule/context says so.
 
-This remap slice **stops at** generic three-state + justified NA + unresolved representable (ISO-R-009 / golden-7 / golden-8). The operational ISMS-graph SoA (risks, treatments, implementations, owners, review/approval, evidence lineage, snapshot diffs with causes) is **landed** in [`docs/specs/operational-soa.md`](operational-soa.md) / [`docs/adr/0003-operational-soa.md`](../adr/0003-operational-soa.md) (Operational ISMS v1 Prompt 11 — not Canonical Assurance lineage Prompt 11). Live `project_soa(framework, version)` remains a pack-structural convenience (applicable + `notImplemented` when the graph is empty); history is `project_soa_from_snapshot` / `pin_soa_snapshot`. Do **not** rewrite pack requirement/control IDs or mapping `to =` in the operational-SoA slice.
+This remap slice **stops at** generic three-state + justified NA + unresolved representable (ISO-R-009 / golden-7 / golden-8). The operational ISMS-graph SoA (risks, treatments, implementations, owners, review/approval, evidence lineage, snapshot diffs with causes) is **landed** in [`docs/specs/operational-soa.md`](operational-soa.md) / [`docs/adr/0029-operational-soa.md`](../adr/0029-operational-soa.md) (Operational ISMS v1 Prompt 11 — not Canonical Assurance lineage Prompt 11). Live `project_soa(framework, version)` remains a pack-structural convenience (applicable + `notImplemented` when the graph is empty); history is `project_soa_from_snapshot` / `pin_soa_snapshot`. Do **not** rewrite pack requirement/control IDs or mapping `to =` in the operational-SoA slice.
 
 ### 4.7 Readiness projection and language
 
@@ -647,7 +647,7 @@ Testable. Product implementation is out of this spec phase.
 
 `adr_needed = true`. Public contracts change: mapping targets, pack metadata role, loader relation set, SoA input type, lineage catalog digest, generic (non-ISO-special) resolution.
 
-Accepted: [`docs/adr/0003-iso27001-canonical-remap.md`](../adr/0003-iso27001-canonical-remap.md). Public contract updated with the eight relations, catalog-targeted mappings, dual digests, and generic SoA semantics.
+Accepted: [`docs/adr/0027-iso27001-canonical-remap.md`](../adr/0027-iso27001-canonical-remap.md). Public contract updated with the eight relations, catalog-targeted mappings, dual digests, and generic SoA semantics.
 
 ---
 
@@ -698,7 +698,7 @@ ISO 27001:2022 is a clean **framework projection** over the canonical assurance 
 
 Cleanup Prompt 2 **extends** this file for fail-closed pack parse, semantic `FrameworkPackDigest`, lossless catalog expression carry through compile, and pin-pure catalog/pack identity. It does **not** remap additional Annex A clauses or re-own SoA (`soa.rs` is Prompt 3).
 
-Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md).
 
 Closed seams (do not regress):
 

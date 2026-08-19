@@ -910,9 +910,9 @@ fn p07_score_suggestion_is_optional_and_validated() {
 fn p07_dual_suite_registered_and_risk_json_still_decodes() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_risk_identification_baseline")
+        !toml.contains("sdd_risk_identification_baseline")
             && toml.contains("sdd_risk_identification_target")
-            && toml.contains("tests/contracts/risk_identification.baseline.rs")
+            && !toml.contains("tests/contracts/risk_identification.baseline.rs")
             && toml.contains("tests/contracts/risk_identification.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

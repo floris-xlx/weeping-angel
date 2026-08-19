@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — internal audit |
 | Slice | First-class `AuditProgram` / child `Audit` domain: independence metadata, explicit reproducible sampling, immutable evidence snapshot pins, findings, human sign-off |
 | Dual-suite (register at implement, same commit as `.rs`) | `sdd_internal_audit_baseline` · `sdd_internal_audit_target` (`tests/contracts/internal_audit.{baseline,target}.rs`) — **not** auto-discovered; add `[[test]]` in root `Cargo.toml`. `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
-| ADR | Accepted [`docs/adr/0003-internal-audit.md`](../adr/0003-internal-audit.md) |
+| ADR | Accepted [`docs/adr/0025-internal-audit.md`](../adr/0025-internal-audit.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — Internal audit section matches landed APIs |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -652,7 +652,7 @@ Traces only under `.sdd/runs/` and `.sdd/artifacts/`. Do not dump into `docs/sdd
 | `tests/contracts/internal_audit.target.rs` | Normative IA-001–IA-010 |
 | `Cargo.toml` | `[[test]]` `sdd_internal_audit_{baseline,target}` **same commit as `.rs`** |
 | `tests/contracts/documentation_layout.rs` | `CANONICAL_SPECS` includes this file (spec-first) |
-| `docs/adr/0003-internal-audit.md` | Decision (**Accepted**) |
+| `docs/adr/0025-internal-audit.md` | Decision (**Accepted**) |
 
 Do not add a crate. Do not edit collision-fenced paths in §0.
 
@@ -715,6 +715,6 @@ Tests/docs:
 - root `Cargo.toml` `[[test]]` `sdd_internal_audit_{baseline,target}`
 - `tests/contracts/documentation_layout.rs` `CANONICAL_SPECS` includes this file
 - pointer in [`assurance-runtime.md`](assurance-runtime.md)
-- Accepted ADR [`docs/adr/0003-internal-audit.md`](../adr/0003-internal-audit.md)
+- Accepted ADR [`docs/adr/0025-internal-audit.md`](../adr/0025-internal-audit.md)
 
 Not landed: `evidence.governance.internal-audit` fact projection from signed audits; ISO 27007 pack; crate-root re-export of the audit engine.

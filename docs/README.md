@@ -18,3 +18,10 @@ The source tree communicates architecture. Agent execution evidence does not bel
 Do not add successful workflow traces, telemetry JSON, run directories (`sdd-*` / `sdd-sdd-*`), raw `audit.txt` / scan logs, or repository snapshots under `docs/`. Write those under `.sdd/runs/` or `.sdd/artifacts/` so a reader can learn the architecture without paging through tens of thousands of lines of agent evidence.
 
 Layout decision: [`docs/adr/0004-documentation-architecture.md`](adr/0004-documentation-architecture.md). Repository health gate: [`docs/adr/0009-repository-health-gate.md`](adr/0009-repository-health-gate.md). Architecture-as-law (Guard 04 + `RepositoryModel`): [`docs/adr/0010-architecture-as-law.md`](adr/0010-architecture-as-law.md). Repository hygiene (panic budget, schema SSOT, generated artifacts, `.gitignore`): [`docs/adr/0012-repository-hygiene.md`](adr/0012-repository-hygiene.md). Command: `cargo xtask guard [--json] [--check NN] [--explain INV-…]`.
+
+Start here:
+
+- [Assurance runtime](specs/assurance-runtime.md)
+- [Collector hexagonal modular monolith](specs/collector-hexagonal.md) ([ADR 0013](adr/0013-collector-hexagonal-modular-monolith.md)) — crate layout; adapters emit observations; `EnvelopeFactory` seals
+- [GitHub collector](specs/github-collector.md) — evidence IDs, mappings, 403/404 (not crate layout)
+- [Continuous assurance scheduler](specs/continuous-assurance-scheduler.md) — still consumes `EvidenceCollector`

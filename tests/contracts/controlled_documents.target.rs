@@ -673,10 +673,10 @@ fn cd_010_dangling_refs_fail_closed() {
 fn cd_011_dual_suite_registered() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
-        cargo.contains("name = \"sdd_controlled_documents_baseline\""),
+        !cargo.contains("name = \"sdd_controlled_documents_baseline\""),
         "CD-011: baseline suite must be listed"
     );
-    assert!(cargo.contains("path = \"tests/contracts/controlled_documents.baseline.rs\""));
+    assert!(!cargo.contains("path = \"tests/contracts/controlled_documents.baseline.rs\""));
     assert!(
         cargo.contains("name = \"sdd_controlled_documents_target\""),
         "CD-011: target suite must be listed"

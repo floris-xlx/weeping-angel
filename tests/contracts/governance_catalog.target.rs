@@ -868,8 +868,8 @@ fn bound_exception(control: &str, kind: SubjectKind, subject: &str) -> Exception
 fn gov_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_governance_catalog_baseline")
-            && toml.contains("tests/contracts/governance_catalog.baseline.rs")
+        !toml.contains("sdd_governance_catalog_baseline")
+            && !toml.contains("tests/contracts/governance_catalog.baseline.rs")
             && toml.contains("sdd_governance_catalog_target")
             && toml.contains("tests/contracts/governance_catalog.target.rs"),
         "governance catalog dual-suite must be listed in root Cargo.toml (tests/contracts/*.rs is not auto-discovered)"

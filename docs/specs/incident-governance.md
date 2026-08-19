@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — incident governance |
 | Slice | Canonical organizational information-security **incident record** on the existing assets/risks/controls/remediation graph; explicit promotion; first-class post-incident review; no SIEM |
 | Dual-suite | `sdd_incident_governance_baseline` · `sdd_incident_governance_target` (`tests/contracts/incident_governance.{baseline,target}.rs`) — registered in root [`Cargo.toml`](../../Cargo.toml); directory is **not** auto-discovered (I3) |
-| ADR | Accepted [`docs/adr/0003-incident-governance.md`](../adr/0003-incident-governance.md) — 0003-* sibling filename (cite by **path**) |
+| ADR | Accepted [`docs/adr/0023-incident-governance.md`](../adr/0023-incident-governance.md) — 0003-* sibling filename (cite by **path**) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — incident-governance pointer; do not fork the spine |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -642,7 +642,7 @@ Tests/docs:
 - root `Cargo.toml` `[[test]]` rows for both names
 - `tests/contracts/documentation_layout.rs` `CANONICAL_SPECS` includes this file
 - pointer in [`assurance-runtime.md`](assurance-runtime.md)
-- Accepted ADR [`docs/adr/0003-incident-governance.md`](../adr/0003-incident-governance.md)
+- Accepted ADR [`docs/adr/0023-incident-governance.md`](../adr/0023-incident-governance.md)
 
 ---
 

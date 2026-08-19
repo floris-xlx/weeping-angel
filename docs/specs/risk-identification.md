@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — risk identification |
 | Slice | Deterministic `RiskCandidate` discovery + clustering from existing evidence; explicit promotion / dismissal; claim-deny for scanner “risk accepted” / “ISO control failed” |
 | Dual-suite | `sdd_risk_identification_baseline` · `sdd_risk_identification_target` (`tests/contracts/risk_identification.{baseline,target}.rs`) — listed in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0007-risk-identification-candidate-correlation.md`](../adr/0007-risk-identification-candidate-correlation.md) |
+| ADR | Accepted [`docs/adr/0042-risk-identification-candidate-correlation.md`](../adr/0042-risk-identification-candidate-correlation.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -58,7 +58,7 @@ Generated SDD traces belong in [`.sdd/runs/`](../../.sdd/) and [`.sdd/artifacts/
 
 ## 0. Collision fence (concurrent SDD)
 
-Parallel SDD runs landed risk methodology (`docs/specs/risk-methodology.md`, ADR `0005-risk-methodology.md`) and risk register (`docs/specs/risk-register.md`, ADR `0005-operational-risk-register.md`) in the same workspace. Those documents remain SSOT for scoring and the register. This slice **consumes** them. It must not rewrite, fork, or silently invert their contracts.
+Parallel SDD runs landed risk methodology (`docs/specs/risk-methodology.md`, ADR `0041-risk-methodology.md`) and risk register (`docs/specs/risk-register.md`, ADR `0040-operational-risk-register.md`) in the same workspace. Those documents remain SSOT for scoring and the register. This slice **consumes** them. It must not rewrite, fork, or silently invert their contracts.
 
 | Do not touch | Owner |
 | --- | --- |
@@ -700,7 +700,7 @@ Baseline suite encoded the found case in §3 (no `RiskCandidate` symbol; observa
 - `crates/weeping-angel-assurance/src/risk_identification/mod.rs`
 - `crates/weeping-angel-evidence/src/lib.rs` claim-deny needles
 - `tests/contracts/risk_identification.{baseline,target}.rs` + root `Cargo.toml` `[[test]]` rows
-- [`docs/adr/0007-risk-identification-candidate-correlation.md`](../adr/0007-risk-identification-candidate-correlation.md) Accepted
+- [`docs/adr/0042-risk-identification-candidate-correlation.md`](../adr/0042-risk-identification-candidate-correlation.md) Accepted
 
 ---
 

@@ -6,7 +6,7 @@
 | Program | First real ISO 27001 assurance vertical |
 | Dual-suite | Target GREEN (`sdd_iso27001_assurance_target`); baseline superseded (`sdd_iso27001_assurance_baseline`) |
 | ADR | Accepted [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md) |
-| Later fact model | [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md) supersedes string-only observation facts; ISO envelope/ledger invariants stay |
+| Later fact model | [ADR 0003 typed evidence](../adr/0036-typed-evidence-canonical-serialization.md) supersedes string-only observation facts; ISO envelope/ledger invariants stay |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/assurance-runtime.md`](assurance-runtime.md), ADR 0001 |
 | Concurrent IR | Separate program. This vertical **does not own** canonical Compliance IR. |
 | Repository | `floris-xlx/weeping-angel` |
@@ -14,11 +14,11 @@
 | Planning baseline | `8c0f36ed873c51a21aa3e6d377d2fdbc4bb458d7` |
 | Targeted IR revision | `assurance-ir/v1` as shipped on that SHA (`Control` / `Requirement` / `Mapping={direction,completeness}` / framework-owned `Assessment`) |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
-| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — single `project_readiness` owner; does not re-own SoA/lineage. ADR: [`0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) |
+| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — single `project_readiness` owner; does not re-own SoA/lineage. ADR: [`0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md) |
 
 This document is the durable SSOT for the ISO 27001 **MVP** program. The vertical has landed: versioned structural pack, immutable ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA projections, and clap `assurance` family. Later work must not invent a competing IR, a GitHub→ISO shortcut, or certification claims.
 
-**ISO remap remapping** (canonical catalog projection; pack-local slivers retired) is specified separately and **implemented**: [`docs/specs/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13, [ADR](../adr/0003-iso27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
+**ISO remap remapping** (canonical catalog projection; pack-local slivers retired) is specified separately and **implemented**: [`docs/specs/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13, [ADR](../adr/0027-iso27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
 
 ---
 
@@ -141,7 +141,7 @@ Forbidden edges already enforced by ACT-003 / ACT-013:
 
 ### 3.4 Evidence
 
-`EvidenceEnvelope` is `{ observation, provenance, digest }`. Observation facts **on this planning SHA** are `BTreeMap<String, String>`. Provenance is `{ collectorId, collectedAt, scope, asset }`. (Later: [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md) stores `BTreeMap<String, EvidenceValue>`; string `with_fact` remains.)
+`EvidenceEnvelope` is `{ observation, provenance, digest }`. Observation facts **on this planning SHA** are `BTreeMap<String, String>`. Provenance is `{ collectorId, collectedAt, scope, asset }`. (Later: [ADR 0003](../adr/0036-typed-evidence-canonical-serialization.md) stores `BTreeMap<String, EvidenceValue>`; string `with_fact` remains.)
 
 There is **no** persistent ledger, **no** artifact store, **no** collection-run identity, **no** `supersedes` / `validFrom` / `validUntil` / sensitivity / typed values.
 
@@ -632,7 +632,7 @@ Operational ISMS Prompt 11 upgrades this from pack-TOML `assessed` rows into a g
 
 ### Phase 35–36 — Assessment runs and comparison
 
-`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`. assessment lineage adds `canonicalCatalogDigest` and `applicabilitySnapshotId` and makes the run a returned persistable record ([ADR 0003 lineage](../adr/0003-assessment-lineage.md)).
+`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`. assessment lineage adds `canonicalCatalogDigest` and `applicabilitySnapshotId` and makes the run a returned persistable record ([ADR 0003 lineage](../adr/0015-assessment-lineage.md)).
 
 Results are immutable snapshots.
 
@@ -675,7 +675,7 @@ Reuse existing scanner report formatting utilities where safe. Do not duplicate 
 
 ### Phase 40 — Remediation linkage
 
-Canonical type is IR `Remediation` on `AssessmentDefinition.remediations` ([`remediation-engine.md`](remediation-engine.md), [ADR 0003](../adr/0003-remediation-engine.md)). A failed assurance control **may** create/link a remediation via `create_from_control_regression` (Prompt 15 `ControlRegressed` source). `ControlTestResult` remains immutable. Remediation state changes independently. Scanner workbench `RemediationRequest` is not this type. External tickets are adapter refs only.
+Canonical type is IR `Remediation` on `AssessmentDefinition.remediations` ([`remediation-engine.md`](remediation-engine.md), [ADR 0003](../adr/0031-remediation-engine.md)). A failed assurance control **may** create/link a remediation via `create_from_control_regression` (Prompt 15 `ControlRegressed` source). `ControlTestResult` remains immutable. Remediation state changes independently. Scanner workbench `RemediationRequest` is not this type. External tickets are adapter refs only.
 
 ### Phase 41–43 — Pack validation, integrity, compatibility
 
@@ -922,7 +922,7 @@ Library or CLI `assess --framework iso-27001` against the golden fixture (and, w
 
 Cleanup Prompt 2 **extends** Phase 31–33 readiness law: there is **one** implementation of framework requirement-status aggregation, `weeping-angel-assurance::readiness::project_readiness`. Callers invoke it; they do not overlay a second privileged-MFA predicate, invent `"0%"` coverage as status, or serialize by reloading live `catalog/canonical/v1`. `overlay_privileged_mfa_presence` is removed. Snapshot JSON `catalogDigest` is the stored pin from `compiled.catalog_digest`.
 
-Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0046-catalog-framework-digest-and-pin-ownership.md`](../adr/0046-catalog-framework-digest-and-pin-ownership.md).
 
 This increment does **not** re-own SoA (`project_soa` / `soa.rs` — Prompt 3), lineage `serialize_assessment_report` (already pin-pure), collectors, or the control-test evaluator. Evidence remains not framework status; scanner findings remain not compliance results; missing coverage remains not success.
 

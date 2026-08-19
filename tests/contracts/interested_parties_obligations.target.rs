@@ -848,8 +848,10 @@ fn ipo_014_explain_is_deterministic() {
 fn ipo_015_dual_suite_and_schema() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
-        cargo.contains("name = \"sdd_interested_parties_obligations_baseline\"")
+        !cargo.contains("name = \"sdd_interested_parties_obligations_baseline\"")
             && cargo
+                .contains("path = \"tests/contracts/interested_parties_obligations.target.rs\"")
+            && !toml
                 .contains("path = \"tests/contracts/interested_parties_obligations.baseline.rs\"")
             && cargo.contains("name = \"sdd_interested_parties_obligations_target\"")
             && cargo

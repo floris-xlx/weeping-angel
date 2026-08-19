@@ -7,7 +7,7 @@
 | Source prompt | [`docs/prompts/operational-isms-v1/11-operational-soa.md`](../prompts/operational-isms-v1/11-operational-soa.md) |
 | Slice | Upgrade SoA from a static pack-TOML assessment projection into a living, explainable operational-graph record (applicability, treatment, mappings, implementation, exceptions, evidence effectiveness) with immutable snapshots and cause-bearing diffs |
 | Dual-suite | `sdd_operational_soa_baseline` · `sdd_operational_soa_target` (`tests/contracts/operational_soa.{baseline,target}.rs`) — **registered** in root `Cargo.toml` (tests/contracts is **not** auto-discovered) |
-| ADR | Accepted [`docs/adr/0003-operational-soa.md`](../adr/0003-operational-soa.md) (`0003-*` program sibling; `0004` is documentation architecture). Cite by **path** |
+| ADR | Accepted [`docs/adr/0029-operational-soa.md`](../adr/0029-operational-soa.md) (`0003-*` program sibling; `0004` is documentation architecture). Cite by **path** |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Protocol report | [`.sdd/runs/sdd-operational-soa.md`](../../.sdd/runs/sdd-operational-soa.md) (generated; do not commit) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
@@ -506,4 +506,4 @@ Landed in `weeping-angel-assurance::soa` (crate-root re-exports) and `src/assura
 - NA without unexpired approved exception → `missingNaApproval`; expired → `expiredNaApproval`. Pack `A.5.19` stays `NotApplicable`; `A.8.13` stays `Unresolved`.
 - Fail-closed: `MissingRiskTreatment` / `MissingRiskRegister` / `MissingInputDigest` / `MissingApplicabilitySnapshot`. Live `project_soa` does not fail closed for empty treatments.
 - `pin_soa_snapshot` digest = `typed_canonical_digest("soa-snapshot", {schema, frameworkPackDigest, soa})`. History = `project_soa_from_snapshot`. `diff_soa_snapshots` fills `SnapshotDiff.soaCauses`.
-- CLI `assurance soa` prints the not-certification banner then JSON. Dual-suite target GREEN; baseline skip-superseded. ADR [`docs/adr/0003-operational-soa.md`](../adr/0003-operational-soa.md).
+- CLI `assurance soa` prints the not-certification banner then JSON. Dual-suite target GREEN; baseline skip-superseded. ADR [`docs/adr/0029-operational-soa.md`](../adr/0029-operational-soa.md).

@@ -1,11 +1,7 @@
 //! Target suite for collector hexagonal increment 1.
 //!
 //! Encodes DESIRED behavior in `docs/specs/collector-hexagonal.md` §4 / §13
-//! (Phases 1–6 + compatibility facade). Must stay RED on the current
-//! `src/lib.rs` monolith: adapters invent `EvidenceProvenance` and seal
-//! envelopes, no `domain/`/`application/`/`ports/`/`adapters/`, no
-//! `CollectorInstance` / `CollectionEngine` / `ObservationGate` /
-//! `EnvelopeFactory`. Do not implement the hexagonal layout here.
+//! (Phases 1–6 + compatibility facade). GREEN after increment 1.
 //!
 //! Neighbor `sdd_github_collector_target` (`ghc_*`) remains GREEN and is
 //! not replaced by this file.

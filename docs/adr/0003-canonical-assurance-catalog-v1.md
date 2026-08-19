@@ -179,7 +179,7 @@ This ADR authorizes **infrastructure + a minimal provider/framework-neutral fixt
 | evidence | `evidence.source.protected-branch` |
 | test | `test.source.protected-branch` |
 
-It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`, or remapping `frameworks/iso-27001/2022/mappings.toml`. Later slices add `*.toml` files and manifest `[files]` lines **without editing the loader**. Those files must still pass the same validator. The IAM family (`controls/identity.toml` and siblings) is authorized by [`0003-iam-canonical-assurance-catalog.md`](0003-iam-canonical-assurance-catalog.md), not by expanding this ADR’s content bound.
+It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`, or remapping `frameworks/iso-27001/2022/mappings.toml`. Later slices add `*.toml` files and manifest `[files]` lines **without editing the loader**. Those files must still pass the same validator. The IAM family (`controls/identity.toml` and siblings) is authorized by [`0022-iam-canonical-assurance-catalog.md`](0022-iam-canonical-assurance-catalog.md), not by expanding this ADR’s content bound.
 
 ## Consequences
 
@@ -187,19 +187,19 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 
 - Downstream slices add TOML + a manifest entry; loader source stays unchanged.
 - assessment lineage can persist `CanonicalCatalogSnapshot` using the catalog digest display string.
-- ISO remap remaps ISO `to =` onto `control.*` IDs ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
+- ISO remap remaps ISO `to =` onto `control.*` IDs ([ADR 0003 remap](0027-iso27001-canonical-remap.md)).
 - Architecture tests (CAT-012…014) keep framework SDK-free and collector framework-blind.
 
 **Negative / cost**
 
 - IR `ControlId` stays permissive so historical sliver strings still parse; live ISO mappings target `control.*`.
 - Manifest `[digest]` is not enforced; changing algorithm requires a code change, not just TOML.
-- Expression ops remain a catalog string allow-list (nested tables validated). Binding onto `TestExpr` JSON is `CanonicalCatalog::projection` ([ADR 0011](0011-catalog-framework-digest-and-pin-ownership.md)); the catalog crate still does not depend on `weeping-angel-control-test`.
+- Expression ops remain a catalog string allow-list (nested tables validated). Binding onto `TestExpr` JSON is `CanonicalCatalog::projection` ([ADR 0011](0046-catalog-framework-digest-and-pin-ownership.md)); the catalog crate still does not depend on `weeping-angel-control-test`.
 
 **Rejected alternatives** (also)
 
 - Enforcing `control.*` on IR `ControlId` in this slice.
-- Teaching `compile_framework` / the framework crate to parse `catalog/canonical/v1` TOML (packs consume `CatalogProjection` instead; [ADR 0011](0011-catalog-framework-digest-and-pin-ownership.md)).
+- Teaching `compile_framework` / the framework crate to parse `catalog/canonical/v1` TOML (packs consume `CatalogProjection` instead; [ADR 0011](0046-catalog-framework-digest-and-pin-ownership.md)).
 - Hashing raw TOML bytes.
 
 ## Access and security
@@ -215,5 +215,5 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 - ADR 0001: [`0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002: [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Packs (unchanged ownership): [`frameworks/README.md`](../../frameworks/README.md)
-- Catalog/framework/readiness trust boundary: [`0011-catalog-framework-digest-and-pin-ownership.md`](0011-catalog-framework-digest-and-pin-ownership.md)
-- Siblings (cite by path): [`0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md), [`0003-subject-population-runtime-and-coverage-semantics.md`](0003-subject-population-runtime-and-coverage-semantics.md), [`0003-iam-canonical-assurance-catalog.md`](0003-iam-canonical-assurance-catalog.md)
+- Catalog/framework/readiness trust boundary: [`0046-catalog-framework-digest-and-pin-ownership.md`](0046-catalog-framework-digest-and-pin-ownership.md)
+- Siblings (cite by path): [`0036-typed-evidence-canonical-serialization.md`](0036-typed-evidence-canonical-serialization.md), [`0034-subject-population-runtime-and-coverage-semantics.md`](0034-subject-population-runtime-and-coverage-semantics.md), [`0022-iam-canonical-assurance-catalog.md`](0022-iam-canonical-assurance-catalog.md)

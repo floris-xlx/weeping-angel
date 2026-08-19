@@ -377,9 +377,9 @@ fn population_arm_json(arm: &str, percentage: Option<&str>) -> String {
 fn dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_population_runtime_baseline")
+        !toml.contains("sdd_population_runtime_baseline")
             && toml.contains("sdd_population_runtime_target")
-            && toml.contains("tests/contracts/population_runtime.baseline.rs")
+            && !toml.contains("tests/contracts/population_runtime.baseline.rs")
             && toml.contains("tests/contracts/population_runtime.target.rs")
     );
 }

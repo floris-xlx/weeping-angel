@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — vulnerability catalog |
 | Slice | Expand IR `Risk` from a four-field inventory stub into an operational information-security risk record; keep `assurance-ir/v1` and existing callers |
 | Dual-suite | `sdd_risk_register_baseline` (skip-superseded) · `sdd_risk_register_target` GREEN (`tests/contracts/risk_register.{baseline,target}.rs`) — **not auto-discovered**; listed in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0005-operational-risk-register.md`](../adr/0005-operational-risk-register.md) |
+| ADR | Accepted [`docs/adr/0040-operational-risk-register.md`](../adr/0040-operational-risk-register.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (landed Risk register section; do not fork the spine) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -532,7 +532,7 @@ Tests/docs:
 - `tests/contracts/risk_register.baseline.rs` (skip-superseded)
 - `tests/contracts/risk_register.target.rs` (GREEN)
 - root `Cargo.toml` `[[test]]` rows `sdd_risk_register_{baseline,target}`
-- Accepted ADR [`docs/adr/0005-operational-risk-register.md`](../adr/0005-operational-risk-register.md)
+- Accepted ADR [`docs/adr/0040-operational-risk-register.md`](../adr/0040-operational-risk-register.md)
 - Public contract section in [`assurance-runtime.md`](assurance-runtime.md)
 
 ---

@@ -410,9 +410,9 @@ fn synthetic_effective(control: &str, test: &str) -> ControlTestResult {
 fn cat_016_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_canonical_assurance_catalog_baseline")
+        !toml.contains("sdd_canonical_assurance_catalog_baseline")
             && toml.contains("sdd_canonical_assurance_catalog_target")
-            && toml.contains("tests/contracts/canonical_assurance_catalog.baseline.rs")
+            && !toml.contains("tests/contracts/canonical_assurance_catalog.baseline.rs")
             && toml.contains("tests/contracts/canonical_assurance_catalog.target.rs"),
         "dual-suite binaries must stay registered in root Cargo.toml"
     );

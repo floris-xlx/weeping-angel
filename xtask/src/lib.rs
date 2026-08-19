@@ -6,9 +6,7 @@
 //! framework packs, catalog sources, cached source index) and runs
 //! [`ArchitectureCheck::check`]. Checks do not reread the Rust tree.
 //!
-//! Implemented: 01–04, 13–15.
-//! Product-semantic stubs 05–12 skip only with a live `DEBT-GUARD-NN`
-//! finding (fail closed otherwise). No silent skips.
+//! Implemented: 01–15. No debt-backed skips.
 
 pub mod architecture;
 pub mod checks;

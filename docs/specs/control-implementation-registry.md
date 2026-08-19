@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — control-implementation registry |
 | Slice | Extend existing IR `ControlImplementation` + `ImplementationStatus` + `validate_assessment_ir` into an operational registry: populations/assets, review, evidence *expectations*, document refs, treatments, automation, overlap integrity, supersession/history. Effectiveness stays on control tests. |
 | Dual-suite | `sdd_control_implementation_registry_baseline` · `sdd_control_implementation_registry_target` (`tests/contracts/control_implementation_registry.{baseline,target}.rs`) — registered in root [`Cargo.toml`](../../Cargo.toml) (directory is **not** auto-discovered). Baseline skip-superseded after it failed on the new contract. |
-| ADR | Accepted [`docs/adr/0003-control-implementation-registry.md`](../adr/0003-control-implementation-registry.md) (0003-* program sibling; 0004 is documentation architecture). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0016-control-implementation-registry.md`](../adr/0016-control-implementation-registry.md) (0003-* program sibling; 0004 is documentation architecture). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -543,7 +543,7 @@ Traces only under `.sdd/runs/` and `.sdd/artifacts/`. `docs/sdd/` stays a pointe
 | `tests/contracts/control_implementation_registry.target.rs` | Normative (CIR-001–015) |
 | `Cargo.toml` | `[[test]]` registration |
 | `tests/contracts/documentation_layout.rs` | `CANONICAL_SPECS` includes this file |
-| `docs/adr/0003-control-implementation-registry.md` | Decision |
+| `docs/adr/0016-control-implementation-registry.md` | Decision |
 
 Do not add a crate. Do not edit collision-fenced paths in §0.
 

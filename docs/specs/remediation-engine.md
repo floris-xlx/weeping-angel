@@ -7,7 +7,7 @@
 | Prompt | [`docs/prompts/operational-isms-v1/16-remediation-engine.md`](../prompts/operational-isms-v1/16-remediation-engine.md) |
 | Slice | Canonical `Remediation` records that connect assurance failures and risk treatment to accountable work, with an auditable lifecycle, verification policy, SLA clock, and adapter-only external ticket refs |
 | Dual-suite | `sdd_remediation_engine_baseline` · `sdd_remediation_engine_target` (`tests/contracts/remediation_engine.{baseline,target}.rs`) — **not auto-discovered** (I3); listed in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0003-remediation-engine.md`](../adr/0003-remediation-engine.md) (0003-* sibling; 0004 is documentation architecture). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0031-remediation-engine.md`](../adr/0031-remediation-engine.md) (0003-* sibling; 0004 is documentation architecture). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — Remediation engine |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |

@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — temporal assurance |
 | Slice | First-class evidence validity windows, deterministic as-of / period selection, temporal control projection, timeline/diff primitives |
 | Dual-suite (register at implement, same commit as `.rs`) | `sdd_temporal_assurance_baseline` · `sdd_temporal_assurance_target` (`tests/contracts/temporal_assurance.{baseline,target}.rs`) |
-| ADR | Accepted [`docs/adr/0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md) |
+| ADR | Accepted [`docs/adr/0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Consumes | Immutable ledger ([`typed-evidence.md`](typed-evidence.md), ISO Phase 7–8), population latest/supersede ([`population-runtime.md`](population-runtime.md)), lineage snapshots ([`assessment-lineage.md`](assessment-lineage.md)) |
 | continuous-assurance scheduler (landed) | [`docs/specs/continuous-assurance-scheduler.md`](continuous-assurance-scheduler.md), [ADR 0005](../adr/0005-continuous-assurance-scheduler.md) — cadence / retry / `tick`; this slice still must not implement them |
@@ -38,7 +38,7 @@ Target `sdd_temporal_assurance_target` GREEN. Types exist once (sibling dual-sui
 | --- | --- |
 | `EvidenceValidityEvent`, `project_validity`, `window_contains` | `weeping-angel-evidence::validity` |
 | Out-of-digest clocks | `EvidenceEnvelope` `observedAt?` / `validFrom?` / `validUntil?` / `sourceRevision?` (accessors default `observed_at → collected_at`, `valid_from → observed_at`) |
-| Ledger | `append` records `asserted`; `supersede` records `superseded` without mutating the prior row; `record_validity_event` (idempotent `eventId`; conflict → `Immutable`); `validity_events` / `validity_events_for`; `valid_during([start,end))`; `as_of` / `latest_as_of` (alias). `within_window` / `latest` stay collection-time. `current` / `valid_at` are four-clock law ([ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md)). |
+| Ledger | `append` records `asserted`; `supersede` records `superseded` without mutating the prior row; `record_validity_event` (idempotent `eventId`; conflict → `Immutable`); `validity_events` / `validity_events_for`; `valid_during([start,end))`; `as_of` / `latest_as_of` (alias). `within_window` / `latest` stay collection-time. `current` / `valid_at` are four-clock law ([ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md)). |
 | Selection | `select_latest_as_of`, `select_evidence(TemporalQuery)`, `build_index_as_of`; evaluate `first_selector` uses the as-of leaf |
 | Clock | `AssessmentContext { now, max_age }`; `as_of()` = injected `now` (not ledger `current()`); `FreshnessPolicy { max_age, as_of, period }` |
 | Period | `PeriodEffectiveness` on `ControlTestResult.period`; default `TemporalSemantics::instant`; sampling = validity-event / envelope boundaries plus `[start, end)` |
@@ -49,7 +49,7 @@ Half-open window: `valid_from <= T` and (`valid_until` is none or `T < valid_unt
 
 ### Remaining increment (Prompt 3 — do not fork this spec)
 
-This file and `sdd_temporal_assurance_*` remain the Prompt 14 as-of / period SSOT (GREEN / skip-superseded). Trust-boundary closure (`latest` / `current` / `valid-at` / `as-of`, pinned `asOf`, fail-closed replay, persistence, historical SoA) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md). Keep Instant period conservatism.
+This file and `sdd_temporal_assurance_*` remain the Prompt 14 as-of / period SSOT (GREEN / skip-superseded). Trust-boundary closure (`latest` / `current` / `valid-at` / `as-of`, pinned `asOf`, fail-closed replay, persistence, historical SoA) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0047-temporal-lineage-evidence-soa-integrity.md`](../adr/0047-temporal-lineage-evidence-soa-integrity.md). Keep Instant period conservatism.
 
 ---
 
@@ -526,7 +526,7 @@ Adding an envelope with `collected_at > as_of` or a validity event with `at > as
 
 ### 4.11 Public contract / docs (done)
 
-1. ADR [`docs/adr/0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md) is **Accepted**.
+1. ADR [`docs/adr/0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md) is **Accepted**.
 2. [`docs/specs/assurance-runtime.md`](assurance-runtime.md) records envelope clocks, validity events, as-of/`within_window` split, period results, timeline/diff, scheduler seam.
 3. This file is in `CANONICAL_SPECS`.
 4. Status is **Implemented**.

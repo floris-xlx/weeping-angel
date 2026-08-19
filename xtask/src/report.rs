@@ -36,6 +36,7 @@ impl CheckResult {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn skip(id: &str, name: &str, debt_id: impl Into<String>) -> Self {
         Self {
             id: id.to_string(),

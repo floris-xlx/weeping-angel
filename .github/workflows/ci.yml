@@ -27,14 +27,17 @@ jobs:
       - name: rustfmt
         run: cargo fmt --all -- --check
 
+      - name: check workspace
+        run: cargo check --workspace --all-targets --features demo
+
       - name: repository health gate
         run: cargo xtask guard
 
       - name: clippy
-        run: cargo clippy --all-targets --features demo -- -D warnings
+        run: cargo clippy --workspace --all-targets --features demo -- -D warnings
 
-      - name: test (unit + integration + e2e lab)
-        run: cargo test --features demo --all-targets
+      - name: test workspace
+        run: cargo test --workspace --features demo --all-targets
 
       - name: demo example builds
         run: cargo build --example weeping-angel-demo --features demo

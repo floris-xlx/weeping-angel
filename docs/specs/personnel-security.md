@@ -7,12 +7,12 @@
 | Prompt | [`docs/prompts/operational-isms-v1/17-personnel-security.md`](../prompts/operational-isms-v1/17-personnel-security.md) |
 | Slice | Operationalize personnel-security **joiner / mover / leaver** lifecycle using provider-neutral identity/personnel evidence and population-aware control tests. Do **not** turn the generic identity model into an HRIS. |
 | Dual-suite | `sdd_personnel_security_baseline` · `sdd_personnel_security_target` (`tests/contracts/personnel_security.{baseline,target}.rs`) — **not auto-discovered** (I3); registered in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md) (`0003-*` sibling; **0004** is documentation architecture). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md) (`0003-*` sibling; **0004** is documentation architecture). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — personnel lifecycle pointer |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Documentation architecture | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) |
-| Population (consumed) | [`docs/specs/population-runtime.md`](population-runtime.md), ADR [`0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
+| Population (consumed) | [`docs/specs/population-runtime.md`](population-runtime.md), ADR [`0034-subject-population-runtime-and-coverage-semantics.md`](../adr/0034-subject-population-runtime-and-coverage-semantics.md) |
 | IAM sibling (consumed, do not rewrite) | [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
 | Governance sibling (consumed, do not rewrite) | [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) |
 | Prompt 12 (consume; do not implement) | [`docs/specs/controlled-documents.md`](controlled-documents.md) — policy ack uses `artifact_ref`. Sibling `DocumentRef` / `ControlledDocument` may exist; PER-007 greps `identity.rs` / `subject.rs` only. |
@@ -529,7 +529,7 @@ Baseline clusters (current tree):
 ### 4.11 Documentation after implement
 
 - This file: **Implemented**; dual-suite registered; baseline skip-superseded; target 17/17 GREEN.
-- ADR: Accepted at [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md).
+- ADR: Accepted at [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md).
 - [`docs/specs/assurance-runtime.md`](assurance-runtime.md): personnel lifecycle pointer (do not rewrite IAM/governance sections).
 - Population runtime: document `active` / `excessive` defect-flag polarity only; do not fork coverage math.
 - Spec registered in `tests/contracts/documentation_layout.rs` `CANONICAL_SPECS`.
@@ -621,7 +621,7 @@ Fail-closed if: baseline cannot go green on current characterization; target can
 
 Architecture / public-contract decision: personnel lifecycle is **canonical `control.personnel.*` content plus population tests**, not an HRIS identity extension, not a second population resolver, and not IAM JML retargeting.
 
-Accepted: [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md).
+Accepted: [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md).
 
 ---
 
@@ -676,5 +676,5 @@ note                 = five control.personnel.* in governance.toml;
 | Evaluator polarity | `classify_predicate` in `crates/weeping-angel-control-test/src/population.rs` — `active` / `excessive` invert |
 | Target suite | `tests/contracts/personnel_security.target.rs` (17 GREEN) |
 | Baseline suite | `#[ignore = "superseded by sdd_personnel_security_target"]` (12 ignored) |
-| ADR | Accepted at [`docs/adr/0003-personnel-security-lifecycle.md`](../adr/0003-personnel-security-lifecycle.md) |
+| ADR | Accepted at [`docs/adr/0030-personnel-security-lifecycle.md`](../adr/0030-personnel-security-lifecycle.md) |
 | PER-007 | `DocumentRef` / `ControlledDocument` grep scoped to `identity.rs` / `subject.rs` |

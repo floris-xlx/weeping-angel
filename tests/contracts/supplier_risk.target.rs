@@ -1002,9 +1002,9 @@ fn sr_014_has_vendor_presence_and_catalog_family_untouched() {
 fn sr_015_dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_supplier_risk_baseline")
+        !toml.contains("sdd_supplier_risk_baseline")
             && toml.contains("sdd_supplier_risk_target")
-            && toml.contains("tests/contracts/supplier_risk.baseline.rs")
+            && !toml.contains("tests/contracts/supplier_risk.baseline.rs")
             && toml.contains("tests/contracts/supplier_risk.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

@@ -6,7 +6,7 @@
 | Program | Concurrent cleanup Prompt 3 — close remaining trust-boundary debt after Prompt 14 / lineage / SoA / scheduler landed |
 | Slice | Distinct `current` / `latest` / `valid-at` / `as-of` APIs; pinned-clock historical selection; append-only validity; fail-closed replay; collection-vs-erasure; persistence fail-closed; historical SoA bound to pinned assessment |
 | Dual-suite (register at implement, **same commit** as the `.rs` files) | `sdd_temporal_lineage_evidence_soa_baseline` · `sdd_temporal_lineage_evidence_soa_target` (`tests/contracts/temporal_lineage_evidence_soa.{baseline,target}.rs`) |
-| ADR | Accepted [`docs/adr/0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md) |
+| ADR | Accepted [`docs/adr/0047-temporal-lineage-evidence-soa-integrity.md`](../adr/0047-temporal-lineage-evidence-soa-integrity.md) |
 | Extends (do not fork) | [`temporal-assurance.md`](temporal-assurance.md), [`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [`assessment-lineage.md`](assessment-lineage.md), [`operational-soa.md`](operational-soa.md), [`typed-evidence.md`](typed-evidence.md), [`continuous-assurance-scheduler.md`](continuous-assurance-scheduler.md) |
 | Public contract | [`assurance-runtime.md`](assurance-runtime.md) |
 | Protocol report (generated, gitignored) | [`.sdd/runs/sdd-temporal-lineage-evidence-soa.md`](../../.sdd/runs/sdd-temporal-lineage-evidence-soa.md) |
@@ -33,7 +33,7 @@ Time is an assurance dimension. A historical assessment is a **pinned execution 
 
 ## Implemented contract (what shipped)
 
-Target `sdd_temporal_lineage_evidence_soa_target` GREEN. Baseline skip-superseded. Decision: [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+Target `sdd_temporal_lineage_evidence_soa_target` GREEN. Baseline skip-superseded. Decision: [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md).
 
 | Concern | Home |
 | --- | --- |
@@ -476,4 +476,4 @@ Do not edit `xtask/**`. Expose stable symbols Prompt 1 can grep / call for Guard
 - [`operational-soa.md`](operational-soa.md) — operational projection (implemented). Historical CLI binds to reconstructed assessment; live `project_soa` is not history.
 - [`typed-evidence.md`](typed-evidence.md) — envelope seal / digest law. Persistence integrity names live in the evidence crate without forking `DigestBody`.
 - [`continuous-assurance-scheduler.md`](continuous-assurance-scheduler.md) — tick collect-without-delete. One-shot `assess` no longer treats collector `Err` as an empty universe when process-local prior valid envelopes exist.
-- Accepted decision: [`docs/adr/0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+- Accepted decision: [`docs/adr/0047-temporal-lineage-evidence-soa-integrity.md`](../adr/0047-temporal-lineage-evidence-soa-integrity.md).

@@ -41,8 +41,8 @@ Parallel SDD runs may land risk methodology (methodology) as `spec-driven-develo
 
 | Do not touch | Owner |
 | --- | --- |
-| [`docs/specs/risk-methodology.md`](risk-methodology.md), [`docs/adr/0005-risk-methodology.md`](../adr/0005-risk-methodology.md), `risk_methodology.rs`, `score_risk`, scales/matrices | risk methodology |
-| [`docs/specs/risk-register.md`](risk-register.md), [`docs/adr/0005-operational-risk-register.md`](../adr/0005-operational-risk-register.md), operational `Risk` fields / register status table | risk register — **consume `Risk` / `RiskId` / optional `treatment_id`** |
+| [`docs/specs/risk-methodology.md`](risk-methodology.md), [`docs/adr/0041-risk-methodology.md`](../adr/0041-risk-methodology.md), `risk_methodology.rs`, `score_risk`, scales/matrices | risk methodology |
+| [`docs/specs/risk-register.md`](risk-register.md), [`docs/adr/0040-operational-risk-register.md`](../adr/0040-operational-risk-register.md), operational `Risk` fields / register status table | risk register — **consume `Risk` / `RiskId` / optional `treatment_id`** |
 | risk identification `RiskCandidate` / promotion | risk identification — do not invent a second promotion engine |
 | `catalog/canonical/v1/**`, ISO pack IDs / remaps | Catalog / ISO remap |
 | `crates/weeping-angel-collector/src/github/**` | GitHub collector |

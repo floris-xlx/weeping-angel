@@ -8,7 +8,7 @@
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19; found-case: no governance family) |
 | Dual-suite | `sdd_governance_catalog_target` GREEN (GOV-001…016); `sdd_governance_catalog_baseline` superseded (`#[ignore]`) |
 | Landed family | 34 controls (25 Hybrid / 9 Manual), 13 evidence types, 34 tests, eight fixtures; clock `2026-08-18T12:00:00Z` |
-| ADR | Accepted [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — governance-family pointer + `evidence.manual.attestation` + ExceptionApproved honesty |
 | Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
@@ -557,7 +557,7 @@ Fail-closed if: baseline cannot go green on current characterization; target can
 
 Architecture / public-contract decision: governance / vendor / personnel / incident / continuity-governance content is a **canonical catalog family** with **first-class manual evidence**, not an ISO-pack extension, not a GRC-product integration, and not fake technical automation of organizational controls.
 
-Accepted: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md).
+Accepted: [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md).
 
 ---
 
@@ -610,7 +610,7 @@ note                 = catalog infrastructure through IAM landed (fixture.exampl
 | Exception honesty | `evaluate_coverage` promotes remaining-all-pass excepted sets to `ExceptionApproved` |
 | Target suite | `tests/contracts/governance_catalog.target.rs` GREEN GOV-001…016 |
 | Baseline suite | `tests/contracts/governance_catalog.baseline.rs` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0021-governance-canonical-assurance-catalog.md`](../adr/0021-governance-canonical-assurance-catalog.md) |
 | ISO pack | Organizational slivers already retired by ISO remap; this slice does not map `control.governance.*` onto ISO |
 | Collectors | No GRC/ITSM collector; `ManualEvidence` still does not emit `evidence.manual.attestation` |
 

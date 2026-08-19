@@ -6,7 +6,7 @@
 | Program | Canonical Assurance Catalog v1 — typed evidence |
 | Slice | Typed evidence values + canonical serialization + digest compatibility + evidence-level validation + control-test typed comparisons |
 | Dual-suite | `sdd_typed_evidence_target` GREEN; `sdd_typed_evidence_baseline` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md) |
+| ADR | Accepted [`docs/adr/0036-typed-evidence-canonical-serialization.md`](../adr/0036-typed-evidence-canonical-serialization.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) Evidence + `evidence-value/v1` |
 | Consumes | Spine ADR 0001, ISO vertical ADR 0002 (string-bag clauses superseded). catalog infrastructure catalog infrastructure is a sibling — consumed, not redesigned. |
 | Repository | `floris-xlx/weeping-angel` |
@@ -291,7 +291,7 @@ Fixed millisecond precision (zero-padded). Offset timestamps normalize to UTC be
 - Determinism: equivalent **semantic** typed evidence ⇒ identical canonical bytes ⇒ identical digest, regardless of map insertion order.
 - Historical **string** observations: same keys/values/provenance ⇒ same digest as on this planning SHA (because `String` still encodes as a JSON string).
 - Do not add framework/provider fields to `DigestBody` or the envelope.
-- `collection_run_id` / `supersedes` / artifact refs / optional validity clocks remain outside fact values. Changing only `collection_run_id` after seal (builder helper) still must not rewrite `digest` / `content_digest` unless a later ADR says otherwise — current code assigns run id inside `seal` from provenance; keep that. Validity windows are events, not digest fields ([ADR 0003 temporal assurance](../adr/0003-temporal-assurance.md)).
+- `collection_run_id` / `supersedes` / artifact refs / optional validity clocks remain outside fact values. Changing only `collection_run_id` after seal (builder helper) still must not rewrite `digest` / `content_digest` unless a later ADR says otherwise — current code assigns run id inside `seal` from provenance; keep that. Validity windows are events, not digest fields ([ADR 0003 temporal assurance](../adr/0035-temporal-assurance.md)).
 
 ### 4.5 Evidence-level validation (invariants kept)
 
@@ -335,7 +335,7 @@ Literal `TestExpr` values use the same `EvidenceValue`. Drop or alias obsolete v
 
 ### 4.9 Public contract / docs (implementation phase)
 
-Landed: [`docs/specs/assurance-runtime.md`](assurance-runtime.md) Evidence documents `BTreeMap<String, EvidenceValue>` and `evidence-value/v1`. ADR 0002 §5 points at [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md).
+Landed: [`docs/specs/assurance-runtime.md`](assurance-runtime.md) Evidence documents `BTreeMap<String, EvidenceValue>` and `evidence-value/v1`. ADR 0002 §5 points at [ADR 0003](../adr/0036-typed-evidence-canonical-serialization.md).
 
 ---
 
@@ -487,10 +487,10 @@ All evidence paths use or cleanly adapt to one typed representation; the control
 | Comparisons | `EvidenceValue::{typed_eq,cmp_numeric,list_contains}`; evaluator reads `fact_value` |
 | Target suite | `tests/contracts/typed_evidence.target.rs` (`sdd_typed_evidence_target`) GREEN 15/15 |
 | Baseline suite | `tests/contracts/typed_evidence.baseline.rs` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md) |
+| ADR | Accepted [`docs/adr/0036-typed-evidence-canonical-serialization.md`](../adr/0036-typed-evidence-canonical-serialization.md) |
 
 Stable digest rule remains §4.4. Stable encoding remains §4.3. Downstream slices consume this API; they do not fork a second value enum.
 
 ### Remaining increment (Prompt 3 — do not fork this spec)
 
-Typed-value / seal / `DigestBody` law is unchanged. Persistence integrity (`Corrupt` / `IncompatibleSchema` via `PersistenceIntegrity` → `LedgerError::Path`, immutable completed collection-run persist, transactional envelope+validity append, distinct `latest` / `current` / `valid_at` / `as_of`) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md). Do not put conclusions on envelopes.
+Typed-value / seal / `DigestBody` law is unchanged. Persistence integrity (`Corrupt` / `IncompatibleSchema` via `PersistenceIntegrity` → `LedgerError::Path`, immutable completed collection-run persist, transactional envelope+validity append, distinct `latest` / `current` / `valid_at` / `as_of`) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md). Do not put conclusions on envelopes.

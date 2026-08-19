@@ -7,7 +7,7 @@
 | Slice | infrastructure catalog — network / cryptography / secrets / data / database / logging / backup / resilience |
 | Planning baseline SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
 | Dual-suite | `sdd_infrastructure_catalog_target` GREEN (INFRA-001…016); `sdd_infrastructure_catalog_baseline` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0024-infrastructure-canonical-assurance-catalog.md`](../adr/0024-infrastructure-canonical-assurance-catalog.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
@@ -63,7 +63,7 @@ This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is IS
 | 02 typed evidence | Typed `EvidenceValue`, seal rules | **Landed.** | Declare required fact *names* and semantic types. No second value enum. No secret material in facts. |
 | 03 population runtime | Subject populations, `AllSubjects` / `CoverageAtLeast` / `NoneSubjects`, missing/stale/fail split | **Landed.** Identity inventory special-case + generic `inventory.subject` / `inventory.complete`. | Declare population-based tests. **Do not locally reimplement coverage math. Do not add `resolve_database_inventory` / `resolve_network_inventory`.** |
 | 04 IAM | `control.identity.*` | **Landed.** | Leave `identity.toml`, identity fixtures, and `sdd_iam_catalog_target` green. |
-| 05 SDLC | `control.source.*` / CI / release | **Landed.** Durable SSOT [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); accepted [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md). | Do not rewrite `sdlc.toml` or SDLC fixtures. |
+| 05 SDLC | `control.source.*` / CI / release | **Landed.** Durable SSOT [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); accepted [`0033-sdlc-canonical-assurance-catalog.md`](../adr/0033-sdlc-canonical-assurance-catalog.md). | Do not rewrite `sdlc.toml` or SDLC fixtures. |
 | 06 vulnerability | `control.vulnerability.*`, `evidence.secret.exposure` | **Landed.** Durable SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). | Do **not** rewrite `vulnerability.toml` or `evidence.secret.exposure`. Secret **storage** (`evidence.secret.storage-configuration`) is this slice; secret **exposure** is vulnerability catalog. |
 
 Rebase rule: adapt infrastructure content to the landed contracts. Prefer existing `CanonicalCatalog`, `EvidenceValue`, and `evaluate_coverage` over extending this slice’s scope.
@@ -755,7 +755,7 @@ Workspace verify command is unchanged. Record the implement-phase HEAD SHA in th
 
 Architecture / public-contract decision: infrastructure content is a **canonical catalog family** (`control.network.*`, `control.crypto.*`, `control.secret.*`, `control.data.*`, `control.database.*`, `control.logging.*`, `control.backup.*`, `control.resilience.*`) consumed later by framework mappings, not an ISO-pack extension and not provider-prefixed checks.
 
-Accepted: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md).
+Accepted: [`docs/adr/0024-infrastructure-canonical-assurance-catalog.md`](../adr/0024-infrastructure-canonical-assurance-catalog.md).
 
 ---
 
@@ -819,7 +819,7 @@ Implemented 2026-08-19 (planning SHA `e430980c0d27a8138a153d49b62ddf3c57827891`)
 | Loader / digest | catalog infrastructure crate; no infrastructure-specific load path or `resolve_database_inventory` |
 | Target suite | `tests/contracts/infrastructure_catalog.target.rs` (`sdd_infrastructure_catalog_target`) GREEN INFRA-001…016 (22 tests) |
 | Baseline suite | `tests/contracts/infrastructure_catalog.baseline.rs` superseded (`#[ignore]`; 18 ignored) |
-| ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0024-infrastructure-canonical-assurance-catalog.md`](../adr/0024-infrastructure-canonical-assurance-catalog.md) |
 | ISO pack | Unchanged by this slice; ISO remap retired pack infra slivers and left A.8.13 / A.8.15 / A.8.24 unmapped |
 | Collectors | No AWS / Azure / GCP / Cloudflare / remote-inventory collector |
 | Secret boundary | Storage (`evidence.secret.storage-configuration`) here; exposure (`evidence.secret.exposure`) vulnerability catalog |
@@ -866,7 +866,7 @@ tests/contracts/infrastructure_catalog.baseline.rs
 tests/contracts/infrastructure_catalog.target.rs
 Cargo.toml                                          # two [[test]] rows
 docs/specs/infrastructure-canonical-assurance-catalog.md
-docs/adr/0003-infrastructure-canonical-assurance-catalog.md
+docs/adr/0024-infrastructure-canonical-assurance-catalog.md
 docs/specs/assurance-runtime.md
 README.md                                           # family pointer
 ```

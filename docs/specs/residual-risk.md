@@ -6,10 +6,10 @@
 | Program | Operational ISMS v1 — residual risk |
 | Slice | Project control effectiveness into an explainable, reproducible residual-risk result pinned to inherent-risk, treatment-plan, methodology, and control-test snapshots. Do **not** implement risk methodology and register / 08 engines. |
 | Dual-suite | `sdd_residual_risk_baseline` · `sdd_residual_risk_target` (`tests/contracts/residual_risk.{baseline,target}.rs`) — registered in root [`Cargo.toml`](../../Cargo.toml) (directory is **not** auto-discovered) |
-| ADR | Accepted [`docs/adr/0003-residual-risk.md`](../adr/0003-residual-risk.md) (`0003-*` program sibling numbering; 0004 is documentation architecture; 0005-* is methodology/register). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0032-residual-risk.md`](../adr/0032-residual-risk.md) (`0003-*` program sibling numbering; 0004 is documentation architecture; 0005-* is methodology/register). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (landed Residual risk section; do not fork the spine) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
-| Lineage (must fit) | [`docs/specs/assessment-lineage.md`](assessment-lineage.md), [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) |
+| Lineage (must fit) | [`docs/specs/assessment-lineage.md`](assessment-lineage.md), [`docs/adr/0015-assessment-lineage.md`](../adr/0015-assessment-lineage.md) |
 | Neighbors (consume / pin; do not implement here) | [`docs/specs/risk-methodology.md`](risk-methodology.md), [`docs/specs/risk-register.md`](risk-register.md), [`docs/specs/risk-treatment.md`](risk-treatment.md), [`docs/specs/control-implementation-registry.md`](control-implementation-registry.md) |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Documentation architecture | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) |
@@ -244,7 +244,7 @@ Assessment lineage (already landed) persists pinned snapshots and forbids silent
 
 ### 3.6 Neighbor register placeholders are not this projection
 
-Accepted [`docs/adr/0005-operational-risk-register.md`](../adr/0005-operational-risk-register.md) places `residualScore` / `residualRating` on the register row as **placeholders only**. **This residual risk spec owns control-derived residual.** Projection lives in assurance-IR + `weeping-angel-assurance::residual`. The GitHub collector remains a **collision fence** (facts only).
+Accepted [`docs/adr/0040-operational-risk-register.md`](../adr/0040-operational-risk-register.md) places `residualScore` / `residualRating` on the register row as **placeholders only**. **This residual risk spec owns control-derived residual.** Projection lives in assurance-IR + `weeping-angel-assurance::residual`. The GitHub collector remains a **collision fence** (facts only).
 
 ### 3.7 Dual-suite registration
 
@@ -478,7 +478,7 @@ path = "tests/contracts/residual_risk.target.rs"
 | Baseline on CURRENT | `sdd_residual_risk_baseline` | **GREEN** — characterizes §3 absence |
 | Target on CURRENT | `sdd_residual_risk_target` | **RED for the right reason** (missing types/API, not half-written stubs) |
 | Implement | IR refs + projection | — |
-| Docs + ADR | this file + `docs/adr/0003-residual-risk.md` | ADR Draft → Accepted when target GREEN |
+| Docs + ADR | this file + `docs/adr/0032-residual-risk.md` | ADR Draft → Accepted when target GREEN |
 | Target after | same target suite | **GREEN** |
 | Baseline after | baseline | skip-supersede (`#[ignore = "superseded by sdd_residual_risk_target"]`) **or** prove it FAILS because CURRENT no longer matches §3 |
 | Neighbors | existing `sdd_*_target` | stay GREEN |
@@ -595,7 +595,7 @@ Additional locks (may share tests):
 
 ## 8. ADR
 
-**Accepted.** [`docs/adr/0003-residual-risk.md`](../adr/0003-residual-risk.md). Filename `0003-*` is shared with catalog-program / operational-slice siblings. **0004** is documentation architecture. **0005-*** remains risk methodology and operational register. Cite the ADR, this spec, and the dual-suite by **path**.
+**Accepted.** [`docs/adr/0032-residual-risk.md`](../adr/0032-residual-risk.md). Filename `0003-*` is shared with catalog-program / operational-slice siblings. **0004** is documentation architecture. **0005-*** remains risk methodology and operational register. Cite the ADR, this spec, and the dual-suite by **path**.
 
 ---
 
@@ -617,7 +617,7 @@ Neighbor engines (`score_risk`, `TreatmentPlan` state machine, register expansio
 
 ## 10. Landed notes
 
-Product code is in `residual.rs` (IR + assurance). ADR [`docs/adr/0003-residual-risk.md`](../adr/0003-residual-risk.md) is **Accepted**. Baseline absence claims are skip-superseded. Target P09-T01–T20 is GREEN.
+Product code is in `residual.rs` (IR + assurance). ADR [`docs/adr/0032-residual-risk.md`](../adr/0032-residual-risk.md) is **Accepted**. Baseline absence claims are skip-superseded. Target P09-T01–T20 is GREEN.
 
 Do **not**: edit GitHub collector files; reimplement Kleene evaluation; rewrite catalog domain TOML or ISO pack IDs; fold residual into `Risk.status`; build dashboards or acceptance workflows.
 

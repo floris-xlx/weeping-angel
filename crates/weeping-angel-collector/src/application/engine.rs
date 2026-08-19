@@ -1,3 +1,5 @@
+//! CollectionEngine: ObservationGate validates, then EnvelopeFactory seals.
+
 use crate::CollectorError;
 use crate::application::{CollectorRegistry, EnvelopeFactory, ObservationGate};
 use crate::domain::{CollectionBatch, CollectionRequest, CollectorInstance};

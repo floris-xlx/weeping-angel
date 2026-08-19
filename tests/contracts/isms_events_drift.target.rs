@@ -369,8 +369,8 @@ fn readiness_pair(previous: Effectiveness, next: Effectiveness) -> SnapshotDiff 
 fn dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("name = \"sdd_isms_events_drift_baseline\"")
-            && toml.contains("path = \"tests/contracts/isms_events_drift.baseline.rs\"")
+        !toml.contains("name = \"sdd_isms_events_drift_baseline\"")
+            && !toml.contains("path = \"tests/contracts/isms_events_drift.baseline.rs\"")
             && toml.contains("name = \"sdd_isms_events_drift_target\"")
             && toml.contains("path = \"tests/contracts/isms_events_drift.target.rs\""),
         "dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"

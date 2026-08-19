@@ -584,8 +584,8 @@ fn never_effective(result: &ControlTestResult, label: &str) {
 fn per_000_dual_suite_is_registered() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
-        cargo.contains("sdd_personnel_security_baseline")
-            && cargo.contains("tests/contracts/personnel_security.baseline.rs")
+        !cargo.contains("sdd_personnel_security_baseline")
+            && !cargo.contains("tests/contracts/personnel_security.baseline.rs")
             && cargo.contains("sdd_personnel_security_target")
             && cargo.contains("tests/contracts/personnel_security.target.rs"),
         "PER-000: dual-suite [[test]] rows must be listed in root Cargo.toml"

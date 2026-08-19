@@ -143,6 +143,6 @@ ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors,
 - Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - ISO 27001 vertical (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Canonical catalog infrastructure (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
-- ISO pack remapped onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)
+- ISO pack remapped onto catalog (accepted): [`docs/adr/0027-iso27001-canonical-remap.md`](0027-iso27001-canonical-remap.md)
 - Scan contract (security-only): [`codex-security/references/scan-contract.md`](../../codex-security/references/scan-contract.md)
 - Athena analogue: `athena-query` `Statement` / `CompileTarget` / `compile` / `CapabilityViolation` (pattern only; no crate dependency)

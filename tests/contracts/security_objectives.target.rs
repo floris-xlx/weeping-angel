@@ -1475,8 +1475,8 @@ fn so_t19_schema_assurance_ir_and_evaluation_snapshot_v1() {
 fn so_t20_dual_suite_registered_and_spec_in_canonical_specs() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("name = \"sdd_security_objectives_baseline\"")
-            && toml.contains("path = \"tests/contracts/security_objectives.baseline.rs\"")
+        !toml.contains("name = \"sdd_security_objectives_baseline\"")
+            && !toml.contains("path = \"tests/contracts/security_objectives.baseline.rs\"")
             && toml.contains("name = \"sdd_security_objectives_target\"")
             && toml.contains("path = \"tests/contracts/security_objectives.target.rs\""),
         "security objectives dual-suite must be explicitly listed (not auto-discovered)"

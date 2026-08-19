@@ -305,7 +305,7 @@ pub fn load_adr_identity(root: &Path) -> Result<AdrIdentityPolicy, String> {
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    if grandfathered_debt.is_empty() {
+    if !value.get("grandfathered_debt").is_some() {
         return Err("architecture/adr-identity.toml missing grandfathered_debt".into());
     }
     let prefixes = value

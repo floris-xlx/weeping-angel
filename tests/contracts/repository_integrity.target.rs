@@ -386,7 +386,7 @@ fn ri_t07b_seed_debt_findings_include_stub_check_ids() {
         let finding = format!("DEBT-GUARD-{id}");
         assert!(
             ids.contains(finding.as_str()),
-            "register must contain {finding} so stub skips are attributable"
+            "register must retain {finding} as resolved proof after Guard {id} became real"
         );
     }
     for id in ["14", "15"] {
@@ -558,22 +558,23 @@ fn ri_t13_stub_checks_do_not_silently_pass() {
             "check {id} must report pass on the live tree; output={combined}"
         );
     }
-    for id in PRODUCT_STUB_CHECKS {
-        let skip = combined.contains(&format!("DEBT-GUARD-{id}"))
-            || combined.contains(&format!("skip(DEBT-GUARD-{id})"))
-            || combined.contains(&format!("skip (DEBT-GUARD-{id})"));
-        let nyi = combined.contains(&format!("not-yet-implemented: check {id}"));
+    for (id, name) in [
+        ("05", "catalog-ssot"),
+        ("06", "framework-pack-parse"),
+        ("07", "framework-digest"),
+        ("08", "readiness-ssot"),
+        ("09", "temporal-evidence-selection"),
+        ("10", "assessment-lineage-rebuild"),
+        ("11", "evidence-latest-vs-current"),
+        ("12", "soa-invariants"),
+    ] {
         assert!(
-            skip || nyi,
-            "stub check {id} must skip-with-debt or fail closed; output={combined}"
+            combined.contains(&format!("{id}  {name}  pass")),
+            "product-law check {id} {name} must pass; output={combined}"
         );
         assert!(
-            !combined.contains(&format!("{id}  "))
-                || !combined.lines().any(|line| {
-                    let t = line.trim();
-                    t.starts_with(&format!("{id}  ")) && t.ends_with("  pass")
-                }),
-            "stub check {id} must not silently pass; output={combined}"
+            !combined.contains(&format!("skip(DEBT-GUARD-{id})")),
+            "check {id} must not skip-with-debt; output={combined}"
         );
     }
 }
@@ -601,20 +602,18 @@ fn ri_t14_ci_runs_xtask_guard() {
 #[test]
 fn ri_t15_dual_suite_registered_in_cargo_toml() {
     let cargo = read("Cargo.toml");
-    assert!(cargo.contains("name = \"sdd_repository_integrity_baseline\""));
+    assert!(!cargo.contains("name = \"sdd_repository_integrity_baseline\""));
     assert!(cargo.contains("name = \"sdd_repository_integrity_target\""));
-    assert!(cargo.contains("path = \"tests/contracts/repository_integrity.baseline.rs\""));
+    assert!(!cargo.contains("path = \"tests/contracts/repository_integrity.baseline.rs\""));
     assert!(cargo.contains("path = \"tests/contracts/repository_integrity.target.rs\""));
 }
 
 /// After target GREEN, baseline absence tests are skip-superseded.
 #[test]
-fn ri_t15b_baseline_is_ignore_superseded() {
-    let baseline = read("tests/contracts/repository_integrity.baseline.rs");
+fn ri_t15b_baseline_is_deleted() {
     assert!(
-        baseline.contains("#[ignore = \"superseded by sdd_repository_integrity_target\"]")
-            || baseline.contains("#[ignore = \"superseded by sdd_repository_integrity_target\"]"),
-        "baseline suite must be ignore-superseded after target GREEN"
+        !std::path::Path::new("tests/contracts/repository_integrity.baseline.rs").exists(),
+        "superseded baseline suite must be deleted"
     );
 }
 
@@ -645,21 +644,15 @@ fn ri_t17_adr_0009_accepted_and_backlog_not_shipped_as_product() {
         spec.contains("remaining_backlog"),
         "spec must keep remaining_backlog"
     );
-    // Guard checks 05–12 stay stubs (fail-closed or skip-with-debt). 14/15 are increment-2 real checks.
     let xtask_src = collect_rs(rel("xtask"));
     assert!(
         !xtask_src.is_empty(),
-        "xtask sources must exist so remaining_backlog stubs can be inspected"
+        "xtask sources must exist so product-law checks can be inspected"
     );
-    for id in PRODUCT_STUB_CHECKS {
-        let implemented_as_real = xtask_src.contains(&format!("check {id} implemented"))
-            && !xtask_src.contains("not-yet-implemented")
-            && !xtask_src.contains("DEBT-GUARD-");
-        assert!(
-            !implemented_as_real,
-            "check {id} must remain a stub this slice"
-        );
-    }
+    assert!(
+        xtask_src.contains("struct ProductLawCheck"),
+        "checks 05–12 must be ProductLawCheck, not stubs"
+    );
     assert!(
         !xtask_src.contains(r#"("14", "adr-graph")"#)
             && !xtask_src.contains("\"14\", \"adr-graph\""),
@@ -905,24 +898,23 @@ fn ri_t22_new_duplicate_adr_prefix_fails_check_14() {
         .iter()
         .map(|v| v.as_str().expect("prefix"))
         .collect();
-    for prefix in GRANDFATHERED_ADR_PREFIXES {
-        assert!(
-            prefixes.contains(&prefix),
-            "grandfathered_prefixes must include {prefix}; got {prefixes:?}"
-        );
-    }
+    assert!(
+        prefixes.is_empty(),
+        "ADR namespace is unique; grandfathered_prefixes must be empty, got {prefixes:?}"
+    );
 
     let adr_files = list_md("docs/adr");
-    for prefix in GRANDFATHERED_ADR_PREFIXES {
-        let count = adr_files
-            .iter()
-            .filter(|name| name.starts_with(&format!("{prefix}-")))
-            .count();
-        assert!(
-            count >= 2,
-            "historical {prefix}-* collisions must remain on disk (no silent renumber); files={adr_files:?}"
-        );
+    let mut by_prefix = std::collections::BTreeMap::<String, usize>::new();
+    for name in &adr_files {
+        if let Some(prefix) = name.get(..4) {
+            *by_prefix.entry(prefix.to_string()).or_default() += 1;
+        }
     }
+    let dups: Vec<_> = by_prefix.into_iter().filter(|(_, n)| *n > 1).collect();
+    assert!(
+        dups.is_empty(),
+        "ADR prefixes must be unique; dups={dups:?}"
+    );
 
     let src = xtask_src_text();
     for needle in [
@@ -1101,8 +1093,8 @@ fn ri_t27_live_exemptions_require_owner_dates_and_expiry_fails_closed() {
     for id in PRODUCT_STUB_CHECKS {
         let finding = finding_named(&register, &format!("DEBT-GUARD-{id}"));
         assert!(
-            exemption_complete(finding),
-            "live skip exemption DEBT-GUARD-{id} must include owner, introduced, severity, remediation, repository_guard, and expires|review_by"
+            finding.get("status") == Some(&toml::Value::String("resolved".into())),
+            "DEBT-GUARD-{id} must be resolved once Guard {id} is a real check"
         );
     }
     let dup = finding_named(&register, "DEBT-DUP-ADR");
@@ -1328,11 +1320,19 @@ fn ri_t31_implemented_checks_retained_product_stubs_remain() {
             "check {id} {name} must pass on the live tree; output={combined}"
         );
     }
-    for id in PRODUCT_STUB_CHECKS {
+    for (id, name) in [
+        ("05", "catalog-ssot"),
+        ("06", "framework-pack-parse"),
+        ("07", "framework-digest"),
+        ("08", "readiness-ssot"),
+        ("09", "temporal-evidence-selection"),
+        ("10", "assessment-lineage-rebuild"),
+        ("11", "evidence-latest-vs-current"),
+        ("12", "soa-invariants"),
+    ] {
         assert!(
-            combined.contains(&format!("skip(DEBT-GUARD-{id})"))
-                || combined.contains(&format!("not-yet-implemented: check {id}")),
-            "product-semantic check {id} must remain skip-with-debt or fail closed; output={combined}"
+            combined.contains(&format!("{id}  {name}  pass")),
+            "product-law check {id} {name} must pass on the live tree; output={combined}"
         );
     }
 }

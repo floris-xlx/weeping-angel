@@ -7,7 +7,7 @@
 | Slice | IAM catalog — identity / authentication / authorization / privileged access / account lifecycle |
 | Planning baseline SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`main`, 2026-08-18) |
 | Dual-suite | `sdd_iam_catalog_target` GREEN (IAM-001…016); `sdd_iam_catalog_baseline` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — owned by catalog infrastructure |
 | Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
@@ -83,7 +83,7 @@ On the planning SHA:
 - `EvidenceObservation.facts` was `BTreeMap<String, String>` (`crates/weeping-angel-evidence/src/lib.rs`).
 - Control-test `EvidenceValue` (`Null`, `Boolean`, `Integer`, `Decimal`, `String`, `Timestamp`, `Duration`, `StringSet`, `Identifier`) was produced by `parse_fact` (string `"true"` → bool, integer parse, else string).
 
-**Now (typed evidence landed):** facts are `BTreeMap<String, EvidenceValue>` in `weeping-angel-evidence`; control-test re-exports that enum. IAM fixtures declare typed names (`mfa_enabled = Bool`, counts as `Integer`, role lists as `StringList`) and must not fork a second value type. See [`docs/specs/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md).
+**Now (typed evidence landed):** facts are `BTreeMap<String, EvidenceValue>` in `weeping-angel-evidence`; control-test re-exports that enum. IAM fixtures declare typed names (`mfa_enabled = Bool`, counts as `Integer`, role lists as `StringList`) and must not fork a second value type. See [`docs/specs/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0036-typed-evidence-canonical-serialization.md).
 
 Still on the planning SHA (population, not facts):
 
@@ -347,7 +347,7 @@ Suggested target assertion clusters (titles include the id):
 
 ### 4.10 Documentation after implement
 
-Done in the docs pass: this file’s §13, accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), IAM pointer on [`docs/specs/assurance-runtime.md`](assurance-runtime.md). catalog infrastructure SSOT is not overwritten. No Entra/Okta collection or ISO remap is claimed.
+Done in the docs pass: this file’s §13, accepted [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md), IAM pointer on [`docs/specs/assurance-runtime.md`](assurance-runtime.md). catalog infrastructure SSOT is not overwritten. No Entra/Okta collection or ISO remap is claimed.
 
 ---
 
@@ -429,7 +429,7 @@ Workspace verify command is unchanged. Record the implement-phase HEAD SHA in th
 
 Architecture / public-contract decision: IAM content is a **canonical catalog family** (`control.identity.*`) consumed later by framework mappings, not an ISO-pack extension and not provider-prefixed checks.
 
-Accepted: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md).
+Accepted: [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md).
 
 ---
 
@@ -498,7 +498,7 @@ Implement-phase note: workspace HEAD at implement was still `5fa3a23a77e63e39b4a
 | Loader / digest | catalog infrastructure crate; no IAM-specific load path |
 | Target suite | `tests/contracts/iam_catalog.target.rs` (`sdd_iam_catalog_target`) GREEN IAM-001…016 |
 | Baseline suite | `tests/contracts/iam_catalog.baseline.rs` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0022-iam-canonical-assurance-catalog.md`](../adr/0022-iam-canonical-assurance-catalog.md) |
 | ISO pack | ISO remap remapped A.8.5 / A.8.2 / A.8.3 / A.5.15 / A.5.18 / A.5.16 / A.6.5 onto `control.identity.*`; slivers retired ([remap §13](iso-27001-canonical-remap.md#13-implement-log)) |
 | Collectors | No Entra/Okta/Workspace/GitHub-identity collector |
 

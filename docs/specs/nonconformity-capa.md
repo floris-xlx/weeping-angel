@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — Prompt 22 nonconformity / CAPA |
 | Slice | Canonical `Nonconformity` + `CorrectiveAction` lifecycle with containment, RCA, planned actions, implementation evidence, effectiveness review, and immutable closure |
 | Dual-suite | `sdd_nonconformity_capa_baseline` (skip-superseded) · `sdd_nonconformity_capa_target` GREEN (`tests/contracts/nonconformity_capa.{baseline,target}.rs`) — **not** auto-discovered (I3); listed in root [`Cargo.toml`](../../Cargo.toml). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
-| ADR | Accepted [`docs/adr/0003-nonconformity-capa.md`](../adr/0003-nonconformity-capa.md) — 0003-* sibling filename (cite by **path**) |
+| ADR | Accepted [`docs/adr/0028-nonconformity-capa.md`](../adr/0028-nonconformity-capa.md) — 0003-* sibling filename (cite by **path**) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — Nonconformity and CAPA pointer; do not fork the spine |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -793,7 +793,7 @@ Neighbor targets listed in the header stay GREEN.
 | `Cargo.toml` | `[[test]]` `sdd_nonconformity_capa_{baseline,target}` |
 | `tests/contracts/documentation_layout.rs` | `CANONICAL_SPECS` includes this file |
 | `docs/specs/assurance-runtime.md` | Pointer section |
-| `docs/adr/0003-nonconformity-capa.md` | Decision (Accepted) |
+| `docs/adr/0028-nonconformity-capa.md` | Decision (Accepted) |
 | `docs/sdd/nonconformity-capa.md` | Stub pointer only |
 
 Do not add a crate. Do not edit collision-fenced paths in §0.

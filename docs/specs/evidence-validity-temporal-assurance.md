@@ -7,7 +7,7 @@
 | Source prompt | [`docs/prompts/operational-isms-v1/14-temporal-assurance.md`](../prompts/operational-isms-v1/14-temporal-assurance.md) |
 | Slice | First-class evidence temporal fields, append-only validity/revocation events, deterministic as-of and period selection, temporal control projection, timeline/diff primitives |
 | Dual-suite (register at implement, **same commit** as the `.rs` files) | `sdd_evidence_validity_temporal_assurance_baseline` · `sdd_evidence_validity_temporal_assurance_target` (`tests/contracts/evidence_validity_temporal_assurance.{baseline,target}.rs`) |
-| ADR | Accepted [`docs/adr/0003-temporal-assurance.md`](../adr/0003-temporal-assurance.md) |
+| ADR | Accepted [`docs/adr/0035-temporal-assurance.md`](../adr/0035-temporal-assurance.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Protocol report (generated, gitignored) | [`.sdd/runs/sdd-evidence-validity-temporal-assurance.md`](../../.sdd/runs/sdd-evidence-validity-temporal-assurance.md) |
 | Consumes | Immutable ledger + typed envelopes ([`typed-evidence.md`](typed-evidence.md), ISO Phase 7–8), population latest/supersede ([`population-runtime.md`](population-runtime.md)), lineage snapshots ([`assessment-lineage.md`](assessment-lineage.md)) |
@@ -21,11 +21,11 @@
 | Validity-event schema | `evidence-validity/v1` (`EVIDENCE_VALIDITY_SCHEMA`) — append-only document beside envelopes, not an IR type |
 | Workspace verify (after implement) | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT **for this SDD run** of Prompt 14. A concurrent sibling run already claimed slug `temporal-assurance` ([`docs/specs/temporal-assurance.md`](temporal-assurance.md), dual-suite `sdd_temporal_assurance_*`, ADR [`0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md)). **Do not clobber those files.** This run owns:
+This document is the durable SSOT **for this SDD run** of Prompt 14. A concurrent sibling run already claimed slug `temporal-assurance` ([`docs/specs/temporal-assurance.md`](temporal-assurance.md), dual-suite `sdd_temporal_assurance_*`, ADR [`0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md)). **Do not clobber those files.** This run owns:
 
 ```text
 docs/specs/evidence-validity-temporal-assurance.md
-docs/adr/0003-temporal-assurance.md
+docs/adr/0035-temporal-assurance.md
 tests/contracts/evidence_validity_temporal_assurance.{baseline,target}.rs
 Cargo.toml [[test]] name sdd_evidence_validity_temporal_assurance_{baseline,target}
 .sdd/runs/sdd-evidence-validity-temporal-assurance.md   # generated; gitignored
@@ -35,7 +35,7 @@ It owns **evidence temporal fields**, **append-only validity / revocation events
 
 ### Remaining increment (Prompt 3 — do not fork this spec)
 
-This file and `sdd_evidence_validity_temporal_assurance_*` remain Prompt 14 validity-event law (GREEN / skip-superseded). Four-clock ledger APIs, immutable collection-run persist, and typed corrupt/schema failures are implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). Validity history stays append-only (`evidence-validity/v1`).
+This file and `sdd_evidence_validity_temporal_assurance_*` remain Prompt 14 validity-event law (GREEN / skip-superseded). Four-clock ledger APIs, immutable collection-run persist, and typed corrupt/schema failures are implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0047-temporal-lineage-evidence-soa-integrity.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). Validity history stays append-only (`evidence-validity/v1`).
 
 It does **not** own catalog TOML, the GitHub collector, ISO remapping, Prompt 10 Kleene evaluation, Prompt 13 scheduler product, Prompt 15+ ISMS events, UI charts, or a new long-term database.
 
@@ -55,7 +55,7 @@ This slice may edit only temporal-validity / as-of selection / period projection
 
 | Do not touch | Owner |
 | --- | --- |
-| `docs/specs/temporal-assurance.md`, `tests/contracts/temporal_assurance.*`, `sdd_temporal_assurance_*`, [`docs/adr/0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md) | Sibling Prompt 14 run (slug `temporal-assurance`) |
+| `docs/specs/temporal-assurance.md`, `tests/contracts/temporal_assurance.*`, `sdd_temporal_assurance_*`, [`docs/adr/0018-evidence-validity-temporal-assurance.md`](../adr/0018-evidence-validity-temporal-assurance.md) | Sibling Prompt 14 run (slug `temporal-assurance`) |
 | `docs/specs/continuous-assurance-scheduler.md`, `tests/contracts/continuous_assurance_scheduler.*`, [`docs/adr/0005-continuous-assurance-scheduler.md`](../adr/0005-continuous-assurance-scheduler.md) | Prompt 13 product (cadence, retry, daemon, `isms run`) |
 | Prompt 15+ event kinds (`ControlRegressed`, `EvidenceExpired`, generic event bus) | Prompt 15 ISMS events / drift |
 | `catalog/canonical/v1/**` domain TOML | catalog families |
@@ -563,7 +563,7 @@ Adding an envelope with `collected_at > as_of` or a validity event with `at > as
 
 Done after target GREEN:
 
-1. ADR [`0003-temporal-assurance.md`](../adr/0003-temporal-assurance.md) is **Accepted**.
+1. ADR [`0035-temporal-assurance.md`](../adr/0035-temporal-assurance.md) is **Accepted**.
 2. [`assurance-runtime.md`](assurance-runtime.md) documents envelope clocks, `evidence-validity/v1`, as-of/`within_window` split, period results, timeline/diff, and the Prompt 13 seam.
 3. This path is in `CANONICAL_SPECS` (`tests/contracts/documentation_layout.rs`).
 4. This spec’s Status is **Implemented**.

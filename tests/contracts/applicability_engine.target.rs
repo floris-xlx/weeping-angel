@@ -172,9 +172,9 @@ fn predicate_values(outcome: &ApplicabilityOutcome) -> Vec<(ApplicabilityPredica
 fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_applicability_engine_baseline")
+        !toml.contains("sdd_applicability_engine_baseline")
             && toml.contains("sdd_applicability_engine_target")
-            && toml.contains("tests/contracts/applicability_engine.baseline.rs")
+            && !toml.contains("tests/contracts/applicability_engine.baseline.rs")
             && toml.contains("tests/contracts/applicability_engine.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );

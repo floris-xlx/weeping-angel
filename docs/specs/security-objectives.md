@@ -7,7 +7,7 @@
 | Slice | First-class measurable security objectives + deterministic status projection from typed evidence |
 | Dual-suite | `sdd_security_objectives_baseline` (skip-superseded) · `sdd_security_objectives_target` (GREEN) |
 | Contract files | `tests/contracts/security_objectives.{baseline,target}.rs` — **not auto-discovered**; listed `[[test]]` in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0008-security-objectives.md`](../adr/0008-security-objectives.md). Cite by **path**. Concurrent `0008-*` siblings: [ISMS context](../adr/0008-isms-context.md), [scope engine](../adr/0008-scope-engine.md), [interested parties](../adr/0008-interested-parties-obligations.md). **Not** a `0003-*` sibling; 0004 is documentation architecture. |
+| ADR | Accepted [`docs/adr/0045-security-objectives.md`](../adr/0045-security-objectives.md). Cite by **path**. Concurrent `0008-*` siblings: [ISMS context](../adr/0008-isms-context.md), [scope engine](../adr/0044-scope-engine.md), [interested parties](../adr/0043-interested-parties-obligations.md). **Not** a `0003-*` sibling; 0004 is documentation architecture. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (security objectives section) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md) |
 | Typed evidence | [`docs/specs/typed-evidence.md`](typed-evidence.md) — **reuse** `EvidenceValue`; no second metric-value enum |
@@ -161,7 +161,7 @@ Pinned at characterization SHA `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a`.
 | Dual-suite neighbors | root `Cargo.toml` | `sdd_security_objectives_*` listed next to existing `sdd_*`. Directory is **not** auto-discovered. |
 | Docs layout | ADR 0004 | Human SSOT is this file. Traces go to `.sdd/runs`. This path is in `CANONICAL_SPECS`. |
 
-IR **must not** depend on `weeping-angel-evidence` (evidence already depends on IR; reversing the edge is forbidden by ADR 0001). Value-bearing evaluation types therefore live in `weeping-angel-assurance`, which already depends on both. See [ADR 0008](../adr/0008-security-objectives.md).
+IR **must not** depend on `weeping-angel-evidence` (evidence already depends on IR; reversing the edge is forbidden by ADR 0001). Value-bearing evaluation types therefore live in `weeping-angel-assurance`, which already depends on both. See [ADR 0008](../adr/0045-security-objectives.md).
 
 Landed additively: IR module + ids; assurance `objectives` module; golden fixture `security-objective-vuln-sla.json` **in addition to** existing IR JSON; dual-suite registration.
 
@@ -649,7 +649,7 @@ Cover explicitly: threshold boundaries, missing data, stale measurement, mixed m
 
 ## 9. ADR
 
-This is an architecture/contract decision (crate home for value-bearing types, reuse of `EvidenceValue`, status algebra, lineage snapshot schema, scope binding, crate-root name split). Accepted: [`docs/adr/0008-security-objectives.md`](../adr/0008-security-objectives.md).
+This is an architecture/contract decision (crate home for value-bearing types, reuse of `EvidenceValue`, status algebra, lineage snapshot schema, scope binding, crate-root name split). Accepted: [`docs/adr/0045-security-objectives.md`](../adr/0045-security-objectives.md).
 
 Filename **`0008-*`**. Do **not** add `0003-security-objectives.md`. Catalog-program ADRs share `0003-*`; documentation architecture is `0004`; concurrent Operational ISMS siblings also use `0008-*`.
 

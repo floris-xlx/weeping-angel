@@ -6,7 +6,7 @@
 | Program | Operational ISMS v1 — continuity / disaster-recovery governance |
 | Slice | Model business continuity and DR as **executable multi-dimension assurance**. Distinguish documented resilience *intentions* from demonstrated recovery *effectiveness*. Surface gaps as risk / remediation **references**. |
 | Dual-suite | `sdd_continuity_resilience_baseline` · `sdd_continuity_resilience_target` (`tests/contracts/continuity_resilience.{baseline,target}.rs`) — **not auto-discovered**; listed in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0005-continuity-resilience.md`](../adr/0005-continuity-resilience.md) — `0005-*` Operational ISMS sibling; cite by **path** |
+| ADR | Accepted [`docs/adr/0038-continuity-resilience.md`](../adr/0038-continuity-resilience.md) — `0005-*` Operational ISMS sibling; cite by **path** |
 | Prompt | [`docs/prompts/operational-isms-v1/20-continuity-resilience.md`](../prompts/operational-isms-v1/20-continuity-resilience.md) |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) — Continuity / resilience; do not fork the spine |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
@@ -544,7 +544,7 @@ path = "tests/contracts/continuity_resilience.target.rs"
 
 | Gate | Suite | Status |
 | --- | --- | --- |
-| Spec + ADR | this file + `docs/adr/0005-continuity-resilience.md` | Accepted |
+| Spec + ADR | this file + `docs/adr/0038-continuity-resilience.md` | Accepted |
 | Baseline on CURRENT | `sdd_continuity_resilience_baseline` | GREEN — §3 found cases that still hold; skip-superseded where they do not |
 | Target | `sdd_continuity_resilience_target` | **GREEN** — P20-T01…T16 call `evaluate_continuity_resilience` |
 | Implement | IR + `evaluate_continuity_resilience` | landed; **no** catalog ID rewrite |
@@ -606,9 +606,9 @@ path = "tests/contracts/continuity_resilience.target.rs"
 
 ## 8. ADR
 
-This is an architecture/contract decision (plan ≠ capability; AssetKind::Service; multi-dimension verdict; opaque Prompt 12/16 refs; no catalog rewrite). Accepted: [`docs/adr/0005-continuity-resilience.md`](../adr/0005-continuity-resilience.md).
+This is an architecture/contract decision (plan ≠ capability; AssetKind::Service; multi-dimension verdict; opaque Prompt 12/16 refs; no catalog rewrite). Accepted: [`docs/adr/0038-continuity-resilience.md`](../adr/0038-continuity-resilience.md).
 
-Filename **`0005-*`**. Operational ISMS siblings already use `0005-risk-methodology.md`, `0005-operational-risk-register.md`, `0005-continuous-assurance-scheduler.md`. Cite this file by **path**.
+Filename **`0005-*`**. Operational ISMS siblings already use `0041-risk-methodology.md`, `0040-operational-risk-register.md`, `0005-continuous-assurance-scheduler.md`. Cite this file by **path**.
 
 ---
 

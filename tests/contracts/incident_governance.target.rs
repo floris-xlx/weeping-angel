@@ -914,16 +914,16 @@ fn ig_011_graph_integrity_legacy_decode_and_ir019() {
 fn ig_012_dual_suite_registered_and_canonical_specs() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_incident_governance_baseline")
+        !toml.contains("sdd_incident_governance_baseline")
             && toml.contains("sdd_incident_governance_target")
-            && toml.contains("tests/contracts/incident_governance.baseline.rs")
+            && !toml.contains("tests/contracts/incident_governance.baseline.rs")
             && toml.contains("tests/contracts/incident_governance.target.rs"),
-        "IG-012: dual-suite must be listed in root Cargo.toml"
+        "IG-012: target suite listed; superseded baseline deleted"
     );
     assert!(
-        manifest_dir()
+        !manifest_dir()
             .join("tests/contracts/incident_governance.baseline.rs")
-            .is_file()
+            .exists()
     );
     assert!(
         manifest_dir()

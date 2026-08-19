@@ -156,10 +156,7 @@ fn source_grep_helper() -> &'static str {
 }
 
 fn hygiene_owned_paths() -> Vec<String> {
-    let mut out = vec![
-        "tests/contracts/repository_hygiene.baseline.rs".to_string(),
-        "tests/contracts/repository_hygiene.target.rs".to_string(),
-    ];
+    let mut out = vec!["tests/contracts/repository_hygiene.target.rs".to_string()];
     let support = rel("tests/support");
     if support.is_dir() {
         if let Ok(entries) = fs::read_dir(&support) {
@@ -180,17 +177,17 @@ fn hygiene_owned_paths() -> Vec<String> {
 fn dual_suite_is_registered_and_tests_sdd_stays_absent() {
     let cargo = read("Cargo.toml");
     assert!(
-        cargo.contains("name = \"sdd_repository_hygiene_baseline\""),
-        "register sdd_repository_hygiene_baseline in root Cargo.toml"
+        !cargo.contains("name = \"sdd_repository_hygiene_baseline\""),
+        "superseded hygiene baseline must not stay registered"
     );
     assert!(
         cargo.contains("name = \"sdd_repository_hygiene_target\""),
         "register sdd_repository_hygiene_target in root Cargo.toml"
     );
     assert!(
-        cargo.contains("path = \"tests/contracts/repository_hygiene.baseline.rs\"")
+        !cargo.contains("path = \"tests/contracts/repository_hygiene.baseline.rs\"")
             && cargo.contains("path = \"tests/contracts/repository_hygiene.target.rs\""),
-        "hygiene suites live under tests/contracts/"
+        "hygiene target lives under tests/contracts/; baseline deleted"
     );
     assert!(!rel("tests/sdd").exists(), "do not create tests/sdd/");
     assert!(

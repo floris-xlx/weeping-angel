@@ -978,8 +978,8 @@ fn p08_t16_dual_suite_registered() {
         "target suite must be listed in root Cargo.toml"
     );
     assert!(
-        toml.contains("sdd_risk_treatment_baseline")
-            && toml.contains("tests/contracts/risk_treatment.baseline.rs"),
+        !toml.contains("sdd_risk_treatment_baseline")
+            && !toml.contains("tests/contracts/risk_treatment.baseline.rs"),
         "baseline suite must remain registered beside the target"
     );
 }

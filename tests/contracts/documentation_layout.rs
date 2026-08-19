@@ -58,6 +58,7 @@ const CANONICAL_SPECS: &[&str] = &[
     "docs/specs/repository-integrity.md",
     "docs/specs/architectural-cleanup-program.md",
     "docs/specs/repository-hygiene.md",
+    "docs/specs/collector-hexagonal.md",
 ];
 
 #[test]
@@ -73,24 +74,45 @@ fn decisions_live_under_docs_adr() {
         "docs/adr/0001-inwardly-extensible-assurance-runtime.md"
     ));
     assert!(exists("docs/adr/0004-documentation-architecture.md"));
-    assert!(exists("docs/adr/0003-controlled-documents.md"));
-    assert!(exists("docs/adr/0003-isms-events-drift.md"));
-    assert!(exists("docs/adr/0003-internal-audit.md"));
-    assert!(exists("docs/adr/0003-nonconformity-capa.md"));
-    assert!(exists("docs/adr/0005-risk-methodology.md"));
-    assert!(exists("docs/adr/0005-operational-risk-register.md"));
-    assert!(exists("docs/adr/0005-continuity-resilience.md"));
+    assert!(exists("docs/adr/0017-controlled-documents.md"));
+    assert!(exists("docs/adr/0026-isms-events-drift.md"));
+    assert!(exists("docs/adr/0025-internal-audit.md"));
+    assert!(exists("docs/adr/0028-nonconformity-capa.md"));
+    assert!(exists("docs/adr/0041-risk-methodology.md"));
+    assert!(exists("docs/adr/0040-operational-risk-register.md"));
+    assert!(exists("docs/adr/0038-continuity-resilience.md"));
     assert!(exists("docs/adr/0008-isms-context.md"));
-    assert!(exists("docs/adr/0008-scope-engine.md"));
-    assert!(exists("docs/adr/0008-interested-parties-obligations.md"));
-    assert!(exists("docs/adr/0008-security-objectives.md"));
+    assert!(exists("docs/adr/0044-scope-engine.md"));
+    assert!(exists("docs/adr/0043-interested-parties-obligations.md"));
+    assert!(exists("docs/adr/0045-security-objectives.md"));
     assert!(exists("docs/adr/0006-risk-treatment-engine.md"));
     assert!(exists("docs/adr/0007-supplier-risk.md"));
     assert!(exists(
-        "docs/adr/0007-risk-identification-candidate-correlation.md"
+        "docs/adr/0042-risk-identification-candidate-correlation.md"
     ));
     assert!(exists("docs/adr/0009-repository-health-gate.md"));
     assert!(exists("docs/adr/0010-architecture-as-law.md"));
+    assert!(exists("docs/adr/0011-repository-guard-governance.md"));
+    assert!(exists("docs/adr/0012-repository-hygiene.md"));
+    assert!(exists(
+        "docs/adr/0013-collector-hexagonal-modular-monolith.md"
+    ));
+}
+
+#[test]
+fn adr_prefixes_are_unique() {
+    let dir = repo_root().join("docs/adr");
+    let mut seen = std::collections::BTreeMap::<String, Vec<String>>::new();
+    for entry in fs::read_dir(&dir).unwrap() {
+        let name = entry.unwrap().file_name().to_string_lossy().into_owned();
+        if let Some(prefix) = name.get(..4) {
+            if prefix.bytes().all(|b| b.is_ascii_digit()) {
+                seen.entry(prefix.to_string()).or_default().push(name);
+            }
+        }
+    }
+    let dups: Vec<_> = seen.into_iter().filter(|(_, v)| v.len() > 1).collect();
+    assert!(dups.is_empty(), "duplicate ADR prefixes: {dups:?}");
 }
 
 #[test]

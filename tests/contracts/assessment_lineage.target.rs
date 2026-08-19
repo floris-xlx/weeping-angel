@@ -823,9 +823,9 @@ fn lin_008_snapshot_and_result_digests_are_deterministic() {
 fn lin_009_dual_suite_binaries_are_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_assessment_lineage_baseline")
+        !toml.contains("sdd_assessment_lineage_baseline")
             && toml.contains("sdd_assessment_lineage_target")
-            && toml.contains("tests/contracts/assessment_lineage.baseline.rs")
+            && !toml.contains("tests/contracts/assessment_lineage.baseline.rs")
             && toml.contains("tests/contracts/assessment_lineage.target.rs"),
         "LIN-009: dual-suite binaries must be registered in root Cargo.toml"
     );

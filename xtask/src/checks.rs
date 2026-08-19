@@ -23,20 +23,77 @@ struct ArchitectureInvariantsCheck;
 struct DebtRegisterCheck;
 struct AdrGraphCheck;
 struct SpecLifecycleCheck;
-struct StubArchitectureCheck {
+struct ProductLawCheck {
     id: &'static str,
     name: &'static str,
+    required: &'static [(&'static str, &'static str)],
+    forbidden: &'static [(&'static str, &'static str)],
 }
 
-const PRODUCT_STUBS: [(&str, &str); 8] = [
-    ("05", "catalog-ssot"),
-    ("06", "framework-pack-parse"),
-    ("07", "framework-digest"),
-    ("08", "readiness-ssot"),
-    ("09", "temporal-evidence-selection"),
-    ("10", "assessment-lineage-rebuild"),
-    ("11", "evidence-latest-vs-current"),
-    ("12", "soa-invariants"),
+const PRODUCT_LAWS: [ProductLawCheck; 8] = [
+    ProductLawCheck {
+        id: "05",
+        name: "catalog-ssot",
+        required: &[
+            (
+                "weeping-angel-canonical-catalog",
+                "pub struct CanonicalCatalog",
+            ),
+            ("weeping-angel-canonical-catalog", "pub fn load("),
+        ],
+        forbidden: &[("weeping-angel-framework", "fn discover_catalog_index")],
+    },
+    ProductLawCheck {
+        id: "06",
+        name: "framework-pack-parse",
+        required: &[("weeping-angel-framework", "enum PackError")],
+        forbidden: &[],
+    },
+    ProductLawCheck {
+        id: "07",
+        name: "framework-digest",
+        required: &[("weeping-angel-framework", "struct FrameworkPackDigest")],
+        forbidden: &[],
+    },
+    ProductLawCheck {
+        id: "08",
+        name: "readiness-ssot",
+        required: &[("weeping-angel-assurance", "pub fn project_readiness(")],
+        forbidden: &[(
+            "weeping-angel-assurance",
+            "fn overlay_privileged_mfa_presence",
+        )],
+    },
+    ProductLawCheck {
+        id: "09",
+        name: "temporal-evidence-selection",
+        required: &[
+            ("weeping-angel-evidence", "pub fn current("),
+            ("weeping-angel-evidence", "pub fn as_of("),
+        ],
+        forbidden: &[],
+    },
+    ProductLawCheck {
+        id: "10",
+        name: "assessment-lineage-rebuild",
+        required: &[("weeping-angel-assurance", "pub fn replay_assessment(")],
+        forbidden: &[("weeping-angel-assurance", "Ok(reconstruct(bundle))")],
+    },
+    ProductLawCheck {
+        id: "11",
+        name: "evidence-latest-vs-current",
+        required: &[
+            ("weeping-angel-evidence", "pub fn latest("),
+            ("weeping-angel-evidence", "pub fn current("),
+        ],
+        forbidden: &[],
+    },
+    ProductLawCheck {
+        id: "12",
+        name: "soa-invariants",
+        required: &[("weeping-angel-assurance", "project_soa_from_snapshot")],
+        forbidden: &[],
+    },
 ];
 
 pub fn run_all_checks(repo: &RepositoryModel) -> Vec<CheckResult> {
@@ -46,8 +103,8 @@ pub fn run_all_checks(repo: &RepositoryModel) -> Vec<CheckResult> {
         ForbiddenPatternsCheck.check(repo),
         ArchitectureInvariantsCheck.check(repo),
     ];
-    for (id, name) in PRODUCT_STUBS {
-        checks.push(StubArchitectureCheck { id, name }.check(repo));
+    for law in &PRODUCT_LAWS {
+        checks.push(law.check(repo));
     }
     checks.push(DebtRegisterCheck.check(repo));
     checks.push(AdrGraphCheck.check(repo));
@@ -125,22 +182,27 @@ impl ArchitectureCheck for SpecLifecycleCheck {
     }
 }
 
-impl ArchitectureCheck for StubArchitectureCheck {
+impl ArchitectureCheck for ProductLawCheck {
     fn check(&self, repo: &RepositoryModel) -> CheckResult {
-        stub_check(self.id, self.name, &repo.debt_ids)
-    }
-}
-
-fn stub_check(id: &str, name: &str, finding_ids: &BTreeSet<String>) -> CheckResult {
-    let debt_id = format!("DEBT-GUARD-{id}");
-    if finding_ids.contains(&debt_id) {
-        CheckResult::skip(id, name, debt_id)
-    } else {
-        CheckResult::fail(
-            id,
-            name,
-            format!("not-yet-implemented: check {id} (no registered {debt_id} finding)"),
-        )
+        for (crate_name, needle) in self.required {
+            if !repo.crate_source_contains(crate_name, needle) {
+                return CheckResult::fail(
+                    self.id,
+                    self.name,
+                    format!("missing required surface in {crate_name}: {needle}"),
+                );
+            }
+        }
+        for (crate_name, needle) in self.forbidden {
+            if repo.crate_source_contains(crate_name, needle) {
+                return CheckResult::fail(
+                    self.id,
+                    self.name,
+                    format!("forbidden leftover in {crate_name}: {needle}"),
+                );
+            }
+        }
+        CheckResult::pass(self.id, self.name)
     }
 }
 
@@ -226,6 +288,8 @@ fn evaluate_invariant(
         "INV-OWNERSHIP-LIVE-CRATES" => eval_ownership_live_crates(repo),
         "INV-NO-HYPOTHETICAL-PACKAGES" => eval_no_hypothetical_packages(repo),
         "INV-DEBT-RESOLVED-HAS-PROOF" => eval_debt_resolved_has_proof(repo),
+        "INV-ADR-NAMESPACE-UNIQUE" => eval_adr_namespace_unique(repo),
+        "INV-NO-SUPERSEDED-BASELINES" => eval_no_superseded_baselines(repo),
         "INV-INVARIANTS-EVALUATED" => {
             let backlog = inv
                 .summary
@@ -352,6 +416,48 @@ fn eval_debt_resolved_has_proof(repo: &RepositoryModel) -> (bool, String) {
             true,
             "debt register validates resolved-without-proof law (check 13)".into(),
         ),
+    }
+}
+
+fn eval_adr_namespace_unique(repo: &RepositoryModel) -> (bool, String) {
+    let mut by_prefix: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for name in &repo.adr_files {
+        if let Some(prefix) = crate::architecture::adr_filename_prefix(name) {
+            by_prefix.entry(prefix).or_default().push(name.clone());
+        }
+    }
+    let dups: Vec<String> = by_prefix
+        .into_iter()
+        .filter(|(_, files)| files.len() > 1)
+        .map(|(prefix, files)| format!("{prefix}: {}", files.join(", ")))
+        .collect();
+    if dups.is_empty() {
+        (
+            true,
+            format!("{} ADR files have unique prefixes", repo.adr_files.len()),
+        )
+    } else {
+        (
+            false,
+            format!("duplicate ADR prefixes: {}", dups.join("; ")),
+        )
+    }
+}
+
+fn eval_no_superseded_baselines(repo: &RepositoryModel) -> (bool, String) {
+    let leftovers: Vec<String> = repo
+        .filesystem
+        .iter()
+        .filter(|p| p.ends_with(".baseline.rs") || p.ends_with("_baseline.rs"))
+        .cloned()
+        .collect();
+    if leftovers.is_empty() {
+        (true, "no superseded baseline suites on disk".into())
+    } else {
+        (
+            false,
+            format!("deleted-baseline leftovers: {}", leftovers.join(", ")),
+        )
     }
 }
 
@@ -582,7 +688,9 @@ fn check_14_on_model(repo: &RepositoryModel) -> Result<(), String> {
         return Err("docs/adr contains no markdown ADRs".into());
     }
 
-    if !repo.debt_ids.contains(&identity.grandfathered_debt) {
+    if !identity.grandfathered_debt.is_empty()
+        && !repo.debt_ids.contains(&identity.grandfathered_debt)
+    {
         return Err(format!(
             "grandfathered ADR prefixes require live finding {}",
             identity.grandfathered_debt

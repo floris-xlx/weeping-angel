@@ -290,10 +290,10 @@ fn crate_toml(name: &str) -> String {
 fn cas_001_dual_suite_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("name = \"sdd_continuous_assurance_scheduler_baseline\"")
-            && toml
+        !toml.contains("name = \"sdd_continuous_assurance_scheduler_baseline\"")
+            && !toml
                 .contains("path = \"tests/contracts/continuous_assurance_scheduler.baseline.rs\""),
-        "baseline suite must be listed in root Cargo.toml"
+        "superseded baseline suite must be deleted from Cargo.toml"
     );
     assert!(
         toml.contains("name = \"sdd_continuous_assurance_scheduler_target\"")
@@ -301,13 +301,13 @@ fn cas_001_dual_suite_registered() {
         "target suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
     );
     assert!(
-        manifest_dir()
+        !manifest_dir()
             .join("tests/contracts/continuous_assurance_scheduler.baseline.rs")
-            .is_file()
+            .exists()
             && manifest_dir()
                 .join("tests/contracts/continuous_assurance_scheduler.target.rs")
                 .is_file(),
-        "both dual-suite files must exist"
+        "target must exist; superseded baseline must be deleted"
     );
 }
 

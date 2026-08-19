@@ -603,9 +603,9 @@ fn assert_gap_on(label: &str, expected: &Value, dimension: &str) {
 fn p20_t11_dual_suite_is_registered_and_specified() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_continuity_resilience_baseline")
+        !toml.contains("sdd_continuity_resilience_baseline")
             && toml.contains("sdd_continuity_resilience_target")
-            && toml.contains("tests/contracts/continuity_resilience.baseline.rs")
+            && !toml.contains("tests/contracts/continuity_resilience.baseline.rs")
             && toml.contains("tests/contracts/continuity_resilience.target.rs"),
         "target suite must be listed in root Cargo.toml"
     );

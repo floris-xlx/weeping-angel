@@ -8,7 +8,7 @@
 | Slice | Interested parties / obligations — canonical obligation layer between organizational context and controls |
 | Dual-suite | `sdd_interested_parties_obligations_baseline` (skip-superseded) · `sdd_interested_parties_obligations_target` (GREEN) |
 | Contract files | `tests/contracts/interested_parties_obligations.{baseline,target}.rs` — **not auto-discovered**; list `[[test]]` in root [`Cargo.toml`](../../Cargo.toml) |
-| ADR | Accepted [`docs/adr/0008-interested-parties-obligations.md`](../adr/0008-interested-parties-obligations.md) (**0004** is documentation architecture — do not reuse that number). Cite by **path**. |
+| ADR | Accepted [`docs/adr/0043-interested-parties-obligations.md`](../adr/0043-interested-parties-obligations.md) (**0004** is documentation architecture — do not reuse that number). Cite by **path**. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (interested parties / obligations section; do not fork the spine) |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md) |
 | ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
@@ -720,7 +720,7 @@ Test comments and spec/ADR prose name the slice **interested parties / obligatio
 
 ## 9. ADR
 
-Accepted: [`docs/adr/0008-interested-parties-obligations.md`](../adr/0008-interested-parties-obligations.md). **0004** remains documentation architecture. Cite by path.
+Accepted: [`docs/adr/0043-interested-parties-obligations.md`](../adr/0043-interested-parties-obligations.md). **0004** remains documentation architecture. Cite by path.
 
 ---
 
@@ -738,5 +738,5 @@ Tests/docs:
 
 - `tests/contracts/interested_parties_obligations.{baseline,target}.rs`
 - root `Cargo.toml` `[[test]]` rows
-- this spec; [`docs/adr/0008-interested-parties-obligations.md`](../adr/0008-interested-parties-obligations.md)
+- this spec; [`docs/adr/0043-interested-parties-obligations.md`](../adr/0043-interested-parties-obligations.md)
 - `sdd_documentation_layout` `CANONICAL_SPECS` entry `docs/specs/interested-parties-obligations.md`
