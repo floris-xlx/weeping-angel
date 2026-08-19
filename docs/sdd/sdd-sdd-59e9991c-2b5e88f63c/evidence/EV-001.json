@@ -1,0 +1,11 @@
+{
+  "classification": "pass",
+  "command": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture",
+  "cwd": "C:\\Users\\floris\\.xylex-sdd\\worktrees\\59e9991c93075928\\sdd-59e9991c-2b5e88f63c\\baseline",
+  "exit_code": 0,
+  "files_hash": "",
+  "id": "EV-001",
+  "phase": "baseline-pre",
+  "stderr_excerpt": "",
+  "stdout_excerpt": "   Compiling weeping-angel v0.2.0 (C:\\Users\\floris\\.xylex-sdd\\worktrees\\59e9991c93075928\\sdd-59e9991c-2b5e88f63c\\baseline)\n   Compiling weeping-angel-assurance v0.2.0 (C:\\Users\\floris\\.xylex-sdd\\worktrees\\59e9991c93075928\\sdd-59e9991c-2b5e88f63c\\baseline\\crates\\weeping-angel-assurance)\n\nrunning 15 tests\n    Finishedtest framework_and_collector_crates_stay_catalog_blind ... ok\ntest prompt_01_and_04_ssot_docs_are_not_overwritten ... ok\ntest manual_control_cannot_auto_pass_without_attestation ... ok\ntest iso_and_fixture_existence_pass_on_one_envelope ... ok\ntest population_uses_inventory_subject_and_complete ... ok\ntest expired_and_revoked_exceptions_do_not_except ... ok\ntest evaluator_distinguishes_missing_stale_fail_manual_and_exception ... ok\ntest scanner_engines_are_not_catalog_contracts ... ok\ntest github_collector_still_advertises_source_star_types ... ok\ntest iso_source_sliver_ids_tests_and_mappings_are_unchanged ... ok\ntest fixture_protected_branch_is_exists_only_and_survives ... ok\ntest catalog_ids_and_validator_stay_provider_and_framework_neutral ... ok\ntest identity_family_and_iam_fixtures_remain ... ok\ntest no_repository_inventory_resolver_or_second_value_enum ... ok\ntest catalog_loader_validate_and_digest_remain_the_single_ssot ... ok\n\ntest result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n `test` profile [unoptimized + debuginfo] target(s) in 36.18s\n     Running tests\\sdd\\sdlc_catalog.baseline.rs (target\\debug\\deps\\sdd_sdlc_catalog_baseline-e4d0e070dfdfb9c2.exe)\nSDD_EXIT_CODE=0\nSDD_DURATION_MS=36262"
+}
