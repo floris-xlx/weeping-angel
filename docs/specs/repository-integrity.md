@@ -6,12 +6,12 @@
 | Program | Repository Integrity & Technical-Debt Reconciliation |
 | Slice | Increment 1 — sections 1–4: executable architecture health model (manifests + debt register + `xtask guard` + CI). **Not** P0 remediations. |
 | Dual-suite | `sdd_repository_integrity_baseline` · `sdd_repository_integrity_target` (`tests/contracts/repository_integrity.{baseline,target}.rs`) — **not** auto-discovered; listed as `[[test]]` in root `Cargo.toml`. Baseline `#[ignore]`-superseded. `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)) |
-| ADR | **Accepted** [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md). Duplicate `0003-*` / `0005-*` / `0007-*` / `0008-*` IDs remain debt (`DEBT-DUP-ADR`); do **not** mint another `0003-*`. Next unique number is **0010**. |
+| ADR | **Accepted** [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md). Duplicate `0003-*` / `0005-*` / `0007-*` / `0008-*` IDs remain debt (`DEBT-DUP-ADR`); do **not** mint another `0003-*`. Successor: [ADR 0010](../adr/0010-architecture-as-law.md) (architecture-as-law). Next unique number is **0011**. |
 | Public contract | This file. Assurance runtime public contract remains [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (untouched). |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | Documentation architecture | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) — human SSOT is this file under `docs/specs/`. `docs/sdd/repository-integrity.md` is a pointer stub only. Generated traces go to `.sdd/`. |
 | Neighbors (must stay GREEN after implement) | `sdd_documentation_layout`, `sdd_assurance_runtime_target`, `sdd_canonical_assurance_catalog_target`, `sdd_iso27001_assurance_target` |
-| Collision fence | Do not implement remaining_backlog (P0 remediations, guard checks 04–12 / 14–15 beyond stubs). Do not invent crates named `weeping-angel-catalog` or `weeping-angel-assurance-cli`. |
+| Collision fence | This slice does not implement P0 remediations. Guard **04** is implemented by the successor program ([ADR 0010](../adr/0010-architecture-as-law.md)); checks **05–12 / 14–15** stay stubs. Do not invent crates named `weeping-angel-catalog` or `weeping-angel-assurance-cli`. |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Characterization SHA | `f560196c57e77df2573cfb9a4b384d3cf1c21e8a` |
@@ -33,11 +33,11 @@ This slice adds a **repository-level** law beside that graph:
 
 ```text
 architecture.toml (ownership)
-  + invariants.toml (declared, not yet evaluated as checks 04+)
+  + invariants.toml (declared this slice; evaluated as check 04 by ADR 0010)
   + forbidden-patterns.toml
   + docs/debt/register.toml
         ↓
-cargo xtask guard   (fail-closed; stubs are not silent passes)
+cargo xtask guard   (fail-closed; remaining stubs are not silent passes)
         ↓
 CI must run it
 ```
@@ -61,7 +61,7 @@ This slice may add **only** the health-gate surfaces listed in §4. It must not 
 | Existing dual-suite bodies except additive `Cargo.toml` `[[test]]` rows and `CANONICAL_SPECS` | Neighbors stay GREEN |
 | `tests/sdd/` | ADR 0004 forbids this path |
 | Hypothetical packages `weeping-angel-catalog`, `weeping-angel-assurance-cli` | **Do not invent** |
-| Guard checks 04–12 and 14–15 as real implementations | remaining_backlog — stub fail-closed or skip-with-debt only |
+| Guard checks 05–12 and 14–15 as real implementations | remaining_backlog — stub fail-closed or skip-with-debt only. Check **04** is [ADR 0010](../adr/0010-architecture-as-law.md). |
 
 Suggested **implement** surfaces (new files only, plus tiny wiring):
 
@@ -106,7 +106,7 @@ cargo xtask guard
   → 03 forbidden-patterns.toml present
   → 13 debt register schema + unique finding IDs
        + status=resolved requires regression_tests or repository_guard
-  → 04–12, 14–15 are explicit stubs (fail closed or skip only with a registered debt finding)
+  → 04 evaluates invariants (ADR 0010); 05–12, 14–15 are explicit stubs (fail closed or skip only with a registered debt finding)
   → non-zero exit if any implemented check fails
 ```
 
@@ -307,7 +307,7 @@ Must exist and be parseable TOML with:
 schema = "weeping-angel/architecture-invariants/v1"
 ```
 
-It MAY list named invariants (IDs, prose, optional `guard_check` references) for later slices. **Evaluating** those invariants is check **04** (stub this increment). Presence/parse is **not** silently “all invariants hold.”
+It MAY list named invariants (IDs, prose, optional `guard_check` references) for later slices. **Evaluating** those invariants is check **04** (stub in this health-gate slice; implemented by [ADR 0010](../adr/0010-architecture-as-law.md)). Presence/parse is **not** silently “all invariants hold.”
 
 #### 4.1.3 `architecture/forbidden-patterns.toml` (check 03)
 
@@ -317,7 +317,7 @@ Must exist and be parseable TOML with:
 schema = "weeping-angel/forbidden-patterns/v1"
 ```
 
-This increment requires the **file** and a parseable schema. Enforcing grep/AST matches against the tree is remaining_backlog (may be one of checks 04–12). The file SHOULD declare at least the hypothetical crate names as forbidden patterns so later enforcement has a seed:
+This increment requires the **file** and a parseable schema. Executing `kind` against the tree is [ADR 0010](../adr/0010-architecture-as-law.md) check **03** (not a new grep crate). The file SHOULD declare at least the hypothetical crate names as forbidden patterns so enforcement has a seed:
 
 - package name `weeping-angel-catalog`
 - package name `weeping-angel-assurance-cli`
@@ -408,7 +408,7 @@ xtask = "run --package xtask --"
 | 01 | Architecture manifest present + parseable | **Implement** |
 | 02 | Canonical ownership table present (seven concepts → live crates) | **Implement** |
 | 03 | Forbidden-patterns file present + parseable | **Implement** |
-| 04 | Architecture invariants evaluated | Stub |
+| 04 | Architecture invariants evaluated | Stub this slice; **real** in [ADR 0010](../adr/0010-architecture-as-law.md) |
 | 05 | Catalog SSOT (no dual catalog sources) | Stub |
 | 06 | Framework pack parse fail-closed | Stub |
 | 07 | Framework digest redesign | Stub |
@@ -421,7 +421,7 @@ xtask = "run --package xtask --"
 | 14 | ADR graph / unique ADR IDs | Stub |
 | 15 | Spec lifecycle states / crate dependency graph policy | Stub |
 
-Do **not** implement 04–12 / 14–15 beyond the stub contract.
+This slice did **not** implement 04–12 / 14–15 beyond the stub contract. Successor [ADR 0010](../adr/0010-architecture-as-law.md) implements **04** only.
 
 ### 4.4 CI
 
@@ -465,7 +465,7 @@ Target tests (must fail before product files exist; pass after):
 | RI-T10 | Workspace members include `xtask`; `.cargo/config.toml` aliases `xtask` |
 | RI-T11 | `cargo xtask guard` is invocable (process starts; implemented checks run) |
 | RI-T12 | Checks 01, 02, 03, 13 actually execute (report lines, not comments) |
-| RI-T13 | Checks 04–12 and 14–15 do not silently pass: skip cites `DEBT-GUARD-NN` **or** fail `not-yet-implemented` |
+| RI-T13 | Check **04** pass/evaluated (ADR 0010). Checks **05–12** and **14–15** do not silently pass: skip cites `DEBT-GUARD-NN` **or** fail `not-yet-implemented` |
 | RI-T14 | `.github/workflows/ci.yml` contains a step running `cargo xtask guard` |
 | RI-T15 | Dual-suite names `sdd_repository_integrity_{baseline,target}` are listed in root `Cargo.toml` |
 | RI-T16 | This spec path is in `CANONICAL_SPECS` |
@@ -479,7 +479,7 @@ Target tests (must fail before product files exist; pass after):
 - [x] `docs/debt/register.toml` requires `id` + `status`; unique ids; `resolved` without `regression_tests` or `repository_guard` is rejected.
 - [x] `docs/debt/README.md` and `docs/debt/baseline-2026-08.md` exist; baseline records the live counts in §3.6 (re-measured).
 - [x] Workspace member `xtask` exists; `.cargo/config.toml` defines `xtask` alias; `cargo xtask guard` runs checks 01, 02, 03, 13.
-- [x] Guard checks 04–12 and 14–15 are stubs: fail closed or skip only with a registered debt finding — never a silent pass.
+- [x] Guard checks 05–12 and 14–15 are stubs: fail closed or skip only with a registered debt finding — never a silent pass. Check **04** is evaluated by [ADR 0010](../adr/0010-architecture-as-law.md).
 - [x] CI workflow contains a mandatory `cargo xtask guard` step.
 - [x] Dual-suite `sdd_repository_integrity_{baseline,target}` is registered in root `Cargo.toml`; baseline skip-superseded after target GREEN.
 - [x] `sdd_documentation_layout` stays GREEN with this spec in `CANONICAL_SPECS`.
@@ -511,13 +511,13 @@ cargo test --test sdd_documentation_layout
 cargo fmt --all -- --check
 ```
 
-Shipped stub policy: checks 04–12 / 14–15 print `skip(DEBT-GUARD-NN)` when that finding exists; otherwise fail closed. Guard exit 0 if implemented checks pass. `cargo clippy` / full `cargo test --features demo --all-targets` remain the existing CI commands (not `--workspace`); CI additionally runs `cargo xtask guard`. Root `cargo test --all-targets` does **not** run `cargo test -p xtask`.
+Shipped stub policy after ADR 0010: checks **05–12 / 14–15** print `skip(DEBT-GUARD-NN)` when that finding exists; otherwise fail closed. Check **04** passes when every invariant evaluates. Guard exit 0 if implemented checks pass. `cargo clippy` / full `cargo test --features demo --all-targets` remain the existing CI commands (not `--workspace`); CI additionally runs `cargo xtask guard`. Root `cargo test --all-targets` does **not** run `cargo test -p xtask`.
 
 ---
 
 ## 8. remaining_backlog (out of scope for this slice)
 
-Do **not** implement these. Record them in the spec and optionally as `open`/`confirmed` debt rows. They correspond to stubbed checks 04–12 / 14–15 and P0 remediations.
+Do **not** implement these in the health-gate slice. Record them in the spec and optionally as `open`/`confirmed` debt rows. They correspond to stubbed checks **05–12 / 14–15** and P0 remediations. Check **04** is closed by [ADR 0010](../adr/0010-architecture-as-law.md).
 
 1. P0 framework expression preservation
 2. Fail-closed pack parsing (check 06)
@@ -535,7 +535,7 @@ Do **not** implement these. Record them in the spec and optionally as `open`/`co
 14. Spec lifecycle states
 15. Deleting obsolete baseline suites
 16. Test-support crate
-17. Remaining guard checks 04–12 and 14–15 beyond stubs (including evaluating `invariants.toml`)
+17. Remaining guard checks **05–12** and **14–15** beyond stubs (check **04** evaluates `invariants.toml` — ADR 0010)
 18. Switching CI clippy/test to `--workspace`
 
 ---
@@ -543,6 +543,7 @@ Do **not** implement these. Record them in the spec and optionally as `open`/`co
 ## 9. Related
 
 - Decision (Accepted): [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md)
+- Successor (architecture-as-law): [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md), [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md)
 - Docs layout: [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md)
 - Crate graph: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md)
 - Catalog crate: [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md)

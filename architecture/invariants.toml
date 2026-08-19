@@ -1,7 +1,6 @@
 schema = "weeping-angel/architecture-invariants/v1"
 
-# Declared this increment. Evaluating these rows is guard check 04 (stub).
-# Presence of this file is not a claim that all invariants hold.
+# Guard 04 evaluates every [[invariant]] against RepositoryModel.
 
 [[invariant]]
 id = "INV-OWNERSHIP-LIVE-CRATES"
@@ -20,5 +19,5 @@ guard_check = "13"
 
 [[invariant]]
 id = "INV-INVARIANTS-EVALUATED"
-summary = "Evaluating this file against the tree is remaining_backlog"
+summary = "Every [[invariant]] is evaluated against RepositoryModel; skip is illegal without a live debt id"
 guard_check = "04"

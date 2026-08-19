@@ -14,7 +14,7 @@
 | Telemetry | [`repository-integrity-health-gate-telemetry.json`](repository-integrity-health-gate-telemetry.json) |
 | Dual-suite | `tests/contracts/repository_integrity.baseline.rs` (skip-retired; 12 ignored) · `tests/contracts/repository_integrity.target.rs` (active; RI-T01–T17 / 18 tests) |
 | Characterization SHA | `f560196c57e77df2573cfb9a4b384d3cf1c21e8a` |
-| Collision fence | Do not implement remaining_backlog. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. Do not mint another `0003-*` ADR. `xtask` stays `publish = false`. |
+| Collision fence | Do not implement remaining_backlog. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. Do not mint another `0003-*` ADR. `xtask` stays `publish = false`. Successor increment: [ADR 0010](../adr/0010-architecture-as-law.md). |
 
 Durable finalize artifact for telemetry run `sdd-f0d2a357dd63`. Product law lives in the linked spec; this file records protocol evidence, gates, and telemetry.
 

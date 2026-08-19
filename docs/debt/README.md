@@ -1,6 +1,6 @@
 # Technical-debt register
 
-Canonical machine register: [`register.toml`](register.toml) (`schema = "weeping-angel/debt-register/v1"`). Decision: [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md).
+Canonical machine register: [`register.toml`](register.toml) (`schema = "weeping-angel/debt-register/v1"`). Decisions: [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md), [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md).
 
 This README is not a second register. Dated snapshots such as [`baseline-2026-08.md`](baseline-2026-08.md) are evidence, not status.
 
@@ -34,4 +34,4 @@ Guard check **13** (`cargo xtask guard`) rejects:
 
 ## Stubbed guard checks
 
-Checks 04–12 and 14–15 may skip only by citing a registered `DEBT-GUARD-NN` finding. Silent pass is forbidden.
+Check **04** is implemented ([ADR 0010](../adr/0010-architecture-as-law.md)); `DEBT-GUARD-04` is `resolved` with `repository_guard = "04"` and `regression_tests`. Checks **05–12** and **14–15** may skip only by citing a registered `DEBT-GUARD-NN` finding. Silent pass is forbidden.

@@ -5,7 +5,7 @@
 | Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | Nothing. Relocates documentation that previously mixed SSOT and agent traces under `docs/sdd/`. Does **not** change assurance runtime, catalog, or collector decisions. |
+| Supercedes | Nothing. Relocates documentation that previously mixed SSOT and agent traces under `docs/sdd/`. Does **not** change assurance runtime, catalog, or collector decisions. Dual-suite home for architecture-as-law increment: [ADR 0010](0010-architecture-as-law.md) (`xtask/tests/*.rs`). |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) (where the spine spec and public contract live) |
 
 ## Context
@@ -30,7 +30,7 @@ Rules:
 
 1. **Specs** are the human SSOT. Dual-suite reports, telemetry, and run folders MUST NOT live beside them.
 2. **ADRs** stay under `docs/adr/`. Cite specs and tests by those canonical paths.
-3. **Executable invariants** are `tests/contracts/*.target.rs` (and superseded `*.baseline.rs`). They remain explicitly listed in root [`Cargo.toml`](../../Cargo.toml); the directory is not Cargo auto-discovery.
+3. **Executable invariants** are `tests/contracts/*.target.rs` (and superseded `*.baseline.rs`). They remain explicitly listed in root [`Cargo.toml`](../../Cargo.toml); the directory is not Cargo auto-discovery. [ADR 0010](0010-architecture-as-law.md) increment-1 law additionally lives in `xtask/tests/*.rs` (`cargo test -p xtask`); still never `tests/sdd/`.
 4. **Generated SDD output** writes to `.sdd/runs/` (history) and `.sdd/artifacts/` (snapshots). Successful traces MUST NOT be added to the primary source tree.
 5. Stubs at [`docs/sdd/README.md`](../sdd/README.md) and [`docs/contracts/README.md`](../contracts/README.md) point at the new locations. They are not a second SSOT.
 

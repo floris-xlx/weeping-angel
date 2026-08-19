@@ -94,9 +94,11 @@ source = "crates/weeping-angel-evidence"
 [[finding]]
 id = "DEBT-GUARD-04"
 title = "Guard check 04 not implemented"
-status = "open"
-summary = "Architecture invariants.toml is declared but not evaluated. Check 04 is a stub this increment."
+status = "resolved"
+summary = "Guard 04 evaluates architecture/invariants.toml against RepositoryModel (Phase 1)."
 source = "cargo xtask guard"
+repository_guard = "04"
+regression_tests = ["sdd_architectural_cleanup_target"]
 
 [[finding]]
 id = "DEBT-GUARD-05"

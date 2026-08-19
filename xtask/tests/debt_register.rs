@@ -15,36 +15,98 @@ fn write_minimal_repo(root: &Path, register: &str) {
     fs::create_dir_all(root.join("crates/weeping-angel-evidence")).unwrap();
     fs::create_dir_all(root.join("src")).unwrap();
     fs::write(
+        root.join("Cargo.toml"),
+        r#"[workspace]
+members = [
+    "crates/weeping-angel-canonical-catalog",
+    "crates/weeping-angel-framework",
+    "crates/weeping-angel-assurance",
+    "crates/weeping-angel-evidence",
+]
+
+[package]
+name = "weeping-angel"
+version = "0.0.0"
+edition = "2024"
+"#,
+    )
+    .unwrap();
+    for pkg in [
+        "weeping-angel-canonical-catalog",
+        "weeping-angel-framework",
+        "weeping-angel-assurance",
+        "weeping-angel-evidence",
+    ] {
+        fs::write(
+            root.join(format!("crates/{pkg}/Cargo.toml")),
+            format!("[package]\nname = \"{pkg}\"\nversion = \"0.0.0\"\nedition = \"2024\"\n"),
+        )
+        .unwrap();
+    }
+    fs::write(
         root.join("architecture/architecture.toml"),
         r#"schema = "weeping-angel/architecture/v1"
 
 [ownership.catalog]
 crate = "weeping-angel-canonical-catalog"
+kind = "exclusive"
 paths = ["crates/weeping-angel-canonical-catalog"]
 
 [ownership.framework_compilation]
 crate = "weeping-angel-framework"
+kind = "exclusive"
 paths = ["crates/weeping-angel-framework"]
 
 [ownership.readiness_projection]
 crate = "weeping-angel-assurance"
+kind = "projection"
 paths = ["crates/weeping-angel-assurance/src/readiness.rs"]
 
 [ownership.temporal_evidence_selection]
 crate = "weeping-angel-assurance"
+kind = "exclusive"
 paths = ["crates/weeping-angel-assurance/src/temporal.rs"]
 
 [ownership.assessment_lineage]
 crate = "weeping-angel-assurance"
+kind = "exclusive"
 paths = ["crates/weeping-angel-assurance/src/lineage.rs"]
 
 [ownership.evidence_persistence]
 crate = "weeping-angel-evidence"
+kind = "exclusive"
 paths = ["crates/weeping-angel-evidence"]
 
 [ownership.assurance_cli]
 crate = "weeping-angel"
+kind = "facade"
 paths = ["src/main.rs", "src/cli.rs"]
+"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("architecture/invariants.toml"),
+        r#"schema = "weeping-angel/architecture-invariants/v1"
+
+[[invariant]]
+id = "INV-OWNERSHIP-LIVE-CRATES"
+summary = "Ownership table names live workspace packages and existing paths only"
+guard_check = "02"
+
+[[invariant]]
+id = "INV-NO-HYPOTHETICAL-PACKAGES"
+summary = "Packages weeping-angel-catalog and weeping-angel-assurance-cli must not exist"
+guard_check = "02"
+
+[[invariant]]
+id = "INV-DEBT-RESOLVED-HAS-PROOF"
+summary = "status=resolved requires regression_tests or repository_guard"
+guard_check = "13"
+
+[[invariant]]
+id = "INV-INVARIANTS-EVALUATED"
+summary = "Every [[invariant]] is evaluated against RepositoryModel; skip is illegal without a live debt id"
+guard_check = "04"
 "#,
     )
     .unwrap();
@@ -77,7 +139,6 @@ paths = ["src/main.rs", "src/cli.rs"]
 fn seed_findings() -> String {
     let mut body = String::from("schema = \"weeping-angel/debt-register/v1\"\n");
     for id in [
-        "DEBT-GUARD-04",
         "DEBT-GUARD-05",
         "DEBT-GUARD-06",
         "DEBT-GUARD-07",
@@ -176,15 +237,17 @@ fn guard_on_fixture_repo_runs_implemented_checks_and_skips_stubs() {
     let report = run_guard(dir.path());
     let rendered = report.render();
     assert!(!report.failed(), "{rendered}");
-    for id in ["01", "02", "03", "13"] {
+    for id in ["01", "02", "03", "04", "13"] {
         assert!(
             rendered.contains(&format!("{id}  ")) && rendered.contains("pass"),
             "expected pass for check {id}: {rendered}"
         );
     }
-    for id in [
-        "04", "05", "06", "07", "08", "09", "10", "11", "12", "14", "15",
-    ] {
+    assert!(
+        rendered.contains("04  architecture-invariants  pass"),
+        "Guard 04 must evaluate invariants: {rendered}"
+    );
+    for id in ["05", "06", "07", "08", "09", "10", "11", "12", "14", "15"] {
         assert!(
             rendered.contains(&format!("skip(DEBT-GUARD-{id})")),
             "stub {id} must skip-with-debt: {rendered}"
@@ -214,7 +277,11 @@ summary = "does not cover stubs"
         "stubs without debt must fail closed: {rendered}"
     );
     assert!(
-        rendered.contains("not-yet-implemented: check 04"),
+        rendered.contains("not-yet-implemented: check 05"),
         "{rendered}"
+    );
+    assert!(
+        rendered.contains("04  architecture-invariants  pass"),
+        "Guard 04 is real and must evaluate even when remaining stubs fail closed: {rendered}"
     );
 }

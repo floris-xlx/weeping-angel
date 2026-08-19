@@ -125,3 +125,9 @@ deploy = true
 openapi = true
 issues = true
 commit = true
+
+[adr]
+format = "xylex"
+id_scope = "repository"
+id_width = 4
+roots = ["docs/adr"]

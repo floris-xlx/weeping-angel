@@ -26,9 +26,7 @@ const OWNERSHIP_CONCEPTS: [&str; 7] = [
     "assurance_cli",
 ];
 
-const STUB_CHECKS: [&str; 11] = [
-    "04", "05", "06", "07", "08", "09", "10", "11", "12", "14", "15",
-];
+const STUB_CHECKS: [&str; 10] = ["05", "06", "07", "08", "09", "10", "11", "12", "14", "15"];
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -504,10 +502,23 @@ fn ri_t11_cargo_xtask_guard_runs_implemented_checks() {
     }
 }
 
-/// RI-T13: stubs 04–12 and 14–15 never silently pass.
+/// RI-T13: check 04 is pass/evaluated; stubs 05–12 and 14–15 never silently pass.
 #[test]
 fn ri_t13_stub_checks_do_not_silently_pass() {
     let combined = guard_report();
+    assert!(
+        combined.contains("04  architecture-invariants  pass")
+            || (combined.contains("architecture-invariants")
+                && combined.contains("04")
+                && combined.contains("pass")
+                && !combined.contains("skip(DEBT-GUARD-04)")),
+        "check 04 must be pass/evaluated; output={combined}"
+    );
+    assert!(
+        !combined.contains("skip(DEBT-GUARD-04)")
+            && !combined.contains("not-yet-implemented: check 04"),
+        "check 04 must not skip or nyi; output={combined}"
+    );
     for id in STUB_CHECKS {
         let skip = combined.contains(&format!("DEBT-GUARD-{id}"))
             || combined.contains(&format!("skip(DEBT-GUARD-{id})"))
@@ -588,7 +599,7 @@ fn ri_t17_adr_0009_accepted_and_backlog_not_shipped_as_product() {
         spec.contains("remaining_backlog"),
         "spec must keep remaining_backlog"
     );
-    // Guard checks 04–12 / 14–15 stay stubs (fail-closed or skip-with-debt), not real P0 remediations.
+    // Guard checks 05–12 / 14–15 stay stubs (fail-closed or skip-with-debt), not real P0 remediations. Check 04 is ADR 0010.
     let xtask_src = collect_rs(rel("xtask"));
     assert!(
         !xtask_src.is_empty(),

@@ -56,6 +56,7 @@ const CANONICAL_SPECS: &[&str] = &[
     "docs/specs/temporal-assurance.md",
     "docs/specs/evidence-validity-temporal-assurance.md",
     "docs/specs/repository-integrity.md",
+    "docs/specs/architectural-cleanup-program.md",
 ];
 
 #[test]
@@ -88,6 +89,7 @@ fn decisions_live_under_docs_adr() {
         "docs/adr/0007-risk-identification-candidate-correlation.md"
     ));
     assert!(exists("docs/adr/0009-repository-health-gate.md"));
+    assert!(exists("docs/adr/0010-architecture-as-law.md"));
 }
 
 #[test]

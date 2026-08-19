@@ -5,13 +5,13 @@
 | Status | **Accepted** — increment 1 health gate is law: architecture ownership SSOT + `cargo xtask guard` (checks 01, 02, 03, 13) is mandatory in CI. `sdd_repository_integrity_target` GREEN; baseline skip-superseded. |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | Nothing in the assurance spine, catalog, or collector decisions. Does **not** renumber existing `0003-*` / `0005-*` / `0007-*` / `0008-*` ADR files. |
+| Supercedes | Nothing in the assurance spine, catalog, or collector decisions. Does **not** renumber existing `0003-*` / `0005-*` / `0007-*` / `0008-*` ADR files. **Amended by** [ADR 0010](0010-architecture-as-law.md) for Guard 04 evaluation, ownership `kind`, executable forbidden kinds, and structured `GuardReport`/CLI. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) (crate graph as built), [ADR 0004](0004-documentation-architecture.md) (specs / ADRs / contracts / `.sdd/`) |
 | Spec | [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md) |
 | Characterization | `f560196c57e77df2573cfb9a4b384d3cf1c21e8a` |
 | Tests | `sdd_repository_integrity_target` GREEN (`tests/contracts/repository_integrity.target.rs`, RI-T01–T16). `sdd_repository_integrity_baseline` `#[ignore = "superseded by sdd_repository_integrity_target"]`. Parser/fixture coverage in `cargo test -p xtask`. Dual-suite registered in root `Cargo.toml`. |
 
-> Filename **`0009-*`**. This is the next unused **unique** ADR number. Cite **this file by path**. Do **not** add a `0003-repository-integrity.md` sibling. Duplicate `0003-*` IDs already exist and are debt (`DEBT-DUP-ADR`), not a license to mint another `0003`. Next unique number is **0010**.
+> Filename **`0009-*`**. Cite **this file by path**. Do **not** add a `0003-repository-integrity.md` sibling. Duplicate `0003-*` IDs already exist and are debt (`DEBT-DUP-ADR`), not a license to mint another `0003`. Architecture-as-law increment: [ADR 0010](0010-architecture-as-law.md). Next unique number is **0011**.
 
 ## Context
 
@@ -61,9 +61,9 @@ Packages `weeping-angel-catalog` and `weeping-angel-assurance-cli` **must not** 
 
 `temporal_evidence_selection` primitives also exist in `weeping-angel-control-test::temporal::select_latest_as_of`. Ownership is declared on the assurance facade; this slice does not move that code.
 
-`invariants.toml` is declared this increment; **evaluating** invariants is guard check 04 (stub). File presence is not a claim that all invariants hold.
+`invariants.toml` is declared this increment. **Evaluating** every `[[invariant]]` is guard check **04**, implemented by [ADR 0010](0010-architecture-as-law.md). File presence alone is not a claim that all invariants hold.
 
-`forbidden-patterns.toml` seeds (check 03 is presence + schema parse; grep/AST enforcement is remaining_backlog):
+`forbidden-patterns.toml` seeds (check 03 was presence + schema this increment; [ADR 0010](0010-architecture-as-law.md) executes `kind`):
 
 - package `weeping-angel-catalog`
 - package `weeping-angel-assurance-cli`
@@ -88,9 +88,9 @@ Workspace member `xtask` (`publish = false`, `[package.metadata.dist] dist = fal
 xtask = "run --package xtask --"
 ```
 
-Implemented checks this increment: **01** (architecture manifest), **02** (ownership table), **03** (forbidden-patterns file), **13** (debt register).
+Implemented checks this increment: **01** (architecture manifest), **02** (ownership table), **03** (forbidden-patterns file), **13** (debt register). Check **04** became real under [ADR 0010](0010-architecture-as-law.md).
 
-Checks **04–12** and **14–15** are stubs. Shipped policy:
+Checks **05–12** and **14–15** remain stubs (04 was a stub in this increment). Shipped policy:
 
 - skip with report line `NN  <name>  skip(DEBT-GUARD-NN)` when that finding id exists in the register
 - otherwise fail closed: `not-yet-implemented: check NN (no registered DEBT-GUARD-NN finding)`
@@ -104,19 +104,20 @@ CI job `test` runs `cargo xtask guard` as a mandatory step (`repository health g
 
 ## Non-goals (remaining_backlog)
 
-P0 framework expression preservation; fail-closed pack parsing; catalog SSOT migration; framework digest redesign; readiness SSOT; lineage rebuild; evidence latest vs current; SoA; persistence invariants; package install tests; crate dependency graph policy; schema fixtures; ADR graph uniqueness rewrite; spec lifecycle states; deleting obsolete baseline suites; test-support crate; implementing guard checks 04–12 / 14–15 beyond stubs; switching CI to `--workspace`.
+P0 framework expression preservation; fail-closed pack parsing; catalog SSOT migration; framework digest redesign; readiness SSOT; lineage rebuild; evidence latest vs current; SoA; persistence invariants; package install tests; crate dependency graph policy; schema fixtures; ADR graph uniqueness rewrite; spec lifecycle states; deleting obsolete baseline suites; test-support crate; implementing remaining guard checks **05–12 / 14–15** beyond stubs (check **04** is [ADR 0010](0010-architecture-as-law.md)); switching CI to `--workspace`.
 
 ## Consequences
 
 - Contributors run `cargo xtask guard` locally and in CI; missing manifests or dishonest `resolved` debt fail the build.
 - Later remediations must add regression tests or a `repository_guard` citation before closing debt.
 - Ownership mistakes (wrong crate names) fail check 02 instead of silently growing a parallel package.
-- Duplicate ADR IDs remain until check 14; new decisions use unused unique numbers (0010, …).
+- Duplicate ADR IDs remain until check 14; new decisions use unused unique numbers (0010, 0011, …).
 - Stub skips are attributable (`DEBT-GUARD-NN`); they are not a generic hatch to skip the gate.
 
 ## Related
 
 - Spec: [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md)
+- Successor increment: [`docs/specs/architectural-cleanup-program.md`](../specs/architectural-cleanup-program.md), [ADR 0010](0010-architecture-as-law.md)
 - Debt register: [`docs/debt/register.toml`](../debt/register.toml), [`docs/debt/README.md`](../debt/README.md)
 - Layout: [ADR 0004](0004-documentation-architecture.md)
 - Crate graph: [ADR 0001](0001-inwardly-extensible-assurance-runtime.md)

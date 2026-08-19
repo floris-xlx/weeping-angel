@@ -5,30 +5,37 @@ schema = "weeping-angel/architecture/v1"
 
 [ownership.catalog]
 crate = "weeping-angel-canonical-catalog"
+kind = "exclusive"
 paths = ["crates/weeping-angel-canonical-catalog"]
 
 [ownership.framework_compilation]
 crate = "weeping-angel-framework"
+kind = "exclusive"
 paths = ["crates/weeping-angel-framework"]
 
 [ownership.readiness_projection]
 crate = "weeping-angel-assurance"
+kind = "projection"
 paths = ["crates/weeping-angel-assurance/src/readiness.rs"]
 
-# Primitives also exist in weeping-angel-control-test::temporal::select_latest_as_of.
-# Ownership is declared on the assurance facade this slice; do not move code.
+# kind = exclusive is metadata for Phase 5. Primitives still live in
+# weeping-angel-control-test::temporal::select_latest_as_of; do not move code.
 [ownership.temporal_evidence_selection]
 crate = "weeping-angel-assurance"
+kind = "exclusive"
 paths = ["crates/weeping-angel-assurance/src/temporal.rs"]
 
 [ownership.assessment_lineage]
 crate = "weeping-angel-assurance"
+kind = "exclusive"
 paths = ["crates/weeping-angel-assurance/src/lineage.rs"]
 
 [ownership.evidence_persistence]
 crate = "weeping-angel-evidence"
+kind = "exclusive"
 paths = ["crates/weeping-angel-evidence"]
 
 [ownership.assurance_cli]
 crate = "weeping-angel"
+kind = "facade"
 paths = ["src/main.rs", "src/cli.rs"]

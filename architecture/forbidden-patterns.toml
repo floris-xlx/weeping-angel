@@ -1,6 +1,7 @@
 schema = "weeping-angel/forbidden-patterns/v1"
 
-# File presence is guard check 03. Enforcing grep/AST matches is remaining_backlog.
+# Check 03 executes kind = package|path|dependency|symbol|source-pattern
+# against RepositoryModel. Seeds below must not exist.
 
 [[pattern]]
 id = "FORBID-HYPOTHETICAL-CATALOG"
