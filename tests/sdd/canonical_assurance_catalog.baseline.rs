@@ -5,7 +5,9 @@
 //! `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`docs/sdd/canonical-assurance-catalog-v1.md`
 //! §3 / §4.10). Absence assertions are ignored so CI does not keep
 //! “there is no catalog” as required green. Compatibility checks (IR
-//! permissiveness, ISO pack IDs, crate graph) stay active.
+//! permissiveness, crate graph) stay active. The ISO thin-stub pack-ID
+//! characterization is ignored after Prompt 12
+//! (`sdd_iso27001_remap_target`).
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -250,6 +252,7 @@ fn ir_invalid_namespace_is_never_returned() {
     );
 }
 
+#[ignore = "superseded by sdd_iso27001_remap_target"]
 #[test]
 fn iso_metadata_owns_thin_canonical_stubs() {
     let metadata =

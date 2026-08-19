@@ -136,6 +136,10 @@ fn require_shipped_catalog() -> PathBuf {
 }
 
 fn first_toml(dir: &Path) -> PathBuf {
+    let fixture = dir.join("fixture.example.toml");
+    if fixture.is_file() {
+        return fixture;
+    }
     let mut files: Vec<PathBuf> = fs::read_dir(dir)
         .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
         .filter_map(|e| e.ok())
@@ -147,6 +151,25 @@ fn first_toml(dir: &Path) -> PathBuf {
         .into_iter()
         .next()
         .unwrap_or_else(|| panic!("expected at least one .toml under {}", dir.display()))
+}
+
+fn toml_containing(dir: &Path, needle: &str) -> PathBuf {
+    let mut files: Vec<PathBuf> = fs::read_dir(dir)
+        .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("toml"))
+        .collect();
+    files.sort();
+    for path in &files {
+        if fs::read_to_string(path).unwrap().contains(needle) {
+            return path.clone();
+        }
+    }
+    panic!(
+        "expected a .toml under {} containing `{needle}`",
+        dir.display()
+    )
 }
 
 fn copy_dir(src: &Path, dst: &Path) {
@@ -337,15 +360,21 @@ fn shipped_catalog_is_minimal_and_regime_free() {
             "catalog/canonical/v1 must not ship {needle} normative content"
         );
     }
-    let control_files: Vec<_> = fs::read_dir(require_shipped_catalog().join("controls"))
+    let controls_dir = require_shipped_catalog().join("controls");
+    let control_files: Vec<_> = fs::read_dir(&controls_dir)
         .unwrap()
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().and_then(|x| x.to_str()) == Some("toml"))
         .collect();
     assert!(
-        control_files.len() <= 2,
-        "this slice ships only a minimal fixture, found {} control files",
-        control_files.len()
+        control_files
+            .iter()
+            .any(|e| e.file_name() == "fixture.example.toml"),
+        "Prompt 01 fixture.example.toml must remain under catalog/canonical/v1/controls"
+    );
+    assert!(
+        !control_files.is_empty(),
+        "catalog/canonical/v1/controls must ship at least the Prompt 01 fixture"
     );
 }
 
@@ -447,13 +476,10 @@ fn cat_003_digest_is_deterministic_and_domain_separated() {
     let (_tmp, copy) = copy_shipped_catalog();
     let control = first_toml(&copy.join("controls"));
     let raw = fs::read_to_string(&control).unwrap();
-    let shuffled = if raw.contains("title =") && raw.contains("description =") {
-        raw.replace("title =", "title_tmp =")
-            .replace("description =", "title =")
-            .replace("title_tmp =", "description =")
-    } else {
-        format!("\n# key-order / whitespace noise\n{raw}\n")
-    };
+    // Comments / blank lines / key order in the TOML source must not change
+    // the digest of parsed documents. Do not swap key *names* (that would
+    // also swap parsed values).
+    let shuffled = format!("\n# key-order / whitespace noise\n{raw}\n");
     fs::write(&control, shuffled).unwrap();
     let recopied = extract_digest(&stats_catalog(&copy));
     assert_eq!(
@@ -483,7 +509,7 @@ fn cat_004_duplicate_ids_fail_closed() {
 #[test]
 fn cat_005_dangling_references_fail_closed() {
     let (_tmp, root) = copy_shipped_catalog();
-    let controls = first_toml(&root.join("controls"));
+    let controls = toml_containing(&root.join("controls"), PINNED_EVIDENCE);
     replace_in(&controls, PINNED_EVIDENCE, "evidence.source.does-not-exist");
     assert_cli_failure_mentions(
         &validate_catalog(&root),
@@ -523,9 +549,9 @@ fn cat_007_provider_names_cannot_appear_in_catalog_ids() {
     }
 
     let (_tmp, root) = copy_shipped_catalog();
-    let controls = first_toml(&root.join("controls"));
+    let controls = toml_containing(&root.join("controls"), PINNED_CONTROL);
     replace_in(&controls, PINNED_CONTROL, "control.github.protected-branch");
-    let tests = first_toml(&root.join("tests"));
+    let tests = toml_containing(&root.join("tests"), PINNED_CONTROL);
     replace_in(&tests, PINNED_CONTROL, "control.github.protected-branch");
     assert_cli_failure_mentions(
         &validate_catalog(&root),
@@ -545,13 +571,13 @@ fn cat_008_framework_names_cannot_appear_in_catalog_ids() {
     }
 
     let (_tmp, root) = copy_shipped_catalog();
-    let controls = first_toml(&root.join("controls"));
+    let controls = toml_containing(&root.join("controls"), PINNED_CONTROL);
     replace_in(
         &controls,
         PINNED_CONTROL,
         "control.iso27001.protected-branch",
     );
-    let tests = first_toml(&root.join("tests"));
+    let tests = toml_containing(&root.join("tests"), PINNED_CONTROL);
     replace_in(&tests, PINNED_CONTROL, "control.iso27001.protected-branch");
     assert_cli_failure_mentions(
         &validate_catalog(&root),
@@ -639,7 +665,7 @@ fn path_escape_in_manifest_fails_closed() {
 #[test]
 fn malformed_catalog_ids_fail_closed() {
     let (_tmp, root) = copy_shipped_catalog();
-    let controls = first_toml(&root.join("controls"));
+    let controls = toml_containing(&root.join("controls"), PINNED_CONTROL);
     replace_in(&controls, PINNED_CONTROL, "source.branch-protection");
     assert_cli_failure_mentions(
         &validate_catalog(&root),
