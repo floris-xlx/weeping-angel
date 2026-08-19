@@ -2,6 +2,7 @@
 /report-lab*
 /report.*
 /weeping-angel.toml
+/node_modules
 
 # docs app
 apps/docs/node_modules/
