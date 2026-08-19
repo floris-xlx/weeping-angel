@@ -2,61 +2,59 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Draft** — specify-only; accept when implement freezes public contracts and ledger APIs |
+| Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “`AssessmentRun` is an immutable snapshot record” *intent* of [ADR 0002](0002-iso-27001-assurance-vertical.md) Phases 35–36 **as implemented**: dropped `_run`, serialize-time ISO pack load, production stub assessment, compare-only-effectiveness. Does **not** supercede pack schema, envelope immutability, collector blindness, or catalog ownership. |
-| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [ADR 0003 catalog infra](0003-canonical-assurance-catalog-v1.md), [typed evidence](0003-typed-evidence-canonical-serialization.md), [population](0003-subject-population-runtime-and-coverage-semantics.md) |
+| Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [catalog](0003-canonical-assurance-catalog-v1.md), [typed evidence](0003-typed-evidence-canonical-serialization.md), [population](0003-subject-population-runtime-and-coverage-semantics.md), [applicability engine](0003-applicability-engine.md) |
 | Spec | [`docs/sdd/assessment-lineage.md`](../sdd/assessment-lineage.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update on accept |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt | [`docs/prompts/canonical-assurance-v1/11-assessment-lineage.md`](../prompts/canonical-assurance-v1/11-assessment-lineage.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
-| Tests | Dual-suite **registered**. Baseline GREEN on current shortcuts. Target LIN-001–008 and LIN-010–014 authored so suite is RED on CURRENT **before** product feature code (LIN-009 / LIN-015 still PASS); then GREEN after implement. |
-| Collision fence | Do not edit Prompt 09 GitHub collector files; do not reimplement Prompt 10 Kleene evaluation (`OrgContext` / `evaluate_org_context` remain unused names). Persist `weeping-angel-assurance::applicability::ApplicabilitySnapshot`. Do not rewrite catalog domain TOML or ISO pack IDs (Prompt 12). |
+| Tests | `sdd_assessment_lineage_target` GREEN (LIN-001–015). `sdd_assessment_lineage_baseline` skip-superseded (14 ignored). Neighbor ACT / ISO / catalog targets remain registered. |
 
 > Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**.
 
 ## Context
 
-ADR 0001 delivered the spine. ADR 0002 delivered the ISO 27001 vertical, including an `AssessmentRun` type, ledger table names (`assessment_runs`, `control_test_runs`, `framework_snapshots`), readiness/SoA projections, and `compare`.
+ADR 0001 delivered the spine. ADR 0002 delivered the ISO 27001 vertical, including an `AssessmentRun` type, ledger table names (`assessment_runs`, `control_test_runs`, `framework_snapshots`), readiness/SoA projections, and `compare`. ADR 0003 applicability shipped an in-memory Kleene snapshot; it did not persist or explain it.
 
-On SHA `e430980…` those seams are MVP shortcuts:
+On SHA `e430980c…` those seams were MVP shortcuts:
 
-1. Facade `assess` builds `AssessmentRun` and **drops** it (`let _run`) with empty `collector_runs` and the compile digest reused as definition, evidence-snapshot, and result identity.
-2. `AssessmentReport::serialize` calls `load_framework_pack("iso-27001", "2022")` and invents coverage percentages.
-3. `assessment_for_target` / `normalize` / `stub_catalog` hard-code ISO 27001:2022; other profiles compile a **production** stub (`canonical:stub-1`).
-4. `compare` only detects effective/ineffective/stale.
-5. `project_soa` rereads current `applicability.toml` from disk.
-6. CLI has no `explain`; non-catalog assurance commands banner-and-exit-0.
-7. Ledger has lineage tables and **no** persist/load APIs for them.
-8. Prompt 10 applicability engine **has landed** (`weeping-angel-assurance::applicability`); lineage still does not persist the snapshot. Characterization SHA had only IR `ApplicabilityRule` + `statically_applicable`.
+1. Facade `assess` built `AssessmentRun` and **dropped** it (`let _run`) with empty `collector_runs` and the compile digest reused as definition, evidence-snapshot, and result identity.
+2. `AssessmentReport::serialize` called `load_framework_pack("iso-27001", "2022")` and invented coverage percentages.
+3. `assessment_for_target` / `normalize` / `stub_catalog` hard-coded ISO 27001:2022; other profiles compiled a **production** stub (`canonical:stub-1`).
+4. `compare` only detected effective/ineffective/stale.
+5. `project_soa` reread current `applicability.toml` from disk with no snapshot identity.
+6. CLI had no `explain`; non-catalog assurance commands banner-and-exit-0.
+7. Ledger had lineage tables and **no** persist/load APIs for them.
 
 Canonical Catalog v1 Prompt 11 requires assessments to be reproducible immutable execution artifacts, explainable to evidence digest / test version / exception / mapping, with pure serialization and one framework loader path.
-
-IR already has `type Assessment = AssessmentDefinition` and `Exception.subjects`. This ADR snapshots those types; it does not fork them. New product modules stay in existing crates (`weeping-angel-assurance` for explain/metrics/run assembly; `weeping-angel-evidence::ledger` for persist/load of opaque JSON).
 
 Questions this decision answers:
 
 1. What is the persisted lineage chain and which crate owns storage?
 2. May serialization resolve current framework/catalog files?
 3. How are non-ISO frameworks assessed without a production stub?
-4. How do we persist the Prompt 10 `ApplicabilitySnapshot` without reimplementing the evaluator?
+4. How does lineage relate to the Prompt 10 `ApplicabilitySnapshot`?
 5. What is the public explain contract?
 6. How are coverage metrics exposed without a fake compliance score?
 
-## Decision (draft — implement will freeze signatures)
+## Decision
+
+This is what shipped.
 
 ### 1. Assessment is a pinned execution record
 
-`AssessmentRun` is the root of an immutable chain:
+`AssessmentRun` is the root of an immutable chain. Types live in `weeping-angel-assurance::lineage` (schema `weeping-angel/assessment-lineage/v1`, `LINEAGE_SNAPSHOT_SCHEMA`) except the run record itself (`weeping-angel-assurance::snapshot`).
 
 ```text
 FrameworkPackSnapshot
 CanonicalCatalogSnapshot
 AssessmentDefinitionSnapshot
-ApplicabilitySnapshot
+ApplicabilitySnapshot          # lineage persist document (see §5)
 CollectionRun[]
-EvidenceEnvelope[]          # already append-only
+EvidenceEnvelope[]             # already append-only
 EvidenceSnapshot
 ControlTestRun[]
 AssessmentRun
@@ -64,86 +62,137 @@ FrameworkReadinessSnapshot
 StatementOfApplicabilitySnapshot
 ```
 
-Pins required on the run: framework pack digest, canonical catalog digest, assessment definition digest, collector ids/versions, collection run ids, evidence snapshot digest, test ids/versions, applicability snapshot identity, result digest, start/completion, scope, status.
+`assess` **returns** the run on `AssessmentReport.run`. `let _run` is forbidden.
 
-`let _run` is forbidden. The run is returned and, when a ledger is supplied, persisted.
+Pins on `AssessmentRun` (camelCase JSON):
 
-Status distinguishes `completed` | `partial` | `failed`. Partial/failed collection is a new row, never a rewrite of a completed run.
+```text
+id, framework,
+frameworkPackDigest, canonicalCatalogDigest,
+assessmentDefinitionDigest, applicabilitySnapshotId,
+collectorRuns[], evidenceSnapshotDigest, resultDigest,
+startedAt, completedAt, scope,
+status = completed | partial | failed
+```
+
+`collectorRuns` are collection-run ids. Collector id/version live on `CollectionRun`. Definition / evidence-snapshot / result identities are **distinct** digests (not the compile digest copied three times).
+
+Collector failure no longer aborts `assess`. A failed or partial `CollectionRun` yields `AssessmentRun.status` `failed` or `partial` and an explainable (possibly empty) result set. History is a new row, never a rewrite of a completed run.
+
+Replay: `reconstruct` / `replay_assessment` / `load_lineage` rebuild an `AssessmentReport` from a `LineageBundle`. They do not consult current pack/catalog files. `verify_current_against_pins` / `detect_digest_mismatch` compare pins to current digests; mismatch is `DigestMismatch`, never a silent rewrite.
 
 ### 2. Ledger is the storage seam; evidence crate does not conclude
 
-Reuse existing SQLite tables. Add persist/load APIs on `EvidenceLedger` for assessment runs, control-test runs, and framework snapshots, plus rows or payloads for catalog / definition / applicability / evidence snapshots as needed.
+Reuse existing SQLite tables. `EvidenceLedger` persist/load APIs:
+
+```text
+persist_assessment_run / load_assessment_run
+persist_control_test_run / load_control_test_run
+persist_framework_snapshot / load_framework_snapshot
+```
 
 Payloads are opaque JSON. `weeping-angel-evidence` still **owns observations, never conclusions**. Effectiveness is computed in control-test / assurance and stored as document bytes.
 
-Envelope `append` remains `INSERT OR IGNORE`. Completed assessment payloads must not be silently `INSERT OR REPLACE`d with different semantic bytes.
+Envelope `append` remains `INSERT OR IGNORE`. Lineage persist is `INSERT OR IGNORE` after an existing-row check: a second write of **different** bytes for the same key returns `LedgerError::Immutable`. Identical bytes are idempotent (`Ok(false)`). `framework_snapshots` is digest-keyed and holds pack / catalog / definition / applicability / evidence / readiness / SoA payloads as needed.
+
+`assess` does **not** open a ledger. Callers persist the returned run (CLI explain reads `assurance-ledger.sqlite`).
+
+`record_collection_run` remains `INSERT OR REPLACE` for in-flight collection identity. Assessment and control-test rows are not silently replaced.
 
 ### 3. Serialization is pure
 
-Generic `AssessmentReport` (and explain/report projections) **must not**:
+Generic `AssessmentReport` **must not** call `load_framework_pack`, perform network I/O, look up files, or resolve “current” catalog/pack state inside `Serialize`.
 
-- call `load_framework_pack`;
-- perform network I/O;
-- look up files;
-- resolve “current” catalog or pack state.
+Rust fields:
 
-Digests and `CoverageMetrics` / `AssessmentSummary` / `FrameworkReadinessSnapshot` are computed at assess/project time and **carried** on the value.
+```text
+assessmentId, profile, digest, results, evidenceCount,
+run?, summary?, coverageMetrics?,
+frameworkPackDigest, canonicalCatalogDigest
+```
+
+`Serialize` writes those plus `disclaimer` / `banner`, `resultDigest`, `assessmentRun`, `status`, `collectionRuns`, carried `CoverageMetrics` / `AssessmentSummary`, and derived lists from **in-memory** results. Digests and metrics are computed at assess/project time and **carried**. If `summary` / `coverageMetrics` are unset, they are folded from the report’s own `results` — still no filesystem.
 
 ### 4. One registry / loader path
 
-`(framework id, version) → resolve_pack_dir / load_framework_pack / load_framework_pack_from` is the only production resolution path.
+```text
+(framework id, version) → resolve_pack_dir / load_framework_pack / load_framework_pack_from
+```
 
-Remove hardcoded `load_framework_pack("iso-27001", "2022")` from generic serialize and orchestration. Remove ISO-only fallbacks in `assessment_for_target`, `normalize`, and `stub_catalog` that skip this path.
+is the only production resolution path. `assessment_for_target`, `normalize`, `stub_catalog`, and assess-time pack pin all pass the **target** identity. There is no `load_framework_pack("iso-27001", "2022")` literal on the generic serialize/orchestrate path.
 
-Remove the production stub assessment. Test fixtures may construct in-memory assessments explicitly.
+The production stub assessment (`canonical:stub-1` / `assess-runtime-1`) is removed. Missing pack on `assessment_for_target` is `AssuranceError::UnknownPack` (fail closed). `normalize` still skips merge on `UnknownPack` when the caller already supplied an in-memory assessment. `stub_catalog` tries the same loader for the profile selector and common versions, then returns `[]`. Test fixtures may construct in-memory assessments explicitly.
 
-Missing pack fails closed.
+### 5. Two applicability documents; lineage persist is the pin
 
-### 5. Persist Prompt 10 `ApplicabilitySnapshot`
+Prompt 10 evaluation stays in `weeping-angel-assurance::applicability` (`weeping-angel/applicability-snapshot/v1`). That engine **produces** the Kleene snapshot; this slice does **not** reimplement it.
 
-Prompt 10 evaluation is **out of this ADR**. Persist the in-memory document already produced by `evaluate_assessment_applicability` (`schema`, `assessment_id`, `scope`, requirement/control decisions with rationale and unknown facts, `pack_entries`, `digest`).
+Crate-root `ApplicabilitySnapshot` is the **lineage persist document** (`::lineage`, schema `weeping-angel/assessment-lineage/v1`): static IR fold (`Always`/`Never`/combinators → applicable / not applicable / unresolved) plus optional `pack_entries` artifacts copied from pack `applicability.toml`. `assess` sets `applicabilitySnapshotId` to that document’s digest.
 
-Unknown predicates stay unresolved (not false). Do not re-evaluate pack `applicability.toml` as Kleene truth.
+Unknown predicates stay unresolved (not false). Pack TOML rows are artifacts, not Kleene truth. The Prompt 10 snapshot remains addressable as `applicability::ApplicabilitySnapshot` and may be stored as opaque JSON; `assess` does not call `evaluate_assessment_applicability`.
+
+Historical SoA: `project_soa_from_snapshot`. Live `project_soa(framework, version)` remains a convenience that may read today’s pack; it must not be used to rewrite a pinned `StatementOfApplicabilitySnapshot`.
 
 ### 6. Explain projection and CLI
 
-Public projection `ControlExplanation` (control, applicability, implementation, population, tests, evidence requirements, evidence digests, missing evidence, failing/missing subjects, exceptions, mappings, effectiveness).
+Public `ControlExplanation`:
 
-CLI family grows:
+```text
+control, applicability, implementation, population,
+tests[{id, testVersion, inputDigest, exprIdentity}],
+evidenceRequirements, evidence, missingEvidence,
+failingSubjects, missingSubjects, exceptions, mappings,
+effectiveness
+```
+
+`explain_control(report, control_id, assessment?, applicability?)` cites **exact** evidence envelope digests from the result, not “latest from current ledger”.
+
+CLI:
 
 ```text
 weeping-angel assurance explain --assessment <id> --control <id>
 ```
 
-Parser in `src/cli.rs`; execution outside the clap enum. Not banner-and-exit-0.
+Parser in `src/cli.rs`; execution in `src/assurance_explain.rs`. Prints the not-certification banner, then JSON. Unknown assessment or control exits non-zero. Does not load a framework pack to answer.
 
 ### 7. Metrics stay separate
 
-`CoverageMetrics` exposes distinct families: control effectiveness, evidence, automation, subject, framework requirement, fresh-evidence, manual-review burden.
+`CoverageMetrics` exposes seven `MetricFamily { covered, total }` fields:
+
+```text
+controlEffectiveness, evidence, automation, subject,
+frameworkRequirement, freshEvidence, manualReviewBurden
+```
 
 No single compliance / certified percentage. Not-certification banner remains.
 
 ### 8. Compare is a lineage diff
 
-`compare` (on readiness snapshots and/or full runs) identifies applicability changes, subject population changes, evidence add/remove/supersession, test-result changes, exception introduce/expire, and framework/catalog digest changes.
+`compare(previous, next)` on `FrameworkReadinessSnapshot` fills effectiveness, stale evidence, applicability status, subjects, exceptions, and pack/catalog digest-change flags.
+
+`compare_runs` / `compare_lineage` on two `AssessmentRun`s detect `frameworkPackDigest` / `canonicalCatalogDigest` changes.
+
+`SnapshotDiff` also carries `evidenceAdded` / `evidenceRemoved` / `evidenceSuperseded` for callers that have envelope identity.
 
 ### 9. Digests
 
-Result and snapshot digests use IR `canonical_digest` law (SHA-256 hex of canonical JSON), domain-separated from raw compile-digest reuse. They are **not** the compile digest copied into three identity fields. Wall-clock `duration` / `evaluatedAt` (`checked_at`) are not part of result identity. Pack/catalog hashes follow existing digest law over canonicalized structures, not raw TOML bytes.
+Result and snapshot digests use IR `typed_canonical_digest` / `canonical_digest` (SHA-256 hex of canonical JSON), domain-separated by type name / schema. They are **not** the compile digest copied into three identity fields.
+
+`assessment_result_digest` hashes test id, control id, effectiveness, evidence refs, missing evidence, test version, input digest, and population. Wall-clock `duration` / `evaluatedAt` (`checked_at`) are excluded. Pack/catalog hashes follow existing digest law over canonicalized structures, not raw TOML bytes.
 
 ## Consequences
 
-- Public report JSON grows explicit summary/metrics/digest fields; serialize-time computed fields go away.
-- Facade assess no longer succeeds on arbitrary profiles via a hidden stub.
-- CLI `AssuranceCommand` gains `Explain`.
-- Contract file must document lineage types, ledger APIs, explain CLI, and pure serialization.
-- Neighbor suites (`sdd_assurance_runtime_target`, `sdd_iso27001_assurance_target`, `sdd_canonical_assurance_catalog_target`) stay green; ISO pack IDs are not remapped (Prompt 12).
-- Dual-suite `sdd_assessment_lineage_*` is the CI gate for this decision once implement completes.
+- Public report JSON carries explicit summary / metrics / dual digests; serialize-time pack load is gone.
+- Facade assess no longer succeeds on arbitrary profiles via a hidden stub; missing pack fails closed.
+- CLI `AssuranceCommand` includes `Explain`.
+- Contract documents lineage types, ledger APIs, explain CLI, and pure serialization.
+- Neighbor suites stay green; ISO pack IDs are not remapped (Prompt 12).
+- Dual-suite `sdd_assessment_lineage_target` is the CI gate.
 
 ## Non-goals
 
-Multi-tenant SaaS, UI, new frameworks, domain catalog redesign, Prompt 10 evaluator, Prompt 12 ISO remap, IR schema fork, certification claims.
+Multi-tenant SaaS, UI, new frameworks, domain catalog redesign, Prompt 10 evaluator, Prompt 12 ISO remap, IR schema fork, certification claims, automatic ledger write inside `assess`.
 
-## Status of this file
+## Status
 
-**Draft.** Do not treat signatures as frozen until implement accepts this ADR and updates [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md).
+Accepted after target GREEN. Public types are frozen in `weeping-angel-assurance::{lineage,snapshot}` and `EvidenceLedger` persist/load APIs. Baseline absence characterization is ignored so CI does not require the pre-lineage HEAD.

@@ -96,6 +96,7 @@ thiserror = "2"
 toml = "0.8"
 tracing = "0.1"
 walkdir = "2"
+weeping-angel-assurance = { path = "crates/weeping-angel-assurance" }
 weeping-angel-canonical-catalog = { path = "crates/weeping-angel-canonical-catalog" }
 weeping-angel-evidence = { path = "crates/weeping-angel-evidence" }
 

@@ -1,12 +1,13 @@
 //! Immutable assessment runs and snapshot comparison.
 
-use serde::{Deserialize, Serialize};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
 use weeping_angel_assurance_ir::AssessmentId;
 use weeping_angel_control_test::Effectiveness;
 
 use crate::readiness::FrameworkReadinessSnapshot;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentRun {
     pub id: AssessmentId,
@@ -20,11 +21,40 @@ pub struct AssessmentRun {
     pub evidence_snapshot_digest: String, // evidenceSnapshotDigest
     pub result_digest: String,
     pub status: String,
-    /// Pinned canonical catalog identity. JSON name is `canonicalCatalogDigest`.
-    #[serde(default, rename = "canonicalCatalogDigest")]
+    /// Pinned canonical catalog identity. JSON names are `canonicalCatalogDigest` and `catalogDigest`.
+    #[serde(default, alias = "catalogDigest", alias = "canonicalCatalogDigest")]
     pub canonical_catalog_pin: String,
     #[serde(default, rename = "applicabilitySnapshotId")]
     pub applicability_snapshot_id: String,
+}
+
+impl Serialize for AssessmentRun {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let catalog = if self.canonical_catalog_pin.is_empty() {
+            catalog_digest()
+        } else {
+            self.canonical_catalog_pin.clone()
+        };
+        let mut state = serializer.serialize_struct("AssessmentRun", 14)?;
+        state.serialize_field("id", &self.id)?;
+        state.serialize_field("framework", &self.framework)?;
+        state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
+        state.serialize_field(
+            "assessmentDefinitionDigest",
+            &self.assessment_definition_digest,
+        )?;
+        state.serialize_field("startedAt", &self.started_at)?;
+        state.serialize_field("completedAt", &self.completed_at)?;
+        state.serialize_field("scope", &self.scope)?;
+        state.serialize_field("collectorRuns", &self.collector_runs)?;
+        state.serialize_field("evidenceSnapshotDigest", &self.evidence_snapshot_digest)?;
+        state.serialize_field("resultDigest", &self.result_digest)?;
+        state.serialize_field("status", &self.status)?;
+        state.serialize_field("canonicalCatalogDigest", &catalog)?;
+        state.serialize_field("catalogDigest", &catalog)?;
+        state.serialize_field("applicabilitySnapshotId", &self.applicability_snapshot_id)?;
+        state.end()
+    }
 }
 
 impl Default for AssessmentRun {

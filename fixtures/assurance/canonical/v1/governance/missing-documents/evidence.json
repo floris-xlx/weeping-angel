@@ -12,6 +12,17 @@
       "type": "inventory.subject",
       "subject_id": "org:acme",
       "facts": { "kind": "organization", "id": "org:acme" }
+    },
+    {
+      "type": "evidence.manual.attestation",
+      "subject_id": "org:acme",
+      "facts": {
+        "subject_id": "org:acme",
+        "attested_by": "ciso",
+        "attested_at": "2026-08-18T12:00:00Z",
+        "kind": "attestation",
+        "review_state": "draft"
+      }
     }
   ]
 }

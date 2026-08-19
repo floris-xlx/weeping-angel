@@ -1,11 +1,10 @@
-//! Baseline suite for the organization-context / applicability engine (Prompt 10).
+//! SUPERSEDED by `sdd_applicability_engine_target`.
 //!
-//! Encodes CURRENT static-only behavior on characterization SHA
-//! `e430980c0d27a8138a153d49b62ddf3c57827891` as specified in
-//! `docs/sdd/applicability-engine.md` §3 / §6.1. Absence tests (B06/B07/B09)
-//! are skip-superseded now that the Kleene evaluator landed. Remaining
-//! characterization of IR declarativeness, static compile, and SoA stays
-//! active. Does not implement the evaluator in this suite.
+//! Historical static-only characterization on SHA
+//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/sdd/applicability-engine.md`
+//! §3 / §6.1). Kleene evaluator + snapshot are now the SSOT in the target
+//! suite. Tests are `#[ignore]` so CI does not require the old absence and
+//! static-only characterization. Dual-suite registration remains.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -150,6 +149,7 @@ fn fresh_context() -> AssessmentContext {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
@@ -162,6 +162,7 @@ fn dual_suite_is_registered() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b01_ir_is_declarative_and_does_not_evaluate_facts() {
     let src = read_repo_file("crates/weeping-angel-assurance-ir/src/applicability.rs");
     assert!(
@@ -179,6 +180,7 @@ fn p10_b01_ir_is_declarative_and_does_not_evaluate_facts() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b02_statically_applicable_always_never_predicate() {
     assert_eq!(
         ApplicabilityRule::Always.statically_applicable(),
@@ -209,6 +211,7 @@ fn p10_b02_statically_applicable_always_never_predicate() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b03_not_of_predicate_stays_none() {
     let rule = ApplicabilityRule::Not(Box::new(ApplicabilityRule::processes_personal_data(true)));
     assert_eq!(
@@ -227,6 +230,7 @@ fn p10_b03_not_of_predicate_stays_none() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b03b_kleene_static_fold_over_combinators() {
     let pred = ApplicabilityRule::jurisdiction("NL");
     assert_eq!(
@@ -276,6 +280,7 @@ fn p10_b03b_kleene_static_fold_over_combinators() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b04_resolve_applicability_filters_static_false_only() {
     let src = crate_sources_joined("weeping-angel-framework");
     let body = fn_resolve_applicability(&src);
@@ -320,7 +325,7 @@ fn p10_b04_resolve_applicability_filters_static_false_only() {
 }
 
 #[test]
-#[ignore = "superseded by sdd_iso27001_remap_target"]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b05_project_soa_reads_pack_booleans() {
     let src = read_repo_file("crates/weeping-angel-assurance/src/soa.rs");
     let body = fn_project_soa(&src);
@@ -395,6 +400,7 @@ fn p10_b07_no_assurance_applicability_module() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b08_compile_keeps_processes_personal_data_predicate() {
     let mut assessment = Assessment::new(AssessmentId::new("assess.applicability.pd"));
     assessment.requirements = vec![requirement_with(
@@ -431,6 +437,7 @@ fn p10_b09_control_has_no_public_subjects_getter() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b10_collision_fence_does_not_import_github_collector() {
     let me = read_repo_file("tests/sdd/applicability_engine.baseline.rs");
     for line in me.lines() {
@@ -445,6 +452,7 @@ fn p10_b10_collision_fence_does_not_import_github_collector() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn compile_does_not_filter_controls_by_applicability() {
     let src = crate_sources_joined("weeping-angel-framework");
     let mappings = src
@@ -473,6 +481,7 @@ fn compile_does_not_filter_controls_by_applicability() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn inventories_exist_but_are_unused_for_applicability() {
     let def = AssessmentDefinition::new(AssessmentId::new("assess.inventories"));
     assert!(def.assets.is_empty());
@@ -533,6 +542,7 @@ fn inventories_exist_but_are_unused_for_applicability() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn facade_assessment_scope_is_collector_allow_set() {
     let facade = std::any::type_name::<weeping_angel_assurance::AssessmentScope>();
     let ir = std::any::type_name::<AssessmentScope>();
@@ -548,6 +558,7 @@ fn facade_assessment_scope_is_collector_allow_set() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn population_runtime_does_not_walk_ir_inventories() {
     let pop = read_repo_file("crates/weeping-angel-control-test/src/population.rs");
     assert!(pop.contains("pub fn resolve_population"));
@@ -570,6 +581,7 @@ fn population_runtime_does_not_walk_ir_inventories() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn effectiveness_not_applicable_is_unrelated_to_ir_rules() {
     let _ = Effectiveness::NotApplicable;
     let mut set = EvidenceSet::new();
@@ -611,6 +623,7 @@ fn effectiveness_not_applicable_is_unrelated_to_ir_rules() {
 }
 
 #[test]
+#[ignore = "superseded by sdd_applicability_engine_target"]
 fn prompt_11_needles_for_prompt_10_remain_absent() {
     let crates = product_crates_joined();
     for needle in ["OrgContext", "org_context", "fn evaluate_org_context"] {

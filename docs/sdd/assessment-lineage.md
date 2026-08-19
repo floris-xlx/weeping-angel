@@ -2,20 +2,20 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified** — dual-suite registered; baseline GREEN on current shortcuts; target LIN-001–008 and LIN-010–014 authored so the suite is **RED on CURRENT** (LIN-009 / LIN-015 still PASS). No product feature code yet. |
+| Status | **Implemented** — target LIN-001–015 GREEN; baseline skip-superseded. |
 | Program | Canonical Assurance Catalog v1 — Prompt 11 |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/11-assessment-lineage.md`](../prompts/canonical-assurance-v1/11-assessment-lineage.md) |
 | Slice | Persistable execution lineage, explanation projection, pure report serialization, generic framework facade, snapshot compare |
 | Dual-suite | `sdd_assessment_lineage_baseline` · `sdd_assessment_lineage_target` (`tests/sdd/assessment_lineage.{baseline,target}.rs`) — **already registered** in root `Cargo.toml` |
-| ADR | Draft [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) — finalize when public contracts / storage seams land |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — update in implement, not this spec-only phase |
+| ADR | Accepted [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Protocol report | [`docs/sdd/sdd-assessment-lineage.md`](sdd-assessment-lineage.md) |
 | Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | ISO vertical (must stay green) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence | [`docs/sdd/typed-evidence.md`](typed-evidence.md) |
 | Population | [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Applicability engine (Prompt 10) | **Landed** in `weeping-angel-assurance::applicability`. This slice **persists** `ApplicabilitySnapshot` produced by `evaluate_assessment_applicability`; do **not** reimplement Kleene evaluation or add `OrgContext` / `evaluate_org_context`. Unknown predicates stay unresolved, never false. Persist/explain/ledger remain this slice. |
+| Applicability engine (Prompt 10) | **Landed** in `weeping-angel-assurance::applicability`. Kleene snapshot stays `applicability::ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`). Crate-root persist document is `lineage::ApplicabilitySnapshot` (`weeping-angel/assessment-lineage/v1`); `assess` pins its digest. Do **not** reimplement Kleene evaluation. |
 | GitHub collector (Prompt 09) | **Collision fence.** Do not edit `tests/sdd/github_collector.*` or `crates/weeping-angel-collector/src/github/**`. |
 | ISO remap (Prompt 12) | **Collision fence.** Do not rewrite `catalog/canonical/v1` domain TOML or ISO pack IDs / `to =` mappings. |
 | Repository | `floris-xlx/weeping-angel` |
@@ -620,27 +620,41 @@ One regression test per later review comment must be titled `P?: <exact subject>
 
 ## 8. ADR
 
-**Required.** This slice changes public report JSON, facade assess semantics (no production stub), CLI family, and ledger storage/lineage seams.
-
-Draft: [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) (`0003-*` catalog-program numbering; cite by path). Finalize in the implement phase when signatures and table APIs are frozen.
+**Accepted.** [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) (`0003-*` catalog-program numbering; cite by path).
 
 ---
 
-## 9. Implement notes (not this spec-only phase)
+## 9. Landed signatures
 
-This spec-only change must **not** edit production Rust or `docs/contracts/assurance-runtime.md`. Dual-suite registration in root `Cargo.toml` is **already done**. Baseline GREEN is already authored.
+Frozen after target GREEN. Public composition:
 
-Implement later, in order:
+| Concern | Home |
+| --- | --- |
+| Snapshot types, explain, reconstruct, result digest, metrics | `weeping-angel-assurance::lineage` (`LINEAGE_SNAPSHOT_SCHEMA` = `weeping-angel/assessment-lineage/v1`) |
+| `AssessmentRun`, `SnapshotDiff`, `compare` / `compare_runs` / `compare_lineage` | `weeping-angel-assurance::snapshot` |
+| Persist/load opaque JSON | `EvidenceLedger::{persist,load}_{assessment_run,control_test_run,framework_snapshot}` |
+| CLI | `src/cli.rs` `AssuranceCommand::Explain` → `src/assurance_explain.rs` |
 
-1. ~~Author LIN-001–008 and LIN-010–014~~ done — target is **RED on CURRENT** (right reason: missing persist/explain/pure-serialize/generic facade). Do not implement product feature code until that RED proof is recorded.
-2. Persist lineage; purify serialize; generic loader; explain CLI; compare; metrics — only lineage/explain/report-serialization/snapshot/ledger persist/generic-facade paths.
-3. Prove target GREEN; skip-supersede baseline; keep neighbor + workspace green (`cargo test --workspace --features demo`).
-4. Accept the ADR; update the public contract (facade, CLI, ledger APIs, report fields).
+`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `scope`, `status` (`completed` \| `partial` \| `failed`).
+
+`assess` returns `AssessmentReport.run`; it does not open a ledger. Replay is `reconstruct` / `replay_assessment` from a `LineageBundle`. Current-file consult is `verify_current_against_pins` → `DigestMismatch`.
+
+Crate-root `ApplicabilitySnapshot` is the lineage persist document (static fold + pack artifacts). Prompt 10 Kleene snapshot remains `applicability::ApplicabilitySnapshot`.
+
+`AssessmentReport::serialize` is pure (no `load_framework_pack`). `CoverageMetrics` has the seven families; no `compliancePercent`.
+
+`assessment_for_target` uses `load_framework_pack(profile, version)` only; missing pack is `UnknownPack`. Production stub ids are gone.
+
+---
+
+## 10. Implement notes
+
+Dual-suite protocol complete: target LIN-001–015 GREEN; baseline skip-superseded; ADR accepted; contract updated.
 
 Do **not**: edit GitHub collector files; reimplement Prompt 10 evaluator types; rewrite catalog domain TOML or ISO pack IDs.
 
 ---
 
-## 10. Definition of done
+## 11. Definition of done
 
 An assessment is a reproducible immutable execution artifact rather than only a current-state report; every result is explainable down to pinned snapshots and evidence digests; report serialization is pure; framework resolution is generic; failed/partial collection is first-class; snapshot replay/diff is deterministic; dual-suite protocol is satisfied (baseline skip-superseded, target GREEN); neighbor SDD targets stay green.

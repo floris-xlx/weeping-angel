@@ -159,7 +159,7 @@ Eight frozen evidence sets under `fixtures/assurance/canonical/v1/identity/`:
 
 ### 8. Consume Prompts 01–03; do not fork infrastructure
 
-No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt 01’s SSOT (`docs/sdd/canonical-assurance-catalog-v1.md`) is not overwritten. No Entra / Okta / Google Workspace / GitHub-identity collector. GitHub continues to emit `source.*` only.
+No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt 01’s SSOT (`docs/sdd/canonical-assurance-catalog-v1.md`) is not overwritten. No Entra / Okta / Google Workspace / GitHub-identity **IdP** collector. Later: [GitHub collector mapping](0003-github-collector-canonical-evidence-mapping.md) emits `evidence.identity.privileged-membership` / `external-access` from GitHub membership APIs; this family still does not own MFA / last-active / termination facts.
 
 Catalog stats after this family (including the Prompt 01 protected-branch fixture): 24 controls, 13 evidence types, 24 tests. Digest is Prompt 01 `CatalogDigest` over parsed documents.
 

@@ -105,9 +105,9 @@ Shipped collectors:
 | `LocalCollector` | `collector.local` | Structural local files (`CODEOWNERS`, policy, workflow presence) |
 | `ManualEvidence` | `collector.manual` | Explicit attestation (`attested-by` required; never synthesized) |
 
-GitHub evidence types are canonical (`source.branch.protection`, `source.branch.required_reviews`, …), not `github.*`. HTTP 403 is `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
+**Superseded for newly emitted observations:** [GitHub collector mapping](0003-github-collector-canonical-evidence-mapping.md). `GitHubCollector` now emits Prompt 04/05 `evidence.*` types (plus `inventory.subject` / `inventory.complete`). Historical `source.*` names remain as a mapping-table const for ISO GH-012 / IAM-015; they are not sealed envelopes. HTTP 403 remains `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
 
-Required GitHub permissions advertised by the descriptor: `contents:read`, `administration:read`, `metadata:read`.
+Required GitHub permissions advertised by the descriptor after Prompt 09: `contents:read`, `metadata:read`, `administration:read`, `actions:read`, `members:read`, `security_events:read`.
 
 Scanner bridge remains one-way (`security_finding` plus a `canonical_type` fact). Absence of findings is not positive evidence. `security.no_vulnerabilities` is not a passable evidence type.
 

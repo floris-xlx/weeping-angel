@@ -627,7 +627,7 @@ Outputs: JSON, Markdown, CSV. Not a certification-ready formal document yet.
 
 ### Phase 35–36 — Assessment runs and comparison
 
-`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`.
+`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`. Prompt 11 adds `canonicalCatalogDigest` and `applicabilitySnapshotId` and makes the run a returned persistable record ([ADR 0003 lineage](../adr/0003-assessment-lineage.md)).
 
 Results are immutable snapshots.
 

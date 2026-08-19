@@ -113,37 +113,37 @@ pub fn unprotected(
     ctx: &EmitCtx<'_>,
 ) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
     let subject = repo_subject_id(owner, name);
-    let mut out = Vec::new();
-    out.push(emit(
-        "evidence.repository.branch-protection",
-        vec![
-            ("subject_id", EvidenceValue::string(&subject)),
-            ("protected", EvidenceValue::from_bool(false)),
-            ("force_push_allowed", EvidenceValue::from_bool(true)),
-            ("deletion_allowed", EvidenceValue::from_bool(true)),
-            ("admin_bypass_allowed", EvidenceValue::from_bool(true)),
-        ],
-        "default branch has no protection rule",
-        ctx,
-    )?);
-    out.push(emit(
-        "evidence.repository.review-policy",
-        vec![
-            ("subject_id", EvidenceValue::string(&subject)),
-            ("reviews_required", EvidenceValue::from_bool(false)),
-            ("required_reviewer_count", EvidenceValue::integer(0)),
-        ],
-        "no required reviews observed",
-        ctx,
-    )?);
-    out.push(emit(
-        "evidence.cicd.status-checks",
-        vec![
-            ("subject_id", EvidenceValue::string(&subject)),
-            ("status_checks_required", EvidenceValue::from_bool(false)),
-        ],
-        "no required status checks observed",
-        ctx,
-    )?);
-    Ok(out)
+    Ok(vec![
+        emit(
+            "evidence.repository.branch-protection",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("protected", EvidenceValue::from_bool(false)),
+                ("force_push_allowed", EvidenceValue::from_bool(true)),
+                ("deletion_allowed", EvidenceValue::from_bool(true)),
+                ("admin_bypass_allowed", EvidenceValue::from_bool(true)),
+            ],
+            "default branch has no protection rule",
+            ctx,
+        )?,
+        emit(
+            "evidence.repository.review-policy",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("reviews_required", EvidenceValue::from_bool(false)),
+                ("required_reviewer_count", EvidenceValue::integer(0)),
+            ],
+            "no required reviews observed",
+            ctx,
+        )?,
+        emit(
+            "evidence.cicd.status-checks",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("status_checks_required", EvidenceValue::from_bool(false)),
+            ],
+            "no required status checks observed",
+            ctx,
+        )?,
+    ])
 }

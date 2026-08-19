@@ -109,6 +109,8 @@ Per-subject outcomes are disjoint: passing, failing, missing, stale, excepted, t
 
 Unclassified field values and type mismatches are **technical**, not missing. A privileged-identity fail whose subject is marked break-glass (`evidence.identity.inventory.account_kind = break-glass`) may surface as `ExceptionApproved` when every failing subject is break-glass.
 
+When `conclude` would otherwise return `Effective` solely because approved unexpired bound IR exceptions removed subjects from the denominator (`excepted` non-empty; `failing` / `missing` / `stale` / `technical` empty), overall effectiveness is `ExceptionApproved`, not silent `Effective`. Same IR `Exception` type; no second engine. Shipped for Prompt 08 honesty and applies to every population family.
+
 ### 6. Existing `TestExpr`, dedicated evaluation detail
 
 Completed/added arms on the existing enum (no script host): `Count`, `CountWhere`, `AllSubjects`, `AnySubject`, `NoneSubjects`, `CoverageAtLeast`, `CoverageExactly`, `MissingSubjects`.

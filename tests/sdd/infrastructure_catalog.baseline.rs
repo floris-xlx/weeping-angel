@@ -1,10 +1,8 @@
 //! Baseline characterization of the infrastructure catalog surface (Prompt 07).
 //!
-//! Encodes what the tree does *today*: Prompt 01 catalog + Prompt 04 IAM family,
-//! a thin ISO-pack logging/crypto/backup/TLS sliver, and no canonical
-//! `control.{network,crypto,secret,data,database,logging,backup,resilience}.*`
-//! family. Must stay GREEN on the current tree. Does not implement catalog
-//! content. Scan product trees only (never this file) — xylex-sdd AC-2 / I4a.
+//! SUPERSEDED by `sdd_infrastructure_catalog_target` after the infrastructure
+//! catalog slice landed. Historical characterization of catalog absence.
+//! Tests are ignored so absence-of-catalog is not required CI green.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -379,6 +377,7 @@ fn product_mentions(needle: &str) -> bool {
         || iso_pack_text().contains(needle)
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
@@ -391,6 +390,7 @@ fn dual_suite_baseline_is_registered() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn catalog_loader_validate_and_digest_remain_the_single_ssot() {
     let catalog = load_catalog();
@@ -440,6 +440,7 @@ fn catalog_loader_validate_and_digest_remain_the_single_ssot() {
     }
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn fixture_example_and_identity_are_the_only_catalog_families() {
     let catalog = load_catalog();
@@ -489,6 +490,7 @@ fn fixture_example_and_identity_are_the_only_catalog_families() {
     }
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn required_infrastructure_evidence_and_population_tests_are_undeclared() {
     let catalog = load_catalog();
@@ -518,6 +520,7 @@ fn required_infrastructure_evidence_and_population_tests_are_undeclared() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn identity_fixtures_exist_and_infrastructure_fixtures_do_not() {
     let identity = manifest_dir().join("fixtures/assurance/canonical/v1/identity");
@@ -537,6 +540,7 @@ fn identity_fixtures_exist_and_infrastructure_fixtures_do_not() {
     }
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn iso_pack_holds_the_logging_crypto_backup_tls_sliver() {
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
@@ -606,6 +610,7 @@ fn iso_pack_holds_the_logging_crypto_backup_tls_sliver() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn iso_hybrid_kind_in_toml_loads_as_automated() {
     let metadata =
@@ -636,6 +641,7 @@ fn iso_hybrid_kind_in_toml_loads_as_automated() {
     let _ = PlannedTestKind::Manual;
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn iso_encryption_and_logging_existence_pass_on_one_envelope() {
     let ctx = fresh_context();
@@ -690,6 +696,7 @@ fn iso_encryption_and_logging_existence_pass_on_one_envelope() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn iso_tls_is_finding_shaped_break_on() {
     let ctx = fresh_context();
@@ -722,6 +729,7 @@ fn iso_tls_is_finding_shaped_break_on() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn github_collector_still_advertises_source_star_only() {
     assert!(
@@ -747,6 +755,7 @@ fn github_collector_still_advertises_source_star_only() {
     }
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn no_cloud_collectors_or_database_inventory_resolver() {
     let collector_src = crate_src("weeping-angel-collector");
@@ -792,6 +801,7 @@ fn no_cloud_collectors_or_database_inventory_resolver() {
     let _ = EvidenceValue::Bool(true);
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn subject_kinds_and_domains_already_cover_infrastructure() {
     let _ = SubjectKind::Database;
@@ -809,6 +819,7 @@ fn subject_kinds_and_domains_already_cover_infrastructure() {
     let _ = ControlDomain::Resilience;
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn generic_inventory_resolves_databases_without_a_family_resolver() {
     let mut set = EvidenceSet::new();
@@ -831,6 +842,7 @@ fn generic_inventory_resolves_databases_without_a_family_resolver() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn unknown_and_partial_populations_cannot_be_effective_on_all_subjects() {
     let ctx = fresh_context();
@@ -877,6 +889,7 @@ fn unknown_and_partial_populations_cannot_be_effective_on_all_subjects() {
     assert_ne!(partial_r.effectiveness, Effectiveness::Effective);
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn classify_value_treats_retention_day_integers_as_technical() {
     let ctx = fresh_context();
@@ -933,6 +946,7 @@ fn classify_value_treats_retention_day_integers_as_technical() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn public_contract_documents_iam_not_infrastructure() {
     let contract =
@@ -959,6 +973,7 @@ fn public_contract_documents_iam_not_infrastructure() {
     }
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
     let cat = fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
@@ -985,6 +1000,7 @@ fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
     );
 }
 
+#[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
 fn no_framework_retention_or_tls_constants_in_product_crates() {
     let product = product_rs_joined();

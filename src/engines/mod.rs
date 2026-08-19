@@ -46,6 +46,21 @@ pub struct EngineHit {
     pub attack_path_json: Option<serde_json::Value>,
 }
 
+impl weeping_angel_assurance::bridge::EngineHitView for EngineHit {
+    fn rule_id(&self) -> &str {
+        &self.rule_id
+    }
+    fn path(&self) -> &str {
+        &self.path
+    }
+    fn category(&self) -> &str {
+        &self.category
+    }
+    fn title(&self) -> &str {
+        &self.title
+    }
+}
+
 impl EngineHit {
     pub fn to_raw_candidate(&self) -> serde_json::Value {
         let mut loc = json!({

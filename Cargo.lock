@@ -2672,7 +2672,6 @@ dependencies = [
  "serde_json",
  "thiserror",
  "toml",
- "weeping-angel",
  "weeping-angel-assurance-ir",
  "weeping-angel-canonical-catalog",
  "weeping-angel-collector",

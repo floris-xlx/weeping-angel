@@ -1,10 +1,12 @@
-//! Baseline suite for immutable assessment lineage (Prompt 11).
+//! SUPERSEDED by `sdd_assessment_lineage_target`.
 //!
-//! Encodes CURRENT shortcuts on characterization SHA
-//! `e430980c0d27a8138a153d49b62ddf3c57827891` as specified in
-//! `docs/sdd/assessment-lineage.md` §3 / §4.11. Must stay GREEN until the
-//! target suite is GREEN and this file is skip-superseded. Does not implement
-//! persist, explain, or pure serialization.
+//! Historical shortcut characterization on SHA
+//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/sdd/assessment-lineage.md`
+//! §3 / §4.11). Persist, explain, pure serialize, generic facade, and compare
+//! are now the SSOT in the target suite. Tests are
+//! `#[ignore = "superseded by sdd_assessment_lineage_target"]` so dropped-run /
+//! serialize-time ISO / stub-assessment is not required CI green. Dual-suite
+//! registration remains (LIN-009).
 
 use std::fs;
 use std::path::{Path, PathBuf};

@@ -214,7 +214,7 @@ fn eval_rule(
         }
         ApplicabilityRule::Not(inner) => {
             let inner_value = eval_rule(inner, context, scratch);
-            let value = inner_value.not();
+            let value = !inner_value;
             scratch.rationale.push(RationaleEntry {
                 code: "not".into(),
                 message: format!("Not({inner_value:?}) = {value:?}"),
@@ -498,7 +498,7 @@ pub(crate) fn select_subjects(
     let excluded = context.excluded_subjects.clone();
     let selected = match selectors {
         None => context.inventory_ids(),
-        Some(sels) if sels.is_empty() => Vec::new(),
+        Some([]) => Vec::new(),
         Some(sels) => {
             let mut ids = Vec::new();
             for selector in sels {

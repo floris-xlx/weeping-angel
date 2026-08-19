@@ -500,7 +500,7 @@ Encodes ACT-001…015 and collector rules.
 ## 19. Implementation notes (spine landed)
 
 - Serde camelCase; `assurance-ir/v1`; `BTreeMap`/`BTreeSet` for digest stability; SHA-256 hex via `canonical_digest`.
-- Facade `assess` compiles a **canonical stub assessment** (one partial mapping + `branch_protection`) so every profile selector runs the same pipeline. Stubs must not emit `Effective` without evidence.
+- Facade `assess` compiles the pack for the assessed `(profile, version)` via `load_framework_pack`. Missing pack is `UnknownPack` (fail closed). The production stub assessment is retired ([ADR 0003 lineage](../adr/0003-assessment-lineage.md)); test fixtures may construct in-memory assessments.
 - `FixtureCollector` uses a fixed `collectedAt` (`2026-08-18T12:00:00Z`) so normalize is deterministic.
 - `EvidenceSet` is a digest-keyed map (COL-005).
 - Cargo 1.96 `PackageId` helpers in the target suite read the real crate graph for ACT-003/013.
@@ -516,6 +516,7 @@ Encodes ACT-001…015 and collector rules.
 | This spec | `docs/sdd/assurance-runtime-spine.md` |
 | Accepted ADR | `docs/adr/0001-inwardly-extensible-assurance-runtime.md` |
 | ISO 27001 vertical ADR | `docs/adr/0002-iso-27001-assurance-vertical.md` |
+| Assessment lineage ADR | `docs/adr/0003-assessment-lineage.md` |
 | Public contract | `docs/contracts/assurance-runtime.md` |
 | IR | `crates/weeping-angel-assurance-ir` |
 | Framework compile | `crates/weeping-angel-framework` |

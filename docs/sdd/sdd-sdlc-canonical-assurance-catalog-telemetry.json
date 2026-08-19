@@ -1,0 +1,776 @@
+{
+  "telemetry_run_id": "sdd-e5b53f79bcd8",
+  "run_id": "sdd-e5b53f79bcd8",
+  "workflow": "spec-driven-development",
+  "objective_fp": "e5b53f79bcd836fa",
+  "reason": "pre_finalize",
+  "report_path": "docs/sdd/sdd-sdlc-canonical-assurance-catalog.md",
+  "verify_ok": true,
+  "supersede_kind": "skip",
+  "agents_ok": 7,
+  "agents_fail": 0,
+  "agents_total": 7,
+  "tokens_used_sum": 15506509,
+  "duration_ms_sum": 5240934,
+  "event_count": 28,
+  "max_iters": 3,
+  "iters_used": 0,
+  "no_delta": false,
+  "dry_run": false,
+  "budget": {
+    "remaining": 41,
+    "spent": 7,
+    "total": 48
+  },
+  "gates": {
+    "baseline_green": true,
+    "baseline_superseded": true,
+    "dry_run": false,
+    "no_delta": false,
+    "target_green": true,
+    "target_red": true
+  },
+  "events": [
+    {
+      "agents_fail": 0,
+      "agents_ok": 0,
+      "agents_total": 0,
+      "budget": { "remaining": 48, "spent": 0, "total": 48 },
+      "detail": {
+        "await_user": false,
+        "dry_run": false,
+        "max_iters": 3,
+        "objective_fp": "e5b53f79bcd836fa",
+        "root": "."
+      },
+      "duration_ms_sum": 0,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "run_start",
+      "phase": "Scope",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 1,
+      "tokens_used_sum": 0,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "agent_id": "01a018f4-4142-78c1-8311-02ce1e60dc29",
+        "duration_ms": 165432,
+        "label": "sdd-scope",
+        "success": true,
+        "tokens_used": 379216
+      },
+      "duration_ms_sum": 165432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Scope",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 2,
+      "tokens_used_sum": 379216,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "baseline_path": "tests/sdd/sdlc_catalog.baseline.rs",
+        "report_dir": "docs/sdd",
+        "root": ".",
+        "target_path": "tests/sdd/sdlc_catalog.target.rs",
+        "test_command": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture; cargo test --test sdd_sdlc_catalog_target -- --nocapture"
+      },
+      "duration_ms_sum": 165432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase",
+      "phase": "Scope",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 3,
+      "tokens_used_sum": 379216,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 165432,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Spec",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 4,
+      "tokens_used_sum": 379216,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "agent_id": "01a018f6-d514-78e1-b55f-fe9410870b13",
+        "duration_ms": 697360,
+        "label": "sdd-spec",
+        "success": true,
+        "tokens_used": 790613
+      },
+      "duration_ms_sum": 862792,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Spec",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 5,
+      "tokens_used_sum": 1169829,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "adr_needed": true,
+        "spec_path": "docs/sdd/sdlc-canonical-assurance-catalog.md",
+        "title": "Prompt 05 SDLC canonical assurance catalog (spec only)"
+      },
+      "duration_ms_sum": 862792,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Spec",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 6,
+      "tokens_used_sum": 1169829,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 862792,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 7,
+      "tokens_used_sum": 1169829,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "agent_id": "01a01901-89d7-76a2-af24-94a945dbb94a",
+        "duration_ms": 539547,
+        "label": "sdd-baseline-green",
+        "success": true,
+        "tokens_used": 1444886
+      },
+      "duration_ms_sum": 1402339,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 8,
+      "tokens_used_sum": 2614715,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1402339,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "gate",
+      "phase": "baseline_green",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 9,
+      "tokens_used_sum": 2614715,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "command": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture",
+        "ok": true,
+        "test_files": [
+          "tests/sdd/sdlc_catalog.baseline.rs",
+          "tests/sdd/sdlc_catalog.target.rs"
+        ]
+      },
+      "duration_ms_sum": 1402339,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "BaselineGreen",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 10,
+      "tokens_used_sum": 2614715,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1402339,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "TargetRed",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 11,
+      "tokens_used_sum": 2614715,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "agent_id": "01a01909-d32a-7282-885a-6cc69e3b115b",
+        "duration_ms": 416503,
+        "label": "sdd-target-red",
+        "success": true,
+        "tokens_used": 1951249
+      },
+      "duration_ms_sum": 1818842,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "TargetRed",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 12,
+      "tokens_used_sum": 4565964,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "evidence": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture; cargo test --test sdd_sdlc_catalog_target -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1818842,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_red",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 13,
+      "tokens_used_sum": 4565964,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "command": "cargo test --test sdd_sdlc_catalog_baseline -- --nocapture; cargo test --test sdd_sdlc_catalog_target -- --nocapture",
+        "ok": true,
+        "test_files": ["tests/sdd/sdlc_catalog.target.rs"]
+      },
+      "duration_ms_sum": 1818842,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "TargetRed",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 14,
+      "tokens_used_sum": 4565964,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1818842,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Implement",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 15,
+      "tokens_used_sum": 4565964,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "agent_id": "01a01910-3d76-7d02-9424-5d0c51fb99ab",
+        "duration_ms": 2493010,
+        "label": "sdd-implement",
+        "success": true,
+        "tokens_used": 9456279
+      },
+      "duration_ms_sum": 4311852,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Implement",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 16,
+      "tokens_used_sum": 14022243,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "files_changed": [
+          "catalog/canonical/v1/controls/sdlc.toml",
+          "catalog/canonical/v1/evidence/sdlc.toml",
+          "catalog/canonical/v1/tests/sdlc.toml",
+          "catalog/canonical/v1/manifest.toml",
+          "fixtures/assurance/canonical/v1/sdlc/healthy-org/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/degraded-org/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/partial-coverage/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/unprotected-default-branch/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/missing-scan-evidence/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/stale-dependency-scan/evidence.json",
+          "fixtures/assurance/canonical/v1/sdlc/approved-exception/evidence.json",
+          "tests/sdd/sdlc_catalog.baseline.rs",
+          "tests/sdd/sdlc_catalog.target.rs",
+          "docs/sdd/sdlc-canonical-assurance-catalog.md",
+          "docs/adr/0003-sdlc-canonical-assurance-catalog.md",
+          "docs/contracts/assurance-runtime.md",
+          "docs/sdd/canonical-assurance-catalog-v1.md"
+        ],
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 4311852,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Implement",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 17,
+      "tokens_used_sum": 14022243,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": { "adr_needed": true },
+      "duration_ms_sum": 4311852,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "DocsAdr",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 18,
+      "tokens_used_sum": 14022243,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "agent_id": "01a01936-5da8-7f41-8255-01699f45b4fd",
+        "duration_ms": 715677,
+        "label": "sdd-docs-adr",
+        "success": true,
+        "tokens_used": 1166427
+      },
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "DocsAdr",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 19,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "adr_paths": ["docs/adr/0003-sdlc-canonical-assurance-catalog.md"],
+        "docs_updated": [
+          "docs/adr/0003-sdlc-canonical-assurance-catalog.md",
+          "docs/sdd/sdlc-canonical-assurance-catalog.md",
+          "docs/contracts/assurance-runtime.md",
+          "README.md",
+          "docs/sdd/github-collector.md",
+          "docs/sdd/infrastructure-canonical-assurance-catalog.md"
+        ]
+      },
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "DocsAdr",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 20,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": { "max_iters": 3 },
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Iterate",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 21,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "evidence": "PRE-IMPLEMENT: cargo test --test sdd_sdlc_catalog_baseline → 18 passed; cargo test --test sdd_sdlc_catalog_target → 0 passed / 16 failed (SDLC family missing: control.source.default-branch-protection). POST-IMPLEMENT target: cargo test --test sdd_sdlc_catalog_target → ok. 16 passed; 0 failed. POST-IMPLEMENT baseline (proof): catalog_has_no_sdlc_population_family FAILED (current tree has no Prompt 05 catalog file `controls/sdlc.toml`); sdlc_population_fixtures_are_absent FAILED. After #[ignore]: cargo test --test sdd_sdlc_catalog_baseline → ok. 0 passed; 0 failed; 18 ignored (superseded by sdd_sdlc_catalog_target). cargo fmt --all -- --check passed. Workspace cargo test --workspace --features demo failed on sdd_canonical_assurance_catalog_baseline::iso_metadata_owns_thin_canonical_stubs (Prompt 12 remapped pack). clippy -D warnings failed on weeping-angel-collector Prompt 09 edits (double_comparisons/vec_init_then_push/collapsible_if), not sdlc.toml.",
+        "passed": true
+      },
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_green",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 22,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "iters_used": 0,
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Iterate",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 23,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 5027529,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Supersede",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 24,
+      "tokens_used_sum": 15188670,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "agent_id": "01a01941-598b-7bc3-a831-a12ad7b12e4c",
+        "duration_ms": 213405,
+        "label": "sdd-supersede",
+        "success": true,
+        "tokens_used": 317839
+      },
+      "duration_ms_sum": 5240934,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Supersede",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 25,
+      "tokens_used_sum": 15506509,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "evidence": "skip: Skip-retired sdlc_catalog.baseline.rs via #[ignore = \"superseded by sdd_sdlc_catalog_target\"]; target remains CI green",
+        "passed": true
+      },
+      "duration_ms_sum": 5240934,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "baseline_superseded",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 26,
+      "tokens_used_sum": 15506509,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "action": "Skip-retired sdlc_catalog.baseline.rs via #[ignore = \"superseded by sdd_sdlc_catalog_target\"]; target remains CI green",
+        "additive_baseline": false,
+        "baseline_not_green": true,
+        "baseline_retired": true,
+        "super_ok": true,
+        "supersede_kind": "skip",
+        "target_still_green": true
+      },
+      "duration_ms_sum": 5240934,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Supersede",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 27,
+      "tokens_used_sum": 15506509,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 5240934,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Finalize",
+      "run_id": "sdd-e5b53f79bcd8",
+      "seq": 28,
+      "tokens_used_sum": 15506509,
+      "workflow": "spec-driven-development"
+    }
+  ]
+}

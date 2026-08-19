@@ -2,26 +2,24 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** |
+| Status | **Implemented — target GREEN; baseline superseded** |
 | Program | Canonical Assurance Catalog v1 |
 | Slice | Prompt 07 — network / cryptography / secrets / data / database / logging / backup / resilience |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/07-infrastructure-catalog.md`](../prompts/canonical-assurance-v1/07-infrastructure-catalog.md) |
 | Planning baseline SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
-| Dual-suite (register at implement) | `sdd_infrastructure_catalog_baseline` · `sdd_infrastructure_catalog_target` |
+| Dual-suite | `sdd_infrastructure_catalog_target` GREEN (INFRA-001…016); `sdd_infrastructure_catalog_baseline` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
 | Prompt-04 pattern (do not overwrite) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
-| Concurrent siblings (do not collide) | Prompt 05 [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); Prompt 06 [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md) |
+| Concurrent siblings (do not collide) | Prompt 05 [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); Prompt 06 [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md); Prompt 08 [`governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (continuity **governance** only) |
 | Spine / ISO law | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
 This document is the durable SSOT for the **infrastructure catalog slice**. It does not replace the Prompt 01 catalog-infrastructure SSOT, the Prompt 02 typed-evidence contract, the Prompt 03 population-runtime contract, or the Prompt 04 IAM family. Prompts 01–04 have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
 
-This spec phase writes **documentation only**. Product TOML, fixtures, dual-suite Rust, and `Cargo.toml` `[[test]]` rows land in the implement phase after baseline GREEN + target RED on current code.
-
-**Verified 2026-08-19** against workspace HEAD `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`). Characterization in §3 is current product state, not a historical planning note. Sibling working-tree files (GitHub collector / lineage / remap / vulnerability / SDLC SDD) must not be treated as this slice.
+§3 is planning-SHA characterization (`e430980c…`). §13 records the family that shipped.
 
 Architecture law (unchanged):
 
@@ -66,8 +64,8 @@ This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Pr
 | 02 typed evidence | Typed `EvidenceValue`, seal rules | **Landed.** | Declare required fact *names* and semantic types. No second value enum. No secret material in facts. |
 | 03 population runtime | Subject populations, `AllSubjects` / `CoverageAtLeast` / `NoneSubjects`, missing/stale/fail split | **Landed.** Identity inventory special-case + generic `inventory.subject` / `inventory.complete`. | Declare population-based tests. **Do not locally reimplement coverage math. Do not add `resolve_database_inventory` / `resolve_network_inventory`.** |
 | 04 IAM | `control.identity.*` | **Landed.** | Leave `identity.toml`, identity fixtures, and `sdd_iam_catalog_target` green. |
-| 05 SDLC | `control.source.*` / CI / release | **Specified; product unlanded** (run-dir specs + ADR draft). Catalog still only `control.source.protected-branch` fixture. | Do not implement SDLC. Do not edit Prompt 05 paths. |
-| 06 vulnerability | `control.vulnerability.*`, `evidence.secret.exposure` | **Specified; product unlanded.** Durable SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). | Do **not** create `vulnerability.toml`, `evidence.secret.exposure`, `fixtures/.../vulnerability/`, or `tests/sdd/vulnerability_catalog.*`. Secret **storage** (`evidence.secret.storage-configuration`) is this slice; secret **exposure** is Prompt 06. |
+| 05 SDLC | `control.source.*` / CI / release | **Landed.** Durable SSOT [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); accepted [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md). | Do not rewrite `sdlc.toml` or SDLC fixtures. |
+| 06 vulnerability | `control.vulnerability.*`, `evidence.secret.exposure` | **Landed.** Durable SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). | Do **not** rewrite `vulnerability.toml` or `evidence.secret.exposure`. Secret **storage** (`evidence.secret.storage-configuration`) is this slice; secret **exposure** is Prompt 06. |
 
 Rebase rule: adapt infrastructure content to the landed contracts. Prefer existing `CanonicalCatalog`, `EvidenceValue`, and `evaluate_coverage` over extending this slice’s scope.
 
@@ -157,9 +155,9 @@ Root `Cargo.toml` does **not** auto-discover `tests/sdd/*.rs`. Registered dual s
 
 Validator `FRAMEWORK_SEGMENTS` includes `iso27001` / `soc2` / `nis2` / `dora` / `gdpr` and hyphenated variants. It does **not** include `pci` / `pci-dss`. Target INFRA-007 must still reject those tokens in infrastructure catalog **file text**.
 
-### 3.7 Public contract
+### 3.7 Public contract (planning SHA)
 
-[`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) documents the IAM family (`control.identity.*`) and fixture `control.source.protected-branch`. It does **not** yet name `control.network.*` / `evidence.database.*` / infrastructure fixtures. After implement, that paragraph must be extended so the contract does not lie. This spec write does not edit the contract.
+On `e430980c…` [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) documented the IAM family (`control.identity.*`) and fixture `control.source.protected-branch` and did **not** name `control.network.*` / `evidence.database.*`. After implement the contract names the family (see the Canonical catalog section).
 
 ### 3.8 What “infrastructure assessment” means today
 
@@ -449,6 +447,7 @@ Each fixture is a frozen evidence set (+ optional Exception records) with a fixe
 | `logging/stale-audit-log` | Audit enabled but envelope older than freshness | `critical-assets-audit-current` → `StaleEvidence` |
 | `logging/missing-alerting` | Known critical asset, no alerting envelope | alerting / coverage → `InsufficientEvidence` |
 | `logging/partial-coverage` | 2 of 3 critical assets have logging | `critical-assets-audit-current` / `monitoring-coverage` not Effective |
+| `logging/partial-inventory` | Non-authoritative asset population (shipped extra) | All-subjects logging tests → `InsufficientEvidence`, never Effective |
 | `backup/healthy` | Required stores current successful backups; restore tests inside window | backup population + restore-fresh `Effective` |
 | `backup/missing-backup` | Required store, no backup config/run | `required-stores-current` → `InsufficientEvidence` or `Ineffective` if config explicitly `backup_enabled=false` — distinguish both in target assertions |
 | `backup/stale-restore-test` | Restore test exists outside window | `restore-test-fresh` → `StaleEvidence` |
@@ -474,10 +473,10 @@ Healthy fixtures may share a multi-resource inventory (several DBs, endpoints, s
 
 Follow the existing root `[[test]]` pattern (IAM).
 
-| Suite | Path (planned) | Role |
+| Suite | Path | Role |
 | --- | --- | --- |
-| Baseline | `tests/sdd/infrastructure_catalog.baseline.rs` · `sdd_infrastructure_catalog_baseline` | GREEN on current tree: **absence** of infrastructure family + **presence** of ISO sliver. After target GREEN, `#[ignore]` so absence-of-catalog is not CI green (`supersede_kind=skip`, matching IAM/ISO). |
-| Target | `tests/sdd/infrastructure_catalog.target.rs` · `sdd_infrastructure_catalog_target` | RED on current tree for missing family / fixtures / population semantics. GREEN after implement — CI gate (INFRA-001…016). |
+| Baseline | `tests/sdd/infrastructure_catalog.baseline.rs` · `sdd_infrastructure_catalog_baseline` | GREEN on planning tree: **absence** of infrastructure family + **presence** of ISO sliver. After target GREEN, `#[ignore]` so absence-of-catalog is not CI green (`supersede_kind=skip`, matching IAM/ISO). |
+| Target | `tests/sdd/infrastructure_catalog.target.rs` · `sdd_infrastructure_catalog_target` | RED on planning tree for missing family / fixtures / population semantics. GREEN after implement — CI gate (INFRA-001…016). |
 
 Suggested target assertion clusters (titles include the id):
 
@@ -502,18 +501,16 @@ Suggested target assertion clusters (titles include the id):
 
 ### 4.10 Documentation after implement
 
-Later docs pass (not this spec write): this file’s landed record, accept the ADR draft (drop `-draft`), pointer on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md). Prompt 01 / 04 / 06 SSOTs are not overwritten. No cloud collection or ISO remap is claimed.
+Landed: this file’s §13 record, accepted ADR (no `-draft`), and IAM-style paragraph on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md). Prompt 01 / 04 / 06 SSOTs are not overwritten. No cloud collection or ISO remap is claimed.
 
-After target GREEN the public contract **must** gain an IAM-style paragraph naming:
+The public contract names:
 
 - 43 `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` ids;
 - the sixteen required evidence contracts;
 - per-family TOML paths + `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/`;
 - population tests (not existence);
 - hybrid honesty for DR / objectives / segmentation;
-- ISO sliver **not** remapped.
-
-Do not edit the contract in this spec phase.
+- ISO sliver **not** remapped by this slice.
 
 ### 4.11 TOML authoring contract (IAM mirror)
 
@@ -587,7 +584,7 @@ Follow `tests/sdd/iam_catalog.{baseline,target}.rs`:
 - Target RED on current code because `control.network.*` / required evidence / population fixtures are missing — not because the test crate fails to compile.
 - After GREEN: `#[ignore = "superseded by sdd_infrastructure_catalog_target"]` on the baseline (IAM/ISO pattern).
 
-Register both `[[test]]` rows in root `Cargo.toml` at implement (not this spec write).
+Both `[[test]]` rows are registered in root `Cargo.toml`. After GREEN, baseline uses `#[ignore = "superseded by sdd_infrastructure_catalog_target"]`.
 
 ### 4.13 Complete test id list (43 — one per control)
 
@@ -678,7 +675,7 @@ No private keys, connection strings, recovered secrets, or compliance narratives
 
 ## 5. Acceptance criteria
 
-Testable. Implementation is out of this spec phase.
+Testable. Met by the landed family and `sdd_infrastructure_catalog_target` (INFRA-001…016).
 
 1. Dual-suite `sdd_infrastructure_catalog_baseline` + `sdd_infrastructure_catalog_target` is registered in root `Cargo.toml` like IAM.
 2. On SHA `e430980c…` (current code, pre-infrastructure content): baseline GREEN; target RED for missing `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` / required evidence / population fixtures — not for unrelated compile errors.
@@ -753,8 +750,6 @@ Fail-closed if: baseline cannot go green on current characterization; target can
 
 Workspace verify command is unchanged. Record the implement-phase HEAD SHA in this document when product work starts.
 
-This spec write does **not** register the suites or add product TOML.
-
 ---
 
 ## 9. ADR
@@ -777,14 +772,13 @@ note         = prompts 01–04 landed (catalog + typed evidence + population + I
 
 ---
 
-## 11. Baseline suite record (planned)
+## 11. Baseline suite record (superseded)
 
 | Field | Value |
 | --- | --- |
 | Planning SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
-| Suite | `sdd_infrastructure_catalog_baseline` · `tests/sdd/infrastructure_catalog.baseline.rs` |
-| Expected on current code | **GREEN** (absence characterization) |
-| Expected after target GREEN | **ignored** so absence-of-catalog is not CI green |
+| Suite | `sdd_infrastructure_catalog_baseline` · [`tests/sdd/infrastructure_catalog.baseline.rs`](../../tests/sdd/infrastructure_catalog.baseline.rs) |
+| Expected now | **ignored** (`#[ignore = "superseded by sdd_infrastructure_catalog_target"]`) so absence-of-catalog is not CI green |
 | Command | `cargo test --workspace --features demo --test sdd_infrastructure_catalog_baseline` |
 
 Baseline asserts (found case):
@@ -794,20 +788,19 @@ Baseline asserts (found case):
 - no `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/`
 - ISO pack still ships `logging.security-events`, `logging.audit-trail`, `backup.recovery-testing`, `encryption.data-at-rest`, `encryption.data-in-transit`, `security.tls` as existence/hybrid (TLS is finding-shaped `break_on`)
 - no AWS/Azure/GCP/Cloudflare collectors
-- `sdd_infrastructure_catalog_*` not yet a CI requirement on this SHA until registered at implement
+- `sdd_infrastructure_catalog_*` was not a CI requirement on the planning SHA until registered at implement (now registered; baseline ignored)
 
 ---
 
-## 12. Target suite record (planned; RED until implement)
+## 12. Target suite record (GREEN)
 
 | Field | Value |
 | --- | --- |
-| Suite | `sdd_infrastructure_catalog_target` · `tests/sdd/infrastructure_catalog.target.rs` |
-| Expected on current code | **RED** (missing family / fixtures / population semantics) |
-| Expected after implement | **GREEN** (CI gate) |
+| Suite | `sdd_infrastructure_catalog_target` · [`tests/sdd/infrastructure_catalog.target.rs`](../../tests/sdd/infrastructure_catalog.target.rs) |
+| Expected | **GREEN** (CI gate INFRA-001…016; 22 tests) |
 | Command | `cargo test --workspace --features demo --test sdd_infrastructure_catalog_target -- --nocapture` |
-| Planned catalog | files in §4.1 listed in `manifest.toml` |
-| Planned fixtures | §4.7 |
+| Landed catalog | files in §4.1 listed in `manifest.toml` |
+| Landed fixtures | §4.7 plus `logging/partial-inventory` |
 | Loader | Prompt 01 `CanonicalCatalog::{load,validate,digest}` — no second loader |
 | Population | Prompt 03 `evaluate_coverage` / generic inventory — no `InfraPopulation` fork |
 
@@ -815,14 +808,38 @@ Baseline asserts (found case):
 
 ## 13. Landed record
 
-Implemented 2026-08-19 on working-tree HEAD `f46cc4690ca131e5eaa932adea1b31fbc3de9965` (planning SHA `e430980c0d27a8138a153d49b62ddf3c57827891`).
+Implemented 2026-08-19 (planning SHA `e430980c0d27a8138a153d49b62ddf3c57827891`). Product family remains the same on later workspace HEAD.
 
-- Catalog: `catalog/canonical/v1/{controls,evidence,tests}/{network,crypto,data,database,logging,backup,resilience}.toml` listed in `manifest.toml` `[files]`. `control.secret.*` / `evidence.secret.storage-configuration` live in `crypto.toml`.
-- Forty-three independently assessable controls; sixteen required evidence contracts; eight Prompt-07 population tests plus one test per remaining control.
-- Fixtures: `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/`.
-- Dual-suite registered; baseline `#[ignore = "superseded by sdd_infrastructure_catalog_target"]` after target GREEN.
-- ADR accepted: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md).
-- Public contract names the family.
+| Surface | Location |
+| --- | --- |
+| Controls (43) | `catalog/canonical/v1/controls/{network,crypto,data,database,logging,backup,resilience}.toml` (`control.secret.*` in `crypto.toml`) |
+| Evidence (16) | matching `evidence/*.toml` (`evidence.secret.storage-configuration` in `crypto.toml`; no `evidence.data.inventory`) |
+| Tests (43) | matching `tests/*.toml` (8 Prompt-07 population ids + one per remaining control) |
+| Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` |
+| Fixtures (29) | `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/` (see §4.7; plus `logging/partial-inventory`) |
+| Loader / digest | Prompt 01 crate; no infrastructure-specific load path or `resolve_database_inventory` |
+| Target suite | `tests/sdd/infrastructure_catalog.target.rs` (`sdd_infrastructure_catalog_target`) GREEN INFRA-001…016 (22 tests) |
+| Baseline suite | `tests/sdd/infrastructure_catalog.baseline.rs` superseded (`#[ignore]`; 18 ignored) |
+| ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
+| ISO pack | Unchanged by this slice; Prompt 12 retired pack infra slivers and left A.8.13 / A.8.15 / A.8.24 unmapped |
+| Collectors | No AWS / Azure / GCP / Cloudflare / remote-inventory collector |
+| Secret boundary | Storage (`evidence.secret.storage-configuration`) here; exposure (`evidence.secret.exposure`) Prompt 06 |
+
+Catalog expression thresholds (not Rust framework constants): `min_days = 90` on logging/backup/data retention tests; `acceptable_min_protocol = "1.2"` on TLS tests; `approved_backends = ["vault", "kms"]` on secret-storage tests; `window = "24h"` on backup run / restore / recovery-evidence freshness.
+
+Hybrid/manual honesty as shipped:
+
+| Control | Automation | Test `op` |
+| --- | --- | --- |
+| `control.network.segmentation` | hybrid | `manual-review` |
+| `control.network.public-exposure-governance` | hybrid | `manual-review` |
+| `control.resilience.disaster-recovery-exercise` | **manual** | `manual-review` |
+| `control.resilience.recovery-objectives` | **manual** | `manual-review` |
+| `control.resilience.recovery-procedure` | hybrid | `all-subjects` on `procedure_present` |
+| `control.resilience.redundancy` | hybrid | `all-subjects` on `redundant` |
+| `control.crypto.key-lifecycle` / `key-rotation` | hybrid | `all-subjects` (supporting timestamps; ceremony still hybrid) |
+
+Compile-blocker (not a second catalog API): the assurance facade no longer depends on the root package. Scanner-view traits live in `weeping-angel-evidence` / `weeping-angel-assurance` so the workspace crate graph has no cycle. Population math, `EvidenceValue`, and `CanonicalCatalog` were not forked.
 
 Protocol:
 
@@ -830,38 +847,43 @@ Protocol:
 Spec (this file) → Baseline GREEN on planning characterization
   → Target RED for missing infrastructure family / population fixtures
   → Implement family TOML + fixtures + Cargo.toml [[test]] rows
-  → ADR / contract pointer finalized
+  → ADR / contract / README finalized
   → Target GREEN → Baseline skip-superseded → Target still GREEN
 ```
 
+Fail-closed gates that were met: baseline characterized absence of `control.network.*` plus presence of the ISO logging/crypto/backup/TLS sliver; target went red for missing family / evidence / fixtures (not compile noise); target greened on the Prompt 01 loader and Prompt 03 evaluator.
+
 ## 14. Implement-phase owned files (allowlist)
 
-Create/update **only**:
+Shipped under:
 
 ```text
 catalog/canonical/v1/manifest.toml
 catalog/canonical/v1/controls/{network,crypto,data,database,logging,backup,resilience}.toml
 catalog/canonical/v1/evidence/{network,crypto,data,database,logging,backup,resilience}.toml
 catalog/canonical/v1/tests/{network,crypto,data,database,logging,backup,resilience}.toml
-fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/**/evidence.json
+fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/**/{evidence,exceptions}.json
 tests/sdd/infrastructure_catalog.baseline.rs
 tests/sdd/infrastructure_catalog.target.rs
-Cargo.toml                                          # two [[test]] rows only
-docs/sdd/infrastructure-canonical-assurance-catalog.md   # landed SHA
-docs/adr/0003-infrastructure-canonical-assurance-catalog.md  # accept; drop -draft
-docs/contracts/assurance-runtime.md                 # family pointer only
+Cargo.toml                                          # two [[test]] rows
+docs/sdd/infrastructure-canonical-assurance-catalog.md
+docs/adr/0003-infrastructure-canonical-assurance-catalog.md
+docs/contracts/assurance-runtime.md
+README.md                                           # family pointer
 ```
+
+Compile-graph files touched only to break the facade↔root cycle (scanner-view traits): `crates/weeping-angel-evidence/src/lib.rs`, `crates/weeping-angel-assurance/{Cargo.toml,src/bridge.rs}`, `src/engines/mod.rs`, `src/contract/types.rs`.
 
 Do **not** create `secret.toml`, `vulnerability.toml`, `infrastructure.toml`, `tests/sdd/vulnerability_catalog.*`, or `fixtures/.../vulnerability/`. Do not edit `identity.toml`, `fixture.example.toml`, `frameworks/iso-27001/2022/**`, Prompt 01/04/06 SSOTs, or Prompt 03 population Rust.
 
-## 15. Target RED reasons (must be these)
+## 15. Target RED reasons (historical; planning SHA)
 
-On current code, `sdd_infrastructure_catalog_target` must fail because:
+On `e430980c…` (pre-family), `sdd_infrastructure_catalog_target` failed because:
 
-1. `catalog/canonical/v1` has no `controls/network.toml` (or any `control.network.*` id).
-2. Required evidence contracts (`evidence.database.inventory`, `evidence.network.tls-configuration`, …) are undeclared.
-3. `fixtures/assurance/canonical/v1/{network,database,logging,backup,…}` do not exist.
+1. `catalog/canonical/v1` had no `controls/network.toml` (or any `control.network.*` id).
+2. Required evidence contracts (`evidence.database.inventory`, `evidence.network.tls-configuration`, …) were undeclared.
+3. `fixtures/assurance/canonical/v1/{network,database,logging,backup,…}` did not exist.
 
-It must **compile**. A missing `[[test]]` row is a harness bug (I3), not a product RED. Register the suites before claiming RED.
+It compiled. A missing `[[test]]` row would have been a harness bug (I3), not a product RED.
 
-Baseline GREEN asserts the same absences plus the ISO sliver still present (`logging.security-events`, `logging.audit-trail`, `backup.recovery-testing`, `encryption.data-at-rest`, `encryption.data-in-transit`, `security.tls`).
+Baseline GREEN asserted the same absences plus the ISO sliver still present (`logging.security-events`, `logging.audit-trail`, `backup.recovery-testing`, `encryption.data-at-rest`, `encryption.data-in-transit`, `security.tls`). After target GREEN those absence asserts are ignored.

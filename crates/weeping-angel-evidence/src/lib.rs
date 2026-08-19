@@ -299,6 +299,8 @@ pub fn looks_like_compliance_claim(text: &str) -> bool {
         || lower.contains("control test result")
         || lower.contains("nis2 compliant")
         || lower.contains("dora compliant")
+        || lower.contains("pci-dss compliant")
+        || lower.contains("pci dss compliant")
 }
 
 /// Redact credential-shaped tokens from diagnostics. Never persist tokens.

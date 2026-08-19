@@ -2,24 +2,25 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Specified — no product implementation yet** |
+| Status | **Implemented — target GREEN; baseline superseded** |
 | Program | Canonical Assurance Catalog v1 |
 | Slice | Prompt 08 — policy / risk governance / personnel security / supplier / incident governance / continuity governance / first-class manual evidence |
 | Source prompt | [`docs/prompts/canonical-assurance-v1/08-governance-catalog.md`](../prompts/canonical-assurance-v1/08-governance-catalog.md) |
-| Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19; HEAD still has no governance family) |
-| Dual-suite (register at implement) | `sdd_governance_catalog_baseline` · `sdd_governance_catalog_target` |
-| ADR | Draft [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) — **accept after target GREEN** |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — pointer only after family lands if the contract would otherwise omit `evidence.manual.*` / governance families |
+| Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19; found-case: no governance family) |
+| Dual-suite | `sdd_governance_catalog_target` GREEN (GOV-001…016); `sdd_governance_catalog_baseline` superseded (`#[ignore]`) |
+| Landed family | 34 controls (25 Hybrid / 9 Manual), 13 evidence types, 34 tests, eight fixtures; clock `2026-08-18T12:00:00Z` |
+| ADR | Accepted [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) — governance-family pointer + `evidence.manual.attestation` + ExceptionApproved honesty |
 | Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
 | Prompt-04 sibling (do not overwrite) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
-| Concurrent siblings (do not overwrite or implement) | Prompt 05 SDLC run-dir specs / ADR draft; Prompt 06 [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md); Prompt 07 [`infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md) |
+| Concurrent siblings (do not overwrite) | Prompt 05 [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); Prompt 06 [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md); Prompt 07 [`infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md) — product landed in parallel |
 | Spine / ISO law | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
 This document is the durable SSOT for the **governance catalog slice** (Prompt 08). It does not replace Prompt 01 catalog infrastructure, Prompt 02 typed evidence, Prompt 03 population runtime, or Prompt 04 IAM content. Prompts 01–04 have landed in product code; this slice consumes their loader, `EvidenceValue`, population evaluator, Exception/Risk IR, and catalog tree and **must not** invent a second copy.
 
-This spec phase writes **documentation only**. Product TOML, fixtures, dual-suite Rust, `Cargo.toml` `[[test]]` rows, and the public-contract pointer land in the implement phase after baseline GREEN + target RED on current code.
+Product TOML, fixtures, dual-suite Rust, `Cargo.toml` `[[test]]` rows, and the public-contract pointer have landed. Consume Prompts 01–03; do not invent a second loader.
 
 Architecture law (unchanged):
 
@@ -64,9 +65,9 @@ This slice does **not** claim ISO / SOC 2 / NIS 2 coverage. Framework remapping 
 | 02 typed evidence | Typed `EvidenceValue`, `with_value`, seal rules | **Landed.** | Declare required fact *names* and semantic types. Store via `with_value`. No second value enum. No secret material. |
 | 03 population runtime | `AllSubjects` / `CoverageAtLeast` / `NoneSubjects` / `FreshWithin` / `ManualReview`, missing/stale/fail split, `inventory.subject` + `inventory.complete`, Exception subject binding | **Landed.** Identity inventory special-case + generic inventory. | Declare population-based tests. **Do not locally reimplement coverage math. Do not add `resolve_personnel_inventory` / `resolve_vendor_inventory`.** |
 | 04 IAM | `control.identity.*` technical identity / MFA / privileged membership / account status | **Landed.** | Leave `identity.toml`, identity fixtures, and `sdd_iam_catalog_target` green. Personnel *governance* (process, training, confidentiality, acknowledgements) lives here. |
-| 05 SDLC | `control.source.*` / CI / supply-chain, including `control.source.secure-development-policy` | **Specified; product may land in parallel.** | Do **not** implement SDLC. Information-security policy, AUP, document-control, and evidence-retention *governance* live here. |
-| 06 vulnerability | Finding-level risk acceptance, `evidence.vulnerability.exception` | **Specified; product may land in parallel.** | Do **not** create `vulnerability.toml` or `evidence.secret.exposure`. Organizational risk assessment / treatment / ownership / acceptance *attestations* live here. |
-| 07 infrastructure | Operational backup/restore/HA, `evidence.resilience.recovery-plan`, planned `*/resilience.toml` | **Specified; product may land in parallel.** | Do **not** create network/crypto/database/logging/backup operational TOML or overwrite `resilience.toml`. Continuity *plan* and DR *governance* live here (`evidence.resilience.continuity-plan`). |
+| 05 SDLC | `control.source.*` / CI / supply-chain, including `control.source.secure-development-policy` | **Landed** (`sdlc.toml`). | Do **not** rewrite SDLC. Information-security policy, AUP, document-control, and evidence-retention *governance* live here. |
+| 06 vulnerability | Finding-level risk acceptance, `evidence.vulnerability.exception` | **Landed** (`vulnerability.toml`; SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md)). | Do **not** rewrite `vulnerability.toml` or `evidence.secret.exposure`. Organizational risk assessment / treatment / ownership / acceptance *attestations* live here. |
+| 07 infrastructure | Operational backup/restore/HA, `evidence.resilience.recovery-plan`, `*/resilience.toml` | **Landed** (`network` / `crypto` / `data` / `database` / `logging` / `backup` / `resilience.toml`). | Do **not** overwrite operational TOML. Continuity *plan* and DR *governance* live in `governance.toml` (`evidence.resilience.continuity-plan`). |
 | ISO pack | Organizational slivers listed in §3.3 | Frozen | **Do not retarget mappings or grow the pack** (Prompt 12). |
 
 Rebase rule: adapt governance content to the landed Prompt 01 file layout (`controls/*.toml`, `evidence/*.toml`, `tests/*.toml`, manifest `[files]`). If Prompts 05–07 land files during this session, **do not overwrite them**. Add only this slice’s files and manifest lines.
@@ -113,7 +114,7 @@ There is **no**:
 - `fixtures/assurance/canonical/v1/governance/`
 - `sdd_governance_catalog_{baseline,target}` `[[test]]` rows
 
-`control.resilience.*` / `evidence.resilience.recovery-plan` are **specified** by Prompt 07 but are **not** product on this SHA. This slice must not create `resilience.toml`.
+`control.resilience.*` / `evidence.resilience.recovery-plan` were **specified** by Prompt 07 and **not** product on this SHA. This slice must not create `resilience.toml` (Prompt 07 later did; continuity IDs still live in `governance.toml`).
 
 ### 3.2 IAM sibling (present; do not disturb)
 
@@ -238,7 +239,7 @@ Reject in canonical governance content (validator + target suite):
 
 Correct: `control.governance.information-security-policy`. Incorrect: `control.vanta.ismp`, `control.iso27001.a.5.1`, `test.servicenow.incident-plan`.
 
-### 4.3 Control family (36 independently assessable controls)
+### 4.3 Control family (34 independently assessable controls)
 
 Stay in the 30–45 band. Do not split into micro-controls. Titles and objectives are framework-neutral. Almost all of these are **Manual** or **Hybrid**. Automated is reserved for honest freshness/presence of a required *typed* evidence record (still not “the PDF proves the ISMS works”).
 
@@ -409,9 +410,9 @@ Personnel/vendor populations use Prompt 03 **generic** `inventory.subject` + `in
 - Population evaluation: Prompt 03 `evaluate_coverage` / `FreshWithin` / `ManualReview`. Governance tests are **declarations**.
 - Personnel / vendor inventory: generic `inventory.subject` + `inventory.complete` (or explicit fixture population). **Do not** add `resolve_personnel_inventory`.
 - Exception: reuse IR `Exception` + existing `Effectiveness::ExceptionApproved`. Bind `subjects`. Empty subjects ≠ whole inventory. Expired/revoked must not pass.
-- **Honesty gap (do not ignore):** `evaluate_coverage` currently (a) removes excepted subjects from the denominator (remaining-all-pass can become `Effective`) and (b) promotes `ExceptionApproved` only for identity break-glass. Core law forbids silent `Effective`. If target GREEN cannot be reached without it, implement may apply a **minimal generic promotion** in the existing evaluator: when the only reason a required bound subject is not failing is an approved unexpired `Exception`, overall effectiveness is `ExceptionApproved`, not `Effective`. That consumes Exception IR; it is **not** a second exception engine and **not** a `GovernanceException` type. Prefer the smallest change; do not rewrite coverage math.
+- **Honesty (shipped):** `evaluate_coverage` still (a) removes excepted subjects from the denominator and (b) promotes `Ineffective` → `ExceptionApproved` for identity break-glass. It additionally promotes remaining-all-pass `Effective` → `ExceptionApproved` when `excepted` is non-empty and `failing` / `missing` / `stale` / `technical` are empty (rationale: `approved unexpired exception bound to excepted subjects; not silent Effective`). Same IR `Exception`; not a second engine and not a `GovernanceException` type. Coverage arithmetic is otherwise unchanged.
 - Risk: reuse IR `Risk` as an attestation subject / record. Do not build a treatment workflow.
-- ISO pack, GitHub collector, Prompt 04–07 families, generic `TestExpr` semantics: **untouched** except the optional ExceptionApproved honesty fix above.
+- ISO pack, GitHub collector, Prompt 04–07 families, generic `TestExpr` semantics: **untouched** except the ExceptionApproved honesty promotion above. This slice does not remap ISO; organizational clauses stay unmapped after Prompt 12 sliver retirement.
 
 ### 4.9 Dual-suite protocol
 
@@ -430,12 +431,12 @@ Suggested target assertion clusters (titles include the id):
 | --- | --- |
 | GOV-001 | Catalog tree / `CanonicalCatalog::load` loads governance content offline |
 | GOV-002 | Digest of the catalog (with governance files listed) is deterministic |
-| GOV-003 | All 36 `control.{governance,risk,personnel,vendor,incident,resilience}` ids present; prefixes only as specified; count in 30–45 |
+| GOV-003 | All 34 `control.{governance,risk,personnel,vendor,incident,resilience}` ids present; prefixes only as specified; count in 30–45 |
 | GOV-004 | Required evidence types declared including `evidence.manual.attestation` and the Prompt-08 domain types; no orphans |
 | GOV-005 | Required tests declared and referenced (`policy-current`, `training-current-all`, `critical-risk-review-current`, `management-review-current`, `internal-audit-current`, `exercise-current`) |
 | GOV-006 | Catalog IDs contain no provider/GRC-product tokens; target greps `vanta` / `drata` / `servicenow` / `jira` in **catalog TOML**, not in this test’s own source |
 | GOV-007 | Catalog TOML / ids contain no `iso27001` / `soc2` / `nis2` tokens |
-| GOV-008 | No governance control lives in the ISO pack as `control.governance.*`; ISO sliver ids and mappings unchanged |
+| GOV-008 | No governance control lives in the ISO pack as `control.governance.*`; this slice does not retarget ISO mappings (organizational clauses stay unmapped after Prompt 12 sliver retirement) |
 | GOV-009 | `training-current-all` is population-based (incomplete-training fixture not Effective; a single training envelope does not pass) |
 | GOV-010 | Missing vs stale vs fail vs manual vs exception distinguished on the eight fixtures |
 | GOV-011 | Partial training / vendor populations cannot yield Effective on all-subjects tests |
@@ -443,7 +444,7 @@ Suggested target assertion clusters (titles include the id):
 | GOV-013 | Hybrid/manual controls requiring operational evidence stay hybrid/manual; `manual-review-despite-evidence` is `ManualReviewRequired` |
 | GOV-014 | Credential-shaped facts still rejected; no secret material in governance fixtures |
 | GOV-015 | IAM / fixture.example ids still present; no Prompt 05/06/07 files overwritten by this slice |
-| GOV-016 | `sdd_iso27001_assurance_target` and `sdd_iam_catalog_target` stay green (ISO sliver and IAM untouched) |
+| GOV-016 | `sdd_iso27001_assurance_target` / remap and `sdd_iam_catalog_target` stay green (this slice does not retarget ISO; IAM untouched) |
 
 Baseline clusters (current tree; stay true until superseded):
 
@@ -474,7 +475,7 @@ Testable. Implementation is out of this spec phase.
 1. Dual-suite `sdd_governance_catalog_baseline` + `sdd_governance_catalog_target` is registered in root `Cargo.toml` (tests/sdd is not autodiscovered).
 2. On current tree (pre-governance TOML): baseline GREEN characterizing §3; target RED for missing `control.governance.*` / `evidence.manual.attestation` / population fixtures — not for unrelated compile errors.
 3. After implement: target GREEN; baseline ignored so absence-of-governance-catalog is not a CI requirement; `cargo test --workspace --features demo`, `fmt --check`, and `clippy -D warnings` stay green.
-4. Thirty-six `control.{governance,risk,personnel,vendor,incident,resilience}` controls exist with stable ids, domains, evidence requirements, test refs, and honest automation class; count stays in 30–45 with no artificial micro-controls.
+4. Thirty-four `control.{governance,risk,personnel,vendor,incident,resilience}` controls exist with stable ids, domains, evidence requirements, test refs, and honest automation class; count stays in 30–45 with no artificial micro-controls.
 5. Evidence types include `evidence.manual.attestation` and `evidence.governance.{policy,policy-review,management-review,internal-audit}`, `evidence.risk.{assessment,treatment}`, `evidence.personnel.{training,acknowledgement}`, `evidence.vendor.{inventory,risk-review}`, `evidence.incident.exercise`, `evidence.resilience.continuity-plan`, declared as facts (shared attestation shape), not conclusions.
 6. Tests include the six Prompt-08 scenarios and evaluate freshness / populations / manual-review, not existence of one PDF.
 7. Evaluator outcomes distinguish missing, stale, actual failure, manual review, and approved exception on the eight named fixtures.
@@ -482,9 +483,9 @@ Testable. Implementation is out of this spec phase.
 9. Partial training or vendor populations cannot be `Effective` on all-subjects tests. Missing evidence ⇒ `InsufficientEvidence`.
 10. Approved unexpired IR exceptions are `ExceptionApproved` for the bound subject (never silent `Effective`). Expired exceptions do not suppress failing results.
 11. Catalog validator accepts the slice: no duplicate/orphan/dangling ids; no provider / GRC-product / framework tokens in canonical governance IDs or TOML narrative (target greps `vanta`/`drata`/`servicenow`/`jira`/`iso`/`soc2`/`nis2` in catalog files, **not** in the target test’s own source).
-12. ISO pack control ids and mappings are unchanged; `sdd_iso27001_assurance_target` remains green. IAM family remains green. Fixture.example IDs remain.
+12. This slice does not retarget ISO mappings; `sdd_iso27001_assurance_target` / remap remain green. IAM family remains green. Fixture.example IDs remain. Organizational ISO clauses stay unmapped.
 13. No second `CanonicalCatalog` loader, no second `EvidenceValue`, no local personnel/vendor population fork, no second Exception/Risk engine.
-14. No GRC product, document editor, ISO remap, certification language, or Prompt 05/06/07 collectors/families implemented here. No `vulnerability.toml`, no `evidence.secret.exposure`, no network/crypto/database/logging/backup operational TOML, no `resilience.toml`.
+14. No GRC product, document editor, ISO remap, certification language, or Prompt 05/06/07 collectors/families implemented here. Sibling TOML (`vulnerability.toml`, `resilience.toml`, network/crypto/…) is not overwritten. Continuity IDs live in `governance.toml`.
 15. Prompt 01 SSOT path `docs/sdd/canonical-assurance-catalog-v1.md` is not overwritten (pointer-only). IAM / SDLC / vuln / infra SSOTs are not overwritten.
 
 ---
@@ -495,7 +496,7 @@ Testable. Implementation is out of this spec phase.
 - Remapping ISO 27001 (or SOC 2 / NIS 2) onto `control.governance.*` (Prompt 12).
 - Growing or retargeting `frameworks/iso-27001/2022` organizational slivers.
 - Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
-- Redesign of typed evidence (Prompt 02) or reimplementing coverage math (Prompt 03), except the optional ExceptionApproved honesty promotion in §4.8.
+- Redesign of typed evidence (Prompt 02) or reimplementing coverage math (Prompt 03), except the shipped ExceptionApproved honesty promotion in §4.8.
 - Prompt 04 IAM technical identity/MFA/role-membership content.
 - Prompt 05 SDLC / change-management technical evidence.
 - Prompt 06 vulnerability finding-level risk acceptance / `evidence.secret.exposure`.
@@ -510,7 +511,7 @@ Testable. Implementation is out of this spec phase.
 
 | Risk | Mitigation |
 | --- | --- |
-| Silent `Effective` when excepted subjects leave the denominator | AC 10; §4.8 minimal ExceptionApproved promotion if required; expired fixtures must still fail. |
+| Silent `Effective` when excepted subjects leave the denominator | AC 10; §4.8 shipped ExceptionApproved promotion; expired fixtures must still fail. |
 | Existence of a PDF treated as operational effectiveness | GOV-013; `manual-review-despite-evidence`; forbidden Exists-as-population encodings. |
 | Partial training/vendor inventory auto-passes | GOV-009/011; consume Prompt 03 Partial/Unknown refusal. |
 | GRC-product tokens leak; validator omits them | Target greps catalog TOML; do not expand Prompt 01 denylist unless a documented one-line add is needed. |
@@ -552,7 +553,7 @@ Fail-closed if: baseline cannot go green on current characterization; target can
 
 Architecture / public-contract decision: governance / vendor / personnel / incident / continuity-governance content is a **canonical catalog family** with **first-class manual evidence**, not an ISO-pack extension, not a GRC-product integration, and not fake technical automation of organizational controls.
 
-Draft: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md). Accept after target GREEN.
+Accepted: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md).
 
 ---
 
@@ -575,7 +576,7 @@ note                 = Prompts 01–04 landed (fixture.example + identity);
 | --- | --- |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Suite | `sdd_governance_catalog_baseline` · `tests/sdd/governance_catalog.baseline.rs` |
-| Expected on current tree | **GREEN** (after `[[test]]` registration; product absence) |
+| Expected on current tree | **ignored** (`#[ignore = "superseded by sdd_governance_catalog_target"]`) |
 | After target GREEN | `#[ignore = "superseded by sdd_governance_catalog_target"]` |
 | Command | `cargo test --workspace --features demo --test sdd_governance_catalog_baseline` |
 
@@ -587,26 +588,27 @@ note                 = Prompts 01–04 landed (fixture.example + identity);
 | --- | --- |
 | Suite | `sdd_governance_catalog_target` · `tests/sdd/governance_catalog.target.rs` |
 | Expected on current tree | **RED** — missing `control.governance.*` / `evidence.manual.attestation` / governance fixtures |
-| Expected after implement | **GREEN** (CI gate) |
+| Expected after implement | **GREEN** (CI gate; met) |
 | Command | `cargo test --workspace --features demo --test sdd_governance_catalog_target` |
 
 ---
 
-## 13. Landed record (fill after implement)
+## 13. Landed record
 
 | Surface | Location |
 | --- | --- |
-| Controls | `catalog/canonical/v1/controls/governance.toml` (+ optional splits) |
-| Evidence | `catalog/canonical/v1/evidence/governance.toml` |
-| Tests | `catalog/canonical/v1/tests/governance.toml` |
-| Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` |
-| Fixtures | `fixtures/assurance/canonical/v1/governance/<name>/` |
+| Controls | `catalog/canonical/v1/controls/governance.toml` — 34 ids (25 Hybrid / 9 Manual); no split files |
+| Evidence | `catalog/canonical/v1/evidence/governance.toml` — 13 types including `evidence.manual.attestation` |
+| Tests | `catalog/canonical/v1/tests/governance.toml` — 34 tests (fresh-within / all-subjects / manual-review) |
+| Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` (`controls/governance.toml` and siblings) |
+| Fixtures | `fixtures/assurance/canonical/v1/governance/<name>/` (eight sets; clock `2026-08-18T12:00:00Z`) |
 | Loader / digest | Prompt 01 crate; no governance-specific load path |
-| Target suite | `tests/sdd/governance_catalog.target.rs` |
-| Baseline suite | superseded after target GREEN |
-| ADR | accept [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) |
-| ISO pack | Unchanged organizational sliver |
-| Collectors | No GRC/ITSM collector |
+| Exception honesty | `evaluate_coverage` promotes remaining-all-pass excepted sets to `ExceptionApproved` |
+| Target suite | `tests/sdd/governance_catalog.target.rs` GREEN GOV-001…016 |
+| Baseline suite | `tests/sdd/governance_catalog.baseline.rs` superseded (`#[ignore]`) |
+| ADR | Accepted [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md) |
+| ISO pack | Organizational slivers already retired by Prompt 12; this slice does not map `control.governance.*` onto ISO |
+| Collectors | No GRC/ITSM collector; `ManualEvidence` still does not emit `evidence.manual.attestation` |
 
 Protocol:
 

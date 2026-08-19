@@ -150,6 +150,18 @@ pub struct SemanticFinding {
     pub extensions: Value,
 }
 
+impl weeping_angel_assurance::bridge::SemanticFindingView for SemanticFinding {
+    fn rule_id(&self) -> &str {
+        &self.rule_id
+    }
+    fn finding_id(&self) -> &str {
+        &self.finding_id
+    }
+    fn title(&self) -> &str {
+        &self.title
+    }
+}
+
 fn is_empty_object(v: &Value) -> bool {
     match v {
         Value::Object(m) => m.is_empty(),

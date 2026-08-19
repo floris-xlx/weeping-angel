@@ -42,30 +42,30 @@ pub fn from_repo_security(
     })
     .unwrap_or(false);
 
-    let mut out = Vec::new();
-    out.push(emit(
-        "evidence.repository.security-scanning",
-        vec![
-            ("subject_id", EvidenceValue::string(&subject)),
-            ("secret_scanning_enabled", EvidenceValue::from_bool(secret)),
-            ("code_scanning_enabled", EvidenceValue::from_bool(code)),
-            ("applicable", EvidenceValue::from_bool(true)),
-        ],
-        "security scanning observation",
-        ctx,
-    )?);
-    out.push(emit(
-        "evidence.repository.dependency-scanning",
-        vec![
-            ("subject_id", EvidenceValue::string(&subject)),
-            (
-                "dependency_scanning_enabled",
-                EvidenceValue::from_bool(dependabot),
-            ),
-            ("updates_monitored", EvidenceValue::from_bool(dependabot)),
-        ],
-        "dependency scanning observation",
-        ctx,
-    )?);
-    Ok(out)
+    Ok(vec![
+        emit(
+            "evidence.repository.security-scanning",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                ("secret_scanning_enabled", EvidenceValue::from_bool(secret)),
+                ("code_scanning_enabled", EvidenceValue::from_bool(code)),
+                ("applicable", EvidenceValue::from_bool(true)),
+            ],
+            "security scanning observation",
+            ctx,
+        )?,
+        emit(
+            "evidence.repository.dependency-scanning",
+            vec![
+                ("subject_id", EvidenceValue::string(&subject)),
+                (
+                    "dependency_scanning_enabled",
+                    EvidenceValue::from_bool(dependabot),
+                ),
+                ("updates_monitored", EvidenceValue::from_bool(dependabot)),
+            ],
+            "dependency scanning observation",
+            ctx,
+        )?,
+    ])
 }

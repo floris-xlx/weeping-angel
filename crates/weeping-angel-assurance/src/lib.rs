@@ -11,7 +11,6 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use chrono::Utc;
-use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use thiserror::Error;
 use weeping_angel_canonical_catalog::CanonicalCatalog;
@@ -43,8 +42,6 @@ use crate::lineage::{
 };
 use weeping_angel_assurance_ir::AssessmentId;
 use weeping_angel_assurance_ir::AssetId;
-
-const NOT_CERTIFICATION: &str = "This is a readiness assessment and is not certification.";
 
 #[derive(Debug, Error)]
 pub enum AssuranceError {
@@ -139,146 +136,7 @@ impl Default for AssessmentReport {
 
 impl Serialize for AssessmentReport {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let projections = report_projections(self);
-        let mut state = serializer.serialize_struct("AssessmentReport", 24)?;
-        state.serialize_field("assessmentId", &self.assessment_id)?;
-        state.serialize_field("profile", &self.profile)?;
-        state.serialize_field("digest", &self.digest)?;
-        state.serialize_field("results", &self.results)?;
-        state.serialize_field("evidenceCount", &self.evidence_count)?;
-        state.serialize_field("disclaimer", &NOT_CERTIFICATION)?;
-        state.serialize_field("banner", &NOT_CERTIFICATION)?;
-        state.serialize_field("frameworkPackDigest", &projections.pack_pin)?;
-        state.serialize_field("canonicalCatalogDigest", &projections.catalog_pin)?;
-        state.serialize_field("resultDigest", &self.digest)?;
-        state.serialize_field("summary", &projections.summary)?;
-        state.serialize_field("coverageMetrics", &projections.metrics)?;
-        state.serialize_field("assessmentRun", &self.run)?;
-        state.serialize_field("status", &projections.status)?;
-        state.serialize_field("collectionRuns", &projections.collection_runs)?;
-        state.serialize_field("readiness", &projections.readiness)?;
-        state.serialize_field("requirements", &projections.requirement_ids)?;
-        state.serialize_field("controls", &projections.controls)?;
-        state.serialize_field(
-            "insufficientEvidence",
-            &projections.summary.insufficient_evidence,
-        )?;
-        state.serialize_field("manualReview", &projections.summary.manual_review)?;
-        state.serialize_field("effective", &projections.summary.effective)?;
-        state.serialize_field("ineffective", &projections.summary.ineffective)?;
-        state.end()
-    }
-}
-
-struct ReportProjections {
-    pack_pin: String,
-    catalog_pin: String,
-    summary: AssessmentSummary,
-    metrics: CoverageMetrics,
-    status: String,
-    collection_runs: Vec<String>,
-    readiness: FrameworkReadinessSnapshot,
-    requirement_ids: Vec<String>,
-    controls: Vec<serde_json::Value>,
-    evidence_refs: Vec<String>,
-}
-
-fn report_projections(report: &AssessmentReport) -> ReportProjections {
-    let pack_pin = if !report.framework_pack_digest.is_empty() {
-        report.framework_pack_digest.clone()
-    } else if let Some(run) = &report.run {
-        run.framework_pack_digest.clone()
-    } else if !report.digest.is_empty() {
-        report.digest.clone()
-    } else {
-        "unpinned".into()
-    };
-    let catalog_pin = if !report.canonical_catalog_digest.is_empty() {
-        report.canonical_catalog_digest.clone()
-    } else if let Some(run) = &report.run {
-        run.canonical_catalog_pin.clone()
-    } else if !report.digest.is_empty() {
-        report.digest.clone()
-    } else {
-        "unpinned".into()
-    };
-    let summary = report
-        .summary
-        .clone()
-        .unwrap_or_else(|| assessment_summary(report));
-    let metrics = report
-        .coverage_metrics
-        .clone()
-        .unwrap_or_else(|| coverage_metrics(&report.results, None));
-    let status = report
-        .run
-        .as_ref()
-        .map(|r| r.status.clone())
-        .unwrap_or_else(|| summary.status.clone());
-    let collection_runs = report
-        .run
-        .as_ref()
-        .map(|r| r.collector_runs.clone())
-        .unwrap_or_default();
-    let controls: Vec<serde_json::Value> = report
-        .results
-        .iter()
-        .map(|r| {
-            serde_json::json!({
-                "id": r.control_id.as_str(),
-                "effectiveness": r.effectiveness,
-            })
-        })
-        .collect();
-    let requirement_ids: Vec<String> = report
-        .results
-        .iter()
-        .map(|r| r.control_id.to_string())
-        .collect();
-    let readiness = FrameworkReadinessSnapshot {
-        assessment_id: report.assessment_id.clone(),
-        framework: report.profile.clone(),
-        framework_version: String::new(),
-        framework_pack_digest: pack_pin.clone(),
-        assessment_digest: report.digest.clone(),
-        evaluated_at: report
-            .run
-            .as_ref()
-            .map(|r| r.completed_at.clone())
-            .unwrap_or_default(),
-        requirements: Vec::new(),
-        controls: report
-            .results
-            .iter()
-            .map(|r| crate::readiness::ControlReadiness {
-                id: r.control_id.clone(),
-                effectiveness: r.effectiveness,
-            })
-            .collect(),
-        effective: summary.effective,
-        ineffective: summary.ineffective,
-        partial: summary.partial,
-        manual_review: summary.manual_review,
-        insufficient_evidence: summary.insufficient_evidence,
-        not_applicable: summary.not_applicable,
-        automation_coverage: format!("{}", metrics.automation.covered),
-        evidence_coverage: format!("{}", metrics.evidence.covered),
-    };
-    ReportProjections {
-        pack_pin,
-        catalog_pin,
-        summary,
-        metrics,
-        status,
-        collection_runs,
-        readiness,
-        requirement_ids,
-        controls,
-        evidence_refs: report
-            .results
-            .iter()
-            .flat_map(|r| r.evidence_refs.iter().cloned())
-            .collect(),
+        crate::lineage::serialize_assessment_report(self, serializer)
     }
 }
 

@@ -773,9 +773,8 @@ fn infra_003_forty_three_infrastructure_controls_are_stable() {
         43,
         "pinned family size is 43"
     );
-    let family: Vec<_> = catalog
-        .controls()
-        .keys()
+    let family: Vec<_> = ids
+        .iter()
         .filter(|id| {
             id.starts_with("control.network.")
                 || id.starts_with("control.crypto.")

@@ -10,8 +10,8 @@
 //! `fixtures/assurance/canonical/v1/governance/*`. The ISO-pack
 //! organizational sliver and Prompt 04 IAM sibling remain.
 //!
-//! After the target suite is GREEN, ignore this file
-//! (`#[ignore = "superseded by sdd_governance_catalog_target"]`).
+//! SUPERSEDED by `sdd_governance_catalog_target` after the governance family
+//! landed. Tests are ignored so absence-of-family is not required CI green.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -372,6 +372,7 @@ fn bound_exception(id: &str, subject_kind: SubjectKind, subject_id: &str) -> Exc
     ex
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
@@ -384,6 +385,7 @@ fn dual_suite_baseline_is_registered() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn catalog_manifest_lists_only_fixture_example_and_identity() {
     let manifest = fs::read_to_string(catalog_v1().join("manifest.toml")).unwrap();
@@ -426,6 +428,7 @@ fn catalog_manifest_lists_only_fixture_example_and_identity() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn canonical_catalog_load_validate_digest_exist() {
     let catalog = load_catalog();
@@ -453,6 +456,7 @@ fn canonical_catalog_load_validate_digest_exist() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn loaded_catalog_has_no_governance_family() {
     let catalog = load_catalog();
@@ -494,6 +498,7 @@ fn loaded_catalog_has_no_governance_family() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn evidence_manual_attestation_is_not_catalog_content() {
     let catalog = load_catalog();
@@ -527,6 +532,7 @@ fn evidence_manual_attestation_is_not_catalog_content() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn required_governance_tests_are_undeclared() {
     let catalog = load_catalog();
@@ -549,6 +555,7 @@ fn required_governance_tests_are_undeclared() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn iam_sibling_and_identity_fixtures_remain() {
     let catalog = load_catalog();
@@ -572,6 +579,7 @@ fn iam_sibling_and_identity_fixtures_remain() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn governance_fixtures_are_absent() {
     let root = manifest_dir().join("fixtures/assurance/canonical/v1");
@@ -591,6 +599,7 @@ fn governance_fixtures_are_absent() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn iso_pack_holds_the_organizational_sliver() {
     let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack loads");
@@ -624,6 +633,7 @@ fn iso_pack_holds_the_organizational_sliver() {
     let _ = (ISO_ORG_CONTROLS, ISO_ORG_TESTS);
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn iso_mappings_still_point_at_pack_organizational_ids() {
     let mappings =
@@ -644,6 +654,7 @@ fn iso_mappings_still_point_at_pack_organizational_ids() {
     let _ = ISO_ORG_MAPPINGS;
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn iso_incident_manual_requires_legacy_manual_attestation_type() {
     let ctx = fresh_context();
@@ -688,6 +699,7 @@ fn iso_incident_manual_requires_legacy_manual_attestation_type() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn iso_policy_existence_passes_on_one_envelope() {
     let ctx = fresh_context();
@@ -717,6 +729,7 @@ fn iso_policy_existence_passes_on_one_envelope() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn document_present_is_not_a_population_or_freshness_test() {
     let ctx = fresh_context();
@@ -759,6 +772,7 @@ fn document_present_is_not_a_population_or_freshness_test() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn test_expr_manual_review_always_yields_manual_review_required() {
     let compiled = CompiledControlTest::builder()
@@ -787,6 +801,7 @@ fn test_expr_manual_review_always_yields_manual_review_required() {
     assert_eq!(result.rationale, "expression requires manual review");
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn exception_approved_promotion_is_identity_break_glass_shaped() {
     let ctx = fresh_context();
@@ -867,6 +882,7 @@ fn exception_approved_promotion_is_identity_break_glass_shaped() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn expired_and_empty_exceptions_do_not_suppress_missing() {
     let ctx = fresh_context();
@@ -914,6 +930,7 @@ fn expired_and_empty_exceptions_do_not_suppress_missing() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn evidence_value_with_value_exists_and_is_the_only_enum() {
     let obs = EvidenceObservation::new(EvidenceType::new("evidence.governance.policy"))
@@ -979,6 +996,7 @@ fn evidence_value_with_value_exists_and_is_the_only_enum() {
     assert_eq!(evidence_value_enums, 1, "exactly one EvidenceValue enum");
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn generic_inventory_resolves_personnel_and_vendors_without_a_family_resolver() {
     let mut set = EvidenceSet::new();
@@ -1026,6 +1044,7 @@ fn generic_inventory_resolves_personnel_and_vendors_without_a_family_resolver() 
     assert!(pop.contains("pub fn evaluate_coverage"));
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn risk_ir_is_a_minimal_record_not_a_grc_engine() {
     let risk = Risk::new(
@@ -1045,6 +1064,7 @@ fn risk_ir_is_a_minimal_record_not_a_grc_engine() {
     let _ = RiskStatus::Closed;
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn validator_omits_grc_product_tokens() {
     let src = crate_sources_joined("weeping-angel-canonical-catalog");
@@ -1061,6 +1081,7 @@ fn validator_omits_grc_product_tokens() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn manual_attestation_is_capability_and_legacy_type() {
     let requests = AssessmentRequests {
@@ -1090,6 +1111,7 @@ fn manual_attestation_is_capability_and_legacy_type() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn collector_manual_does_not_emit_catalog_attestation() {
     let sealed = ManualEvidence {
@@ -1126,6 +1148,7 @@ fn collector_manual_does_not_emit_catalog_attestation() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn subject_kinds_and_domains_already_cover_governance() {
     let _ = SubjectKind::Organization;
@@ -1142,6 +1165,7 @@ fn subject_kinds_and_domains_already_cover_governance() {
     assert!(SubjectKind::parse_name("vendor").is_some());
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn public_contract_documents_iam_not_governance() {
     let contract =
@@ -1168,6 +1192,7 @@ fn public_contract_documents_iam_not_governance() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
     for rel in SSOT_01_04 {
@@ -1189,6 +1214,7 @@ fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn spec_and_draft_adr_exist_as_spec_phase_artifacts() {
     let spec = manifest_dir().join("docs/sdd/governance-canonical-assurance-catalog.md");
@@ -1213,6 +1239,7 @@ fn spec_and_draft_adr_exist_as_spec_phase_artifacts() {
     );
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn no_grc_collectors() {
     let collector = crate_src("weeping-angel-collector");
@@ -1224,6 +1251,7 @@ fn no_grc_collectors() {
     }
 }
 
+#[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn sibling_sdd_suites_stay_registered() {
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();

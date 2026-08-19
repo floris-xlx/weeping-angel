@@ -16,7 +16,7 @@
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | IAM family (landed) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) — 23 `control.identity.*` |
 | Fixture (landed, exists-only) | `control.source.protected-branch` / `test.source.protected-branch` (`op = exists`) |
-| SDLC / vuln / infra / governance | Specified; **product unlanded** on this SHA. Map IDs only if present at implement time. Do not invent them. |
+| SDLC / vuln / infra / governance | Product landed after this SHA. Prompt 12 mapped identity + landed `control.source.*` only. Governance / vuln / infra catalog IDs exist and stay **unmapped** here (Prompt 08 does not remap ISO). |
 | Concurrent (do not collide) | Prompt 09 [`github-collector.md`](github-collector.md); Prompt 10 applicability engine (**landed** — consume `weeping-angel-assurance::applicability`, map SoA `Unresolved` ↔ `ManualDeterminationRequired`); Prompt 11 [`assessment-lineage.md`](assessment-lineage.md) |
 | Workspace verify | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`; `cargo test --workspace --features demo`; `weeping-angel assurance catalog validate`; `weeping-angel assurance framework validate frameworks/iso-27001/2022`; `cargo test --test sdd_iso27001_remap_target --offline` |
 
@@ -375,7 +375,7 @@ iso27001:5.2      # Related → incident.response-process
 iso27001:a.5.1    # Related → incident.response-process
 ```
 
-Clauses 4.* / 5.* / 6.* / 7.* / 8.1 / 9.* / 10.* remain Manual/Hybrid and unmapped until governance catalog IDs exist.
+Clauses 4.* / 5.* / 6.* / 7.* / 8.1 / 9.* / 10.* remain Manual/Hybrid and unmapped. Governance catalog IDs now exist (`control.governance.*` / `control.risk.*` / …) and this remap still does **not** project onto them.
 
 Illustrative (not a license to invent IDs) if families land:
 
@@ -685,4 +685,4 @@ ISO 27001:2022 is a clean **framework projection** over the canonical assurance 
 ## 13. Implement log
 
 - 2026-08-19: remapped `frameworks/iso-27001/2022` onto landed catalog IDs (`control.identity.*` plus landed `control.source.*` SDLC). Pack slivers retired. Loader accepts all eight IR relations + provenance/`valid_for`. Generic `(id, version)` load/serialize; `catalogDigest` / `canonicalCatalogDigest` pinned. SoA is three-state. IAM-008 / IAM-016 / EXPECTED_CANONICAL_CONTROLS / CANONICAL_CONTROL_PREFIXES superseded. Remap baseline skip-superseded. ADR accepted (dropped `-draft`).
-- Catalog families mapped: identity (required remaps) + SDLC (A.8.25 / A.8.26). Unlanded vuln/infra/governance remain unmapped.
+- Catalog families mapped: identity (required remaps) + SDLC (A.8.25 / A.8.26). Vuln / infra / governance catalog families later landed and remain **unmapped** (Prompt 08 does not project `control.governance.*` / `control.incident.*` onto ISO).

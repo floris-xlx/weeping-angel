@@ -462,4 +462,4 @@ Deviations from §4 that are now law (see ADR):
 | `PopulationEvaluation` required fields | Also emits `staleSubjects`, `exceptedSubjects`, `technicalSubjects` |
 | `evaluate_compiled` attaches expr | `CompiledTest.expr` JSON side-table deserialized onto `CompiledControlTest` |
 
-Identity populations additionally resolve from `evidence.identity.inventory` (+ privileged-membership / service-account). Break-glass failing privileged subjects may conclude `ExceptionApproved` when every failing subject is break-glass.
+Identity populations additionally resolve from `evidence.identity.inventory` (+ privileged-membership / service-account). Break-glass failing privileged subjects may conclude `ExceptionApproved` when every failing subject is break-glass. Remaining-all-pass sets that are `Effective` only because approved unexpired bound IR exceptions emptied the remainder (`excepted` non-empty; no fail/missing/stale/technical) conclude `ExceptionApproved` (Prompt 08 honesty; not a second exception engine).

@@ -1,6 +1,7 @@
 //! Immutable assessment lineage: snapshots, result identity, explain, replay.
 
-use serde::{Deserialize, Serialize};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
 use weeping_angel_assurance_ir::{
     ApplicabilityRule, AssessmentId, Control, ControlId, ControlImplementation, ControlTestId,
     Exception, Mapping, typed_canonical_digest,
@@ -202,9 +203,9 @@ pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> Applicabi
             id: req.id().to_string(),
             rule: req.applicability().clone(),
             static_outcome: static_outcome_label(req.applicability()),
-            rationale: format!(
+            rationale:
                 "static applicability from ApplicabilityRule; unresolved predicates stay included"
-            ),
+                    .to_string(),
         })
         .collect::<Vec<_>>();
     let control_decisions = assessment
@@ -597,6 +598,149 @@ pub fn detect_digest_mismatch(pinned: &str, current: &str) -> Result<(), DigestM
     } else {
         Ok(())
     }
+}
+
+const NOT_CERTIFICATION: &str = "This is a readiness assessment and is not certification.";
+
+fn carried_pack_pin(report: &AssessmentReport) -> String {
+    if !report.framework_pack_digest.is_empty() {
+        return report.framework_pack_digest.clone();
+    }
+    if let Some(run) = &report.run
+        && !run.framework_pack_digest.is_empty()
+    {
+        return run.framework_pack_digest.clone();
+    }
+    if !report.digest.is_empty() {
+        report.digest.clone()
+    } else {
+        "unpinned".into()
+    }
+}
+
+fn carried_catalog_pin(report: &AssessmentReport) -> String {
+    if !report.canonical_catalog_digest.is_empty() {
+        return report.canonical_catalog_digest.clone();
+    }
+    if let Some(run) = &report.run
+        && !run.canonical_catalog_pin.is_empty()
+    {
+        return run.canonical_catalog_pin.clone();
+    }
+    String::new()
+}
+
+/// Pure report serialization: only values already on the report / run.
+/// No pack load, catalog load, network, or filesystem lookup.
+pub fn serialize_assessment_report<S: Serializer>(
+    report: &AssessmentReport,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let pack_pin = carried_pack_pin(report);
+    let catalog_pin = carried_catalog_pin(report);
+    let summary = report
+        .summary
+        .clone()
+        .unwrap_or_else(|| assessment_summary(report));
+    let metrics = report
+        .coverage_metrics
+        .clone()
+        .unwrap_or_else(|| coverage_metrics(&report.results, None));
+    let status = report
+        .run
+        .as_ref()
+        .map(|r| r.status.clone())
+        .unwrap_or_else(|| summary.status.clone());
+    let collection_runs = report
+        .run
+        .as_ref()
+        .map(|r| r.collector_runs.clone())
+        .unwrap_or_default();
+    let controls: Vec<serde_json::Value> = report
+        .results
+        .iter()
+        .map(|r| {
+            serde_json::json!({
+                "id": r.control_id.as_str(),
+                "effectiveness": r.effectiveness,
+            })
+        })
+        .collect();
+    let requirement_ids: Vec<String> = report
+        .results
+        .iter()
+        .map(|r| r.control_id.to_string())
+        .collect();
+    let evidence_refs: Vec<String> = report
+        .results
+        .iter()
+        .flat_map(|r| r.evidence_refs.iter().cloned())
+        .collect();
+    let readiness = FrameworkReadinessSnapshot {
+        assessment_id: report.assessment_id.clone(),
+        framework: report.profile.clone(),
+        framework_version: String::new(),
+        framework_pack_digest: pack_pin.clone(),
+        assessment_digest: report.digest.clone(),
+        evaluated_at: report
+            .run
+            .as_ref()
+            .map(|r| r.completed_at.clone())
+            .unwrap_or_default(),
+        requirements: Vec::new(),
+        controls: report
+            .results
+            .iter()
+            .map(|r| crate::readiness::ControlReadiness {
+                id: r.control_id.clone(),
+                effectiveness: r.effectiveness,
+            })
+            .collect(),
+        effective: summary.effective,
+        ineffective: summary.ineffective,
+        partial: summary.partial,
+        manual_review: summary.manual_review,
+        insufficient_evidence: summary.insufficient_evidence,
+        not_applicable: summary.not_applicable,
+        automation_coverage: metrics.automation.covered.to_string(),
+        evidence_coverage: metrics.evidence.covered.to_string(),
+    };
+
+    let mut state = serializer.serialize_struct("AssessmentReport", 30)?;
+    state.serialize_field("assessmentId", &report.assessment_id)?;
+    state.serialize_field("profile", &report.profile)?;
+    state.serialize_field("digest", &report.digest)?;
+    state.serialize_field("results", &report.results)?;
+    state.serialize_field("evidenceCount", &report.evidence_count)?;
+    state.serialize_field("disclaimer", &NOT_CERTIFICATION)?;
+    state.serialize_field("banner", &NOT_CERTIFICATION)?;
+    state.serialize_field("frameworkPackDigest", &pack_pin)?;
+    state.serialize_field("canonicalCatalogDigest", &catalog_pin)?;
+    state.serialize_field("catalogDigest", &catalog_pin)?;
+    state.serialize_field("resultDigest", &report.digest)?;
+    state.serialize_field("summary", &summary)?;
+    state.serialize_field("coverageMetrics", &metrics)?;
+    state.serialize_field("assessmentRun", &report.run)?;
+    state.serialize_field("status", &status)?;
+    state.serialize_field("collectionRuns", &collection_runs)?;
+    state.serialize_field("collectionRunId", &collection_runs.first())?;
+    state.serialize_field("evidenceRefs", &evidence_refs)?;
+    state.serialize_field("readiness", &readiness)?;
+    state.serialize_field("requirements", &requirement_ids)?;
+    state.serialize_field("controls", &controls)?;
+    state.serialize_field("insufficientEvidence", &summary.insufficient_evidence)?;
+    state.serialize_field("manualReview", &summary.manual_review)?;
+    state.serialize_field("effective", &summary.effective)?;
+    state.serialize_field("ineffective", &summary.ineffective)?;
+    state.serialize_field("automationCoverage", &metrics.automation)?;
+    state.serialize_field("evidenceCoverage", &metrics.evidence)?;
+    state.serialize_field("subjectCoverage", &metrics.subject)?;
+    state.serialize_field("controlCoverage", &metrics.control_effectiveness)?;
+    state.serialize_field(
+        "frameworkRequirementCoverage",
+        &metrics.framework_requirement,
+    )?;
+    state.end()
 }
 
 pub fn verify_current_against_pins(

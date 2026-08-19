@@ -278,8 +278,9 @@ impl GitHubCollector {
             ) {
                 envelopes.push(env);
             }
-        } else if only_explicit && !hole {
-            if let Ok(env) = emit(
+        } else if only_explicit
+            && !hole
+            && let Ok(env) = emit(
                 "inventory.complete",
                 vec![
                     ("authoritative", EvidenceValue::from_bool(true)),
@@ -291,9 +292,9 @@ impl GitHubCollector {
                     scope,
                     asset: AssetId::new("scope:explicit"),
                 },
-            ) {
-                envelopes.push(env);
-            }
+            )
+        {
+            envelopes.push(env);
         }
 
         let _ = (
@@ -405,14 +406,12 @@ impl GitHubCollector {
                     ],
                     "CODEOWNERS presence observation",
                     ctx,
-                ) {
-                    if !envelopes.iter().any(|e| {
-                        e.observation().evidence_type().as_str()
-                            == "evidence.repository.review-ownership"
-                            && e.observation().fact("subject_id") == Some(subject.as_str())
-                    }) {
-                        envelopes.push(env);
-                    }
+                ) && !envelopes.iter().any(|e| {
+                    e.observation().evidence_type().as_str()
+                        == "evidence.repository.review-ownership"
+                        && e.observation().fact("subject_id") == Some(subject.as_str())
+                }) {
+                    envelopes.push(env);
                 }
             }
             Fetch::Absent => {
@@ -439,13 +438,11 @@ impl GitHubCollector {
                             ],
                             "CODEOWNERS absent observation",
                             ctx,
-                        ) {
-                            if !envelopes.iter().any(|e| {
-                                e.observation().evidence_type().as_str()
-                                    == "evidence.repository.review-ownership"
-                            }) {
-                                envelopes.push(env);
-                            }
+                        ) && !envelopes.iter().any(|e| {
+                            e.observation().evidence_type().as_str()
+                                == "evidence.repository.review-ownership"
+                        }) {
+                            envelopes.push(env);
                         }
                     }
                     _ => {}
@@ -702,17 +699,17 @@ fn parse_scope(scope: &CollectorScope) -> ParsedScope {
             orgs.push(org.to_string());
             continue;
         }
-        if let Some(repo) = label.strip_prefix("repo:") {
-            if let Some((owner, name)) = repo.split_once('/') {
-                repos.push((owner.to_string(), name.to_string()));
-                continue;
-            }
+        if let Some(repo) = label.strip_prefix("repo:")
+            && let Some((owner, name)) = repo.split_once('/')
+        {
+            repos.push((owner.to_string(), name.to_string()));
+            continue;
         }
-        if let Some((owner, name)) = label.split_once('/') {
-            if !owner.contains(':') {
-                repos.push((owner.to_string(), name.to_string()));
-                continue;
-            }
+        if let Some((owner, name)) = label.split_once('/')
+            && !owner.contains(':')
+        {
+            repos.push((owner.to_string(), name.to_string()));
+            continue;
         }
         unknown.push(label.to_string());
     }

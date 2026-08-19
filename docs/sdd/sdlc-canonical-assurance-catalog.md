@@ -300,7 +300,7 @@ Envelope `type` in fixtures should equal the **catalog evidence id** (IAM fixtur
 | `evidence.repository.inventory` | `subject_id`, `archived` (bool), `owner_id?`, `criticality?` (`production` \| `non-production` \| `unknown`), `in_scope` (bool) | `compliant`, provider repo-object dumps as type id |
 | `evidence.repository.visibility` | `subject_id`, `visibility` (`public` \| `internal` \| `private`), `visibility_allowed` (bool) | “visibility control passed” |
 | `evidence.repository.default-branch` | `subject_id`, `default_branch`, `default_branch_named` (bool) | — |
-| `evidence.repository.branch-protection` | `subject_id`, `protected` (bool), `force_push_allowed` (bool), `deletion_allowed` (bool), `admin_bypass_allowed` (bool) | “branch protection effective” |
+| `evidence.repository.branch-protection` | `subject_id`, `protected` (bool), `force_push_restricted` (bool), `deletion_restricted` (bool); fixtures also store inverse `force_push_allowed` / `deletion_allowed` and `admin_bypass_allowed` / `admin_bypass_restricted` | “branch protection effective” |
 | `evidence.repository.review-policy` | `subject_id`, `reviews_required` (bool), `required_reviewer_count` (integer), `meets_review_threshold` (bool) | “review control passed” |
 | `evidence.repository.review-ownership` | `subject_id`, `ownership_defined` (bool) | `codeowners` as a type id |
 | `evidence.repository.security-scanning` | `subject_id`, `secret_scanning_enabled` (bool), `code_scanning_enabled` (bool), `applicable` (bool) | scanner finding dumps |
@@ -364,7 +364,7 @@ Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 / I
 | Test | Population | Pass | Fail | Missing | Stale |
 | --- | --- | --- | --- | --- | --- |
 | `default-branches-protected` | all **non-archived** in-scope repositories | every subject `protected=true` | ≥1 in-scope repo `protected=false` | inventory unknown **or** known repo lacks branch-protection | stale protection / inventory |
-| `force-push-restricted` | protected default branches / their repos | none have `force_push_allowed=true` | unauthorized force-push still allowed | missing protection envelope | stale |
+| `force-push-restricted` | protected default branches / their repos | `force_push_restricted=true` (equivalently none have unauthorized `force_push_allowed=true`) | unauthorized force-push still allowed | missing protection envelope | stale |
 | `reviews-required` | production / in-scope repos (use `criticality=production` or `in_scope`) | `reviews_required=true` | review not required | missing review-policy | stale |
 | `minimum-reviewer-count` | same as reviews | `meets_review_threshold=true` (threshold is a fixture/policy integer fact, not a hardcoded GitHub “2”) | count below threshold | missing count | stale |
 | `secret-scanning-enabled` | in-scope repos where `applicable=true` (or all in-scope if applicability omitted) | `secret_scanning_enabled=true` | scanning disabled | missing scan evidence → **InsufficientEvidence**, never `Ineffective` | stale |
@@ -374,6 +374,37 @@ Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 / I
 | `artifacts-have-integrity` | repos/releases that produce artifacts (where required) | `integrity_evidence_present=true` (and provenance when bound) | integrity missing while required | missing artifact-integrity | stale |
 
 **Forbidden encoding:** `Exists(evidence.repository.branch-protection)` as the body of `test.source.default-branches-protected`. Existence of some protection fact is not protection on the population. The infrastructure fixture may keep `exists` **only** on `test.source.protected-branch`.
+
+**Shipped `TestExpr` bindings** (Prompt 03 `all-subjects` / `coverage-at-least` 100%; hybrid/manual use `manual-review`):
+
+| Test | `op` | Field |
+| --- | --- | --- |
+| `test.source.repository-inventory-complete` | `all-subjects` | `in_scope` |
+| `test.source.visibility-governed` | `coverage-at-least` | `visibility_allowed` |
+| `test.source.default-branches-protected` | `all-subjects` | `protected` |
+| `test.source.force-push-restricted` | `coverage-at-least` | `force_push_restricted` |
+| `test.source.branch-deletion-restricted` | `coverage-at-least` | `deletion_restricted` |
+| `test.source.reviews-required` | `coverage-at-least` | `reviews_required` |
+| `test.source.minimum-reviewer-count` | `coverage-at-least` | `meets_review_threshold` |
+| `test.source.review-ownership-present` | `all-subjects` | `ownership_defined` |
+| `test.source.required-status-checks` | `coverage-at-least` | `status_checks_required` |
+| `test.source.admin-bypass-governed` | `manual-review` | — |
+| `test.source.signed-commits-required` | `coverage-at-least` | `signing_required` |
+| `test.source.secret-scanning-enabled` | `coverage-at-least` | `secret_scanning_enabled` |
+| `test.source.code-scanning-enabled` | `coverage-at-least` | `code_scanning_enabled` |
+| `test.source.dependency-scanning-current` | `coverage-at-least` | `scanned_at` |
+| `test.source.dependency-updates-monitored` | `coverage-at-least` | `updates_monitored` |
+| `test.supply-chain.lockfile-integrity` | `coverage-at-least` | `pins_direct_deps` |
+| `test.cicd.workflow-permissions-minimized` | `coverage-at-least` | `permissions_minimized` |
+| `test.release.environments-protected` | `coverage-at-least` | `authorization_required` (`kind=deployment`) |
+| `test.release.authorization-recorded` | `manual-review` | — |
+| `test.release.authority-separated` | `manual-review` | — |
+| `test.supply-chain.provenance-present` | `coverage-at-least` | `provenance_present` |
+| `test.supply-chain.artifacts-have-integrity` | `coverage-at-least` | `integrity_evidence_present` |
+| `test.source.changes-traceable` | `coverage-at-least` | `traceable` |
+| `test.source.security-review-recorded` | `manual-review` | — |
+| `test.source.secure-development-policy-attested` | `manual-review` | — |
+| `test.supply-chain.unsupported-components-handled` | `manual-review` | — |
 
 Missing evidence must **not** be converted into technical failure (`Effectiveness` technical / type-mismatch). Unknown / partial inventory must not produce `Effective` on all-subjects tests.
 
@@ -455,12 +486,12 @@ Suggested target assertion clusters (titles include the id):
 
 ### 4.10 Documentation after implement
 
-- This file’s landed-record section.
-- Accept [`docs/adr/0003-sdlc-canonical-assurance-catalog-draft.md`](../adr/0003-sdlc-canonical-assurance-catalog-draft.md) → `docs/adr/0003-sdlc-canonical-assurance-catalog.md` (drop `-draft`).
-- Pointer on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) (family exists only after TOML lands).
+- This file’s landed-record section (§12).
+- Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired).
+- Pointer on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) (family exists after TOML lands).
 - Pointer-only mention on Prompt 01 SSOT. Do not overwrite Prompt 01 / 04 SSOTs.
 
-No GitHub collector expansion or ISO remap is claimed.
+No GitHub collector expansion or ISO remap is claimed by this slice.
 
 ---
 
@@ -485,7 +516,7 @@ Testable. Implementation is out of this spec phase.
 15. IAM family and catalog-infrastructure fixture IDs remain; `sdd_iam_catalog_target` and `sdd_canonical_assurance_catalog_target` stay green.
 16. Prompt 01 SSOT `docs/sdd/canonical-assurance-catalog-v1.md` is pointer-only (not overwritten as domain SSOT); this file is the SDLC slice SSOT.
 17. A GitHub, GitLab, or Bitbucket collector could independently populate the same evidence contracts and receive the same control results (no GitHub-native object names in canonical IDs).
-18. After implement, public contract `docs/contracts/assurance-runtime.md` is updated so it does not omit the landed SDLC family; ADR draft is accepted (drop `-draft`).
+18. After implement, public contract `docs/contracts/assurance-runtime.md` names the landed SDLC family; ADR is accepted at [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (no `-draft`).
 
 ---
 
@@ -622,9 +653,11 @@ note         = prompts 01–04 landed (catalog fixture + IAM family + typed evid
 | Loader / digest | Prompt 01 crate; no SDLC-specific load path |
 | Target suite | `tests/sdd/sdlc_catalog.target.rs` (`sdd_sdlc_catalog_target`) GREEN SDLC-001…016 |
 | Baseline suite | `tests/sdd/sdlc_catalog.baseline.rs` superseded (`#[ignore]`) |
-| ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) |
+| ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired) |
+| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) names the family and evidence types |
 | ISO pack | This slice did not rewrite pack-local `source.*` rows. Prompt 12 remapped A.8.25 / A.8.26 onto catalog `control.source.*` ([remap §13](iso-27001-canonical-remap.md#13-implement-log)). |
-| Collectors | No GitHub/GitLab/Bitbucket expansion |
+| Collectors | This slice did not expand GitHub/GitLab/Bitbucket. Prompt 09 later emits these contracts ([`github-collector.md`](github-collector.md)). |
+| Test-bound facts | Force-push / deletion predicates bind `force_push_restricted` / `deletion_restricted` (fixtures also store inverse `*_allowed`). Hybrid/manual tests use `op = "manual-review"`. |
 
 Workspace `assurance catalog stats` after this family (sibling families may also be listed in the same manifest):
 

@@ -179,7 +179,7 @@ impl GitHubClient {
                 Ok(resp) if resp.status == 404 => {
                     return PageWalk {
                         items,
-                        complete: page == 1 || page > 1,
+                        complete: page >= 1,
                         error: None,
                     };
                 }

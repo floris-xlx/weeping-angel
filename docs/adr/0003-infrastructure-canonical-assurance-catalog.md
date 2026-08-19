@@ -11,8 +11,9 @@
 | Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
 | Prompt | [`docs/prompts/canonical-assurance-v1/07-infrastructure-catalog.md`](../prompts/canonical-assurance-v1/07-infrastructure-catalog.md) |
 | Planning baseline | `e430980c0d27a8138a153d49b62ddf3c57827891` |
+| Tests | `sdd_infrastructure_catalog_target` GREEN (INFRA-001…016). Absence-characterization baseline `sdd_infrastructure_catalog_baseline` superseded / `#[ignore = "superseded by sdd_infrastructure_catalog_target"]`. |
 
-> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. Accepted after `sdd_infrastructure_catalog_target` GREEN.
+> Filename `0003-*` is shared with catalog-program siblings. Cite this decision by **path**. Draft filename `0003-infrastructure-canonical-assurance-catalog-draft.md` is retired. Accepted after `sdd_infrastructure_catalog_target` GREEN.
 
 ## Context
 
@@ -35,6 +36,8 @@ Questions this decision answers:
 7. How do we avoid colliding with Prompt 06 `evidence.secret.exposure`?
 
 ## Decision
+
+This is what shipped.
 
 ### 1. Infrastructure is canonical catalog content, not a pack and not a collector
 
@@ -64,9 +67,55 @@ Provider details belong only in future collectors that **emit** canonical facts.
 
 ### 2. Forty-three provider-neutral controls (35–50 band)
 
-Family covers: admin-interface restriction, public-exposure governance, segmentation, current firewall policy, no unnecessary public databases, management-access protection, TLS for sensitive traffic, insecure-protocol restriction; encryption at rest/in transit, key lifecycle, secret/credential storage, key/secret rotation, certificate validity, backup encryption; production data-store and database inventory, access restriction, database encryption/backup/auditing, retention policy, sensitive classification; audit / admin / auth logging, retention vs threshold, time sync, alerting, privileged-action observability, log integrity, monitoring coverage; backup enablement/coverage/retention, restore testing; recovery procedure, DR exercise, redundancy, recovery objectives, recovery-evidence freshness.
+Shipped family (no micro-controls). `control.secret.*` lives in `crypto.toml` (no `secret.toml`).
 
-Hybrid/manual honesty: DR exercise, recovery objectives, and network-segmentation rationale do not auto-pass from a single technical flag.
+| Control | Automation |
+| --- | --- |
+| `control.network.admin-interface-restriction` | automated |
+| `control.network.public-exposure-governance` | hybrid |
+| `control.network.segmentation` | hybrid (test `kind = "manual"`, `op = "manual-review"`) |
+| `control.network.firewall-policy-current` | automated |
+| `control.network.no-unnecessary-public-databases` | automated |
+| `control.network.management-access-protection` | automated |
+| `control.network.tls-sensitive-traffic` | automated |
+| `control.network.insecure-protocol-restriction` | automated |
+| `control.crypto.encryption-at-rest` | automated |
+| `control.crypto.encryption-in-transit` | automated |
+| `control.crypto.key-lifecycle` | hybrid |
+| `control.secret.storage` | automated |
+| `control.secret.credential-storage` | automated |
+| `control.crypto.key-rotation` | hybrid |
+| `control.crypto.certificate-validity` | automated |
+| `control.crypto.backup-encryption` | automated |
+| `control.data.production-inventory` | automated |
+| `control.data.access-restriction` | hybrid |
+| `control.data.retention-policy` | hybrid |
+| `control.data.sensitive-classification` | hybrid |
+| `control.database.inventory` | automated |
+| `control.database.access-restriction` | automated |
+| `control.database.encryption` | automated |
+| `control.database.backup-enabled` | automated |
+| `control.database.auditing` | hybrid |
+| `control.logging.audit-enabled` | automated |
+| `control.logging.admin-events` | automated |
+| `control.logging.auth-security-events` | automated |
+| `control.logging.retention-meets-policy` | automated |
+| `control.logging.time-synchronization` | hybrid |
+| `control.logging.security-alerting` | automated |
+| `control.logging.privileged-actions-observable` | hybrid |
+| `control.logging.integrity-protected-storage` | hybrid |
+| `control.logging.monitoring-coverage` | automated |
+| `control.backup.enabled` | automated |
+| `control.backup.population-coverage` | automated |
+| `control.backup.retention` | automated |
+| `control.backup.restore-testing` | automated |
+| `control.resilience.recovery-procedure` | hybrid |
+| `control.resilience.disaster-recovery-exercise` | **manual** |
+| `control.resilience.redundancy` | hybrid |
+| `control.resilience.recovery-objectives` | **manual** |
+| `control.resilience.recovery-evidence-freshness` | automated |
+
+Hybrid/manual honesty: DR exercise, recovery objectives, and network-segmentation rationale use `op = "manual-review"` and do not auto-pass from a single technical flag. Each control has stable id, domain(s) from existing `ControlDomain`, evidence requirements, and a test ref. Validator rejects provider/framework segments. Canonical infrastructure TOML contains no ISO/SOC2/NIS2/PCI tokens.
 
 ### 3. Evidence types are facts, not conclusions
 
@@ -110,7 +159,7 @@ test.network.no-prohibited-public-databases
 test.secret.approved-storage
 ```
 
-Retention days, acceptable TLS minimum, restore-test freshness window, and approved secret-storage backends come from **catalog/test configuration** (`[test.expression]` keys) or assessment policy (`AssessmentContext.max_age`) — not hardcoded ISO/PCI constants in Rust.
+Shipped `[test.expression]` keys (documentary policy; evaluator classifies bool / `*_at` facts): `min_days = 90`, `acceptable_min_protocol = "1.2"`, `approved_backends = ["vault", "kms"]`, `window = "24h"`. Assessment policy may still supply freshness via `AssessmentContext.max_age`. Not hardcoded ISO/PCI constants in Rust.
 
 Missing evidence is `InsufficientEvidence`, not a technical failure. Partial/unknown population cannot yield `Effective` on all-subjects tests. Approved unexpired IR exceptions yield `ExceptionApproved` for the bound subject.
 
@@ -126,9 +175,53 @@ In-scope “critical” / “public” / “required” subsets are the **kind i
 
 This slice does not retarget ISO mappings. **Later:** [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired pack `logging.*` / `backup.*` / `encryption.*` / `security.tls` slivers and left A.8.13 / A.8.15 / A.8.24 unmapped rather than claiming catalog equivalence. See [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) §13.
 
-### 7. Do not add cloud collectors
+### 7. Deterministic fixtures
 
-Provider details belong only in future collectors that **emit** canonical facts. This slice does not implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service.
+Twenty-nine frozen evidence sets under `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/` (clock `2026-08-19T12:00:00Z` unless a stale fixture):
+
+| Fixture | Distinguishes |
+| --- | --- |
+| `network/healthy` | Authoritative endpoint/network inventory; automated network tests can pass |
+| `network/public-db-exposed` | Prohibited public DB → **Ineffective** |
+| `network/insecure-tls` | Public endpoint below policy → **Ineffective** |
+| `network/partial-inventory` | Non-authoritative population → **InsufficientEvidence** |
+| `network/stale-firewall-policy` | Policy older than freshness → **StaleEvidence** |
+| `network/exception-approved-exposure` | Named public DB + approved unexpired Exception → **ExceptionApproved** |
+| `crypto/healthy` | Approved storage, managed keys, valid certs |
+| `crypto/unapproved-secret-storage` | `approved_storage=false` → **Ineffective** |
+| `crypto/stale-certificate` | Certificate/rotation freshness fail |
+| `data/healthy` | Production stores inventoried / classified |
+| `data/partial-classification` | Missing classification → not Effective |
+| `database/healthy` | Critical DBs encrypted → **Effective** |
+| `database/unencrypted-critical-db` | One `encrypted=false` → **Ineffective** (lone encrypted sibling must not pass) |
+| `database/partial-inventory` | Non-authoritative DB population → **InsufficientEvidence** |
+| `database/missing-encryption` | Known DB, no envelope → **InsufficientEvidence** |
+| `logging/healthy` | Current audit, retention ≥ catalog `min_days`, alerting on |
+| `logging/retention-below-threshold` | `meets_threshold=false` → **Ineffective** |
+| `logging/stale-audit-log` | Envelope older than freshness → **StaleEvidence** |
+| `logging/missing-alerting` | No alerting envelope → **InsufficientEvidence** |
+| `logging/partial-coverage` | Incomplete monitoring coverage → not Effective |
+| `logging/partial-inventory` | Non-authoritative asset population → **InsufficientEvidence** |
+| `backup/healthy` | Current successful backups + restore tests |
+| `backup/missing-backup` | Required store without backup evidence |
+| `backup/stale-restore-test` | Restore outside window → **StaleEvidence** |
+| `backup/failing-restore` | `success=false` → **Ineffective** |
+| `resilience/healthy` | Plan + objectives attested; automated freshness can pass |
+| `resilience/stale-recovery-plan` | Plan/exercise outside window → **StaleEvidence** |
+| `resilience/missing-dr-exercise` | No exercise attestation → **ManualReviewRequired** / **InsufficientEvidence** |
+| `resilience/exception-approved-rto` | Named store + approved Exception → **ExceptionApproved** |
+
+Healthy primary populations use n ≥ 3 subjects. Fixtures emit canonical types plus generic `inventory.subject` / `inventory.complete`. No pack-local `encryption.at-rest.configured`. No secret material.
+
+### 8. Consume Prompts 01–03; do not fork infrastructure
+
+No second catalog loader, typed `EvidenceValue`, or population evaluator. No `resolve_database_inventory` / `resolve_network_inventory`. Prompt 01’s SSOT is not overwritten. No AWS / Azure / GCP / Cloudflare collector.
+
+A compile-graph cycle (facade depending on the root package) was broken with scanner-view traits in `weeping-angel-evidence` / `weeping-angel-assurance`. That is not a catalog API fork.
+
+### 9. Do not add cloud collectors
+
+Provider details belong only in future collectors that **emit** canonical facts. This slice does not implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service. Operational restore stays here; Prompt 08 owns continuity/DR **governance** (`evidence.resilience.continuity-plan`), not `evidence.backup.restore-test`.
 
 ## Alternatives considered
 
@@ -183,5 +276,7 @@ AWS / Azure / GCP / Cloudflare collectors; ISO / SOC 2 / NIS 2 / PCI text or map
 - Typed evidence: [`0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Population runtime: [`0003-subject-population-runtime-and-coverage-semantics.md`](0003-subject-population-runtime-and-coverage-semantics.md)
 - IAM family: [`0003-iam-canonical-assurance-catalog.md`](0003-iam-canonical-assurance-catalog.md)
-- Vulnerability sibling (do not collide): [`0003-vulnerability-canonical-assurance-catalog-draft.md`](0003-vulnerability-canonical-assurance-catalog-draft.md)
+- SDLC sibling: [`0003-sdlc-canonical-assurance-catalog.md`](0003-sdlc-canonical-assurance-catalog.md)
+- Vulnerability sibling (do not collide on `evidence.secret.exposure`): [`0003-vulnerability-canonical-assurance-catalog.md`](0003-vulnerability-canonical-assurance-catalog.md)
+- Governance sibling (continuity **governance** only): [`0003-governance-canonical-assurance-catalog.md`](0003-governance-canonical-assurance-catalog.md)
 - ISO vertical (sliver frozen): [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)

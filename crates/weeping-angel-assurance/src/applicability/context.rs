@@ -1,6 +1,7 @@
 //! Derived organization context over existing IR inventories. Not a second inventory.
 
 use std::collections::BTreeMap;
+use std::ops::Not;
 
 use serde::{Deserialize, Serialize};
 use weeping_angel_assurance_ir::{
@@ -23,14 +24,6 @@ impl FactValue {
         if value { Self::True } else { Self::False }
     }
 
-    pub fn not(self) -> Self {
-        match self {
-            Self::True => Self::False,
-            Self::False => Self::True,
-            Self::Unknown => Self::Unknown,
-        }
-    }
-
     pub fn known_equals(self, expected: bool) -> Self {
         match self {
             Self::Unknown => Self::Unknown,
@@ -41,6 +34,18 @@ impl FactValue {
                     Self::False
                 }
             }
+        }
+    }
+}
+
+impl Not for FactValue {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        match self {
+            Self::True => Self::False,
+            Self::False => Self::True,
+            Self::Unknown => Self::Unknown,
         }
     }
 }
@@ -264,7 +269,7 @@ impl Inventories<'_> {
     ) {
         record_drops(
             self.assets,
-            |asset, sel| asset_matches(asset, sel),
+            asset_matches,
             |asset| asset.id.as_str().to_string(),
             selectors,
             exclusion_index,
@@ -273,7 +278,7 @@ impl Inventories<'_> {
         );
         record_drops(
             self.identities,
-            |identity, sel| identity_matches(identity, sel),
+            identity_matches,
             |identity| identity.id.as_str().to_string(),
             selectors,
             exclusion_index,
@@ -282,7 +287,7 @@ impl Inventories<'_> {
         );
         record_drops(
             self.vendors,
-            |vendor, sel| vendor_matches(vendor, sel),
+            vendor_matches,
             |vendor| vendor.id.as_str().to_string(),
             selectors,
             exclusion_index,
@@ -291,7 +296,7 @@ impl Inventories<'_> {
         );
         record_drops(
             self.processing_activities,
-            |activity, sel| activity_matches(activity, sel),
+            activity_matches,
             |activity| activity.id.as_str().to_string(),
             selectors,
             exclusion_index,
@@ -300,7 +305,7 @@ impl Inventories<'_> {
         );
         record_drops(
             self.risks,
-            |risk, sel| risk_matches(risk, sel),
+            risk_matches,
             |risk| risk.id.as_str().to_string(),
             selectors,
             exclusion_index,
@@ -397,35 +402,38 @@ fn tags_match(have: &BTreeMap<String, String>, want: &BTreeMap<String, String>) 
 }
 
 pub(crate) fn asset_kind_matches(kind: AssetKind, subject: SubjectKind) -> bool {
-    match (kind, subject) {
-        (_, SubjectKind::Asset) => true,
-        (AssetKind::Organization, SubjectKind::Organization) => true,
-        (AssetKind::Repository, SubjectKind::Repository) => true,
-        (AssetKind::Application, SubjectKind::Application) => true,
-        (AssetKind::Service, SubjectKind::Service) => true,
-        (AssetKind::Database, SubjectKind::Database) => true,
-        (AssetKind::CloudAccount, SubjectKind::CloudAccount) => true,
-        (AssetKind::CloudResource, SubjectKind::CloudResource) => true,
-        (AssetKind::Device, SubjectKind::Device) => true,
-        (AssetKind::Network, SubjectKind::Network) => true,
-        (AssetKind::Dataset, SubjectKind::Dataset | SubjectKind::DataStore) => true,
-        (AssetKind::Endpoint, SubjectKind::Endpoint) => true,
-        (AssetKind::Branch, SubjectKind::Branch) => true,
-        (AssetKind::Deployment, SubjectKind::Deployment) => true,
-        _ => false,
-    }
+    matches!(
+        (kind, subject),
+        (_, SubjectKind::Asset)
+            | (AssetKind::Organization, SubjectKind::Organization)
+            | (AssetKind::Repository, SubjectKind::Repository)
+            | (AssetKind::Application, SubjectKind::Application)
+            | (AssetKind::Service, SubjectKind::Service)
+            | (AssetKind::Database, SubjectKind::Database)
+            | (AssetKind::CloudAccount, SubjectKind::CloudAccount)
+            | (AssetKind::CloudResource, SubjectKind::CloudResource)
+            | (AssetKind::Device, SubjectKind::Device)
+            | (AssetKind::Network, SubjectKind::Network)
+            | (
+                AssetKind::Dataset,
+                SubjectKind::Dataset | SubjectKind::DataStore
+            )
+            | (AssetKind::Endpoint, SubjectKind::Endpoint)
+            | (AssetKind::Branch, SubjectKind::Branch)
+            | (AssetKind::Deployment, SubjectKind::Deployment)
+    )
 }
 
 fn identity_kind_matches(kind: IdentityKind, subject: SubjectKind) -> bool {
-    match (kind, subject) {
-        (_, SubjectKind::Identity) => true,
-        (IdentityKind::User, SubjectKind::User) => true,
-        (
-            IdentityKind::Service | IdentityKind::ServiceAccount,
-            SubjectKind::ServiceAccount | SubjectKind::Service,
-        ) => true,
-        _ => false,
-    }
+    matches!(
+        (kind, subject),
+        (_, SubjectKind::Identity)
+            | (IdentityKind::User, SubjectKind::User)
+            | (
+                IdentityKind::Service | IdentityKind::ServiceAccount,
+                SubjectKind::ServiceAccount | SubjectKind::Service,
+            )
+    )
 }
 
 pub(crate) fn normalize_token(value: &str) -> String {

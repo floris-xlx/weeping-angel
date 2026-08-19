@@ -14,7 +14,7 @@
 | Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
 | Typed evidence | [`docs/sdd/typed-evidence.md`](typed-evidence.md) |
 | Population (consumed) | [`docs/sdd/population-runtime.md`](population-runtime.md), ADR [`0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
-| Lineage (neighbor, do not implement) | [`docs/sdd/assessment-lineage.md`](assessment-lineage.md) — persist/explain/ledger stay Prompt 11 |
+| Lineage (neighbor, persist landed) | [`docs/sdd/assessment-lineage.md`](assessment-lineage.md), [ADR](../adr/0003-assessment-lineage.md) — Kleene snapshot stays in this module; lineage persist/explain is Prompt 11 |
 | GitHub collector (collision fence) | [`docs/sdd/github-collector.md`](github-collector.md) — do not touch |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
