@@ -1,5 +1,14 @@
 # ADR 0002 — ISO 27001 automated-assurance vertical (first real framework pack)
 
+<!-- weeping-angel-adr-meta
+id = "0002"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |

@@ -8,6 +8,7 @@ pub mod assessment;
 pub mod asset;
 pub mod audit;
 pub mod capa;
+pub mod catalog_view;
 pub mod continuity;
 pub mod control;
 pub mod crosswalk;
@@ -65,6 +66,7 @@ pub use capa::{
     NonconformitySeverity, NonconformitySource, NonconformitySourceKind, NonconformityStatus,
     ReviewPeriod, RootCauseAnalysis, overdue_action_ids, validate_capa_at, validate_capa_inventory,
 };
+pub use catalog_view::{CatalogProjection, WorkspaceCatalogLoader, workspace_catalog_projection};
 pub use continuity::{
     AssetRef, BackupExpectation, CadenceStatus, ContinuityDimension, ContinuityExercise,
     ContinuityGap, ContinuityRemediationRef, ContinuityResilienceError,

@@ -32,7 +32,8 @@ use weeping_angel_evidence::{
 use weeping_angel_framework::pack::PackError;
 use weeping_angel_framework::{
     FrameworkCapabilities, FrameworkContext, FrameworkProfile, FrameworkTarget, compile_framework,
-    load_framework_pack, load_framework_pack_from, validate_framework_pack,
+    load_framework_pack, load_framework_pack_from, load_framework_pack_from_with,
+    validate_framework_pack,
 };
 
 fn manifest_dir() -> PathBuf {
@@ -95,6 +96,11 @@ fn iso_target() -> FrameworkTarget {
 
 fn load_iso_pack() -> weeping_angel_framework::LoadedPack {
     load_framework_pack("iso-27001", "2022").expect("ISO pack must load")
+}
+
+fn load_isolated_pack(dir: &Path) -> Result<weeping_angel_framework::LoadedPack, PackError> {
+    let projection = load_catalog().projection().expect("catalog projection");
+    load_framework_pack_from_with(dir, Some(&projection))
 }
 
 const RETIRED_SLIVERS: &[&str] = &[
@@ -352,12 +358,16 @@ fn pack_and_product_text() -> String {
 }
 
 fn serialize_empty_iso_report() -> Value {
+    let pack = load_iso_pack();
+    let catalog = load_catalog();
     let report = AssessmentReport {
         assessment_id: AssessmentId::new("assess-iso-remap-target"),
         profile: "iso-27001".into(),
         digest: "digest".into(),
         results: Vec::new(),
         evidence_count: 0,
+        framework_pack_digest: pack.digest.0,
+        canonical_catalog_digest: catalog.digest().expect("catalog digest").to_string(),
         ..Default::default()
     };
     serde_json::to_value(&report).expect("serialize AssessmentReport")
@@ -759,7 +769,7 @@ fn iso_r_006_loader_accepts_evidence_for_superset_of_subset_of() {
     let tmp = tempfile::tempdir().expect("temp pack");
     for rel in ["EvidenceFor", "SupersetOf", "SubsetOf"] {
         write_relation_pack(tmp.path(), rel, "control.identity.privileged-mfa", "");
-        let loaded = load_framework_pack_from(tmp.path());
+        let loaded = load_isolated_pack(tmp.path());
         assert!(
             loaded.is_ok(),
             "ISO-R-006: relation {rel} must load, got {loaded:?}"

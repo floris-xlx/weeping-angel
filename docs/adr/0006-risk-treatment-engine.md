@@ -1,5 +1,14 @@
 # ADR 0006 — Risk treatment engine in assurance IR
 
+<!-- weeping-angel-adr-meta
+id = "0006"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_risk_treatment_target` GREEN (P08-T01–T16); baseline skip-superseded (`#[ignore = "superseded by target suite"]`) |

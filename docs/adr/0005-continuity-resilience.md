@@ -1,5 +1,14 @@
 # ADR 0005 — Continuity and resilience as executable assurance
 
+<!-- weeping-angel-adr-meta
+id = "0005"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_continuity_resilience_target` GREEN; plan existence is not demonstrated recovery. |

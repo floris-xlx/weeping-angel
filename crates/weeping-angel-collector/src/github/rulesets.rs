@@ -1,7 +1,7 @@
 use serde_json::Value;
 use weeping_angel_evidence::EvidenceValue;
 
-use weeping_angel_evidence::EvidenceEnvelope;
+use crate::domain::ObservationCandidate;
 
 use super::normalize::{EmitCtx, emit, repo_subject_id};
 use crate::CollectorError;
@@ -13,7 +13,7 @@ pub fn from_rulesets_json(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let rules: Vec<&Value> = if let Some(arr) = json.as_array() {
         arr.iter().collect()
     } else {

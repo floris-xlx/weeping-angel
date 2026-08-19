@@ -1,7 +1,7 @@
 use serde_json::Value;
 use weeping_angel_evidence::EvidenceValue;
 
-use weeping_angel_evidence::EvidenceEnvelope;
+use crate::domain::ObservationCandidate;
 
 use super::normalize::{EmitCtx, emit, repo_subject_id};
 use crate::CollectorError;
@@ -13,7 +13,7 @@ pub fn from_workflow_permissions(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let subject = repo_subject_id(owner, name);
     let default = json
         .get("default_workflow_permissions")
@@ -41,7 +41,7 @@ pub fn from_environments(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let envs = json
         .get("environments")
         .and_then(Value::as_array)

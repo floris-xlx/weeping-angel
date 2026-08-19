@@ -4,6 +4,8 @@ Canonical machine register: [`register.toml`](register.toml) (`schema = "weeping
 
 This README is not a second register. Dated snapshots such as [`baseline-2026-08.md`](baseline-2026-08.md) are evidence, not status.
 
+Repository-hygiene before/after counts live in [`docs/specs/repository-hygiene.md`](../specs/repository-hygiene.md) §12 (and optionally `.sdd/runs/`), not in `register.toml`. [ADR 0012](../adr/0012-repository-hygiene.md) does not close `DEBT-IGNORE` / `DEBT-UNWRAP` / `DEBT-SCHEMA-DUP` from this slice.
+
 ## Status machine
 
 Every `[[finding]]` has a required `id`, `title`, `status`, and `summary`.

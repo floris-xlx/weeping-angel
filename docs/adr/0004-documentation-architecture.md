@@ -1,5 +1,14 @@
 # ADR 0004 — Documentation architecture (specs, ADRs, contracts, generated SDD)
 
+<!-- weeping-angel-adr-meta
+id = "0004"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = ["0001-inwardly-extensible-assurance-runtime"]
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |
@@ -31,8 +40,9 @@ Rules:
 1. **Specs** are the human SSOT. Dual-suite reports, telemetry, and run folders MUST NOT live beside them.
 2. **ADRs** stay under `docs/adr/`. Cite specs and tests by those canonical paths.
 3. **Executable invariants** are `tests/contracts/*.target.rs` (and superseded `*.baseline.rs`). They remain explicitly listed in root [`Cargo.toml`](../../Cargo.toml); the directory is not Cargo auto-discovery. [ADR 0010](0010-architecture-as-law.md) increment-1 law additionally lives in `xtask/tests/*.rs` (`cargo test -p xtask`); still never `tests/sdd/`.
-4. **Generated SDD output** writes to `.sdd/runs/` (history) and `.sdd/artifacts/` (snapshots). Successful traces MUST NOT be added to the primary source tree.
+4. **Generated SDD output** writes to `.sdd/runs/` (history) and `.sdd/artifacts/` (snapshots). Successful traces MUST NOT be added to the primary source tree. [`docs/sdd/`](../sdd/) is a stub, not an execution dump.
 5. Stubs at [`docs/sdd/README.md`](../sdd/README.md) and [`docs/contracts/README.md`](../contracts/README.md) point at the new locations. They are not a second SSOT.
+6. **Non-SDD generated artifacts** (raw `audit.txt`, Python `__pycache__` / `*.pyc`, local scan dumps) follow the same rule: not git source. [ADR 0012](0012-repository-hygiene.md) is the hygiene extension.
 
 The public assurance contract previously at `docs/contracts/assurance-runtime.md` is [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md). It remains a human document; the executable contract is `tests/contracts/`.
 
@@ -54,3 +64,4 @@ The public assurance contract previously at `docs/contracts/assurance-runtime.md
 - Map: [`docs/README.md`](../README.md)
 - Generated-output note: [`.sdd/README.md`](../../.sdd/README.md)
 - Layout invariant: `sdd_documentation_layout` (`tests/contracts/documentation_layout.rs`)
+- Hygiene (schemas, panic budget, admission, generated non-SDD artifacts): [ADR 0012](0012-repository-hygiene.md)

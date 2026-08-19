@@ -1,5 +1,14 @@
 # ADR 0003 — ISMS events and deterministic snapshot drift
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_isms_events_drift_target` GREEN; `sdd_isms_events_drift_baseline` skip-superseded |

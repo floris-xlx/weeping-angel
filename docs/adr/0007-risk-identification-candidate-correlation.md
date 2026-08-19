@@ -1,5 +1,14 @@
 # ADR 0007 — Risk identification via candidates and deterministic correlation
 
+<!-- weeping-angel-adr-meta
+id = "0007"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_risk_identification_target` GREEN (RI-001…010) |

@@ -1,0 +1,345 @@
+schema = "weeping-angel/spec-lifecycle/v1"
+
+[[spec]]
+path = "docs/specs/applicability-engine.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/architectural-cleanup-program.md"
+state = "active"
+ownership = ["repository_guard"]
+depends_on = ["docs/specs/repository-integrity.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/assessment-lineage.md"
+state = "active"
+ownership = ["assessment_lineage"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/assurance-runtime-spine.md"
+state = "active"
+ownership = ["assessment_lineage"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/assurance-runtime.md"
+state = "active"
+ownership = ["readiness_projection"]
+depends_on = ["docs/specs/assurance-runtime-spine.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/canonical-assurance-catalog-v1.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/catalog-framework-readiness-trust-boundary.md"
+state = "active"
+ownership = ["catalog", "framework_compilation"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/continuity-resilience.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/continuous-assurance-scheduler.md"
+state = "active"
+ownership = ["readiness_projection"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/control-implementation-registry.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/controlled-documents.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/evidence-validity-temporal-assurance.md"
+state = "active"
+ownership = ["temporal_evidence_selection"]
+depends_on = ["docs/specs/temporal-assurance.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/github-collector.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/governance-canonical-assurance-catalog.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/iam-canonical-assurance-catalog.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/incident-governance.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/infrastructure-canonical-assurance-catalog.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/interested-parties-obligations.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/internal-audit.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/isms-context.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/isms-events-drift.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/iso-27001-automated-assurance-mvp.md"
+state = "active"
+ownership = ["framework_compilation"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/iso-27001-canonical-remap.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/nonconformity-capa.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/operational-soa.md"
+state = "active"
+ownership = ["assessment_lineage"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/personnel-security.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/population-runtime.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/remediation-engine.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/repository-hygiene.md"
+state = "active"
+ownership = ["repository_guard"]
+depends_on = ["docs/specs/repository-integrity.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/repository-integrity.md"
+state = "active"
+ownership = ["repository_guard"]
+depends_on = ["docs/specs/assurance-runtime-spine.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/residual-risk.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/risk-identification.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/risk-methodology.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/risk-register.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/risk-treatment.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/scope-engine.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/sdlc-canonical-assurance-catalog.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/security-objectives.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/supplier-risk.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/temporal-assurance.md"
+state = "active"
+ownership = ["temporal_evidence_selection"]
+depends_on = ["docs/specs/assurance-runtime.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/temporal-lineage-evidence-soa.md"
+state = "active"
+ownership = ["temporal_evidence_selection", "assessment_lineage", "evidence_persistence"]
+depends_on = ["docs/specs/temporal-assurance.md", "docs/specs/assessment-lineage.md"]
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/typed-evidence.md"
+state = "active"
+ownership = ["evidence_persistence"]
+depends_on = []
+supersedes = []
+successor = ""
+
+[[spec]]
+path = "docs/specs/vulnerability-canonical-assurance-catalog.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = ["docs/specs/canonical-assurance-catalog-v1.md"]
+supersedes = []
+successor = ""

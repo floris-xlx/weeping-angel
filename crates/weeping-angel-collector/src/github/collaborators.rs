@@ -2,7 +2,7 @@ use serde_json::Value;
 use weeping_angel_assurance_ir::AssetId;
 use weeping_angel_evidence::EvidenceValue;
 
-use weeping_angel_evidence::EvidenceEnvelope;
+use crate::domain::ObservationCandidate;
 
 use super::normalize::{EmitCtx, emit};
 use crate::CollectorError;
@@ -12,8 +12,8 @@ pub const MODULE: &str = "collaborators";
 pub fn from_collaborators(
     people: &[Value],
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-    let mut out: Vec<EvidenceEnvelope> = Vec::new();
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
+    let mut out: Vec<ObservationCandidate> = Vec::new();
     for person in people {
         let login: &str = match person.get("login").and_then(Value::as_str) {
             Some(l) => l,
@@ -63,8 +63,8 @@ pub fn from_collaborators(
 pub fn from_outside_collaborators(
     people: &[Value],
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-    let mut out: Vec<EvidenceEnvelope> = Vec::new();
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
+    let mut out: Vec<ObservationCandidate> = Vec::new();
     for person in people {
         let login: &str = match person.get("login").and_then(Value::as_str) {
             Some(l) => l,
@@ -101,7 +101,7 @@ pub fn from_outside_collaborators(
 pub fn from_deploy_keys(
     keys: &[Value],
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let mut out = Vec::new();
     for key in keys {
         let id = key

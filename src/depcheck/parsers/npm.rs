@@ -167,7 +167,7 @@ pub fn parse_yarn_lock(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     static V1: OnceLock<Regex> = OnceLock::new();
     let v1 = V1.get_or_init(|| {
         Regex::new(r#"(?m)^"?(@?[^@"\s][^@"]*?)@(?:npm:)?[^:]+:\s*$\n\s+version\s+"?([^"\n]+)"?"#)
-            .expect("yarn v1 regex")
+            .expect("yarn v1 regex") // panic-ok: regex literal
     });
     for caps in v1.captures_iter(content) {
         let name = caps[1].trim_matches('"').to_string();

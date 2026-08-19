@@ -15,7 +15,7 @@ use xtask::{
     main_with_args, repo_root_from_xtask_manifest, run_guard,
 };
 
-const REMAINING_STUBS: [&str; 10] = ["05", "06", "07", "08", "09", "10", "11", "12", "14", "15"];
+const REMAINING_STUBS: [&str; 8] = ["05", "06", "07", "08", "09", "10", "11", "12"];
 
 const OWNERSHIP_KINDS: [&str; 5] = [
     "exclusive",
@@ -34,8 +34,21 @@ fn read_live(rel: &str) -> String {
 }
 
 fn xtask_lib_src() -> String {
-    fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lib.rs"))
-        .expect("read xtask/src/lib.rs")
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut out = String::new();
+    fn walk(dir: &Path, out: &mut String) {
+        for entry in fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                walk(&path, out);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                out.push_str(&fs::read_to_string(&path).unwrap());
+                out.push('\n');
+            }
+        }
+    }
+    walk(&root, &mut out);
+    out
 }
 
 fn check_named<'a>(report: &'a xtask::GuardReport, id: &str) -> &'a xtask::CheckResult {
@@ -56,14 +69,48 @@ id = "DEBT-GUARD-{id}"
 title = "stub"
 status = "open"
 summary = "skip with live debt"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "product-semantic check owned by Prompts 2/3"
+repository_guard = "{id}"
+skip_check = "{id}"
+expires = "2027-12-31"
 "#
         ));
     }
+    body.push_str(
+        r#"
+[[finding]]
+id = "DEBT-DUP-ADR"
+title = "duplicate adr prefixes"
+status = "confirmed"
+summary = "historical prefix collisions"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "pin historical files"
+repository_guard = "14"
+review_by = "2027-12-31"
+"#,
+    );
     body
 }
 
 fn architecture_toml_with_kinds() -> &'static str {
     r#"schema = "weeping-angel/architecture/v1"
+
+[policy]
+ownership_kinds = ["exclusive", "facade", "projection", "adapter", "shared-primitive"]
+required_concepts = [
+  "catalog",
+  "framework_compilation",
+  "readiness_projection",
+  "temporal_evidence_selection",
+  "assessment_lineage",
+  "evidence_persistence",
+  "assurance_cli",
+]
 
 [ownership.catalog]
 crate = "weeping-angel-canonical-catalog"
@@ -232,12 +279,44 @@ edition = "2024"
     fs::write(root.join("src/cli.rs"), "").unwrap();
     fs::write(
         root.join("docs/adr/0010-architecture-as-law.md"),
-        "# ADR 0010\n",
+        r#"# ADR 0010
+
+<!-- weeping-angel-adr-meta
+id = "0010"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+"#,
     )
     .unwrap();
     fs::write(
         root.join("docs/specs/architectural-cleanup-program.md"),
         "# spec\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("architecture/adr-identity.toml"),
+        r#"schema = "weeping-angel/adr-identity/v1"
+grandfathered_debt = "DEBT-DUP-ADR"
+grandfathered_prefixes = ["0003", "0005", "0007", "0008"]
+grandfathered_files = []
+"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("architecture/spec-lifecycle.toml"),
+        r#"schema = "weeping-angel/spec-lifecycle/v1"
+
+[[spec]]
+path = "docs/specs/architectural-cleanup-program.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+"#,
     )
     .unwrap();
     fs::write(root.join("frameworks/iso-27001/2022/pack.toml"), "").unwrap();
@@ -346,7 +425,7 @@ fn acp_t03_guard_04_evaluates_every_invariant_and_passes_on_valid_fixture() {
     let rendered = report.render();
     assert!(
         !report.failed(),
-        "increment-1 fixture must be green (04 pass, remaining stubs skip): {rendered}"
+        "increment-2 fixture must be green (04/14/15 pass, remaining stubs skip): {rendered}"
     );
     assert_eq!(
         check_named(&report, "04").status,
@@ -354,7 +433,7 @@ fn acp_t03_guard_04_evaluates_every_invariant_and_passes_on_valid_fixture() {
         "Guard 04 must evaluate invariants and pass, not stub-skip: {rendered}"
     );
     assert_eq!(check_named(&report, "04").name, "architecture-invariants");
-    for id in ["01", "02", "03", "13"] {
+    for id in ["01", "02", "03", "13", "14", "15"] {
         assert_eq!(
             check_named(&report, id).status,
             CheckStatus::Pass,
@@ -730,7 +809,7 @@ fn acp_t15_live_guard_04_passes_remaining_stubs_skip() {
             other => panic!("live stub {id} must skip(DEBT-GUARD-{id}), got {other:?}"),
         }
     }
-    for id in ["01", "02", "03", "13"] {
+    for id in ["01", "02", "03", "13", "14", "15"] {
         assert_eq!(check_named(&report, id).status, CheckStatus::Pass);
     }
 

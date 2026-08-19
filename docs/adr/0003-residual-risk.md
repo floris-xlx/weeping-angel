@@ -1,5 +1,14 @@
 # ADR 0003 — Residual risk is an explainable projection, not a hidden formula
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_residual_risk_target` GREEN (P09-T01–T20); baseline absence claims skip-superseded. |

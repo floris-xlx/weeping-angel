@@ -35,6 +35,10 @@ Provider → Canonical Evidence → Canonical Test → Canonical Control → Fra
 
 An assessment is a **reproducible immutable execution artifact**, not a current-state report computed from whatever files sit on disk at serialize time.
 
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+LIN-001–015 and `sdd_assessment_lineage_*` remain lineage SSOT (GREEN / skip-superseded). Fail-closed `replay_assessment`, independent JSON `asOf`, and reconstructable pin equalities: [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+
 ---
 
 ## 0. Collision fence (concurrent SDD)
@@ -634,9 +638,9 @@ Frozen after target GREEN. Public composition:
 | Persist/load opaque JSON | `EvidenceLedger::{persist,load}_{assessment_run,control_test_run,framework_snapshot}` |
 | CLI | `src/cli.rs` `AssuranceCommand::Explain` → `src/assurance_explain.rs` |
 
-`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `asOf` (JSON from `startedAt`; evaluation clock), `scope`, `status` (`completed` \| `partial` \| `failed`). Historical replay uses evidence that was a candidate at that `asOf` ([`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md)).
+`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `asOf` (JSON from the `as_of` field; live `assess` may default it to `startedAt`), `scope`, `status` (`completed` \| `partial` \| `failed`). Historical replay uses evidence that was a candidate at that `asOf` ([`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md)).
 
-`assess` returns `AssessmentReport.run`; it does not open a ledger. Replay is `reconstruct` / `replay_assessment` from a `LineageBundle`. Current-file consult is `verify_current_against_pins` → `DigestMismatch`.
+`assess` returns `AssessmentReport.run`; it does not open a ledger. Replay is `replay_assessment` (fail-closed pin verification) / `reconstruct` (trusted clone) from a `LineageBundle`. Current-file consult is `verify_current_against_pins` → `DigestMismatch`.
 
 Crate-root `ApplicabilitySnapshot` is the lineage persist document (static fold + pack artifacts). applicability engine Kleene snapshot remains `applicability::ApplicabilitySnapshot`.
 

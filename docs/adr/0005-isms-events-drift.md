@@ -1,5 +1,14 @@
 # ADR 0005 — ISMS events and semantic snapshot drift (library observation stream)
 
+<!-- weeping-angel-adr-meta
+id = "0005"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — same shipped contract as [`0003-isms-events-drift.md`](0003-isms-events-drift.md); `sdd_isms_events_drift_target` GREEN; baseline skip-superseded |

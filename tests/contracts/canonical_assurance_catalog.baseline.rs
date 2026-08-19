@@ -1,13 +1,16 @@
-//! SUPERSEDED by `sdd_canonical_assurance_catalog_target` after catalog
-//! infrastructure landed (catalog infrastructure).
+//! SUPERSEDED by `sdd_canonical_assurance_catalog_target`.
 //!
 //! Historical characterization of the pre-catalog tree on planning SHA
 //! `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`docs/specs/canonical-assurance-catalog-v1.md`
-//! §3 / §4.10). Absence assertions are ignored so CI does not keep
-//! “there is no catalog” as required green. Compatibility checks (IR
-//! permissiveness, crate graph) stay active. The ISO thin-stub pack-ID
-//! characterization is ignored after ISO remap
-//! (`sdd_iso27001_remap_target`).
+//! §3 / §4.10) and increment-2 leaky seams
+//! (`docs/specs/catalog-framework-readiness-trust-boundary.md` §3 / §7.1).
+//! Absence assertions and retired leaky-seam tests are
+//! `#[ignore = "superseded by target suite"]` (or a named successor suite)
+//! so CI does not keep those absences as required green. Compatibility
+//! checks (IR permissiveness, crate graph) stay active. The ISO thin-stub
+//! pack-ID characterization is ignored after ISO remap
+//! (`sdd_iso27001_remap_target`). Target
+//! `sdd_canonical_assurance_catalog_target` is the source of truth.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -15,11 +18,19 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use weeping_angel::cli::{AssuranceCommand, Cli, Commands};
+use weeping_angel_assurance::readiness::FrameworkReadinessSnapshot;
+use weeping_angel_assurance::snapshot::{AssessmentRun, catalog_digest};
 use weeping_angel_assurance_ir::{
-    ASSURANCE_IR_SCHEMA, ControlId, ControlTestId, EvidenceRequirementId, IdError,
+    ASSURANCE_IR_SCHEMA, AssessmentId, ControlId, ControlTestId, EvidenceRequirementId, IdError,
+    MappingCompleteness, MappingDirection, MappingRelation, MappingSource,
 };
+use weeping_angel_canonical_catalog::{CanonicalCatalog, CatalogError};
 use weeping_angel_framework::pack::FRAMEWORK_PACK_SCHEMA;
-use weeping_angel_framework::{FrameworkProfile, stub_catalog};
+use weeping_angel_framework::{
+    FrameworkCapabilities, FrameworkContext, FrameworkProfile, FrameworkTarget,
+    assessment_from_pack, compile_framework, load_framework_pack, load_framework_pack_from,
+    stub_catalog,
+};
 
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -52,6 +63,75 @@ fn product_rust_sources() -> String {
 fn read_crate_toml(name: &str) -> String {
     fs::read_to_string(manifest_dir().join("crates").join(name).join("Cargo.toml"))
         .unwrap_or_else(|e| panic!("read {name} Cargo.toml: {e}"))
+}
+
+fn crate_src_file(name: &str, rel: &str) -> String {
+    fs::read_to_string(
+        manifest_dir()
+            .join("crates")
+            .join(name)
+            .join("src")
+            .join(rel),
+    )
+    .unwrap_or_else(|e| panic!("read {name}/src/{rel}: {e}"))
+}
+
+fn iso_target() -> FrameworkTarget {
+    FrameworkTarget {
+        profile: FrameworkProfile::Iso27001,
+        capabilities: FrameworkCapabilities::default(),
+        version: weeping_angel_assurance_ir::FrameworkVersion::new("2022"),
+        context: FrameworkContext::default(),
+    }
+}
+
+fn copy_dir(src: &Path, dst: &Path) {
+    fs::create_dir_all(dst).unwrap();
+    for entry in fs::read_dir(src).unwrap() {
+        let entry = entry.unwrap();
+        let to = dst.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_dir(&entry.path(), &to);
+        } else {
+            fs::copy(entry.path(), to).unwrap();
+        }
+    }
+}
+
+fn write_trust_boundary_pack(dir: &Path, mapping_block: &str, metadata: &str) {
+    fs::write(
+        dir.join("manifest.toml"),
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[framework]
+id = "iso-27001"
+version = "2022"
+content_mode = "StructuralOnly"
+"#,
+    )
+    .unwrap();
+    fs::write(
+        dir.join("requirements.toml"),
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[[requirement]]
+id = "iso27001:a.8.5"
+title = "Authentication (structural)"
+kind = "annex"
+"#,
+    )
+    .unwrap();
+    fs::write(dir.join("metadata.toml"), metadata).unwrap();
+    fs::write(
+        dir.join("mappings.toml"),
+        format!(
+            r#"schema = "weeping-angel/framework-pack/v1"
+
+{mapping_block}
+"#
+        ),
+    )
+    .unwrap();
 }
 
 fn assert_current_assurance_command(command: &AssuranceCommand) {
@@ -343,5 +423,476 @@ fn ir_crate_has_no_toml_or_fs_loader() {
     assert!(
         !lib.contains("std::fs") && !lib.contains("CanonicalCatalog"),
         "IR lib does not load catalog files"
+    );
+}
+
+#[test]
+fn cat_ssot_b00_canonical_catalog_load_rejects_duplicate_ids() {
+    let src = manifest_dir().join("catalog/canonical/v1");
+    let tmp = tempfile::tempdir().expect("temp catalog");
+    let root = tmp.path().join("v1");
+    copy_dir(&src, &root);
+    let controls = root.join("controls/identity.toml");
+    let mut text = fs::read_to_string(&controls).unwrap();
+    text.push_str(
+        r#"
+
+[[control]]
+id = "control.identity.privileged-mfa"
+title = "duplicate privileged MFA"
+domain = "identity"
+narrative = "second row with the same id"
+automation = "Automated"
+criticality = "high"
+evidence = ["evidence.identity.mfa-status"]
+tests = ["test.identity.privileged-mfa-enabled"]
+"#,
+    );
+    fs::write(&controls, text).unwrap();
+    match CanonicalCatalog::load(&root) {
+        Err(CatalogError::Duplicate { kind, id }) => {
+            assert_eq!(kind, "control");
+            assert_eq!(id, "control.identity.privileged-mfa");
+        }
+        other => panic!("CanonicalCatalog::load must fail closed on duplicate ids, got {other:?}"),
+    }
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn cat_ssot_b01_pack_has_silent_catalog_parser() {
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    assert!(
+        pack.contains("fn discover_catalog_index() -> Option<CatalogIndex>"),
+        "pack.rs currently re-parses catalog/canonical/v1 as Option"
+    );
+    assert!(
+        pack.contains(
+            "toml::from_str(&fs::read_to_string(root.join(\"manifest.toml\")).ok()?).ok()?"
+        ),
+        "catalog discover returns None on manifest IO/TOML failure"
+    );
+    assert!(
+        pack.contains("let Ok(text) = fs::read_to_string(&path) else {")
+            && pack.contains("let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {"),
+        "listed catalog files currently continue on IO/TOML failure"
+    );
+    assert!(
+        pack.contains("let catalog = discover_catalog_index();"),
+        "load_framework_pack_from currently injects the silent catalog index"
+    );
+    assert!(
+        !pack.contains("struct IndexedTest")
+            || !pack
+                .split("struct IndexedTest")
+                .nth(1)
+                .unwrap()
+                .split('}')
+                .next()
+                .unwrap()
+                .contains("expression"),
+        "IndexedTest currently has no expression field"
+    );
+
+    let loaded =
+        load_framework_pack("iso-27001", "2022").expect("ISO pack loads via catalog index");
+    assert!(
+        loaded
+            .controls
+            .iter()
+            .any(|c| c.id().as_str() == "control.identity.privileged-mfa"),
+        "discover_catalog_index currently injects catalog controls into the pack"
+    );
+    assert!(
+        loaded
+            .tests
+            .iter()
+            .any(|t| t.id.as_str() == "test.identity.privileged-mfa-enabled"),
+        "catalog tests are attached without going through CanonicalCatalog::load"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn cat_ssot_b02_construct_test_plan_drops_expressions() {
+    let lib = crate_src_file("weeping-angel-framework", "lib.rs");
+    let plan = lib
+        .split("fn construct_test_plan(")
+        .nth(1)
+        .expect("construct_test_plan");
+    assert!(
+        plan.contains("expr: None,"),
+        "construct_test_plan currently sets CompiledTest.expr = None"
+    );
+
+    let catalog = CanonicalCatalog::load(manifest_dir().join("catalog/canonical/v1"))
+        .expect("authoritative catalog load");
+    let catalog_test = catalog
+        .tests()
+        .get("test.identity.privileged-mfa-enabled")
+        .expect("catalog test");
+    assert_eq!(
+        catalog_test.expression.get("op").and_then(|v| v.as_str()),
+        Some("coverage-at-least"),
+        "catalog SSOT currently stores the coverage expression"
+    );
+
+    let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack");
+    let assessment = assessment_from_pack(&pack, &iso_target());
+    let compiled = compile_framework(&assessment, &iso_target()).expect("compile");
+    assert!(
+        !compiled.tests.is_empty(),
+        "compiled ISO plan must include catalog-injected tests"
+    );
+    assert!(
+        compiled.tests.iter().all(|t| t.expr.is_none()),
+        "compiled tests currently drop catalog [test.expression] trees"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn cat_ssot_b03_metadata_is_latent_competing_library() {
+    let metadata =
+        fs::read_to_string(manifest_dir().join("frameworks/iso-27001/2022/metadata.toml")).unwrap();
+    assert!(
+        !metadata.contains("[[control]]") && !metadata.contains("[[test]]"),
+        "ISO metadata.toml currently has no competing control/test library"
+    );
+    assert!(
+        metadata.contains("library = \"catalog/canonical/v1\""),
+        "ISO pack annotates catalog/canonical/v1 as the library"
+    );
+
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    assert!(
+        pack.contains("struct MetadataFile")
+            && pack.contains("control: Vec<ControlRow>")
+            && pack.contains("test: Vec<TestRow>"),
+        "pack loader still deserializes metadata [[control]] / [[test]]"
+    );
+    assert!(
+        pack.contains("if row.id.starts_with(\"control.\")")
+            && pack.contains("if !row.control.starts_with(\"control.\")"),
+        "non-control.* metadata rows are still silently skipped"
+    );
+
+    let tmp = tempfile::tempdir().expect("temp pack");
+    write_trust_boundary_pack(
+        tmp.path(),
+        r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "catalog control plus competing sliver rows"
+"#,
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[[control]]
+id = "sliver.mfa.privileged"
+title = "competing sliver"
+description = "must be skipped today"
+
+[[control]]
+id = "control.identity.privileged-mfa"
+title = "pack-local privileged MFA"
+description = "competing catalog id"
+
+[[test]]
+id = "test.sliver.mfa"
+control = "sliver.mfa.privileged"
+kind = "automated"
+
+[[test]]
+id = "test.pack.privileged-mfa"
+control = "control.identity.privileged-mfa"
+kind = "automated"
+"#,
+    );
+    let loaded = load_framework_pack_from(tmp.path()).expect("pack with sliver rows still loads");
+    assert!(
+        loaded
+            .controls
+            .iter()
+            .all(|c| c.id().as_str() != "sliver.mfa.privileged"),
+        "non-control.* metadata [[control]] is currently dropped"
+    );
+    assert!(
+        loaded
+            .tests
+            .iter()
+            .all(|t| t.id.as_str() != "test.sliver.mfa"),
+        "metadata [[test]] whose control is not control.* is currently dropped"
+    );
+    assert!(
+        loaded
+            .tests
+            .iter()
+            .any(|t| t.id.as_str() == "test.pack.privileged-mfa"),
+        "pack metadata tests for control.* currently merge beside catalog tests"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn frw_b01_unknown_mapping_fields_default_best_effort() {
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    assert!(
+        pack.contains("_ => MappingCompleteness::Partial"),
+        "unknown completeness currently defaults to Partial"
+    );
+    assert!(
+        pack.contains("_ => MappingDirection::Forward"),
+        "unknown / empty direction currently defaults to Forward"
+    );
+    assert!(
+        pack.contains("_ => MappingSource::BuiltIn"),
+        "unknown provenance source currently defaults to BuiltIn"
+    );
+    assert!(
+        pack.contains("\"\" => MappingRelation::from_completeness(completeness)"),
+        "empty relation currently derives from completeness"
+    );
+    assert!(
+        pack.contains("content_provider: FrameworkContentProvider::StructuralOnly"),
+        "content_provider is always StructuralOnly regardless of manifest content_mode"
+    );
+
+    let tmp = tempfile::tempdir().expect("temp pack");
+    write_trust_boundary_pack(
+        tmp.path(),
+        r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "sideways"
+completeness = "totally-bogus"
+relation = ""
+rationale = "unknown tokens default today"
+provenance = { source = "mystery" }
+"#,
+        "schema = \"weeping-angel/framework-pack/v1\"\n",
+    );
+    let loaded = load_framework_pack_from(tmp.path()).expect("unknown mapping tokens still parse");
+    let mapping = loaded.mappings.first().expect("one mapping");
+    assert_eq!(mapping.completeness(), MappingCompleteness::Partial);
+    assert_eq!(mapping.direction(), MappingDirection::Forward);
+    assert_eq!(mapping.relation(), MappingRelation::PartiallySatisfies);
+    assert_eq!(mapping.provenance().source, MappingSource::BuiltIn);
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn frw_b02_pack_digest_is_merged_id_lists() {
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    assert!(
+        pack.contains("\"requirements\": requirements.iter().map(|r| r.id().as_str())")
+            && pack.contains("\"controls\": controls.iter().map(|c| c.id().as_str())")
+            && pack.contains("\"tests\": tests.iter().map(|t| t.id.as_str())")
+            && pack.contains("format!(\"{:?}\", m.relation())"),
+        "pack digest currently hashes schema + id lists + relation Debug after merge"
+    );
+    assert!(
+        !pack.contains("completeness")
+            || !pack
+                .split("let digest_body = serde_json::json!")
+                .nth(1)
+                .unwrap()
+                .split(';')
+                .next()
+                .unwrap()
+                .contains("completeness"),
+        "digest body currently omits mapping completeness"
+    );
+
+    let mapping = r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "COMPLETENESS"
+relation = "PartiallySatisfies"
+rationale = "RATIONALE"
+"#;
+    let meta = "schema = \"weeping-angel/framework-pack/v1\"\n";
+    let a = tempfile::tempdir().expect("pack a");
+    let b = tempfile::tempdir().expect("pack b");
+    write_trust_boundary_pack(
+        a.path(),
+        &mapping
+            .replace("COMPLETENESS", "partial")
+            .replace("RATIONALE", "first rationale"),
+        meta,
+    );
+    write_trust_boundary_pack(
+        b.path(),
+        &mapping.replace("COMPLETENESS", "full").replace(
+            "RATIONALE",
+            "second rationale  # comment-only change in meaning",
+        ),
+        meta,
+    );
+    let da = load_framework_pack_from(a.path()).unwrap();
+    let db = load_framework_pack_from(b.path()).unwrap();
+    assert_eq!(
+        da.digest.0, db.digest.0,
+        "completeness/rationale changes currently collide when relation + ids stay the same"
+    );
+    assert_ne!(
+        da.mappings[0].completeness(),
+        db.mappings[0].completeness(),
+        "the two packs currently differ in completeness (partial vs full)"
+    );
+
+    let c = tempfile::tempdir().expect("pack c");
+    write_trust_boundary_pack(
+        c.path(),
+        &mapping
+            .replace("COMPLETENESS", "partial")
+            .replace(
+                "relation = \"PartiallySatisfies\"",
+                "relation = \"Supports\"",
+            )
+            .replace("RATIONALE", "supports"),
+        meta,
+    );
+    let dc = load_framework_pack_from(c.path()).unwrap();
+    assert_ne!(
+        da.digest.0, dc.digest.0,
+        "relation Debug currently is hashed, so Supports changes the digest"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn pin_b01_readiness_snapshot_serialize_reloads_live_catalog() {
+    let readiness = crate_src_file("weeping-angel-assurance", "readiness.rs");
+    assert!(
+        readiness.contains("state.serialize_field(\"catalogDigest\", &catalog_digest())?"),
+        "FrameworkReadinessSnapshot::serialize currently calls catalog_digest()"
+    );
+
+    let snap = FrameworkReadinessSnapshot {
+        assessment_id: AssessmentId::new("assess-pin-b01"),
+        framework: "iso-27001".into(),
+        framework_version: "2022".into(),
+        framework_pack_digest: "pack-pin-ignored".into(),
+        catalog_digest: String::new(),
+        assessment_digest: "assessment-pin-ignored".into(),
+        evaluated_at: "2026-01-01T00:00:00Z".into(),
+        requirements: Vec::new(),
+        controls: Vec::new(),
+        effective: 0,
+        ineffective: 0,
+        partial: 0,
+        manual_review: 0,
+        insufficient_evidence: 0,
+        not_applicable: 0,
+        automation_coverage: "stored-not-used".into(),
+        evidence_coverage: "stored-not-used".into(),
+    };
+    let json = serde_json::to_value(&snap).expect("serialize snapshot");
+    let live = catalog_digest();
+    assert_eq!(
+        json.get("catalogDigest").and_then(|v| v.as_str()),
+        Some(live.as_str()),
+        "snapshot JSON catalogDigest is the live catalog, not a stored pin"
+    );
+    assert_ne!(
+        live, "pack-pin-ignored",
+        "live catalog digest must not be the unused pack pin string"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn pin_b02_catalog_digest_and_empty_run_pin_fallback() {
+    let snapshot = crate_src_file("weeping-angel-assurance", "snapshot.rs");
+    assert!(
+        snapshot.contains("\"catalog-unavailable\".into()"),
+        "snapshot::catalog_digest currently falls back to catalog-unavailable"
+    );
+    assert!(
+        snapshot.contains("if self.canonical_catalog_pin.is_empty()")
+            && snapshot.contains("catalog_digest()"),
+        "empty AssessmentRun pin currently reloads live catalog at serialize"
+    );
+    let facade = crate_src_file("weeping-angel-assurance", "lib.rs");
+    assert!(
+        facade.contains("fn load_catalog_pin()")
+            && facade.contains("\"catalog-unavailable\".into()"),
+        "load_catalog_pin currently falls back to catalog-unavailable"
+    );
+
+    let live = catalog_digest();
+    assert!(
+        live.starts_with("wa:canonical-catalog:weeping-angel/canonical-catalog/v1:"),
+        "workspace catalog is loadable today; live pin is {live}"
+    );
+    let run = AssessmentRun {
+        canonical_catalog_pin: String::new(),
+        ..AssessmentRun::default()
+    };
+    let json = serde_json::to_value(&run).expect("serialize run");
+    assert_eq!(
+        json.get("catalogDigest").and_then(|v| v.as_str()),
+        Some(live.as_str()),
+        "empty pin currently becomes the live catalog digest at serialize"
+    );
+    assert_eq!(
+        json.get("canonicalCatalogDigest").and_then(|v| v.as_str()),
+        Some(live.as_str())
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn pin_b03_scheduler_reloads_unpinned_pack() {
+    let scheduler = crate_src_file("weeping-angel-assurance", "scheduler.rs");
+    let project = scheduler
+        .split("fn run_project(")
+        .nth(1)
+        .expect("run_project");
+    assert!(
+        project.contains("load_framework_pack(framework, version)")
+            && project.contains("\"unpinned\""),
+        "run_project currently reloads the pack and treats failure as unpinned"
+    );
+    let snap = scheduler
+        .split("fn run_snapshot(")
+        .nth(1)
+        .expect("run_snapshot");
+    assert!(
+        snap.contains("load_framework_pack(framework, self.target.version.as_str())")
+            && snap.contains("canonical_catalog_pin: String::new()"),
+        "run_snapshot currently reloads the pack and leaves the catalog pin empty"
+    );
+}
+
+#[ignore = "superseded by target suite"]
+#[test]
+fn rdy_b01_overlay_privileged_mfa_and_empty_readiness_forks() {
+    let scheduler = crate_src_file("weeping-angel-assurance", "scheduler.rs");
+    assert!(
+        scheduler.contains("fn overlay_privileged_mfa_presence(")
+            && scheduler.contains("overlay_privileged_mfa_presence(&mut results, evidence, &ctx);"),
+        "scheduler currently overlays privileged-MFA results after evaluate_compiled"
+    );
+    assert!(
+        scheduler.contains(".require(EvidenceType::new(\"identity.privileged.mfa\"))")
+            && scheduler.contains("*row = overlay;"),
+        "overlay currently replaces control.identity.privileged-mfa with a presence test"
+    );
+    assert!(
+        scheduler.contains("fn empty_readiness(")
+            && scheduler.contains("automation_coverage: \"0%\".into()")
+            && scheduler.contains("evidence_coverage: \"0%\".into()"),
+        "empty_readiness currently invents 0% coverage strings"
+    );
+    let readiness = crate_src_file("weeping-angel-assurance", "readiness.rs");
+    assert!(
+        readiness.contains("fn coverage_metrics(snapshot: &FrameworkReadinessSnapshot)")
+            && readiness.contains("let metrics = coverage_metrics(self);"),
+        "snapshot serialize currently re-derives coverage instead of using project_readiness strings"
     );
 }

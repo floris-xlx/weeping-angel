@@ -12,18 +12,11 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use thiserror::Error;
 
-use weeping_angel_assurance_ir::{
-    AssessmentId, ControlId, ControlTestId, EvidenceType, canonical_digest,
-};
+use weeping_angel_assurance_ir::{AssessmentId, canonical_digest};
 use weeping_angel_collector::{CollectorScope, EvidenceCollector};
-use weeping_angel_control_test::{
-    AssessmentContext, CompiledControlTest, ControlTestKind, ControlTestResult, EvidenceSet,
-    evaluate,
-};
+use weeping_angel_control_test::{AssessmentContext, ControlTestResult, EvidenceSet};
 use weeping_angel_evidence::{CollectionRun, EvidenceLedger, LedgerError};
-use weeping_angel_framework::{
-    Assessment, CompiledFramework, FrameworkTarget, compile_framework, load_framework_pack,
-};
+use weeping_angel_framework::{Assessment, CompiledFramework, FrameworkTarget, compile_framework};
 
 use crate::lineage::{
     assessment_result_digest, assessment_summary, coverage_metrics, definition_snapshot,
@@ -753,8 +746,7 @@ impl AssuranceScheduler {
             now,
             max_age: spec.freshness.max_age,
         };
-        let mut results = evaluate_compiled(&self.compiled, evidence, &ctx);
-        overlay_privileged_mfa_presence(&mut results, evidence, &ctx);
+        let results = evaluate_compiled(&self.compiled, evidence, &ctx);
         report.results = results;
         report.evidence_count = evidence.len();
         report.ran_jobs.push(spec.job_id.clone());
@@ -772,9 +764,7 @@ impl AssuranceScheduler {
         let framework = self.target.profile.as_selector();
         let version = self.target.version.as_str();
         let _soa = project_soa(framework, version);
-        let pack_digest = load_framework_pack(framework, version)
-            .map(|p| p.digest.0)
-            .unwrap_or_else(|_| "unpinned".into());
+        let pack_digest = self.compiled.framework_pack_digest.clone();
         let snap = project_readiness(
             &self.compiled,
             &report.results,
@@ -797,9 +787,7 @@ impl AssuranceScheduler {
         report: &mut TickReport,
     ) -> Result<(), SchedulerError> {
         let framework = self.target.profile.as_selector();
-        let pack_digest = load_framework_pack(framework, self.target.version.as_str())
-            .map(|p| p.digest.0)
-            .unwrap_or_else(|_| "unpinned".into());
+        let pack_digest = self.compiled.framework_pack_digest.clone();
         let collector_runs: Vec<String> = report
             .collection_runs
             .iter()
@@ -827,7 +815,7 @@ impl AssuranceScheduler {
             evidence_snapshot_digest: evidence_snapshot.digest,
             result_digest: assessment_result_digest(&report.results),
             status: "completed".into(),
-            canonical_catalog_pin: String::new(),
+            canonical_catalog_pin: self.compiled.catalog_digest.clone(),
             applicability_snapshot_id: snapshot_applicability(
                 &self.assessment,
                 &self.scope.describe(),
@@ -1049,29 +1037,6 @@ fn collect_job(
     })
 }
 
-/// CAS fixture type `identity.privileged.mfa` is still evaluated through `evaluate`.
-/// Catalog coverage expr consumes `evidence.identity.mfa-status`; overlay preserves
-/// freshness/stale law for the presence envelope used by the target suite.
-fn overlay_privileged_mfa_presence(
-    results: &mut [ControlTestResult],
-    evidence: &EvidenceSet,
-    ctx: &AssessmentContext,
-) {
-    let test = CompiledControlTest::builder()
-        .id(ControlTestId::new("test.identity.privileged-mfa-enabled"))
-        .control_id(ControlId::new("control.identity.privileged-mfa"))
-        .kind(ControlTestKind::Automated)
-        .require(EvidenceType::new("identity.privileged.mfa"))
-        .build();
-    let overlay = evaluate(&test, evidence, ctx);
-    if let Some(row) = results
-        .iter_mut()
-        .find(|r| r.control_id.as_str() == "control.identity.privileged-mfa")
-    {
-        *row = overlay;
-    }
-}
-
 fn apply_retry_or_keep(spec: &JobSpec, state: &mut JobState, now: DateTime<Utc>) {
     if state.attempt_count >= spec.retry.max_attempts {
         state.failure_state = FailureState::FailedExhausted;
@@ -1090,6 +1055,7 @@ fn empty_readiness(id: &AssessmentId, framework: &str) -> FrameworkReadinessSnap
         framework: framework.into(),
         framework_version: String::new(),
         framework_pack_digest: String::new(),
+        catalog_digest: String::new(),
         assessment_digest: String::new(),
         evaluated_at: String::new(),
         requirements: Vec::new(),
@@ -1100,7 +1066,7 @@ fn empty_readiness(id: &AssessmentId, framework: &str) -> FrameworkReadinessSnap
         manual_review: 0,
         insufficient_evidence: 0,
         not_applicable: 0,
-        automation_coverage: "0%".into(),
-        evidence_coverage: "0%".into(),
+        automation_coverage: String::new(),
+        evidence_coverage: String::new(),
     }
 }

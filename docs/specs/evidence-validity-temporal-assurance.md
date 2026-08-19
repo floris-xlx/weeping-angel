@@ -33,6 +33,10 @@ Cargo.toml [[test]] name sdd_evidence_validity_temporal_assurance_{baseline,targ
 
 It owns **evidence temporal fields**, **append-only validity / revocation events**, **deterministic selection at an assessment clock or range**, **point-in-time and period control projection**, and **timeline/diff primitives** for readiness and audit exports.
 
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+This file and `sdd_evidence_validity_temporal_assurance_*` remain Prompt 14 validity-event law (GREEN / skip-superseded). Four-clock ledger APIs, immutable collection-run persist, and typed corrupt/schema failures are implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). Validity history stays append-only (`evidence-validity/v1`).
+
 It does **not** own catalog TOML, the GitHub collector, ISO remapping, Prompt 10 Kleene evaluation, Prompt 13 scheduler product, Prompt 15+ ISMS events, UI charts, or a new long-term database.
 
 Architecture law (frozen):

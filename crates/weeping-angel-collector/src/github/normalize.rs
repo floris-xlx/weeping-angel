@@ -1,10 +1,11 @@
+use std::collections::BTreeMap;
+
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 use weeping_angel_assurance_ir::AssetId;
-use weeping_angel_evidence::{
-    EvidenceEnvelope, EvidenceObservation, EvidenceProvenance, EvidenceType, EvidenceValue,
-};
+use weeping_angel_evidence::{EvidenceType, EvidenceValue};
 
+use crate::domain::ObservationCandidate;
 use crate::{CollectorError, CollectorScope};
 
 pub struct EmitCtx<'a> {
@@ -18,18 +19,21 @@ pub fn emit(
     facts: Vec<(&str, EvidenceValue)>,
     narrative: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<EvidenceEnvelope, CollectorError> {
-    let mut obs = EvidenceObservation::new(EvidenceType::new(ty)).with_narrative(narrative);
+) -> Result<ObservationCandidate, CollectorError> {
+    let mut map = BTreeMap::new();
     for (k, v) in facts {
-        obs = obs.with_value(k, v);
+        map.insert(k.to_string(), v);
     }
-    let prov = EvidenceProvenance {
-        collector_id: "collector.github".into(),
-        collected_at: ctx.collected_at,
-        scope: ctx.scope.as_label(),
+    Ok(ObservationCandidate {
         asset: ctx.asset.clone(),
-    };
-    Ok(EvidenceEnvelope::seal(obs, prov)?)
+        evidence_type: EvidenceType::new(ty),
+        facts: map,
+        narrative: narrative.to_string(),
+        observed_at: Some(ctx.collected_at),
+        valid_from: None,
+        valid_until: None,
+        source_revision: None,
+    })
 }
 
 pub fn repo_subject_id(owner: &str, name: &str) -> String {
@@ -72,7 +76,7 @@ pub fn repository_envelopes(
     name: &str,
     in_scope: bool,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let mut out = Vec::new();
     let subject = repo_subject_id(owner, name);
     let archived = archived_of(repo);

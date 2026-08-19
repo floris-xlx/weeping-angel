@@ -1091,6 +1091,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inventory"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4f0c30c76f2f4ccee3fe55a2435f691ca00c0e4bd87abe4f4a851b1d4dac39b"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2686,6 +2695,7 @@ version = "0.2.0"
 dependencies = [
  "chrono",
  "hex",
+ "inventory",
  "serde",
  "serde_json",
  "sha2",
@@ -2697,6 +2707,7 @@ name = "weeping-angel-canonical-catalog"
 version = "0.2.0"
 dependencies = [
  "hex",
+ "inventory",
  "serde",
  "serde_json",
  "sha2",

@@ -1,5 +1,14 @@
 # ADR 0003 — Generic Kleene applicability engine over IR rules
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |

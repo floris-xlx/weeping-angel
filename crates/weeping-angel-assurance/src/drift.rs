@@ -163,6 +163,7 @@ fn readiness_view(snapshot: &IsmsSnapshot) -> FrameworkReadinessSnapshot {
         framework: "iso-27001".into(),
         framework_version: "2022".into(),
         framework_pack_digest: "pack-isms-drift".into(),
+        catalog_digest: String::new(),
         assessment_digest: snapshot.snapshot_id.clone(),
         evaluated_at: rfc3339_z(snapshot.evaluated_at),
         requirements: Vec::new(),

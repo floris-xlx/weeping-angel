@@ -1,22 +1,36 @@
-//! Target suite for Canonical Assurance Catalog v1 infrastructure (catalog infrastructure).
+//! Target suite for Canonical Assurance Catalog v1 infrastructure (CAT-001…016)
+//! plus Prompt 2 trust-boundary law
+//! (`docs/specs/catalog-framework-readiness-trust-boundary.md` §4 / §5 / §7.2).
 //!
-//! Encodes DESIRED behavior in `docs/specs/canonical-assurance-catalog-v1.md`
-//! §4 / §5 (CAT-001…016). Must stay RED on the current tree (no catalog
-//! crate, no `catalog/canonical/v1`, no `assurance catalog` CLI). Do not
-//! weaken these assertions to match today's absence, and do not implement
-//! the feature in this suite.
+//! CAT-001…016 stay the landed catalog-infrastructure gate. Increment-2
+//! `cat_ssot_t*` / `frw_*` / `pin_t*` / `rdy_t*` encode DESIRED behavior that
+//! must stay RED on CURRENT code (second catalog parser, dropped expressions,
+//! best-effort pack parse, non-semantic digest, live pin reload, forked
+//! readiness). Do not implement the feature in this suite and do not weaken
+//! these assertions to match today's leaky seams.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use clap::Parser;
+use serde_json::json;
 use weeping_angel::cli::Cli;
+use weeping_angel_assurance::readiness::{FrameworkReadinessSnapshot, project_readiness};
+use weeping_angel_assurance::snapshot::{AssessmentRun, catalog_digest};
 use weeping_angel_assurance_ir::{
-    ASSURANCE_IR_SCHEMA, Control, ControlId, EvidenceRequirement, Mapping, PlannedControlTest,
+    ASSURANCE_IR_SCHEMA, AssessmentId, Control, ControlId, EvidenceRequirement, EvidenceType,
+    Mapping, MappingCompleteness, MappingDirection, MappingRelation, PlannedControlTest,
     Requirement,
 };
-use weeping_angel_framework::pack::FRAMEWORK_PACK_SCHEMA;
+use weeping_angel_canonical_catalog::{CanonicalCatalog, CatalogError};
+use weeping_angel_control_test::{ControlTestResult, EvidenceSelector, TestExpr};
+use weeping_angel_framework::pack::{FRAMEWORK_PACK_SCHEMA, PackError};
+use weeping_angel_framework::{
+    CatalogProjection, FrameworkCapabilities, FrameworkContext, FrameworkProfile, FrameworkTarget,
+    assessment_from_pack, compile_framework, load_framework_pack, load_framework_pack_from,
+    load_framework_pack_from_with,
+};
 
 const CATALOG_SCHEMA: &str = "weeping-angel/canonical-catalog/v1";
 const DIGEST_PREFIX: &str = "wa:canonical-catalog:weeping-angel/canonical-catalog/v1:";
@@ -293,6 +307,101 @@ fn replace_in(path: &Path, from: &str, to: &str) {
         path.display()
     );
     fs::write(path, src.replace(from, to)).unwrap();
+}
+
+fn crate_src_file(name: &str, rel: &str) -> String {
+    fs::read_to_string(
+        manifest_dir()
+            .join("crates")
+            .join(name)
+            .join("src")
+            .join(rel),
+    )
+    .unwrap_or_else(|e| panic!("read {name}/src/{rel}: {e}"))
+}
+
+fn iso_target() -> FrameworkTarget {
+    FrameworkTarget {
+        profile: FrameworkProfile::Iso27001,
+        capabilities: FrameworkCapabilities::default(),
+        version: weeping_angel_assurance_ir::FrameworkVersion::new("2022"),
+        context: FrameworkContext::default(),
+    }
+}
+
+fn write_trust_boundary_pack(dir: &Path, mapping_block: &str, metadata: &str) {
+    fs::write(
+        dir.join("manifest.toml"),
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[framework]
+id = "iso-27001"
+version = "2022"
+content_mode = "StructuralOnly"
+"#,
+    )
+    .unwrap();
+    fs::write(
+        dir.join("requirements.toml"),
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[[requirement]]
+id = "iso27001:a.8.5"
+title = "Authentication (structural)"
+kind = "annex"
+"#,
+    )
+    .unwrap();
+    fs::write(dir.join("metadata.toml"), metadata).unwrap();
+    fs::write(
+        dir.join("mappings.toml"),
+        format!(
+            r#"schema = "weeping-angel/framework-pack/v1"
+
+{mapping_block}
+"#
+        ),
+    )
+    .unwrap();
+}
+
+fn honest_mapping_block() -> &'static str {
+    r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "privileged MFA is a slice of authentication"
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1", author = "weeping-angel" }
+"#
+}
+
+fn workspace_catalog_projection() -> CatalogProjection {
+    CanonicalCatalog::load(catalog_v1())
+        .expect("workspace catalog")
+        .projection()
+        .expect("catalog projection")
+}
+
+fn load_isolated_pack(dir: &Path) -> Result<weeping_angel_framework::LoadedPack, PackError> {
+    load_framework_pack_from_with(dir, Some(&workspace_catalog_projection()))
+}
+
+fn compile_iso_pack() -> weeping_angel_framework::CompiledFramework {
+    let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack must load for compile");
+    let assessment = assessment_from_pack(&pack, &iso_target());
+    compile_framework(&assessment, &iso_target()).expect("ISO pack must compile")
+}
+
+fn synthetic_effective(control: &str, test: &str) -> ControlTestResult {
+    serde_json::from_value(json!({
+        "testId": test,
+        "controlId": control,
+        "effectiveness": "effective",
+        "rationale": "synthetic effective result"
+    }))
+    .expect("ControlTestResult JSON")
 }
 
 // ── CAT-016 / registration ─────────────────────────────────────────────────
@@ -822,4 +931,797 @@ fn ir_schema_and_iso_pack_ids_are_not_remapped() {
     let _ = std::any::type_name::<Mapping>();
     let _ = std::any::type_name::<EvidenceRequirement>();
     let _ = std::any::type_name::<PlannedControlTest>();
+}
+
+// ── Prompt 2 / increment 2: catalog SSOT, fail-closed pack, pins, readiness ─
+
+#[test]
+fn cat_ssot_t01_framework_has_no_second_catalog_toml_parser() {
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    assert!(
+        !pack.contains("fn discover_catalog_index"),
+        "CAT-SSOT-T01: weeping-angel-framework must not re-parse catalog/canonical/v1"
+    );
+    assert!(
+        !pack.contains("struct CatalogIndex")
+            && !pack.contains("struct IndexedControl")
+            && !pack.contains("struct IndexedTest"),
+        "CAT-SSOT-T01: CatalogIndex / IndexedControl / IndexedTest are a competing parser"
+    );
+    assert!(
+        !pack.contains("let Ok(text) = fs::read_to_string(&path) else {")
+            && !pack.contains("let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {"),
+        "CAT-SSOT-T01: pack load must not continue over catalog IO/TOML"
+    );
+    assert!(
+        !pack.contains("catalog/canonical"),
+        "CAT-SSOT-T01: pack load must not walk catalog/canonical/v1"
+    );
+
+    let tmp = tempfile::tempdir().expect("isolated pack");
+    write_trust_boundary_pack(
+        tmp.path(),
+        honest_mapping_block(),
+        "schema = \"weeping-angel/framework-pack/v1\"\n",
+    );
+    match load_framework_pack_from(tmp.path()) {
+        Err(PackError::Dangling { to, .. }) => {
+            assert_eq!(to, "control.identity.privileged-mfa");
+        }
+        other => panic!(
+            "CAT-SSOT-T01: without a supplied CanonicalCatalog projection, mapping onto catalog ids must fail closed, got {other:?}"
+        ),
+    }
+}
+
+#[test]
+fn cat_ssot_t02_competing_metadata_control_library_fails_pack_load() {
+    let tmp = tempfile::tempdir().expect("competing metadata pack");
+    write_trust_boundary_pack(
+        tmp.path(),
+        honest_mapping_block(),
+        r#"schema = "weeping-angel/framework-pack/v1"
+
+[[control]]
+id = "sliver.mfa.privileged"
+title = "competing sliver"
+description = "non-control.* row must not be skipped"
+
+[[control]]
+id = "control.identity.privileged-mfa"
+title = "pack-local privileged MFA"
+description = "competing catalog id"
+
+[[test]]
+id = "test.pack.privileged-mfa"
+control = "control.identity.privileged-mfa"
+kind = "automated"
+"#,
+    );
+    match load_framework_pack_from(tmp.path()) {
+        Err(err) => {
+            let text = err.to_string().to_ascii_lowercase();
+            assert!(
+                text.contains("compet")
+                    || text.contains("library")
+                    || text.contains("metadata")
+                    || text.contains("control"),
+                "CAT-SSOT-T02: competing metadata library must be a typed PackError, got {err}"
+            );
+        }
+        Ok(pack) => panic!(
+            "CAT-SSOT-T02: metadata [[control]]/[[test]] must fail pack load, got {} controls / {} tests",
+            pack.controls.len(),
+            pack.tests.len()
+        ),
+    }
+}
+
+#[test]
+fn cat_ssot_t03_catalog_still_fail_closed_and_nested_unknown_ops_error() {
+    let (_tmp, root) = copy_shipped_catalog();
+    let controls = first_toml(&root.join("controls"));
+    let mut body = fs::read_to_string(&controls).unwrap();
+    body.push_str(
+        "\n[[control]]\nid = \"control.source.protected-branch\"\ntitle = \"duplicate\"\n",
+    );
+    fs::write(&controls, body).unwrap();
+    match CanonicalCatalog::load(&root) {
+        Err(CatalogError::Duplicate { .. }) => {}
+        other => {
+            panic!("CAT-SSOT-T03: CanonicalCatalog must still reject duplicate ids, got {other:?}")
+        }
+    }
+
+    let (_tmp, nested_root) = copy_shipped_catalog();
+    let tests = toml_containing(&nested_root.join("tests"), PINNED_TEST);
+    let mut nested = fs::read_to_string(&tests).unwrap();
+    nested.push_str(
+        r#"
+
+[[test]]
+id = "test.source.nested-unknown-op"
+control = "control.source.protected-branch"
+kind = "automated"
+required_evidence = ["evidence.source.protected-branch"]
+
+[test.expression]
+op = "all"
+
+[[test.expression.children]]
+op = "not-a-real-operator"
+"#,
+    );
+    fs::write(&tests, nested).unwrap();
+    let control = toml_containing(&nested_root.join("controls"), PINNED_CONTROL);
+    replace_in(
+        &control,
+        "tests = [\"test.source.protected-branch\"]",
+        "tests = [\"test.source.protected-branch\", \"test.source.nested-unknown-op\"]",
+    );
+    match CanonicalCatalog::load(&nested_root) {
+        Err(CatalogError::UnknownOperator { op, .. }) => {
+            assert_eq!(op, "not-a-real-operator");
+        }
+        Err(CatalogError::MalformedExpression { reason, .. }) => {
+            assert!(
+                reason.to_ascii_lowercase().contains("op")
+                    || reason.to_ascii_lowercase().contains("operator"),
+                "CAT-SSOT-T03: nested unknown op must be malformed/unknown, got {reason}"
+            );
+        }
+        other => panic!(
+            "CAT-SSOT-T03: nested unknown child op must fail closed, got {}",
+            match other {
+                Ok(_) => "Ok(CanonicalCatalog)".into(),
+                Err(e) => format!("Err({e})"),
+            }
+        ),
+    }
+}
+
+#[test]
+fn frw_expr_t01_catalog_expression_survives_compile_onto_compiled_test() {
+    let catalog = CanonicalCatalog::load(catalog_v1()).expect("catalog load");
+    let catalog_test = catalog
+        .tests()
+        .get("test.identity.privileged-mfa-enabled")
+        .expect("catalog test.identity.privileged-mfa-enabled");
+    assert_eq!(
+        catalog_test.expression.get("op").and_then(|v| v.as_str()),
+        Some("coverage-at-least"),
+        "catalog SSOT stores the coverage expression"
+    );
+
+    let lib = crate_src_file("weeping-angel-framework", "lib.rs");
+    let plan = lib
+        .split("fn construct_test_plan(")
+        .nth(1)
+        .expect("construct_test_plan");
+    assert!(
+        !plan.contains("expr: None,"),
+        "FRW-EXPR-T01: construct_test_plan must not drop catalog [test.expression]"
+    );
+
+    let compiled = compile_iso_pack();
+    let test = compiled
+        .tests
+        .iter()
+        .find(|t| t.id.as_str() == "test.identity.privileged-mfa-enabled")
+        .expect("compiled plan must include catalog test.identity.privileged-mfa-enabled");
+    let expr = test
+        .expr
+        .clone()
+        .expect("FRW-EXPR-T01: CompiledTest.expr must be Some");
+    let parsed: TestExpr = serde_json::from_value(expr.clone())
+        .expect("FRW-EXPR-T01: CompiledTest.expr must round-trip as TestExpr");
+    let again = serde_json::to_value(&parsed).expect("re-serialize TestExpr");
+    assert_eq!(
+        serde_json::from_value::<TestExpr>(again).unwrap(),
+        parsed,
+        "FRW-EXPR-T01: parse/serialize/reload of the compiled expression must be lossless"
+    );
+    let text = expr.to_string();
+    assert!(
+        text.contains("CoverageAtLeast")
+            || text.contains("coverage-at-least")
+            || text.contains("coverageAtLeast")
+            || text.contains("100"),
+        "FRW-EXPR-T01: privileged-MFA expr must preserve coverage-at-least 100, got {expr}"
+    );
+
+    let manual = compiled
+        .tests
+        .iter()
+        .find(|t| t.id.as_str() == "test.identity.strong-authentication-policy")
+        .expect("manual-review catalog test must compile");
+    let manual_expr = manual
+        .expr
+        .as_ref()
+        .expect("FRW-EXPR-T01: manual-review must not be dropped");
+    let manual_text = manual_expr.to_string();
+    assert!(
+        manual_text.contains("ManualReview") || manual_text.contains("manual-review"),
+        "FRW-EXPR-T01: manual-review must survive compile, got {manual_expr}"
+    );
+}
+
+#[test]
+fn frw_expr_t02_all_any_not_and_threshold_are_not_normalized_together() {
+    let compiled = compile_iso_pack();
+    let coverage = compiled
+        .tests
+        .iter()
+        .find(|t| t.id.as_str() == "test.identity.privileged-mfa-enabled")
+        .and_then(|t| t.expr.clone());
+    let population = compiled
+        .tests
+        .iter()
+        .find(|t| t.id.as_str() == "test.identity.unique-user-identities")
+        .and_then(|t| t.expr.clone());
+    let manual = compiled
+        .tests
+        .iter()
+        .find(|t| t.id.as_str() == "test.identity.strong-authentication-policy")
+        .and_then(|t| t.expr.clone());
+    assert!(
+        coverage.is_some() && population.is_some() && manual.is_some(),
+        "FRW-EXPR-T02: coverage / all-subjects / manual-review must each survive compile"
+    );
+    assert_ne!(
+        coverage, population,
+        "FRW-EXPR-T02: coverage-at-least must not be normalized into all-subjects"
+    );
+    assert_ne!(
+        coverage, manual,
+        "FRW-EXPR-T02: coverage-at-least must not collapse into manual-review"
+    );
+
+    let leaf = TestExpr::Exists(EvidenceSelector::of_type(EvidenceType::new(
+        "evidence.identity.mfa-status",
+    )));
+    let all = TestExpr::All(vec![leaf.clone()]);
+    let any = TestExpr::Any(vec![leaf]);
+    let not_all = TestExpr::Not(Box::new(all.clone()));
+    assert_ne!(all, any, "FRW-EXPR-T02: all vs any stay distinct");
+    assert_ne!(
+        all, not_all,
+        "FRW-EXPR-T02: dropping not must change the tree"
+    );
+    assert_ne!(
+        serde_json::to_value(&all).unwrap(),
+        serde_json::to_value(&not_all).unwrap(),
+        "FRW-EXPR-T02: not(all) JSON must not collide with all"
+    );
+}
+
+#[test]
+fn frw_parse_t01_unknown_mapping_tokens_are_typed_pack_errors() {
+    let cases: &[(&str, &str, &[&str])] = &[
+        (
+            r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "totally-bogus"
+relation = "PartiallySatisfies"
+rationale = "unknown completeness must not become Partial"
+"#,
+            "completeness",
+            &["completeness", "unknown", "totally-bogus"],
+        ),
+        (
+            r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "sideways"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "unknown direction must not become Forward"
+"#,
+            "direction",
+            &["direction", "unknown", "sideways"],
+        ),
+        (
+            r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "partial"
+relation = "KindaSatisfies"
+rationale = "unknown relation must not parse"
+"#,
+            "relation",
+            &["relation", "unsupported", "kindasatisfies"],
+        ),
+    ];
+    for (mapping, field, needles) in cases {
+        let tmp = tempfile::tempdir().expect("malformed mapping pack");
+        write_trust_boundary_pack(
+            tmp.path(),
+            mapping,
+            "schema = \"weeping-angel/framework-pack/v1\"\n",
+        );
+        match load_framework_pack_from(tmp.path()) {
+            Err(err) => {
+                let text = err.to_string().to_ascii_lowercase();
+                assert!(
+                    needles.iter().any(|n| text.contains(*n)),
+                    "FRW-PARSE-T01: unknown {field} must be a typed PackError mentioning {needles:?}, got {err}"
+                );
+            }
+            Ok(pack) => panic!(
+                "FRW-PARSE-T01: unknown {field} must fail closed, got completeness={:?} direction={:?} relation={:?}",
+                pack.mappings.first().map(|m| m.completeness()),
+                pack.mappings.first().map(|m| m.direction()),
+                pack.mappings.first().map(|m| m.relation()),
+            ),
+        }
+    }
+}
+
+#[test]
+fn frw_parse_t02_dangling_catalog_id_and_malformed_manifest_fail_closed() {
+    let dangling = tempfile::tempdir().expect("dangling pack");
+    write_trust_boundary_pack(
+        dangling.path(),
+        r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.does-not-exist"
+direction = "forward"
+completeness = "partial"
+relation = "PartiallySatisfies"
+rationale = "unknown catalog id"
+"#,
+        "schema = \"weeping-angel/framework-pack/v1\"\n",
+    );
+    match load_framework_pack_from(dangling.path()) {
+        Err(PackError::Dangling { to, .. }) => {
+            assert!(to.contains("does-not-exist"));
+        }
+        other => panic!(
+            "FRW-PARSE-T02: dangling catalog control id must be PackError::Dangling, got {other:?}"
+        ),
+    }
+
+    let bad_schema = tempfile::tempdir().expect("bad schema pack");
+    write_trust_boundary_pack(
+        bad_schema.path(),
+        honest_mapping_block(),
+        "schema = \"weeping-angel/framework-pack/v1\"\n",
+    );
+    replace_in(
+        &bad_schema.path().join("manifest.toml"),
+        "weeping-angel/framework-pack/v1",
+        "weeping-angel/framework-pack/v0",
+    );
+    match load_framework_pack_from(bad_schema.path()) {
+        Err(PackError::Schema(message)) => {
+            assert!(
+                message.contains("v0") || message.to_ascii_lowercase().contains("schema"),
+                "FRW-PARSE-T02: malformed/unsupported manifest schema, got {message}"
+            );
+        }
+        other => panic!("FRW-PARSE-T02: unsupported pack schema must fail closed, got {other:?}"),
+    }
+
+    let empty_completeness = tempfile::tempdir().expect("empty completeness pack");
+    write_trust_boundary_pack(
+        empty_completeness.path(),
+        r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = ""
+relation = "PartiallySatisfies"
+rationale = "empty completeness is not silently Partial"
+"#,
+        "schema = \"weeping-angel/framework-pack/v1\"\n",
+    );
+    match load_framework_pack_from(empty_completeness.path()) {
+        Err(err) => {
+            let text = err.to_string().to_ascii_lowercase();
+            assert!(
+                text.contains("completeness") || text.contains("unknown") || text.contains("empty"),
+                "FRW-PARSE-T02: empty completeness must be a typed error, got {err}"
+            );
+        }
+        Ok(pack) => panic!(
+            "FRW-PARSE-T02: empty completeness must fail closed, got {:?}",
+            pack.mappings.first().map(|m| m.completeness())
+        ),
+    }
+}
+
+#[test]
+fn frw_dig_t01_whitespace_comment_key_order_share_semantic_digest() {
+    let mapping = honest_mapping_block();
+    let meta = "schema = \"weeping-angel/framework-pack/v1\"\n";
+    let a = tempfile::tempdir().expect("pack a");
+    let b = tempfile::tempdir().expect("pack b");
+    write_trust_boundary_pack(a.path(), mapping, meta);
+    write_trust_boundary_pack(
+        b.path(),
+        &format!("# comment-only / key-order noise\n\n{mapping}\n\n"),
+        &format!("\n{meta}\n# trailing comment\n"),
+    );
+    let mappings_b = fs::read_to_string(b.path().join("mappings.toml")).unwrap();
+    let reordered = mappings_b.replace(
+        "direction = \"forward\"\ncompleteness = \"partial\"\nrelation = \"PartiallySatisfies\"",
+        "relation = \"PartiallySatisfies\"\ncompleteness = \"partial\"\ndirection = \"forward\"",
+    );
+    fs::write(b.path().join("mappings.toml"), reordered).unwrap();
+
+    let da = load_isolated_pack(a.path());
+    let db = load_isolated_pack(b.path());
+    let (da, db) = match (da, db) {
+        (Ok(a), Ok(b)) => (a, b),
+        other => panic!(
+            "FRW-DIG-T01: formatting-only packs must load so their semantic digest can match, got {other:?}"
+        ),
+    };
+    assert_eq!(
+        da.digest.0, db.digest.0,
+        "FRW-DIG-T01: whitespace/comment/key-order must not change FrameworkPackDigest"
+    );
+
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    let body = pack
+        .split("let digest_body = serde_json::json!")
+        .nth(1)
+        .unwrap_or("")
+        .split(';')
+        .next()
+        .unwrap_or("");
+    assert!(
+        body.contains("completeness") && body.contains("direction") && body.contains("rationale"),
+        "FRW-DIG-T01: semantic digest payload must include completeness/direction/rationale, not id lists only"
+    );
+}
+
+#[test]
+fn frw_dig_t02_completeness_or_relation_change_changes_digest() {
+    let mapping = r#"[[mapping]]
+from = "iso27001:a.8.5"
+to = "control.identity.privileged-mfa"
+direction = "forward"
+completeness = "COMPLETENESS"
+relation = "RELATION"
+rationale = "RATIONALE"
+provenance = { source = "BuiltIn", reference = "catalog/canonical/v1", author = "weeping-angel" }
+"#;
+    let meta = "schema = \"weeping-angel/framework-pack/v1\"\n";
+    let partial = tempfile::tempdir().expect("partial");
+    let full = tempfile::tempdir().expect("full");
+    let supports = tempfile::tempdir().expect("supports");
+    write_trust_boundary_pack(
+        partial.path(),
+        &mapping
+            .replace("COMPLETENESS", "partial")
+            .replace("RELATION", "PartiallySatisfies")
+            .replace("RATIONALE", "slice"),
+        meta,
+    );
+    write_trust_boundary_pack(
+        full.path(),
+        &mapping
+            .replace("COMPLETENESS", "full")
+            .replace("RELATION", "PartiallySatisfies")
+            .replace("RATIONALE", "slice"),
+        meta,
+    );
+    write_trust_boundary_pack(
+        supports.path(),
+        &mapping
+            .replace("COMPLETENESS", "partial")
+            .replace("RELATION", "Supports")
+            .replace("RATIONALE", "slice"),
+        meta,
+    );
+    let dp = load_isolated_pack(partial.path()).expect("partial pack");
+    let df = load_isolated_pack(full.path()).expect("full pack");
+    let ds = load_isolated_pack(supports.path()).expect("supports pack");
+    assert_ne!(
+        dp.digest.0, df.digest.0,
+        "FRW-DIG-T02: completeness partial→full must change FrameworkPackDigest (assessment-affecting)"
+    );
+    assert_ne!(
+        dp.digest.0, ds.digest.0,
+        "FRW-DIG-T02: PartiallySatisfies vs Supports must not collide"
+    );
+    assert_ne!(dp.mappings[0].completeness(), df.mappings[0].completeness());
+    assert_eq!(
+        dp.mappings[0].relation(),
+        MappingRelation::PartiallySatisfies
+    );
+    assert_eq!(ds.mappings[0].relation(), MappingRelation::Supports);
+}
+
+#[test]
+fn frw_dig_t03_pack_digest_is_not_catalog_injection() {
+    let pack = crate_src_file("weeping-angel-framework", "pack.rs");
+    let body = pack
+        .split("let digest_body = serde_json::json!")
+        .nth(1)
+        .unwrap_or("")
+        .split(';')
+        .next()
+        .unwrap_or("");
+    assert!(
+        !body.contains("\"controls\": controls.iter().map(|c| c.id().as_str())")
+            && !body.contains("\"tests\": tests.iter().map(|t| t.id.as_str())"),
+        "FRW-DIG-T03: pack digest must not hash catalog-injected control/test id lists"
+    );
+
+    let iso = load_framework_pack("iso-27001", "2022").expect("ISO pack");
+    let catalog = CanonicalCatalog::load(catalog_v1()).expect("catalog");
+    let catalog_pin = catalog.digest().expect("catalog digest").to_string();
+    assert_ne!(
+        iso.digest.0, catalog_pin,
+        "FRW-DIG-T03: FrameworkPackDigest must stay a separate identity from CanonicalCatalog::digest"
+    );
+    assert!(
+        catalog_pin.starts_with("wa:canonical-catalog:"),
+        "catalog identity remains the catalog pin"
+    );
+}
+
+#[test]
+fn pin_t01_snapshot_serialize_emits_stored_catalog_pin() {
+    let readiness = crate_src_file("weeping-angel-assurance", "readiness.rs");
+    assert!(
+        !readiness.contains("state.serialize_field(\"catalogDigest\", &catalog_digest())"),
+        "PIN-T01: FrameworkReadinessSnapshot::serialize must not call catalog_digest()"
+    );
+    assert!(
+        readiness.contains("catalog_digest") || readiness.contains("catalogDigest"),
+        "PIN-T01: snapshot must own a stored catalog digest field"
+    );
+
+    let snap: FrameworkReadinessSnapshot = serde_json::from_value(json!({
+        "assessmentId": "assess-pin-t01",
+        "framework": "iso-27001",
+        "frameworkVersion": "2022",
+        "frameworkPackDigest": "pack-pin-stored",
+        "catalogDigest": "stored-catalog-pin-must-win",
+        "assessmentDigest": "assessment-pin-stored",
+        "evaluatedAt": "2026-01-01T00:00:00Z",
+        "requirements": [],
+        "controls": [],
+        "effective": 0,
+        "ineffective": 0,
+        "partial": 0,
+        "manualReview": 0,
+        "insufficientEvidence": 0,
+        "notApplicable": 0,
+        "automationCoverage": "stored-not-used",
+        "evidenceCoverage": "stored-not-used"
+    }))
+    .expect("deserialize snapshot with stored catalogDigest");
+    let json = serde_json::to_value(&snap).expect("serialize snapshot");
+    assert_eq!(
+        json.get("catalogDigest").and_then(|v| v.as_str()),
+        Some("stored-catalog-pin-must-win"),
+        "PIN-T01: mutating/reloading live catalog must not replace the stored pin; got {}",
+        json.get("catalogDigest").unwrap_or(&json)
+    );
+    assert_eq!(
+        json.get("frameworkPackDigest").and_then(|v| v.as_str()),
+        Some("pack-pin-stored")
+    );
+    let live = catalog_digest();
+    assert_ne!(
+        json.get("catalogDigest").and_then(|v| v.as_str()),
+        Some(live.as_str()),
+        "PIN-T01: serialized catalogDigest must not be the live catalog walk"
+    );
+}
+
+#[test]
+fn pin_t02_empty_assessment_run_pin_does_not_reload_catalog() {
+    let snapshot = crate_src_file("weeping-angel-assurance", "snapshot.rs");
+    let ser = snapshot
+        .split("impl Serialize for AssessmentRun")
+        .nth(1)
+        .unwrap_or("");
+    assert!(
+        !ser.contains("catalog_digest()") && !ser.contains("CanonicalCatalog::load"),
+        "PIN-T02: empty AssessmentRun pin must not invoke live CanonicalCatalog::load"
+    );
+
+    let run = AssessmentRun {
+        canonical_catalog_pin: String::new(),
+        framework_pack_digest: "pack-pin-empty".into(),
+        ..AssessmentRun::default()
+    };
+    let json = serde_json::to_value(&run).expect("serialize run");
+    let catalog = json
+        .get("catalogDigest")
+        .and_then(|v| v.as_str())
+        .unwrap_or("missing");
+    assert!(
+        catalog.is_empty(),
+        "PIN-T02: empty pin must stay empty (not live catalog-unavailable / current files); got {catalog}"
+    );
+    assert_eq!(
+        json.get("canonicalCatalogDigest").and_then(|v| v.as_str()),
+        Some("")
+    );
+}
+
+#[test]
+fn pin_t03_scheduler_projection_does_not_reload_pack_digest() {
+    let scheduler = crate_src_file("weeping-angel-assurance", "scheduler.rs");
+    let project = scheduler
+        .split("fn run_project(")
+        .nth(1)
+        .expect("run_project");
+    assert!(
+        !project.contains("load_framework_pack("),
+        "PIN-T03: run_project must not reload load_framework_pack to refresh digest"
+    );
+    assert!(
+        !project.contains("\"unpinned\""),
+        "PIN-T03: failed pack reload must not become an unpinned success path"
+    );
+    let snap = scheduler
+        .split("fn run_snapshot(")
+        .nth(1)
+        .expect("run_snapshot");
+    assert!(
+        !snap.contains("load_framework_pack("),
+        "PIN-T03: run_snapshot must use compiled/assessment identity, not a live pack walk"
+    );
+}
+
+#[test]
+fn rdy_t01_project_readiness_is_the_only_requirement_status_owner() {
+    let readiness = crate_src_file("weeping-angel-assurance", "readiness.rs");
+    assert!(
+        readiness.contains("pub fn project_readiness(") && readiness.contains("partially covered"),
+        "RDY-T01: project_readiness owns mapping-honesty status"
+    );
+    assert!(
+        !readiness.contains("fn coverage_metrics(snapshot: &FrameworkReadinessSnapshot)"),
+        "RDY-T01: snapshot serialize must not re-derive readiness independently of project_readiness"
+    );
+
+    let scheduler = crate_src_file("weeping-angel-assurance", "scheduler.rs");
+    assert!(
+        !scheduler.contains("\"partially covered\"") && !scheduler.contains("let has_partial"),
+        "RDY-T01: scheduler must not reimplement requirement-status strings"
+    );
+    let snapshot = crate_src_file("weeping-angel-assurance", "snapshot.rs");
+    assert!(
+        !snapshot.contains("\"partially covered\""),
+        "RDY-T01: snapshot compare must not assign requirement status"
+    );
+
+    let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack");
+    let compiled = compile_iso_pack();
+    let results: Vec<ControlTestResult> = compiled
+        .controls
+        .iter()
+        .map(|c| synthetic_effective(c.id().as_str(), &format!("test.{}", c.id().as_str())))
+        .collect();
+    let first = project_readiness(
+        &compiled,
+        &results,
+        "iso-27001",
+        "2022",
+        pack.digest.as_str(),
+        AssessmentId::new("assess-rdy-t01-a"),
+    );
+    let second = project_readiness(
+        &compiled,
+        &results,
+        "iso-27001",
+        "2022",
+        pack.digest.as_str(),
+        AssessmentId::new("assess-rdy-t01-b"),
+    );
+    let a85 = first
+        .requirements
+        .iter()
+        .find(|r| r.id.as_str() == "iso27001:a.8.5")
+        .expect("A.8.5");
+    let a85_b = second
+        .requirements
+        .iter()
+        .find(|r| r.id.as_str() == "iso27001:a.8.5")
+        .expect("A.8.5");
+    assert_eq!(
+        a85.status, a85_b.status,
+        "RDY-T01: duplicated callers must not diverge; both must invoke project_readiness"
+    );
+    assert_eq!(a85.status, "partially covered");
+}
+
+#[test]
+fn rdy_t02_no_privileged_mfa_overlay_replacing_catalog_predicate() {
+    let scheduler = crate_src_file("weeping-angel-assurance", "scheduler.rs");
+    assert!(
+        !scheduler.contains("fn overlay_privileged_mfa_presence(")
+            && !scheduler.contains("overlay_privileged_mfa_presence("),
+        "RDY-T02: privileged-MFA effectiveness is the catalog coverage expression, not a presence overlay"
+    );
+    assert!(
+        !scheduler.contains(".require(EvidenceType::new(\"identity.privileged.mfa\"))"),
+        "RDY-T02: overlay must not replace evidence.identity.mfa-status with identity.privileged.mfa"
+    );
+    assert!(
+        !scheduler.contains("automation_coverage: \"0%\".into()"),
+        "RDY-T02: empty_readiness must not invent coverage percentages that bypass project_readiness"
+    );
+}
+
+#[test]
+fn rdy_t03_partially_satisfies_supports_and_equivalent_stay_distinct() {
+    let pack = load_framework_pack("iso-27001", "2022").expect("ISO pack");
+    assert!(
+        pack.mappings
+            .iter()
+            .any(|m| m.relation() == MappingRelation::PartiallySatisfies),
+        "RDY-T03: pack still carries PartiallySatisfies"
+    );
+    assert!(
+        pack.mappings
+            .iter()
+            .any(|m| m.relation() == MappingRelation::Supports),
+        "RDY-T03: pack still carries Supports"
+    );
+    assert!(
+        pack.mappings
+            .iter()
+            .all(|m| m.to_control().as_str().starts_with("control.")),
+        "RDY-T03: packs project onto control.* only"
+    );
+
+    let compiled = compile_iso_pack();
+    let results: Vec<ControlTestResult> = compiled
+        .controls
+        .iter()
+        .map(|c| synthetic_effective(c.id().as_str(), &format!("test.{}", c.id().as_str())))
+        .collect();
+    let snapshot = project_readiness(
+        &compiled,
+        &results,
+        "iso-27001",
+        "2022",
+        pack.digest.as_str(),
+        AssessmentId::new("assess-rdy-t03"),
+    );
+    let a85 = snapshot
+        .requirements
+        .iter()
+        .find(|r| r.id.as_str() == "iso27001:a.8.5")
+        .expect("A.8.5");
+    assert_eq!(
+        a85.status, "partially covered",
+        "RDY-T03: PartiallySatisfies/Supports with Effective tests stay partially covered, not effective"
+    );
+    assert_ne!(
+        MappingRelation::PartiallySatisfies,
+        MappingRelation::Supports
+    );
+    assert_ne!(
+        MappingRelation::PartiallySatisfies,
+        MappingRelation::Equivalent
+    );
+    assert_ne!(MappingCompleteness::Partial, MappingCompleteness::Full);
+    assert_ne!(MappingDirection::Forward, MappingDirection::Reverse);
+
+    let collector = crate_sources_joined("weeping-angel-collector");
+    assert!(
+        !collector.contains("iso27001:")
+            && !collector
+                .to_ascii_lowercase()
+                .contains("iso 27001 compliant"),
+        "RDY-T03: collector-facing APIs must not leak ISO-specific status into evidence"
+    );
+    let catalog_src = crate_sources_joined("weeping-angel-canonical-catalog");
+    assert!(
+        !catalog_src.contains("iso27001:") && !catalog_src.contains("ISO 27001 compliant"),
+        "RDY-T03: catalog-facing APIs must not leak ISO-specific status into evidence"
+    );
 }

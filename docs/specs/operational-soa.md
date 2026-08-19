@@ -36,6 +36,10 @@ Provider → Canonical Evidence → Canonical Test → Canonical Control → Fra
 
 The SoA is a **readiness projection over that graph**, never a certificate and never an ISO-normative document.
 
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+`sdd_operational_soa_*` remains the operational-row / snapshot-diff SSOT (GREEN / skip-superseded). Historical SoA (`assurance soa` empty/`latest`) binds to a reconstructed assessment and fails closed if pins cannot be proven: [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). Never infer certification from readiness.
+
 ```text
 what the requirement means     = pack requirement id + catalog mapping (remap)
 whether it applies             = Kleene ApplicabilityDecision (engine) + NA governance

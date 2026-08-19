@@ -1,5 +1,14 @@
 # ADR 0003 — Nonconformity and CAPA as operational IR records
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_nonconformity_capa_target` GREEN; baseline skip-superseded; inventories on `AssessmentDefinition.nonconformities` / `corrective_actions` |

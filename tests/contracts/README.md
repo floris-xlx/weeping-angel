@@ -2,6 +2,6 @@
 
 Dual-suite contract tests for the assurance runtime. Target suites are the current law. Baseline suites are superseded characterizations (`#[ignore]`).
 
-These files are **not** auto-discovered. Each suite must be listed as `[[test]]` in the root [`Cargo.toml`](../../Cargo.toml).
+These files are **not** auto-discovered. Each suite must be listed as `[[test]]` in the root [`Cargo.toml`](../../Cargo.toml). Discover names with `rg "^name = \"sdd_" Cargo.toml` — do not keep a parallel inventory.
 
-Human specs: [`docs/specs/`](../../docs/specs/). Decisions: [`docs/adr/`](../../docs/adr/).
+Human specs: [`docs/specs/`](../../docs/specs/). Decisions: [`docs/adr/`](../../docs/adr/). Hygiene: [`docs/specs/repository-hygiene.md`](../../docs/specs/repository-hygiene.md), [ADR 0012](../../docs/adr/0012-repository-hygiene.md).

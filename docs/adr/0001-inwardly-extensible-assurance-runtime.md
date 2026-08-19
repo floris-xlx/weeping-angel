@@ -1,5 +1,14 @@
 # ADR 0001 — Inwardly extensible polyglot assurance runtime
 
+<!-- weeping-angel-adr-meta
+id = "0001"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |

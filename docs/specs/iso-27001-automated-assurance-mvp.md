@@ -14,6 +14,7 @@
 | Planning baseline | `8c0f36ed873c51a21aa3e6d377d2fdbc4bb458d7` |
 | Targeted IR revision | `assurance-ir/v1` as shipped on that SHA (`Control` / `Requirement` / `Mapping={direction,completeness}` / framework-owned `Assessment`) |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
+| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — single `project_readiness` owner; does not re-own SoA/lineage. ADR: [`0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) |
 
 This document is the durable SSOT for the ISO 27001 **MVP** program. The vertical has landed: versioned structural pack, immutable ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA projections, and clap `assurance` family. Later work must not invent a competing IR, a GitHub→ISO shortcut, or certification claims.
 
@@ -912,6 +913,20 @@ Library or CLI `assess --framework iso-27001` against the golden fixture (and, w
 | Network leaks into framework/control-test | ACT-003/013 extended; Phase 53 crate-graph tests |
 
 `adr_needed` is true: this is an architecture and contract expansion of ADR 0001 (pack format, copyright boundary, ledger, DSL, GitHub collector, readiness/SoA). ADR 0002 is **accepted**.
+
+---
+
+## 9.1 Increment — readiness projection owner (Prompt 2)
+
+**Status:** implemented. MVP legal/CLI/non-certification law and ISO-001…010 remain.
+
+Cleanup Prompt 2 **extends** Phase 31–33 readiness law: there is **one** implementation of framework requirement-status aggregation, `weeping-angel-assurance::readiness::project_readiness`. Callers invoke it; they do not overlay a second privileged-MFA predicate, invent `"0%"` coverage as status, or serialize by reloading live `catalog/canonical/v1`. `overlay_privileged_mfa_presence` is removed. Snapshot JSON `catalogDigest` is the stored pin from `compiled.catalog_digest`.
+
+Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+
+This increment does **not** re-own SoA (`project_soa` / `soa.rs` — Prompt 3), lineage `serialize_assessment_report` (already pin-pure), collectors, or the control-test evaluator. Evidence remains not framework status; scanner findings remain not compliance results; missing coverage remains not success.
+
+Extend `tests/contracts/iso27001_assurance.target.rs` only when an MVP assertion must encode the pin/owner contract. Prefer the catalog and remap dual-suites for increment-specific cases. Do not create `tests/sdd/`.
 
 ---
 

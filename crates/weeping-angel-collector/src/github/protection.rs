@@ -1,7 +1,7 @@
 use serde_json::Value;
 use weeping_angel_evidence::EvidenceValue;
 
-use weeping_angel_evidence::EvidenceEnvelope;
+use crate::domain::ObservationCandidate;
 
 use super::normalize::{EmitCtx, emit, repo_subject_id};
 use crate::CollectorError;
@@ -11,7 +11,7 @@ pub fn from_protection_json(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let subject = repo_subject_id(owner, name);
     let mut out = Vec::new();
 
@@ -111,7 +111,7 @@ pub fn unprotected(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let subject = repo_subject_id(owner, name);
     Ok(vec![
         emit(

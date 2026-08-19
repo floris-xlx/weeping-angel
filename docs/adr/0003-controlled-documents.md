@@ -1,5 +1,14 @@
 # ADR 0003 — Controlled document and policy registry (immutable versions ≠ effectiveness)
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_controlled_documents_target` GREEN (CD-001–014); baseline absence cases CD-B001/B002 skip-superseded. |

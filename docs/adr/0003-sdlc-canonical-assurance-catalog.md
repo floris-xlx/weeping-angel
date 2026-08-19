@@ -1,5 +1,14 @@
 # ADR 0003 — SDLC family in the canonical assurance catalog
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |

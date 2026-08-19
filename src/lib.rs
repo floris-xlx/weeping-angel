@@ -730,8 +730,12 @@ pub fn run_scan_diff_command(args: crate::cli::ScanDiffArgs) -> Result<i32> {
             base: args.base.clone(),
         }
     } else {
+        let base = args
+            .base
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("scan-diff --base is required unless --working-tree"))?;
         DiffTarget::Revisions {
-            base: args.base.clone().unwrap(),
+            base,
             head: args.head.clone(),
         }
     };

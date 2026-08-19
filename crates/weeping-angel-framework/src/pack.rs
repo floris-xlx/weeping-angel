@@ -1,15 +1,20 @@
 //! Versioned framework-pack loader. Network-free. Provider-independent.
+//!
+//! Packs are projections onto canonical controls. Catalog TOML is never parsed
+//! here; callers supply an IR-shaped [`CatalogProjection`] or named load uses
+//! the workspace adapter registered by the catalog crate.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use thiserror::Error;
 use weeping_angel_assurance_ir::{
-    Control, ControlId, ControlTestId, EvidenceRequirement, EvidenceRequirementId, EvidenceType,
-    FrameworkId, FrameworkVersion, Mapping, MappingCompleteness, MappingDirection,
-    MappingProvenance, MappingRelation, MappingSource, MappingVersionConstraint,
-    PlannedControlTest, PlannedTestKind, Requirement, RequirementId, canonical_digest,
+    CatalogProjection, Control, ControlId, EvidenceRequirement, EvidenceRequirementId, FrameworkId,
+    FrameworkVersion, Mapping, MappingCompleteness, MappingDirection, MappingProvenance,
+    MappingRelation, MappingSource, MappingVersionConstraint, PlannedControlTest, Requirement,
+    RequirementId, canonical_digest, workspace_catalog_projection,
 };
 
 use crate::{
@@ -44,8 +49,28 @@ pub enum PackError {
     Dangling { from: String, to: String },
     #[error("unsupported relation: {0}")]
     UnsupportedRelation(String),
+    #[error("unknown completeness: {0}")]
+    UnknownCompleteness(String),
+    #[error("unknown direction: {0}")]
+    UnknownDirection(String),
+    #[error("unknown provenance source: {0}")]
+    UnknownSource(String),
     #[error("empty rationale where required for {0}")]
     EmptyRationale(String),
+    #[error("competing metadata library row {id}")]
+    CompetingLibrary { id: String },
+    #[error("malformed expression: {0}")]
+    MalformedExpression(String),
+    #[error("duplicate requirement id: {0}")]
+    DuplicateRequirement(String),
+    #[error("duplicate mapping {from} → {to} ({relation})")]
+    DuplicateMapping {
+        from: String,
+        to: String,
+        relation: String,
+    },
+    #[error("digest mismatch: expected {expected}, got {actual}")]
+    DigestMismatch { expected: String, actual: String },
     #[error("io: {0}")]
     Io(String),
     #[error("parse: {0}")]
@@ -65,9 +90,21 @@ impl From<PackError> for FrameworkCompileError {
             PackError::UnsupportedRelation(rel) => FrameworkCompileError::MappingIntegrity {
                 message: format!("unsupported relation {rel}"),
             },
+            PackError::UnknownCompleteness(value) => FrameworkCompileError::MappingIntegrity {
+                message: format!("unknown completeness {value}"),
+            },
+            PackError::UnknownDirection(value) => FrameworkCompileError::MappingIntegrity {
+                message: format!("unknown direction {value}"),
+            },
+            PackError::UnknownSource(value) => FrameworkCompileError::MappingIntegrity {
+                message: format!("unknown provenance source {value}"),
+            },
             PackError::EmptyRationale(id) => FrameworkCompileError::MappingIntegrity {
                 message: format!("empty rationale where required for {id}"),
             },
+            PackError::DigestMismatch { expected, actual } => {
+                FrameworkCompileError::DigestMismatch { expected, actual }
+            }
             other => FrameworkCompileError::Schema {
                 message: other.to_string(),
             },
@@ -79,12 +116,18 @@ impl From<PackError> for FrameworkCompileError {
 struct ManifestFile {
     schema: String,
     framework: ManifestFramework,
+    #[serde(default)]
+    capabilities: BTreeMap<String, bool>,
+    #[serde(default)]
+    digest: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct ManifestFramework {
     id: String,
     version: String,
+    #[serde(default)]
+    content_mode: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -153,27 +196,40 @@ struct MetadataFile {
 
 #[derive(Debug, Deserialize)]
 struct ControlRow {
-    id: String,
-    title: String,
     #[serde(default)]
-    description: String,
+    id: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct TestRow {
+    #[serde(default)]
     id: String,
-    control: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ApplicabilityFile {
     #[serde(default)]
-    kind: String,
+    entry: Vec<ApplicabilityRow>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ApplicabilityRow {
     #[serde(default)]
-    required: Vec<String>,
+    reference: String,
     #[serde(default)]
-    break_on: Vec<String>,
+    requirement: String,
+    #[serde(default)]
+    applicability: String,
+    #[serde(default)]
+    applicable: Option<bool>,
+    #[serde(default)]
+    applicability_rationale: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct LoadedPack {
     pub digest: FrameworkPackDigest,
+    pub catalog_digest: String,
     pub profile: String,
     pub version: String,
     pub content_provider: FrameworkContentProvider,
@@ -210,10 +266,18 @@ pub fn resolve_pack_dir(framework: &str, version: &str) -> Result<PathBuf, PackE
 
 pub fn load_framework_pack(framework: &str, version: &str) -> Result<LoadedPack, PackError> {
     let dir = resolve_pack_dir(framework, version)?;
-    load_framework_pack_from(&dir)
+    let catalog = workspace_catalog_projection();
+    load_framework_pack_from_with(&dir, catalog.as_ref())
 }
 
 pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
+    load_framework_pack_from_with(dir, None)
+}
+
+pub fn load_framework_pack_from_with(
+    dir: &Path,
+    catalog: Option<&CatalogProjection>,
+) -> Result<LoadedPack, PackError> {
     let manifest_text = read(dir.join("manifest.toml"))?;
     let manifest: ManifestFile = toml::from_str(&manifest_text).map_err(parse_err)?;
     if manifest.schema != FRAMEWORK_PACK_SCHEMA {
@@ -236,12 +300,25 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
             test: Vec::new(),
         }
     };
+    if let Some(row) = meta.control.first() {
+        return Err(PackError::CompetingLibrary { id: row.id.clone() });
+    }
+    if let Some(row) = meta.test.first() {
+        return Err(PackError::CompetingLibrary { id: row.id.clone() });
+    }
+
+    let applicability = load_applicability(dir)?;
+    let content_provider = parse_content_mode(&manifest.framework.content_mode)?;
 
     let framework_id = FrameworkId::new(&manifest.framework.id);
     let framework_version = FrameworkVersion::new(&manifest.framework.version);
 
+    let mut seen_requirements = BTreeSet::new();
     let mut requirements = Vec::new();
     for row in reqs_file.requirement {
+        if !seen_requirements.insert(row.id.clone()) {
+            return Err(PackError::DuplicateRequirement(row.id));
+        }
         requirements.push(Requirement::new(
             RequirementId::new(&row.id),
             framework_id.clone(),
@@ -251,56 +328,11 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
         ));
     }
 
-    let mut controls = Vec::new();
-    for row in &meta.control {
-        if row.id.starts_with("control.") {
-            controls.push(Control::new(
-                ControlId::new(&row.id),
-                row.title.clone(),
-                row.description.clone(),
-            ));
-        }
-    }
-
-    let catalog = discover_catalog_index();
-
     let mut mappings = Vec::new();
+    let mut seen_mappings = BTreeSet::new();
+    let mut used_control_ids = BTreeSet::new();
     for row in maps_file.mapping {
-        if !requirements.iter().any(|r| r.id().as_str() == row.from) {
-            return Err(PackError::Dangling {
-                from: row.from,
-                to: row.to,
-            });
-        }
-        let in_pack = controls.iter().any(|c| c.id().as_str() == row.to);
-        let in_catalog = catalog.as_ref().is_some_and(|c| c.has_control(&row.to));
-        if !row.to.starts_with("control.") || !(in_pack || in_catalog) {
-            return Err(PackError::Dangling {
-                from: row.from,
-                to: row.to,
-            });
-        }
-        if let Some(index) = catalog.as_ref()
-            && let Some(control) = index.control(&row.to)
-            && !controls.iter().any(|c| c.id().as_str() == row.to)
-        {
-            controls.push(Control::new(
-                ControlId::new(&control.id),
-                control.title.clone(),
-                control.description.clone(),
-            ));
-        }
-        if row.rationale.trim().is_empty() && row.completeness != "full" {
-            return Err(PackError::EmptyRationale(format!(
-                "{}→{}",
-                row.from, row.to
-            )));
-        }
-        let completeness = match row.completeness.as_str() {
-            "full" => MappingCompleteness::Full,
-            "related" => MappingCompleteness::Related,
-            _ => MappingCompleteness::Partial,
-        };
+        let completeness = parse_completeness(&row.completeness)?;
         let relation = match row.relation.as_str() {
             "Equivalent" => MappingRelation::Equivalent,
             "Satisfies" => MappingRelation::Satisfies,
@@ -314,10 +346,47 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
             other => return Err(PackError::UnsupportedRelation(other.into())),
         };
         let direction = match row.direction.as_str() {
+            "forward" => MappingDirection::Forward,
             "reverse" => MappingDirection::Reverse,
             "bidirectional" => MappingDirection::Bidirectional,
-            _ => MappingDirection::Forward,
+            other => {
+                return Err(PackError::UnknownDirection(if other.is_empty() {
+                    "empty".into()
+                } else {
+                    other.into()
+                }));
+            }
         };
+        if let Some(prov) = &row.provenance {
+            let _ = parse_mapping_source(&prov.source)?;
+        }
+        if !requirements.iter().any(|r| r.id().as_str() == row.from) {
+            return Err(PackError::Dangling {
+                from: row.from,
+                to: row.to,
+            });
+        }
+        let in_catalog = catalog.and_then(|c| c.control(&row.to)).is_some();
+        if !row.to.starts_with("control.") || !in_catalog {
+            return Err(PackError::Dangling {
+                from: row.from,
+                to: row.to,
+            });
+        }
+        if row.rationale.trim().is_empty() && row.completeness != "full" {
+            return Err(PackError::EmptyRationale(format!(
+                "{}→{}",
+                row.from, row.to
+            )));
+        }
+        let key = (row.from.clone(), row.to.clone(), format!("{relation:?}"));
+        if !seen_mappings.insert(key) {
+            return Err(PackError::DuplicateMapping {
+                from: row.from,
+                to: row.to,
+                relation: format!("{relation:?}"),
+            });
+        }
         let mut mapping = Mapping::new(
             RequirementId::new(&row.from),
             ControlId::new(&row.to),
@@ -328,7 +397,7 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
         .with_rationale(row.rationale);
         if let Some(prov) = row.provenance {
             mapping = mapping.with_provenance(MappingProvenance {
-                source: parse_mapping_source(&prov.source),
+                source: parse_mapping_source(&prov.source)?,
                 author: prov.author,
                 reference: prov.reference,
                 reviewed_at: None,
@@ -340,14 +409,21 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
                 to: constraint.to.map(FrameworkVersion::new),
             });
         }
+        used_control_ids.insert(row.to);
         mappings.push(mapping);
     }
 
+    let mut controls = Vec::new();
     let mut tests = Vec::new();
     let mut evidence_requirements = Vec::new();
-    if let Some(index) = catalog.as_ref() {
-        for control in &controls {
-            for planned in index.tests_for(control.id().as_str()) {
+    if let Some(index) = catalog {
+        for id in &used_control_ids {
+            if let Some(control) = index.control(id) {
+                if !controls.iter().any(|c: &Control| c.id() == control.id()) {
+                    controls.push(control.clone());
+                }
+            }
+            for planned in index.tests_for(id) {
                 for ty in &planned.required_evidence {
                     evidence_requirements.push(EvidenceRequirement::new(
                         EvidenceRequirementId::new(format!("ev.{}", ty.as_str())),
@@ -358,40 +434,10 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
                     .iter()
                     .any(|t: &PlannedControlTest| t.id == planned.id)
                 {
-                    tests.push(planned);
+                    tests.push(planned.clone());
                 }
             }
         }
-    }
-    for row in meta.test {
-        if !row.control.starts_with("control.") {
-            continue;
-        }
-        let kind = if row.kind.eq_ignore_ascii_case("manual") {
-            PlannedTestKind::Manual
-        } else {
-            PlannedTestKind::Automated
-        };
-        let mut planned =
-            PlannedControlTest::new(ControlTestId::new(&row.id), ControlId::new(&row.control));
-        planned.kind = kind;
-        planned.required_evidence = row
-            .required
-            .iter()
-            .map(|t| EvidenceType::new(t.as_str()))
-            .collect();
-        planned.break_on = row
-            .break_on
-            .iter()
-            .map(|t| EvidenceType::new(t.as_str()))
-            .collect();
-        for ty in &planned.required_evidence {
-            evidence_requirements.push(EvidenceRequirement::new(
-                EvidenceRequirementId::new(format!("ev.{}", ty.as_str())),
-                ty.clone(),
-            ));
-        }
-        tests.push(planned);
     }
 
     evidence_requirements.sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
@@ -401,22 +447,63 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
         "schema": FRAMEWORK_PACK_SCHEMA,
         "framework": manifest.framework.id,
         "version": manifest.framework.version,
-        "requirements": requirements.iter().map(|r| r.id().as_str()).collect::<Vec<_>>(),
-        "controls": controls.iter().map(|c| c.id().as_str()).collect::<Vec<_>>(),
-        "mappings": mappings.iter().map(|m| {
-            (m.from_requirement().as_str(), m.to_control().as_str(), format!("{:?}", m.relation()))
+        "contentMode": format!("{content_provider:?}"),
+        "capabilities": manifest.capabilities,
+        "requirements": requirements.iter().map(|r| {
+            serde_json::json!({
+                "id": r.id().as_str(),
+                "title": r.title(),
+                "kind": r.description(),
+            })
         }).collect::<Vec<_>>(),
-        "tests": tests.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(),
+        "mappings": mappings.iter().map(|m| {
+            serde_json::json!({
+                "from": m.from_requirement().as_str(),
+                "to": m.to_control().as_str(),
+                "relation": format!("{:?}", m.relation()),
+                "completeness": format!("{:?}", m.completeness()),
+                "direction": format!("{:?}", m.direction()),
+                "rationale": m.rationale(),
+                "provenance": {
+                    "source": format!("{:?}", m.provenance().source),
+                    "author": m.provenance().author.clone(),
+                    "reference": m.provenance().reference.clone(),
+                },
+                "validFor": {
+                    "from": m.valid_for().from.as_ref().map(|v| v.as_str().to_string()),
+                    "to": m.valid_for().to.as_ref().map(|v| v.as_str().to_string()),
+                },
+            })
+        }).collect::<Vec<_>>(),
+        "applicability": applicability.iter().map(|e| {
+            serde_json::json!({
+                "reference": e.reference,
+                "requirement": e.requirement,
+                "applicability": e.applicability,
+                "applicable": e.applicable,
+                "rationale": e.applicability_rationale,
+            })
+        }).collect::<Vec<_>>(),
     });
     let digest = FrameworkPackDigest(
         canonical_digest(&digest_body).map_err(|e| PackError::Parse(e.to_string()))?,
     );
+    if let Some(declared) = manifest.digest.as_deref()
+        && !declared.is_empty()
+        && declared != digest.as_str()
+    {
+        return Err(PackError::DigestMismatch {
+            expected: declared.to_string(),
+            actual: digest.0.clone(),
+        });
+    }
 
     Ok(LoadedPack {
         digest,
+        catalog_digest: catalog.map(|c| c.digest.clone()).unwrap_or_default(),
         profile: manifest.framework.id,
         version: manifest.framework.version,
-        content_provider: FrameworkContentProvider::StructuralOnly,
+        content_provider,
         requirements,
         controls,
         mappings,
@@ -426,7 +513,19 @@ pub fn load_framework_pack_from(dir: &Path) -> Result<LoadedPack, PackError> {
 }
 
 pub fn validate_framework_pack(dir: &Path) -> Result<LoadedPack, PackError> {
-    let pack = load_framework_pack_from(dir)?;
+    let catalog = workspace_catalog_projection();
+    let pack = load_framework_pack_from_with(dir, catalog.as_ref())?;
+    if pack.requirements.is_empty() {
+        return Err(PackError::Schema("pack has no requirements".into()));
+    }
+    Ok(pack)
+}
+
+pub fn validate_framework_pack_with(
+    dir: &Path,
+    catalog: Option<&CatalogProjection>,
+) -> Result<LoadedPack, PackError> {
+    let pack = load_framework_pack_from_with(dir, catalog)?;
     if pack.requirements.is_empty() {
         return Err(PackError::Schema("pack has no requirements".into()));
     }
@@ -492,179 +591,65 @@ pub fn profile_to_pack_id(profile: FrameworkProfile) -> &'static str {
     profile.as_selector()
 }
 
+fn load_applicability(dir: &Path) -> Result<Vec<ApplicabilityRow>, PackError> {
+    let path = dir.join("applicability.toml");
+    if !path.is_file() {
+        return Ok(Vec::new());
+    }
+    let file: ApplicabilityFile = toml::from_str(&read(path)?).map_err(parse_err)?;
+    Ok(file.entry)
+}
+
+fn parse_content_mode(raw: &str) -> Result<FrameworkContentProvider, PackError> {
+    match raw {
+        "" | "StructuralOnly" | "structural-only" | "structuralOnly" => {
+            Ok(FrameworkContentProvider::StructuralOnly)
+        }
+        "LicensedContent" | "licensed" | "licensedContent" => {
+            Ok(FrameworkContentProvider::LicensedContent)
+        }
+        "UserSuppliedContent" | "user-supplied" | "userSuppliedContent" => {
+            Ok(FrameworkContentProvider::UserSuppliedContent)
+        }
+        other => Err(PackError::Schema(format!("unknown content_mode `{other}`"))),
+    }
+}
+
+fn parse_completeness(raw: &str) -> Result<MappingCompleteness, PackError> {
+    match raw {
+        "full" => Ok(MappingCompleteness::Full),
+        "partial" => Ok(MappingCompleteness::Partial),
+        "related" => Ok(MappingCompleteness::Related),
+        other => Err(PackError::UnknownCompleteness(if other.is_empty() {
+            "empty".into()
+        } else {
+            other.into()
+        })),
+    }
+}
+
+fn parse_mapping_source(raw: &str) -> Result<MappingSource, PackError> {
+    match raw {
+        "BuiltIn" | "builtIn" | "builtin" => Ok(MappingSource::BuiltIn),
+        "UserDefined" | "userDefined" => Ok(MappingSource::UserDefined),
+        "LicensedFrameworkContent" | "licensedFrameworkContent" => {
+            Ok(MappingSource::LicensedFrameworkContent)
+        }
+        "Imported" | "imported" => Ok(MappingSource::Imported),
+        "AuditorApproved" | "auditorApproved" => Ok(MappingSource::AuditorApproved),
+        "Generated" | "generated" => Ok(MappingSource::Generated),
+        other => Err(PackError::UnknownSource(if other.is_empty() {
+            "empty".into()
+        } else {
+            other.into()
+        })),
+    }
+}
+
 fn read(path: PathBuf) -> Result<String, PackError> {
     fs::read_to_string(&path).map_err(|e| PackError::Io(format!("{}: {e}", path.display())))
 }
 
 fn parse_err(err: toml::de::Error) -> PackError {
     PackError::Parse(err.to_string())
-}
-
-fn parse_mapping_source(raw: &str) -> MappingSource {
-    match raw {
-        "UserDefined" | "userDefined" => MappingSource::UserDefined,
-        "LicensedFrameworkContent" | "licensedFrameworkContent" => {
-            MappingSource::LicensedFrameworkContent
-        }
-        "Imported" | "imported" => MappingSource::Imported,
-        "AuditorApproved" | "auditorApproved" => MappingSource::AuditorApproved,
-        "Generated" | "generated" => MappingSource::Generated,
-        _ => MappingSource::BuiltIn,
-    }
-}
-
-fn catalog_search_roots() -> Vec<PathBuf> {
-    let mut roots = Vec::new();
-    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("..").join("catalog/canonical/v1"));
-    }
-    roots.push(PathBuf::from("catalog/canonical/v1"));
-    roots
-}
-
-#[derive(Debug, Default)]
-struct CatalogIndex {
-    controls: std::collections::BTreeMap<String, IndexedControl>,
-    tests: Vec<IndexedTest>,
-}
-
-#[derive(Debug, Clone)]
-struct IndexedControl {
-    id: String,
-    title: String,
-    description: String,
-}
-
-#[derive(Debug, Clone)]
-struct IndexedTest {
-    id: String,
-    control: String,
-    kind: String,
-    required: Vec<String>,
-}
-
-impl CatalogIndex {
-    fn has_control(&self, id: &str) -> bool {
-        self.controls.contains_key(id)
-    }
-
-    fn control(&self, id: &str) -> Option<&IndexedControl> {
-        self.controls.get(id)
-    }
-
-    fn tests_for(&self, control_id: &str) -> Vec<PlannedControlTest> {
-        self.tests
-            .iter()
-            .filter(|t| t.control == control_id)
-            .map(|t| {
-                let kind = if t.kind.eq_ignore_ascii_case("manual") {
-                    PlannedTestKind::Manual
-                } else if t.kind.eq_ignore_ascii_case("hybrid") {
-                    PlannedTestKind::Hybrid
-                } else {
-                    PlannedTestKind::Automated
-                };
-                let mut planned =
-                    PlannedControlTest::new(ControlTestId::new(&t.id), ControlId::new(&t.control));
-                planned.kind = kind;
-                planned.required_evidence = t
-                    .required
-                    .iter()
-                    .map(|ty| EvidenceType::new(ty.as_str()))
-                    .collect();
-                planned
-            })
-            .collect()
-    }
-}
-
-fn discover_catalog_index() -> Option<CatalogIndex> {
-    let root = catalog_search_roots()
-        .into_iter()
-        .find(|p| p.join("manifest.toml").is_file())?;
-    let manifest: toml::Value =
-        toml::from_str(&fs::read_to_string(root.join("manifest.toml")).ok()?).ok()?;
-    let files = manifest.get("files")?;
-    let mut index = CatalogIndex::default();
-    if let Some(controls) = files.get("controls").and_then(|v| v.as_array()) {
-        for entry in controls {
-            let Some(rel) = entry.as_str() else { continue };
-            let path = root.join(rel);
-            let Ok(text) = fs::read_to_string(&path) else {
-                continue;
-            };
-            let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
-                continue;
-            };
-            if let Some(rows) = parsed.get("control").and_then(|v| v.as_array()) {
-                for row in rows {
-                    let Some(id) = row.get("id").and_then(|v| v.as_str()) else {
-                        continue;
-                    };
-                    index.controls.insert(
-                        id.to_string(),
-                        IndexedControl {
-                            id: id.to_string(),
-                            title: row
-                                .get("title")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or(id)
-                                .to_string(),
-                            description: row
-                                .get("description")
-                                .or_else(|| row.get("narrative"))
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("")
-                                .to_string(),
-                        },
-                    );
-                }
-            }
-        }
-    }
-    if let Some(tests) = files.get("tests").and_then(|v| v.as_array()) {
-        for entry in tests {
-            let Some(rel) = entry.as_str() else { continue };
-            let path = root.join(rel);
-            let Ok(text) = fs::read_to_string(&path) else {
-                continue;
-            };
-            let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
-                continue;
-            };
-            if let Some(rows) = parsed.get("test").and_then(|v| v.as_array()) {
-                for row in rows {
-                    let Some(id) = row.get("id").and_then(|v| v.as_str()) else {
-                        continue;
-                    };
-                    let Some(control) = row.get("control").and_then(|v| v.as_str()) else {
-                        continue;
-                    };
-                    let required = row
-                        .get("required_evidence")
-                        .and_then(|v| v.as_array())
-                        .map(|arr| {
-                            arr.iter()
-                                .filter_map(|v| v.as_str().map(ToOwned::to_owned))
-                                .collect()
-                        })
-                        .unwrap_or_default();
-                    index.tests.push(IndexedTest {
-                        id: id.to_string(),
-                        control: control.to_string(),
-                        kind: row
-                            .get("kind")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("automated")
-                            .to_string(),
-                        required,
-                    });
-                }
-            }
-        }
-    }
-    Some(index)
 }

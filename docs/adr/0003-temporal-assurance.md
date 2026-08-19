@@ -1,5 +1,14 @@
 # ADR 0003 — Evidence validity and temporal assurance
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_evidence_validity_temporal_assurance_target` GREEN; baseline skip-superseded. Product types are the same as [`0003-evidence-validity-temporal-assurance.md`](0003-evidence-validity-temporal-assurance.md). |
@@ -27,7 +36,7 @@ Same seven clauses as [`0003-evidence-validity-temporal-assurance.md`](0003-evid
 
 1. `DigestBody` stays observation+provenance. Validity is append-only `evidence-validity/v1` (`asserted` | `superseded` | `revoked` | `invalidated`). Optional envelope clocks sit outside the digest.
 2. Clocks: `collected_at`, `observed_at`, half-open `[valid_from, valid_until)`, `supersedes`, revocation events, optional `source_revision` / artifact digest.
-3. Candidate filter at `T`; `within_window` stays collection-time; `valid_during` / `latest_as_of` / `select_latest_as_of` are the validity APIs.
+3. Candidate filter at `T`; `within_window` stays collection-time; `valid_during` / `as_of` (`latest_as_of` alias) / `select_latest_as_of` are the validity APIs. Distinct `current` / `valid_at` are [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md).
 4. `PeriodEffectiveness` is distinct from point-in-time `Effectiveness`. Default semantics `instant`.
 5. `project_timeline` / `TemporalDiff`; pairwise `compare` unchanged.
 6. `FreshnessPolicy` + injected `AssessmentContext.now` (`as_of()`). No daemon.
@@ -49,3 +58,4 @@ UI charts; new long-term database; Prompt 13 scheduler product; Prompt 15 event 
 - Canonical decision write-up (implemented surfaces): [`0003-evidence-validity-temporal-assurance.md`](0003-evidence-validity-temporal-assurance.md)
 - Ledger / envelope: [`docs/specs/typed-evidence.md`](../specs/typed-evidence.md)
 - Scheduler seam: [`docs/specs/continuous-assurance-scheduler.md`](../specs/continuous-assurance-scheduler.md)
+- Four-clock / fail-closed replay / historical SoA: [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)

@@ -119,10 +119,10 @@ Rules:
 - Deterministic, versioned, network-free, provider-independent.
 - Validated before compile (`validate_framework_pack`).
 - Public ISO pack is `StructuralOnly` — identifiers and mappings, no protected ISO normative wording.
-- `FrameworkPackDigest` is computed over canonical pack content and recorded on snapshots.
+- `FrameworkPackDigest` is IR `canonical_digest` over **pack-authored** semantics (schema, id, version, content mode, capabilities, requirements, mappings including relation/completeness/direction/rationale/provenance/`validFor`, applicability). It is insensitive to whitespace, comments, TOML key order, and path enumeration. It does **not** include catalog control injection. Catalog identity is a separate pin (`CanonicalCatalog::digest`).
 - Old pack versions migrate explicitly or fail with guidance; they are never silently reinterpreted.
-- Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`); the pack loader fails closed on unknown catalog targets and retired slivers. The ISO pack is a projection over the catalog, not a second control library (`metadata.toml` must not declare `access.*` / `source.*` slivers).
-- Reports pin `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on `AssessmentReport` / `AssessmentRun`; `catalogDigest` on readiness JSON). Serialize uses carried pins — no pack load, network, or filesystem lookup inside `Serialize`.
+- Packs resolve by `(id, version)` via `load_framework_pack`. Mapping `to` values are catalog control IDs (`control.*`) resolved against an IR `CatalogProjection` supplied by `CanonicalCatalog::projection` (named load uses the workspace `inventory` adapter; `load_framework_pack_from_with` takes an explicit projection). Unknown catalog targets, unknown completeness/direction/provenance source, and `metadata.toml` `[[control]]` / `[[test]]` library rows fail closed (`PackError`). The framework crate does not parse catalog TOML and does not depend on `weeping-angel-canonical-catalog`. The ISO pack is a projection over the catalog, not a second control library.
+- Reports pin `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on `AssessmentReport` / `AssessmentRun`; `catalogDigest` on readiness JSON). Serialize and readiness/scheduler project emit **stored** pins — no pack load, network, or filesystem lookup inside `Serialize`. See [ADR 0011](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
 - SoA consumes generic three-state applicability (`Applicable` / `NotApplicable` / `Unresolved`). `Unresolved` is the SoA spelling of `ManualDeterminationRequired`. Not-applicable is justified by organization context, never by missing evidence. Pack `applicability.toml` is default/structural flags only. Operational projection, NA approval, and snapshot history: [`docs/specs/operational-soa.md`](operational-soa.md).
 
 Content modes: `StructuralOnly` | `LicensedContent` | `UserSuppliedContent`.
@@ -136,7 +136,7 @@ catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
 ```
 
 - Schema: `weeping-angel/canonical-catalog/v1` (`CATALOG_SCHEMA`)
-- Loader: `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest,stats,control}` (`load` always validates)
+- Loader: `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest,stats,control,projection}` (`load` always validates). `projection()` is the only IR-shaped catalog view packs may consume. Nested `[test.expression]` `op` values fail closed.
 - Default path: `catalog/canonical/v1`. Manifest `[files]` lists participating TOML; extra section `*.toml` and path escape fail closed. `[digest]` in the fixture is documentary.
 - Catalog IDs: `control.*` / `evidence.*` / `test.*` (IR newtypes stay permissive)
 - Provider/framework segments (`github`, `iso27001`, …) fail closed at the catalog boundary
@@ -153,7 +153,7 @@ catalog/canonical/v1/{manifest.toml,controls/,evidence/,tests/}
 - Governance family (governance catalog): 34 `control.{governance,risk,personnel,vendor,incident,resilience}` controls (25 Hybrid / 9 Manual; continuity/DR **governance** only; operational restore stays infrastructure catalog), 13 first-class evidence types (`evidence.manual.attestation` plus `evidence.governance.{policy,policy-review,management-review,internal-audit}`, `evidence.risk.{assessment,treatment}`, `evidence.personnel.{training,acknowledgement}`, `evidence.vendor.{inventory,risk-review}`, `evidence.incident.exercise`, `evidence.resilience.continuity-plan`), and 34 freshness/population/manual-review tests in `catalog/canonical/v1/{controls,evidence,tests}/governance.toml`. Manual evidence is immutable fact, not a boolean bypass. Missing evidence is `InsufficientEvidence`. Partial training/vendor populations cannot be `Effective`. Approved unexpired IR exceptions are `ExceptionApproved`, never silent `Effective`. This family does not remap ISO. SSOT: [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md). ADR: [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md).
 - Fixtures: `fixtures/assurance/canonical/v1/governance/` (`current-documents`, `stale-documents`, `missing-documents`, `incomplete-training-population`, `vendor-review-gaps`, `approved-exception`, `expired-exception`, `manual-review-despite-evidence`). Clock `2026-08-18T12:00:00Z` (`stale-documents` uses `2024-08-01T12:00:00Z`).
 - No Entra / Okta / Google Workspace collector. GitHub is the first reference-grade provider collector and emits IAM/SDLC catalogs canonical types (`evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.identity.privileged-membership` / `external-access` plus `inventory.subject` / `inventory.complete`). It does not emit `source.*` envelopes. Historical `source.*` strings remain in `GITHUB_EVIDENCE_TYPES` as the ISO GH-012 / IAM-015 mapping table. SSOT: [`docs/specs/github-collector.md`](github-collector.md). Goldens: `fixtures/assurance/canonical/v1/github/`.
-- Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind.
+- Framework packs are **not** remapped here. Framework crate must not depend on the catalog crate; collector stays catalog-blind. Packs consume `CatalogProjection` ([ADR 0011](../adr/0011-catalog-framework-digest-and-pin-ownership.md)); they must not grow a second catalog TOML parser.
 
 See [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md), [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md), [`docs/specs/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md), [`docs/specs/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md), [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md), [`docs/specs/personnel-security.md`](personnel-security.md), [`docs/specs/github-collector.md`](github-collector.md), [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md), [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md), [`docs/adr/0003-vulnerability-canonical-assurance-catalog.md`](../adr/0003-vulnerability-canonical-assurance-catalog.md), [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md), [`docs/adr/0003-governance-canonical-assurance-catalog.md`](../adr/0003-governance-canonical-assurance-catalog.md), and [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md).
 
@@ -285,7 +285,7 @@ The evaluator compares stored types (`typed_eq` / `cmp_numeric` / `list_contains
 `EvidenceLedger` (SQLite file or in-memory) owns **observations**, never conclusions.
 
 ```text
-append, get, query, latest, for_subject, for_type,
+append, get, query, latest, current, valid_at, as_of, for_subject, for_type,
 for_collection_run, within_window, supersede, record_collection_run,
 record_validity_event, validity_events, validity_events_for,
 valid_during, latest_as_of,
@@ -304,9 +304,11 @@ Sibling document `evidence-validity/v1` (`EvidenceValidityEvent`: `asserted` \| 
 
 Half-open window: `validFrom <= T` and (`validUntil` omitted or `T < validUntil`). Candidate at `T` requires `collectedAt <= T`, `observedAt <= T`, inside the window, and not revoked/invalidated at or before `T`; among remaining leaves, latest `observedAt` then `collectedAt` then digest.
 
-`within_window` remains inclusive `collected_at`. `valid_during` / `latest_as_of` / `select_latest_as_of` apply the candidate filter (no future, no expired, no revoked-at-T). Digest-order first-hit over the unbounded bag is not an evaluation selector.
+`within_window` remains inclusive `collected_at`. `valid_during` / `as_of` / `latest_as_of` / `select_latest_as_of` apply the candidate filter (no future, no expired, no revoked-at-T). Digest-order first-hit over the unbounded bag is not an evaluation selector.
 
-`AssessmentContext` is `{ now, maxAge }`. `now` is the injected `as_of` clock. `weeping-angel-control-test::FreshnessPolicy { maxAge, asOf, period }` is the scheduler handoff (cadence is not this contract; do not confuse with `scheduler::FreshnessPolicy`, which is `maxAge` only). Live `assess` still uses `Utc::now()` + 24h.
+The four ledger clocks are **not** aliases: `latest` is record-order (`collected_at DESC`, no validity); `current` is the valid evaluation leaf at live `Utc::now()`; `valid_at(t)` is the membership set at `t`; `as_of(t)` is the evaluation leaf at pinned `t`. `latest_as_of` is an alias of `as_of` only. Callers must not use `latest` for current assessment. See [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) and [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md).
+
+`AssessmentContext` is `{ now, maxAge }`. `now` is the injected assessment clock (`as_of()`). That injected clock is distinct from ledger `current()`. `weeping-angel-control-test::FreshnessPolicy { maxAge, asOf, period }` is the scheduler handoff (cadence is not this contract; do not confuse with `scheduler::FreshnessPolicy`, which is `maxAge` only). Live `assess` still uses `Utc::now()` + 24h.
 
 Point-in-time results stay `Effectiveness`. Period projection emits `PeriodEffectiveness` on `ControlTestResult.period` (`continuouslyEffective` \| `intermittentRegression` \| `insufficientObservationCoverage` \| `ineffective` \| `manualReviewRequired`). Default semantics are `instant`: one `Exists` hit is not continuous operating effectiveness. Unset period uses `[now - maxAge, now)`.
 
@@ -316,9 +318,11 @@ Defects are disjoint: missing → `insufficientEvidence`; future/expired → exc
 
 SSOT: [`docs/specs/evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md), [`docs/specs/temporal-assurance.md`](temporal-assurance.md). ADRs: [`0003-temporal-assurance.md`](../adr/0003-temporal-assurance.md), [`0003-evidence-validity-temporal-assurance.md`](../adr/0003-evidence-validity-temporal-assurance.md).
 
-Lineage persist APIs store **opaque JSON**. A second write of different bytes for the same assessment / control-test / snapshot key is `LedgerError::Immutable`. Identical bytes are idempotent. `framework_snapshots` is digest-keyed and may hold pack, catalog, definition, applicability, evidence, readiness, or SoA payloads. `record_collection_run` remains `INSERT OR REPLACE` for in-flight collection identity.
+Lineage persist APIs store **opaque JSON**. A second write of different bytes for the same assessment / control-test / snapshot key is `LedgerError::Immutable`. Identical bytes are idempotent. `framework_snapshots` is digest-keyed and may hold pack, catalog, definition, applicability, evidence, readiness, or SoA payloads. `record_collection_run` is idempotent on identical bytes; a **completed** payload with different bytes is `LedgerError::Immutable`; in-flight (non-completed) identity may still update. Malformed envelope JSON or digest/key mismatch surfaces as typed `Corrupt` (mapped onto `LedgerError::Path`). Incompatible `schemaVersion` surfaces as typed `IncompatibleSchema` (also via `Path`).
 
 `CollectionRun` = `{ runId, collectorId, collectorVersion, startedAt, completedAt, scope, status, evidenceCount, errorCount, configurationDigest }`.
+
+`CollectionOutcome` = `noNewObservation` | `knownAbsent` | `collectionFailed` | `evidenceNoLongerValid`. Collector `Err` is `collectionFailed`, never an implicit revoke or empty world.
 
 `EvidenceArtifactRef` = `{ artifactId, digest, mediaType, size, storageLocator, redactionState }`.
 
@@ -463,16 +467,17 @@ AssuranceScheduler::builder()
 
 `Clock::now` drives due/not-due, retry backoff, and cooperative timeout (`FakeClock` in tests, `UtcClock` in production). `JobSpec` owns cadence, freshness (`max_age` → `AssessmentContext`), `dependsOn`, retry/backoff, timeout, and optional jitter. `JobKind` is `collection` | `test` | `projection` | `snapshot`; Drift is a snapshot stage that calls existing `compare`. Typed observations are `detect_events` / `detect_isms_drift` (Prompt 15); `tick` does not invent that catalog. Scheduled run identity is a canonical digest of job + cadence slot + collector/config + attempt-policy version — not `Utc::now()` uniqueness. Operational job state lives in `InMemorySchedulerStore`, not envelope payloads.
 
-A failed or timed-out collect does not delete ledger envelopes; evaluate reattaches prior evidence and existing `StaleEvidence` law applies (fresh → `Effective`, stale → `StaleEvidence`). Independent collection jobs may run concurrently. Framework and control-test stay network-free; collectors never set `Effectiveness`. One-shot `assess` is unchanged (collector `Err` still evaluates an empty set).
+A failed or timed-out collect does not delete ledger envelopes; evaluate reattaches prior evidence and existing `StaleEvidence` law applies (fresh → `Effective`, stale → `StaleEvidence`). Independent collection jobs may run concurrently. Framework and control-test stay network-free; collectors never set `Effectiveness`. One-shot `assess` on collector `Err` or empty success is `CollectionFailed` / `NoNewObservation` (or `KnownAbsent` when an envelope asserts `absent=true`) and evaluates process-local `prior_valid_envelopes` — not an implicit empty universe. `EvidenceNoLongerValid` is only an explicit validity event.
 
 `tick` records Collect → Normalize → Seal → Ledger → Evaluate → Project → Snapshot → Drift against existing collect/seal/ledger/evaluate/project/compare APIs. A future daemon is `loop { tick(); sleep_until(next) }` outside clap. `weeping-angel isms run` is not shipped; clap must not define cadence/retry/backoff/jitter.
 
-`AssessmentRun` pins `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, and `asOf` (serialized from `startedAt`). Distinct identities — not the compile digest copied three times. The run is returned on `AssessmentReport.run`; `assess` does not open a ledger. Replay at that clock must ignore later envelopes.
+`AssessmentRun` pins `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, and `asOf` (serialized from the `as_of` field; live `assess` may default it to `startedAt`). Distinct identities — not the compile digest copied three times. The run is returned on `AssessmentReport.run`; `assess` does not open a ledger. Replay at that clock must ignore later envelopes.
 
 Projections (not certificates):
 
 ```text
-project_readiness(...) → FrameworkReadinessSnapshot
+project_readiness(compiled, results, framework, version, packDigest, assessmentId) → FrameworkReadinessSnapshot
+        # only requirement-status owner; copies compiled.catalog_digest; JSON catalogDigest is stored pin
 project_soa(framework, version) → StatementOfApplicability   # live convenience (pack flags; not history)
 project_soa_from_snapshot(snap) → StatementOfApplicability  # historical reconstruction
 project_operational_soa(input) → Result<StatementOfApplicability, OperationalSoaError>
@@ -487,12 +492,12 @@ compare_temporal / diff_period(range, set, periodByControl) → TemporalDiff
 detect_events(previous, next) → Vec<IsmsEvent>                 # Prompt 15; order-insensitive
 detect_isms_drift(previous, next) → IsmsDrift                  # readiness compare + events
 explain_control(report, controlId, assessment?, applicability?) → ControlExplanation
-reconstruct / replay_assessment(bundle) → AssessmentReport
+reconstruct / replay_assessment(bundle) → AssessmentReport  # replay verifies pins; reconstruct is a trusted clone
 ```
 
 `CoverageMetrics` exposes seven separate families (`controlEffectiveness`, `evidence`, `automation`, `subject`, `frameworkRequirement`, `freshEvidence`, `manualReviewBurden`). Do not collapse them into one compliance percentage.
 
-A requirement mapped only with `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot become fully `effective` even if every mapped control is `Effective` (`partially covered`).
+A requirement mapped only with `PartiallySatisfies` / `Supports` / `Related` / `EvidenceFor` / `SubsetOf` cannot become fully `effective` even if every mapped control is `Effective` (`partially covered`). That honesty rule lives only in `project_readiness` (`relation_may_fully_satisfy`). Callers must not overlay a second predicate or invent coverage percentages as status.
 
 ## Lineage
 
@@ -505,7 +510,7 @@ StatementOfApplicabilitySnapshot, LineageBundle,
 ControlExplanation, AssessmentSummary, CoverageMetrics
 ```
 
-Replay uses the pinned bundle only. Consulting current pack/catalog files is allowed solely to compare digests (`verify_current_against_pins`); mismatch is `DigestMismatch`.
+Replay uses the pinned bundle only. `replay_assessment` fail-closes (`ReplayFailure` → `AssuranceError::UnknownPack`) on missing pins, digest mismatch, incomplete/inconsistent lineage, or incompatible snapshot schema. It must not load current pack/catalog/evidence to fill gaps. `reconstruct` is a clone helper for an already-verified bundle. Consulting current pack/catalog files is allowed solely to compare digests (`verify_current_against_pins`); mismatch is `DigestMismatch`. Historical `assurance soa` binds to a reconstructed assessment (`project_soa_from_snapshot`); live `project_soa` is not history.
 
 Crate-root `ApplicabilitySnapshot` is the persist document (static IR fold + `packEntries` artifacts). The Kleene document remains `weeping-angel-assurance::applicability::ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`).
 

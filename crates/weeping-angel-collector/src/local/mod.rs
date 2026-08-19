@@ -5,13 +5,15 @@ use std::path::{Path, PathBuf};
 
 use chrono::Utc;
 use weeping_angel_assurance_ir::AssetId;
-use weeping_angel_evidence::{
-    EvidenceEnvelope, EvidenceObservation, EvidenceProvenance, EvidenceType,
-};
+use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType, EvidenceValue};
 
-use crate::{
-    CollectorCapabilities, CollectorDescriptor, CollectorError, CollectorScope, EvidenceCollector,
+use crate::application::{CollectionEngine, EnvelopeFactory};
+use crate::domain::{
+    CollectionCoverage, CollectionRequest, CollectorCapabilities, CollectorDescriptor,
+    CollectorInstance, CollectorScope, CredentialRef, ObservationBatch, ObservationCandidate,
 };
+use crate::ports::CollectorAdapter;
+use crate::{CollectorError, EvidenceCollector};
 
 /// Local collector: CODEOWNERS, SECURITY.md, CI workflow presence.
 pub struct LocalCollector {
@@ -27,9 +29,17 @@ impl LocalCollector {
         let path = self.root.join(rel);
         path.is_file()
     }
+
+    fn instance(&self) -> CollectorInstance {
+        CollectorInstance::new(
+            "local:default",
+            "collector.local",
+            CredentialRef::new("local:default"),
+        )
+    }
 }
 
-impl EvidenceCollector for LocalCollector {
+impl CollectorAdapter for LocalCollector {
     fn descriptor(&self) -> CollectorDescriptor {
         CollectorDescriptor {
             id: "collector.local".into(),
@@ -53,11 +63,14 @@ impl EvidenceCollector for LocalCollector {
         }
     }
 
-    fn collect(&self, scope: &CollectorScope) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-        let mut out = Vec::new();
+    fn collect_observations(
+        &self,
+        _instance: &CollectorInstance,
+        request: &CollectionRequest,
+    ) -> Result<ObservationBatch, CollectorError> {
         let collected_at = Utc::now();
         let asset = AssetId::new("repo:local");
-        if !scope.allows(&asset) {
+        if !request.scope.allows(&asset) {
             return Err(CollectorError::OutOfScope {
                 asset: asset.to_string(),
             });
@@ -65,17 +78,47 @@ impl EvidenceCollector for LocalCollector {
         let codeowners = self.exists("CODEOWNERS")
             || self.exists(".github/CODEOWNERS")
             || self.exists("docs/CODEOWNERS");
-        let obs = EvidenceObservation::new(EvidenceType::new("source.codeowners.present"))
-            .with_fact("present", if codeowners { "true" } else { "false" })
-            .with_narrative("CODEOWNERS presence is structural, not effectiveness");
-        let prov = EvidenceProvenance {
-            collector_id: "collector.local".into(),
-            collected_at,
-            scope: scope.as_label(),
+        let candidate = ObservationCandidate {
             asset,
+            evidence_type: EvidenceType::new("source.codeowners.present"),
+            facts: [(
+                "present".into(),
+                EvidenceValue::String(if codeowners { "true" } else { "false" }.into()),
+            )]
+            .into_iter()
+            .collect(),
+            narrative: "CODEOWNERS presence is structural, not effectiveness".into(),
+            observed_at: Some(collected_at),
+            valid_from: None,
+            valid_until: None,
+            source_revision: None,
         };
-        out.push(EvidenceEnvelope::seal(obs, prov)?);
-        Ok(out)
+        Ok(ObservationBatch {
+            candidates: vec![candidate],
+            diagnostics: Vec::new(),
+            coverage: CollectionCoverage {
+                hole: false,
+                strict_scope: true,
+            },
+            collected_at: Some(collected_at),
+        })
+    }
+}
+
+impl EvidenceCollector for LocalCollector {
+    fn descriptor(&self) -> CollectorDescriptor {
+        CollectorAdapter::descriptor(self)
+    }
+
+    fn collect(&self, scope: &CollectorScope) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+        let batch = CollectionEngine::new().collect(
+            self,
+            &self.instance(),
+            CollectionRequest {
+                scope: scope.clone(),
+            },
+        )?;
+        Ok(batch.envelopes)
     }
 }
 
@@ -100,20 +143,40 @@ impl ManualEvidence {
                     .into(),
             });
         }
-        let obs = EvidenceObservation::new(self.evidence_type.clone())
-            .with_fact("attested_by", &self.attested_by)
-            .with_fact("reason", &self.reason)
-            .with_narrative(format!(
+        let candidate = ObservationCandidate {
+            asset: self.subject.clone(),
+            evidence_type: self.evidence_type.clone(),
+            facts: [
+                (
+                    "attested_by".into(),
+                    EvidenceValue::String(self.attested_by.clone()),
+                ),
+                ("reason".into(), EvidenceValue::String(self.reason.clone())),
+            ]
+            .into_iter()
+            .collect(),
+            narrative: format!(
                 "manual evidence attested-by {} for {}",
                 self.attested_by, self.subject
-            ));
-        let prov = EvidenceProvenance {
-            collector_id: "collector.manual".into(),
-            collected_at,
-            scope: self.subject.to_string(),
-            asset: self.subject.clone(),
+            ),
+            observed_at: Some(collected_at),
+            valid_from: None,
+            valid_until: None,
+            source_revision: None,
         };
-        Ok(EvidenceEnvelope::seal(obs, prov)?)
+        let scope = CollectorScope::new().allow_asset(self.subject.clone());
+        let instance = CollectorInstance::new(
+            "manual:default",
+            "collector.manual",
+            CredentialRef::new("manual:default"),
+        );
+        let batch = ObservationBatch {
+            candidates: vec![candidate.clone()],
+            diagnostics: Vec::new(),
+            coverage: CollectionCoverage::default(),
+            collected_at: Some(collected_at),
+        };
+        EnvelopeFactory::new().seal_candidate(&instance, &scope, &batch, &candidate)
     }
 
     pub fn from_file(

@@ -1,5 +1,14 @@
 # ADR 0010 — Architecture-as-law (`RepositoryModel` + Guard 04 + ownership kinds + executable forbidden patterns + structured `cargo xtask guard`)
 
+<!-- weeping-angel-adr-meta
+id = "0010"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = ["0001-inwardly-extensible-assurance-runtime", "0004-documentation-architecture", "0009-repository-health-gate"]
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — increment 1 (Phase 0 freeze + Phase 1 architecture-as-law) implemented. |

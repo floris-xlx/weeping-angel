@@ -1,5 +1,14 @@
 # ADR 0003 — Personnel security is a lifecycle population, not an HRIS
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_personnel_security_target` GREEN (17); baseline skip-superseded (12 ignored). |

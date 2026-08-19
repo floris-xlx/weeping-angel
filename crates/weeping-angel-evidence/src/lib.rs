@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use weeping_angel_assurance_ir::{AssetId, canonical_digest};
 
-pub use ledger::{EvidenceLedger, LedgerError};
+pub use ledger::{
+    Corrupt, EvidenceLedger, IncompatibleSchema, LedgerError, PersistenceIntegrity,
+    prior_valid_envelopes,
+};
 pub use validity::{
     EVIDENCE_VALIDITY_SCHEMA, EvidenceValidityEvent, EvidenceValidityKind, ValidityEventKind,
     ValidityProjection, ValidityView, is_candidate_at, project_validity, window_contains,
@@ -35,6 +38,17 @@ const CREDENTIAL_KEYS: &[&str] = &[
 ];
 
 pub const EVIDENCE_SCHEMA: &str = "evidence/v1";
+
+/// Collector-run observation kinds. Distinct from validity events.
+/// A failed collection is never an implicit empty world or a revoke.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CollectionOutcome {
+    NoNewObservation,
+    KnownAbsent,
+    CollectionFailed,
+    EvidenceNoLongerValid,
+}
 
 #[derive(Debug, Error)]
 pub enum EvidenceError {
@@ -312,6 +326,10 @@ impl EvidenceEnvelope {
 
     pub fn digest(&self) -> &str {
         &self.digest
+    }
+
+    pub fn schema_version(&self) -> &str {
+        &self.schema_version
     }
 
     pub fn evidence_id(&self) -> &str {

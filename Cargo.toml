@@ -276,6 +276,14 @@ name = "sdd_github_collector_target"
 path = "tests/contracts/github_collector.target.rs"
 
 [[test]]
+name = "sdd_collector_hexagonal_baseline"
+path = "tests/contracts/collector_hexagonal.baseline.rs"
+
+[[test]]
+name = "sdd_collector_hexagonal_target"
+path = "tests/contracts/collector_hexagonal.target.rs"
+
+[[test]]
 name = "sdd_assessment_lineage_baseline"
 path = "tests/contracts/assessment_lineage.baseline.rs"
 
@@ -518,3 +526,19 @@ path = "tests/contracts/repository_integrity.baseline.rs"
 [[test]]
 name = "sdd_repository_integrity_target"
 path = "tests/contracts/repository_integrity.target.rs"
+
+[[test]]
+name = "sdd_temporal_lineage_evidence_soa_baseline"
+path = "tests/contracts/temporal_lineage_evidence_soa.baseline.rs"
+
+[[test]]
+name = "sdd_temporal_lineage_evidence_soa_target"
+path = "tests/contracts/temporal_lineage_evidence_soa.target.rs"
+
+[[test]]
+name = "sdd_repository_hygiene_baseline"
+path = "tests/contracts/repository_hygiene.baseline.rs"
+
+[[test]]
+name = "sdd_repository_hygiene_target"
+path = "tests/contracts/repository_hygiene.target.rs"

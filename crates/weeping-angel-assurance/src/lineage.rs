@@ -700,9 +700,94 @@ pub fn reconstruct(bundle: &LineageBundle) -> AssessmentReport {
     report
 }
 
-/// Replay from pins. Equivalent to [`reconstruct`]; current files are not required.
+/// Replay from pins. Verifies lineage then reconstructs. Never loads current files.
 pub fn replay_assessment(bundle: &LineageBundle) -> Result<AssessmentReport, AssuranceError> {
-    Ok(reconstruct(bundle))
+    verify_replay_bundle(bundle)?;
+    let report = reconstruct(bundle);
+    Ok(report)
+}
+
+fn pin_missing(pin: &str) -> bool {
+    let trimmed = pin.trim();
+    trimmed.is_empty() || trimmed.eq_ignore_ascii_case("unpinned")
+}
+
+fn snapshot_schema_ok(schema: &str) -> bool {
+    schema == LINEAGE_SNAPSHOT_SCHEMA
+}
+
+fn verify_replay_bundle(bundle: &LineageBundle) -> Result<(), AssuranceError> {
+    if pin_missing(&bundle.run.framework_pack_digest)
+        || pin_missing(&bundle.run.canonical_catalog_pin)
+        || pin_missing(&bundle.run.assessment_definition_digest)
+        || pin_missing(&bundle.run.evidence_snapshot_digest)
+        || pin_missing(&bundle.run.applicability_snapshot_id)
+        || pin_missing(&bundle.run.result_digest)
+        || bundle.run.as_of.trim().is_empty()
+    {
+        return Err(crate::ReplayFailure::MissingPinnedMaterial(
+            "required run pin, snapshot identity, or asOf is absent".into(),
+        )
+        .into());
+    }
+    for (label, schema) in [
+        ("pack", bundle.pack.schema.as_str()),
+        ("catalog", bundle.catalog.schema.as_str()),
+        ("definition", bundle.definition.schema.as_str()),
+        ("applicability", bundle.applicability.schema.as_str()),
+        ("evidence", bundle.evidence.schema.as_str()),
+        ("soa", bundle.soa.schema.as_str()),
+    ] {
+        if !snapshot_schema_ok(schema) {
+            return Err(crate::ReplayFailure::IncompatibleSchema(format!(
+                "{label} schema {schema}"
+            ))
+            .into());
+        }
+    }
+    detect_digest_mismatch(&bundle.run.framework_pack_digest, &bundle.pack.digest)?;
+    detect_digest_mismatch(&bundle.run.canonical_catalog_pin, &bundle.catalog.digest)?;
+    detect_digest_mismatch(
+        &bundle.run.assessment_definition_digest,
+        &bundle.definition.digest,
+    )?;
+    detect_digest_mismatch(
+        &bundle.run.evidence_snapshot_digest,
+        &bundle.evidence.digest,
+    )?;
+    detect_digest_mismatch(
+        &bundle.run.applicability_snapshot_id,
+        &bundle.applicability.digest,
+    )?;
+    let result_identity = assessment_result_digest(&bundle.results);
+    detect_digest_mismatch(&bundle.run.result_digest, &result_identity)?;
+    if !bundle.evidence.envelope_digests.is_empty() {
+        let sealed = seal_evidence_snapshot(
+            bundle.evidence.envelope_digests.iter().cloned(),
+            bundle.evidence.collection_run_ids.iter().cloned(),
+        );
+        if sealed.digest != bundle.evidence.digest {
+            return Err(crate::ReplayFailure::InconsistentLineage(
+                "envelope digest list does not match evidence snapshot identity".into(),
+            )
+            .into());
+        }
+    }
+    if !bundle.soa.framework_pack_digest.is_empty()
+        && bundle.soa.framework_pack_digest != bundle.run.framework_pack_digest
+    {
+        return Err(crate::ReplayFailure::InconsistentLineage(
+            "SoA pack pin does not match run framework pack pin".into(),
+        )
+        .into());
+    }
+    if bundle.definition.digest.is_empty() || bundle.applicability.digest.is_empty() {
+        return Err(crate::ReplayFailure::IncompleteLineage(
+            "definition or applicability snapshot missing identity".into(),
+        )
+        .into());
+    }
+    Ok(())
 }
 
 pub fn load_lineage(bundle: &LineageBundle) -> AssessmentReport {
@@ -802,6 +887,7 @@ pub fn serialize_assessment_report<S: Serializer>(
         framework: report.profile.clone(),
         framework_version: String::new(),
         framework_pack_digest: pack_pin.clone(),
+        catalog_digest: String::new(),
         assessment_digest: report.digest.clone(),
         evaluated_at: report
             .run

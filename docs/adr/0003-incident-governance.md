@@ -1,5 +1,14 @@
 # ADR 0003 — Incident governance in assurance IR
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_incident_governance_target` GREEN; incidents live on `AssessmentDefinition.incidents`. |

@@ -1,5 +1,14 @@
 # ADR 0003 — Canonical Assurance Catalog v1 (infrastructure)
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |
@@ -102,6 +111,7 @@ CanonicalCatalog::validate(&self) -> Result<(), CatalogError>
 CanonicalCatalog::digest(&self) -> Result<CatalogDigest, CatalogError>
 CanonicalCatalog::stats(&self) -> Result<CatalogStats, CatalogError>
 CanonicalCatalog::control(&self, id) -> Result<&CatalogControl, CatalogError>
+CanonicalCatalog::projection(&self) -> Result<CatalogProjection, CatalogError>  # IR adapter; [ADR 0011]
 CanonicalCatalog::controls() / evidence() / tests() / root()
 ```
 
@@ -184,12 +194,12 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 
 - IR `ControlId` stays permissive so historical sliver strings still parse; live ISO mappings target `control.*`.
 - Manifest `[digest]` is not enforced; changing algorithm requires a code change, not just TOML.
-- Expression ops are a string allow-list, not the control-test AST — drift is possible until a later slice binds them.
+- Expression ops remain a catalog string allow-list (nested tables validated). Binding onto `TestExpr` JSON is `CanonicalCatalog::projection` ([ADR 0011](0011-catalog-framework-digest-and-pin-ownership.md)); the catalog crate still does not depend on `weeping-angel-control-test`.
 
 **Rejected alternatives** (also)
 
 - Enforcing `control.*` on IR `ControlId` in this slice.
-- Teaching `compile_framework` to load `catalog/canonical/v1`.
+- Teaching `compile_framework` / the framework crate to parse `catalog/canonical/v1` TOML (packs consume `CatalogProjection` instead; [ADR 0011](0011-catalog-framework-digest-and-pin-ownership.md)).
 - Hashing raw TOML bytes.
 
 ## Access and security
@@ -205,4 +215,5 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 - ADR 0001: [`0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002: [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Packs (unchanged ownership): [`frameworks/README.md`](../../frameworks/README.md)
+- Catalog/framework/readiness trust boundary: [`0011-catalog-framework-digest-and-pin-ownership.md`](0011-catalog-framework-digest-and-pin-ownership.md)
 - Siblings (cite by path): [`0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md), [`0003-subject-population-runtime-and-coverage-semantics.md`](0003-subject-population-runtime-and-coverage-semantics.md), [`0003-iam-canonical-assurance-catalog.md`](0003-iam-canonical-assurance-catalog.md)

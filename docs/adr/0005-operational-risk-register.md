@@ -1,5 +1,14 @@
 # ADR 0005 — Operational risk register in assurance IR
 
+<!-- weeping-angel-adr-meta
+id = "0005"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_risk_register_target` GREEN (RR-001–RR-015); found-case baseline skip-superseded. |

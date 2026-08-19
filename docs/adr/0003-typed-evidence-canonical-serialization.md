@@ -1,5 +1,14 @@
 # ADR 0003 â€” Typed evidence values and canonical serialization
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |
@@ -108,6 +117,7 @@ Incompatible pairs (`Bool` vs `String("true")`, `String("2")` vs `Integer(2)`) â
 - Credential-shaped keys rejected on **top-level facts and nested `Object` keys**.
 - Ledger `append` / `get` round-trips typed values via the hybrid codec. Historical string-only payloads load as `String`.
 - Envelope JSON still has no `frameworks` / `iso27001` / `gdpr` / `soc2` / `controlTestResult`.
+- Ledger four-clock APIs and persistence integrity names do not change `DigestBody` ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)).
 - Collection-run identity stays outside fact values.
 
 ## Consequences
@@ -128,3 +138,4 @@ Catalog domain content, provider collector semantics, remote ledger, and inferri
 - ADR 0001: [`0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002: [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Catalog sibling: [`0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
+- Persistence integrity / four-clock ledger (does not change `DigestBody`): [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)

@@ -1,7 +1,7 @@
 use serde_json::Value;
 use weeping_angel_evidence::EvidenceValue;
 
-use weeping_angel_evidence::EvidenceEnvelope;
+use crate::domain::ObservationCandidate;
 
 use super::normalize::{EmitCtx, emit, repo_subject_id};
 use crate::CollectorError;
@@ -19,7 +19,7 @@ pub fn from_repo_security(
     owner: &str,
     name: &str,
     ctx: &EmitCtx<'_>,
-) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+) -> Result<Vec<ObservationCandidate>, CollectorError> {
     let analysis = repo.get("security_and_analysis");
     if analysis.is_none() {
         return Ok(Vec::new());

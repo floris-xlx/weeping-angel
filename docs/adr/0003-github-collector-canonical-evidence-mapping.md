@@ -1,5 +1,14 @@
 # ADR 0003 — GitHub collector emits canonical evidence contracts
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = ["0003-github-collector-canonical-evidence-mapping-draft"]
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |

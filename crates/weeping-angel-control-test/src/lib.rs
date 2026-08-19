@@ -68,8 +68,10 @@ pub struct AssessmentContext {
 }
 
 impl AssessmentContext {
+    /// Injected assessment clock (pinned `asOf` for this evaluation).
+    /// Distinct from live ledger [`weeping_angel_evidence::EvidenceLedger::current`].
     pub fn as_of(&self) -> DateTime<Utc> {
-        self.now
+        pinned_assessment_clock(self)
     }
 
     pub fn period(&self) -> Option<TimeRange> {
@@ -83,6 +85,12 @@ impl AssessmentContext {
             period: self.period(),
         }
     }
+}
+
+fn pinned_assessment_clock(ctx: &AssessmentContext) -> DateTime<Utc> {
+    // `now` is the injected assessment clock for this context (pinned asOf).
+    // Live ledger current() uses Utc::now(), not this helper.
+    ctx.now
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

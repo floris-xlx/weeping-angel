@@ -1,19 +1,18 @@
-//! Baseline suite for Repository Integrity increment 1 (health gate).
+//! Baseline suite for Repository Integrity.
 //!
-//! Characterization of CURRENT tree (`docs/specs/repository-integrity.md` §3)
-//! on SHA `f560196c57e77df2573cfb9a4b384d3cf1c21e8a`: no `architecture/`
-//! manifests, no `docs/debt/` register, no `xtask` workspace member or
-//! `.cargo/config.toml` alias, CI does not run `cargo xtask guard`, and
-//! hypothetical packages `weeping-angel-catalog` /
-//! `weeping-angel-assurance-cli` do not exist.
-//!
-//! Encodes the found case (RI-B01–B10), not the desired gate. Does **not**
-//! implement `cargo xtask guard`, architecture manifests, or debt files.
-//! SUPERSEDED by `sdd_repository_integrity_target`. Tests are
+//! Increment 1 (RI-B01–B10): characterization of SHA `f560196c` absences
+//! (`docs/specs/repository-integrity.md` §3). SUPERSEDED by
+//! `sdd_repository_integrity_target` — those tests stay
 //! `#[ignore = "superseded by sdd_repository_integrity_target"]`.
+//!
+//! Increment 2 (RI-B11–B18): characterization of CURRENT increment-1 /
+//! ADR-0010 behavior (`docs/specs/repository-integrity.md` §12). Encodes the
+//! found case (xtask monolith, hard-coded policy, Guard 14/15 skip-with-debt,
+//! weak debt exemptions, JSON without schema/counts, no spec-lifecycle /
+//! adr-identity files). Does **not** implement increment-2 product code.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn repo_root() -> PathBuf {
@@ -336,4 +335,293 @@ fn spec_first_docs_exist_without_product_files() {
     assert!(spec.contains("remaining_backlog"));
     assert!(spec.contains("weeping-angel-canonical-catalog"));
     assert!(spec.contains("RI-B01"));
+}
+
+fn cargo_xtask_guard_args(args: &[&str]) -> std::process::Output {
+    Command::new("cargo")
+        .args(["xtask", "guard"])
+        .args(args)
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn cargo xtask guard")
+}
+
+fn xtask_src_rel_rs() -> Vec<String> {
+    let root = rel("xtask/src");
+    let mut files = Vec::new();
+    fn walk(dir: &Path, prefix: &Path, files: &mut Vec<String>) {
+        let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
+        for entry in entries {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, prefix, files);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                let rel = path
+                    .strip_prefix(prefix)
+                    .expect("xtask/src prefix")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                files.push(rel);
+            }
+        }
+    }
+    walk(&root, &root, &mut files);
+    files.sort();
+    files
+}
+
+fn xtask_src_text() -> String {
+    let mut out = String::new();
+    for rel_rs in xtask_src_rel_rs() {
+        out.push_str(&read(&format!("xtask/src/{rel_rs}")));
+        out.push('\n');
+    }
+    out
+}
+
+fn debt_findings() -> Vec<toml::Value> {
+    parse_toml("docs/debt/register.toml")
+        .get("finding")
+        .and_then(|f| f.as_array())
+        .expect("[[finding]]")
+        .clone()
+}
+
+fn finding_by_id<'a>(findings: &'a [toml::Value], id: &str) -> &'a toml::Value {
+    findings
+        .iter()
+        .find(|f| f.get("id").and_then(|v| v.as_str()) == Some(id))
+        .unwrap_or_else(|| panic!("register must contain {id}"))
+}
+
+fn field_present(finding: &toml::Value, key: &str) -> bool {
+    match finding.get(key) {
+        None => false,
+        Some(toml::Value::String(s)) => !s.is_empty(),
+        Some(toml::Value::Array(a)) => !a.is_empty(),
+        Some(_) => true,
+    }
+}
+
+/// RI-B11: xtask/src Rust sources are only lib.rs and main.rs (monolith).
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b11_xtask_src_is_lib_and_main_only() {
+    let files = xtask_src_rel_rs();
+    assert_eq!(
+        files,
+        vec!["lib.rs".to_string(), "main.rs".to_string()],
+        "increment-1/ADR-0010 xtask/src must be a two-file monolith; found {files:?}"
+    );
+    for forbidden in [
+        "model.rs",
+        "architecture.rs",
+        "debt.rs",
+        "report.rs",
+        "checks.rs",
+    ] {
+        assert!(
+            !files
+                .iter()
+                .any(|f| f == forbidden || f.ends_with(forbidden)),
+            "xtask/src must not contain {forbidden} on CURRENT tree; found {files:?}"
+        );
+    }
+    assert!(
+        !files.iter().any(|f| f.starts_with("checks")),
+        "xtask/src must not contain checks* modules on CURRENT tree; found {files:?}"
+    );
+}
+
+/// RI-B12: policy constants live in Rust; remaining stubs include 14 and 15.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b12_policy_is_hard_coded_and_stubs_include_14_15() {
+    let src = xtask_src_text();
+    for needle in [
+        "REQUIRED_OWNERSHIP",
+        "OWNERSHIP_KINDS",
+        "FORBIDDEN_PACKAGES",
+    ] {
+        assert!(
+            src.contains(needle),
+            "xtask sources must contain {needle} as a hard-coded policy constant"
+        );
+    }
+    assert!(
+        src.contains(r#"("14", "adr-graph")"#) || src.contains("\"14\", \"adr-graph\""),
+        "remaining stubs must include check 14 adr-graph; xtask sources did not"
+    );
+    assert!(
+        src.contains(r#"("15", "spec-lifecycle")"#) || src.contains("\"15\", \"spec-lifecycle\""),
+        "remaining stubs must include check 15 spec-lifecycle; xtask sources did not"
+    );
+}
+
+/// RI-B13: RepositoryModel.source_files is a path list; needles reread disk.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b13_repository_model_source_files_reread_disk() {
+    let lib = read("xtask/src/lib.rs");
+    assert!(
+        lib.contains("pub struct RepositoryModel"),
+        "RepositoryModel must be defined in xtask/src/lib.rs"
+    );
+    assert!(
+        lib.contains("pub source_files: Vec<String>"),
+        "RepositoryModel must expose source_files as Vec<String>"
+    );
+    assert!(
+        lib.contains("fn source_contains") && lib.contains("fs::read_to_string"),
+        "source needle evaluation must use fs::read_to_string (no cached source map)"
+    );
+    for cache_field in [
+        "source_cache",
+        "source_index",
+        "source_text",
+        "normalized_source",
+        "source_map",
+    ] {
+        assert!(
+            !lib.contains(&format!("pub {cache_field}"))
+                && !lib.contains(&format!("{cache_field}:")),
+            "RepositoryModel must not expose cached source field {cache_field} on CURRENT tree"
+        );
+    }
+}
+
+/// RI-B14: live guard report skips Guard 14 and 15 with DEBT-GUARD-NN.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b14_guard_skips_14_and_15_with_debt() {
+    let output = cargo_xtask_guard_args(&[]);
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        output.status.success(),
+        "cargo xtask guard must be invocable on CURRENT tree; output={combined}"
+    );
+    assert!(
+        combined.contains("skip(DEBT-GUARD-14)")
+            || combined.contains("14  adr-graph  skip(DEBT-GUARD-14)"),
+        "live report must skip Guard 14 with DEBT-GUARD-14; output={combined}"
+    );
+    assert!(
+        combined.contains("skip(DEBT-GUARD-15)")
+            || combined.contains("15  spec-lifecycle  skip(DEBT-GUARD-15)"),
+        "live report must skip Guard 15 with DEBT-GUARD-15; output={combined}"
+    );
+}
+
+/// RI-B15: live skip exemptions omit increment-2 exemption metadata.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b15_live_guard_exemptions_omit_expiry_metadata() {
+    let findings = debt_findings();
+    let ids = [
+        "DEBT-GUARD-05",
+        "DEBT-GUARD-06",
+        "DEBT-GUARD-07",
+        "DEBT-GUARD-08",
+        "DEBT-GUARD-09",
+        "DEBT-GUARD-10",
+        "DEBT-GUARD-11",
+        "DEBT-GUARD-12",
+        "DEBT-GUARD-14",
+        "DEBT-GUARD-15",
+    ];
+    for id in ids {
+        let finding = finding_by_id(&findings, id);
+        let complete = field_present(finding, "owner")
+            && field_present(finding, "introduced")
+            && field_present(finding, "severity")
+            && field_present(finding, "remediation")
+            && (field_present(finding, "expires") || field_present(finding, "review_by"));
+        assert!(
+            !complete,
+            "{id} must omit at least one of owner/introduced/severity/remediation/expires|review_by on CURRENT tree; finding={finding}"
+        );
+    }
+}
+
+/// RI-B16: JSON report is checks/violations/skipped/debt_exemptions/duration only.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b16_guard_json_has_duration_and_no_schema_counts() {
+    let output = cargo_xtask_guard_args(&["--json"]);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "cargo xtask guard --json must succeed; stdout={stdout} stderr={stderr}"
+    );
+    let value: serde_json::Value = serde_json::from_str(stdout.trim()).unwrap_or_else(|e| {
+        panic!("guard --json must emit JSON object; parse error {e}; stdout={stdout}")
+    });
+    let obj = value.as_object().expect("JSON object");
+    for key in [
+        "checks",
+        "violations",
+        "skipped",
+        "debt_exemptions",
+        "duration",
+    ] {
+        assert!(
+            obj.contains_key(key),
+            "JSON must include {key}; got {obj:?}"
+        );
+    }
+    let duration = obj.get("duration").and_then(|d| d.as_object());
+    let duration = duration.expect("duration object");
+    for key in ["secs", "nanos", "as_secs_f64"] {
+        assert!(
+            duration.contains_key(key),
+            "duration must include {key}; got {duration:?}"
+        );
+    }
+    assert!(
+        !obj.contains_key("schema"),
+        "CURRENT JSON must not include a report schema field"
+    );
+    assert!(
+        !obj.contains_key("version"),
+        "CURRENT JSON must not include a report version field"
+    );
+    assert!(
+        !obj.contains_key("counts"),
+        "CURRENT JSON must not include an aggregate counts object"
+    );
+}
+
+/// RI-B17: DEBT-GUARD-14 and DEBT-GUARD-15 remain open stubs.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b17_debt_guard_14_and_15_are_open() {
+    let findings = debt_findings();
+    for id in ["DEBT-GUARD-14", "DEBT-GUARD-15"] {
+        let finding = finding_by_id(&findings, id);
+        assert_eq!(
+            finding.get("status").and_then(|s| s.as_str()),
+            Some("open"),
+            "{id} must have status = open on CURRENT tree"
+        );
+    }
+}
+
+/// RI-B18: increment-2 architecture metadata files are absent.
+#[ignore = "superseded by sdd_repository_integrity_target"]
+#[test]
+fn ri_b18_spec_lifecycle_and_adr_identity_files_are_absent() {
+    assert!(
+        !rel("architecture/spec-lifecycle.toml").is_file(),
+        "architecture/spec-lifecycle.toml must not exist on CURRENT increment-1/ADR-0010 tree"
+    );
+    assert!(
+        !rel("architecture/adr-identity.toml").is_file(),
+        "architecture/adr-identity.toml must not exist on CURRENT increment-1/ADR-0010 tree"
+    );
 }

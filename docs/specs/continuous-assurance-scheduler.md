@@ -76,7 +76,7 @@ Assurance today is a **one-shot** library call (`AssuranceEngineBuilder::assess`
 
 That means:
 
-- a collector failure on the current call evaluates an **empty** `EvidenceSet` even when the ledger still holds earlier envelopes;
+- a collector failure on the one-shot path used to evaluate an **empty** `EvidenceSet` even when prior valid envelopes existed in-process (closed by [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md); tick reattach was already ledger-backed);
 - `CollectionRun.run_id` is derived from `Utc::now()`, so crash/retry invents a new identity and cannot deduplicate;
 - there is no due/not-due clock, no next-run, no job dependencies, no timeout/jitter contract;
 - CLI has `weeping-angel assurance …` (mostly banner stubs) and **no** `weeping-angel isms` family;
@@ -85,6 +85,10 @@ That means:
 **User-visible goal:** the same Collect → Evaluate → Snapshot pipeline can operate **continuously and safely over time** on a local/offline core: due jobs run, independent collectors may run concurrently, failed collection does not wipe prior evidence, duplicate work collapses to a stable run identity, and a process crash can resume.
 
 Definition of done: the deterministic assurance pipeline is no longer only a one-shot assessment.
+
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+CAS-001…016 and `sdd_continuous_assurance_scheduler_*` remain scheduler SSOT (GREEN / skip-superseded). Tick collect already avoids deleting envelopes on collector `Err`. One-shot `assess()` no longer evaluates an implicit empty world on collector `Err`: [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). This increment must not reimplement cadence / retry / daemon.
 
 ---
 
@@ -97,7 +101,7 @@ Pinned at characterization SHA `6e31bf1ae8f4a69227e0557d878f2e76d0cb8f2a`.
 | `AssuranceEngineBuilder::assess` | `weeping-angel-assurance::lib` | One-shot path may remain. Scheduler **reuses** collect/seal/evaluate/project/snapshot/compare; it must not bypass them with a parallel evaluator. Prefer extracting shared steps over duplicating evaluate. |
 | `CollectionRun::new` | `weeping-angel-evidence` | Today `run_id = digest(collector_id, Utc::now())`. Scheduled runs **must not** use wall-clock uniqueness as identity. One-shot constructor may stay for non-scheduled callers until they opt in. |
 | Envelope `collection_run_id` | `EvidenceEnvelope::seal` | Provenance digest (`collector_id`, `collected_at`, `scope`). Attaching a scheduler run id via `with_collection_run` is allowed if it does not change envelope **content digest** law. |
-| `EvidenceLedger` | evidence crate | Append-only envelopes (`INSERT OR IGNORE`). `record_collection_run` is `INSERT OR REPLACE` (not lineage-immutable). Scheduler must not `DELETE` envelopes on collector failure. Do not store cadence/retry in envelope payloads. |
+| `EvidenceLedger` | evidence crate | Append-only envelopes (`INSERT OR IGNORE`). Completed `record_collection_run` is lineage-immutable (identical retry no-op; different completed bytes → `Immutable`). Scheduler must not `DELETE` envelopes on collector failure. Do not store cadence/retry in envelope payloads. |
 | `AssessmentContext` | control-test | `{ now, max_age }`. Scheduler supplies `now` from `Clock` and `max_age` from the job freshness policy. Control-test stays network-free and provider-blind. |
 | `evaluate` / `Effectiveness` | control-test | Collectors **never** write these. Stale prior evidence already maps to `StaleEvidence` when age `> max_age`. |
 | `compare` / `SnapshotDiff` | assurance snapshot | Scheduler Drift step **calls** existing compare on consecutive snapshots. Semantic observations are Prompt 15 `detect_events` / `detect_isms_drift` — do not invent a second catalog here. |

@@ -1,5 +1,14 @@
 # ADR 0003 — Evidence validity and temporal assurance
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_temporal_assurance_target` GREEN (17/17); baseline skip-superseded. Sibling dual-suite `sdd_evidence_validity_temporal_assurance_*` encodes the same product contract. |
@@ -63,7 +72,7 @@ Future observations never satisfy a past clock. Expired windows never satisfy ou
 
 Stale (`max_age` / `FreshWithin`) is distinct from expired, future, and missing. `is_stale` runs only on candidates.
 
-`EvidenceLedger::within_window` remains inclusive `collected_at`. Validity-window query is `valid_during` (`[start, end)`). Collection-time `latest` is unchanged; as-of latest is `latest_as_of`.
+`EvidenceLedger::within_window` remains inclusive `collected_at`. Validity-window query is `valid_during` (`[start, end)`). Collection-time `latest` is unchanged. As-of evaluation leaf is `as_of` (`latest_as_of` is an alias). Live valid leaf is `current`; membership at `T` is `valid_at` ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)).
 
 `append` of a new envelope also records an `asserted` event. `supersede` appends the new envelope and a `superseded` event for the previous digest; the previous payload is untouched. `record_validity_event` is idempotent by `eventId`; different bytes for the same id are `LedgerError::Immutable`.
 
@@ -81,7 +90,7 @@ Default temporal semantics are `instant`. Continuous fill of a gap requires expl
 
 ### 6. Scheduler seam only
 
-`FreshnessPolicy { max_age, as_of, period }` is the handoff. Live `assess` still defaults `now = Utc::now()` and 24h `max_age`. Historical replay injects a fixed `AssessmentContext.now`. `AssessmentRun` JSON `asOf` is the pinned evaluation clock (live `assess` serializes it from `startedAt`).
+`FreshnessPolicy { max_age, as_of, period }` is the handoff. Live `assess` still defaults `now = Utc::now()` and 24h `max_age`. Historical replay injects a fixed `AssessmentContext.now`. `AssessmentRun` JSON `asOf` is the pinned evaluation clock (serialized from the `as_of` field; live `assess` may default it to `startedAt`).
 
 ### 7. Same ledger, no new product DB, no UI
 
@@ -93,7 +102,7 @@ Reuse `EvidenceLedger`. No charts.
 | --- | --- |
 | `EvidenceValidityEvent`, `project_validity`, `window_contains` | `weeping-angel-evidence::validity` (`EVIDENCE_VALIDITY_SCHEMA`) |
 | Envelope clocks (out-of-digest) | `EvidenceEnvelope::{with_observed_at,with_valid_from,with_valid_until,with_source_revision}` |
-| Ledger events / `valid_during` / `latest_as_of` | `weeping-angel-evidence::ledger` |
+| Ledger events / `valid_during` / `as_of` / `latest_as_of` / `current` / `valid_at` | `weeping-angel-evidence::ledger` |
 | `TimeRange`, `FreshnessPolicy`, `TemporalQuery`, `PeriodEffectiveness`, `select_latest_as_of`, `select_evidence`, `project_period_effectiveness` | `weeping-angel-control-test::temporal` |
 | As-of index | `build_index_as_of` / evaluate `first_selector` |
 | `ControlTestResult.period` | control-test result document |
@@ -120,3 +129,4 @@ UI charts; new long-term database; scheduler product (cadence/retry/daemon); cat
 - Lineage replay: [`docs/specs/assessment-lineage.md`](../specs/assessment-lineage.md)
 - Scheduler seam: [`docs/specs/continuous-assurance-scheduler.md`](../specs/continuous-assurance-scheduler.md)
 - Sibling ADR: [`0003-temporal-assurance.md`](0003-temporal-assurance.md)
+- Four-clock / fail-closed replay / historical SoA: [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)

@@ -1,5 +1,14 @@
 # ADR 0003 — Internal audit as an operational evidence-backed process
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_internal_audit_target` GREEN; baseline skip-superseded |

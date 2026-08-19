@@ -1,5 +1,14 @@
 # ADR 0008 — Organizational scope engine (executable ISMS boundary)
 
+<!-- weeping-angel-adr-meta
+id = "0008"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_scope_engine_target` GREEN (SCP-T01–T15); `sdd_scope_engine_baseline` skip-superseded |

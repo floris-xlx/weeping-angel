@@ -1,5 +1,14 @@
 # ADR 0008 — Canonical ISMS context IR (operational root)
 
+<!-- weeping-angel-adr-meta
+id = "0008"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_isms_context_target` GREEN (CTX-T01–T14); `sdd_isms_context_baseline` skip-superseded |

@@ -1,5 +1,14 @@
 # ADR 0009 — Repository health gate (architecture ownership SSOT + `cargo xtask guard`)
 
+<!-- weeping-angel-adr-meta
+id = "0009"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = ["0001-inwardly-extensible-assurance-runtime", "0004-documentation-architecture"]
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — increment 1 health gate is law: architecture ownership SSOT + `cargo xtask guard` (checks 01, 02, 03, 13) is mandatory in CI. `sdd_repository_integrity_target` GREEN; baseline skip-superseded. |

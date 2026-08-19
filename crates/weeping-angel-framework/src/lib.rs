@@ -16,8 +16,10 @@ pub use weeping_angel_assurance_ir::{Assessment, AssessmentDefinition, Assessmen
 
 pub use pack::{
     FrameworkContentProvider, FrameworkPackDigest, LoadedPack, assessment_from_pack,
-    load_framework_pack, load_framework_pack_from, validate_framework_pack,
+    load_framework_pack, load_framework_pack_from, load_framework_pack_from_with,
+    validate_framework_pack, validate_framework_pack_with,
 };
+pub use weeping_angel_assurance_ir::CatalogProjection;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -126,6 +128,10 @@ pub struct CompiledFramework {
     pub digest: String,
     #[serde(default)]
     pub mappings: Vec<Mapping>,
+    #[serde(default)]
+    pub framework_pack_digest: String,
+    #[serde(default)]
+    pub catalog_digest: String,
 }
 
 #[derive(Debug, Error)]
@@ -187,6 +193,7 @@ pub fn compile_framework(
 
     let tests = construct_test_plan(&normalized, &controls, &evidence_requirements)?;
     stages.push(PIPELINE_STAGES[5].to_string());
+    let (framework_pack_digest, catalog_digest) = pack_pins(assessment, target);
 
     let projection = construct_framework_projection(target, &applicable_requirements, &controls);
     let _ = projection;
@@ -224,7 +231,17 @@ pub fn compile_framework(
         validation: CompileValidation { stages, ok: true },
         digest,
         mappings: normalized.mappings.clone(),
+        framework_pack_digest,
+        catalog_digest,
     })
+}
+
+fn pack_pins(assessment: &Assessment, target: &FrameworkTarget) -> (String, String) {
+    let _ = assessment;
+    match pack::load_framework_pack(target.profile.as_selector(), target.version.as_str()) {
+        Ok(loaded) => (loaded.digest.0, loaded.catalog_digest),
+        Err(_) => (String::new(), String::new()),
+    }
 }
 
 fn normalize(
@@ -246,11 +263,19 @@ fn normalize(
     }
     let _ = target;
     let mut out = assessment.clone();
+    let mut pack_digest = String::new();
+    let mut catalog_digest = String::new();
     match pack::load_framework_pack(target.profile.as_selector(), target.version.as_str()) {
-        Ok(loaded) => pack::merge_pack(&mut out, &loaded),
+        Ok(loaded) => {
+            pack_digest = loaded.digest.0.clone();
+            catalog_digest = loaded.catalog_digest.clone();
+            pack::merge_pack(&mut out, &loaded);
+        }
         Err(pack::PackError::UnknownPack(_)) => {}
+        Err(_) if !assessment.controls.is_empty() || !assessment.tests.is_empty() => {}
         Err(err) => return Err(err.into()),
     }
+    let _ = (pack_digest, catalog_digest);
     out.requirements
         .sort_by(|a, b| a.id().as_str().cmp(b.id().as_str()));
     out.controls
@@ -379,7 +404,7 @@ fn construct_test_plan(
                 kind: t.kind,
                 required: t.required_evidence.clone(),
                 break_on: t.break_on.clone(),
-                expr: None,
+                expr: t.expr.clone(),
             })
             .collect());
     }
@@ -394,7 +419,7 @@ fn construct_test_plan(
             kind: PlannedTestKind::Automated,
             required: vec![ev.evidence_type().clone()],
             break_on: vec![EvidenceType::new("exposed_without_auth")],
-            expr: None,
+            expr: Option::default(),
         })
         .collect();
     Ok(tests)

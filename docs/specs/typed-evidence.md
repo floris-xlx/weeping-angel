@@ -490,3 +490,7 @@ All evidence paths use or cleanly adapt to one typed representation; the control
 | ADR | Accepted [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md) |
 
 Stable digest rule remains §4.4. Stable encoding remains §4.3. Downstream slices consume this API; they do not fork a second value enum.
+
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+Typed-value / seal / `DigestBody` law is unchanged. Persistence integrity (`Corrupt` / `IncompatibleSchema` via `PersistenceIntegrity` → `LedgerError::Path`, immutable completed collection-run persist, transactional envelope+validity append, distinct `latest` / `current` / `valid_at` / `as_of`) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) / [ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md). Do not put conclusions on envelopes.

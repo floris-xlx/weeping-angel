@@ -1,5 +1,14 @@
 # ADR 0005 — Canonical risk methodology IR and pure scoring
 
+<!-- weeping-angel-adr-meta
+id = "0005"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_risk_methodology_target` GREEN (P05-T01–T17); `sdd_risk_methodology_baseline` skip-superseded |

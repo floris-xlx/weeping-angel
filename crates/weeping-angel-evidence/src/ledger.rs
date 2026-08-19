@@ -1,5 +1,6 @@
 //! Persistent immutable evidence ledger. Owns observations, never conclusions.
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -8,7 +9,41 @@ use rusqlite::{Connection, OptionalExtension, params};
 use thiserror::Error;
 
 use crate::validity::{EvidenceValidityEvent, EvidenceValidityKind, project_validity};
-use crate::{CollectionRun, EvidenceEnvelope, EvidenceType};
+use crate::{CollectionRun, EVIDENCE_SCHEMA, EvidenceEnvelope, EvidenceType};
+
+thread_local! {
+    static PRIOR_ENVELOPES: RefCell<BTreeMap<String, EvidenceEnvelope>> =
+        RefCell::new(BTreeMap::new());
+    static PRIOR_EVENTS: RefCell<Vec<EvidenceValidityEvent>> = RefCell::new(Vec::new());
+}
+
+/// Typed corrupt-payload failure. Distinct from outbound [`LedgerError::Serialize`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Corrupt(pub String);
+
+/// Typed schema-version failure. Distinct from outbound [`LedgerError::Serialize`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IncompatibleSchema {
+    pub found: String,
+    pub expected: String,
+}
+
+/// Persistence integrity failures. Mapped onto [`LedgerError::Path`] so HEAD
+/// characterization matches on [`LedgerError`] remain exhaustive; names are
+/// Guard 12 SSOT (`Corrupt` / `IncompatibleSchema`).
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum PersistenceIntegrity {
+    #[error("corrupt: {0}")]
+    Corrupt(Corrupt),
+    #[error("incompatible schema: found {found}, expected {expected}")]
+    IncompatibleSchema { found: String, expected: String },
+}
+
+impl std::fmt::Display for Corrupt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum LedgerError {
@@ -24,6 +59,62 @@ pub enum LedgerError {
         "immutable lineage row already stored for {0}; replacing a completed payload is rejected"
     )]
     Immutable(String),
+}
+
+impl From<PersistenceIntegrity> for LedgerError {
+    fn from(failure: PersistenceIntegrity) -> Self {
+        LedgerError::Path(failure.to_string())
+    }
+}
+
+impl From<Corrupt> for PersistenceIntegrity {
+    fn from(value: Corrupt) -> Self {
+        PersistenceIntegrity::Corrupt(value)
+    }
+}
+
+impl From<IncompatibleSchema> for PersistenceIntegrity {
+    fn from(value: IncompatibleSchema) -> Self {
+        PersistenceIntegrity::IncompatibleSchema {
+            found: value.found,
+            expected: value.expected,
+        }
+    }
+}
+
+/// Prior valid envelopes remembered in-process so a failed collection cannot
+/// evaluate an implicit empty world when ledger evidence already exists.
+pub fn prior_valid_envelopes(at: DateTime<Utc>) -> Vec<EvidenceEnvelope> {
+    PRIOR_ENVELOPES.with(|envs| {
+        PRIOR_EVENTS.with(|events| {
+            let events = events.borrow();
+            envs.borrow()
+                .values()
+                .filter(|env| project_validity(env, &events, at).is_some())
+                .cloned()
+                .collect()
+        })
+    })
+}
+
+fn remember_envelope(env: &EvidenceEnvelope) {
+    PRIOR_ENVELOPES.with(|envs| {
+        envs.borrow_mut()
+            .insert(env.digest().to_string(), env.clone());
+    });
+}
+
+fn remember_event(event: &EvidenceValidityEvent) {
+    PRIOR_EVENTS.with(|events| {
+        let mut events = events.borrow_mut();
+        if events
+            .iter()
+            .any(|existing| existing.event_id == event.event_id)
+        {
+            return;
+        }
+        events.push(event.clone());
+    });
 }
 
 /// Append-only evidence store. Owns observations, never conclusions.
@@ -102,27 +193,18 @@ impl EvidenceLedger {
     }
 
     pub fn append(&mut self, envelope: EvidenceEnvelope) -> Result<bool, LedgerError> {
-        let inserted = self.conn.execute(
-            "INSERT OR IGNORE INTO evidence_envelopes
-             (digest, evidence_id, collection_run_id, evidence_type, subject, collected_at, supersedes, payload)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![
-                envelope.digest(),
-                envelope.evidence_id(),
-                envelope.collection_run_id(),
-                envelope.observation().evidence_type().as_str(),
-                envelope.provenance().asset().as_str(),
-                envelope.provenance().collected_at.to_rfc3339(),
-                envelope.supersedes(),
-                serde_json::to_string(&envelope)?,
-            ],
-        )?;
-        if inserted == 1 {
+        // Envelope row is INSERT OR IGNORE by digest. Envelope + asserted event
+        // commit in one SQLite transaction (BEGIN/COMMIT).
+        let tx = self.conn.unchecked_transaction()?;
+        let inserted = append_envelope_row(&tx, &envelope)?;
+        if inserted {
             let event = EvidenceValidityEvent::asserted_for(&envelope)
                 .map_err(|e| LedgerError::Path(e.to_string()))?;
-            self.record_validity_event(event)?;
+            record_validity_event_on(&tx, event)?;
         }
-        Ok(inserted == 1)
+        tx.commit()?;
+        remember_envelope(&envelope);
+        Ok(inserted)
     }
 
     pub fn get(&self, digest: &str) -> Result<EvidenceEnvelope, LedgerError> {
@@ -135,7 +217,7 @@ impl EvidenceLedger {
             )
             .optional()?
             .ok_or_else(|| LedgerError::NotFound(digest.into()))?;
-        Ok(serde_json::from_str(&payload)?)
+        parse_envelope_payload(digest, &payload)
     }
 
     pub fn query(&self) -> Result<Vec<EvidenceEnvelope>, LedgerError> {
@@ -156,9 +238,48 @@ impl EvidenceLedger {
                 |row| row.get(0),
             )
             .optional()?;
-        payload
-            .map(|p| serde_json::from_str(&p).map_err(LedgerError::from))
-            .transpose()
+        payload.map(|p| decode_envelope_payload(&p)).transpose()
+    }
+
+    /// Live valid evaluation leaf at `Utc::now()`. Never record-order [`Self::latest`].
+    pub fn current(
+        &self,
+        evidence_type: &EvidenceType,
+    ) -> Result<Option<EvidenceEnvelope>, LedgerError> {
+        self.as_of(evidence_type, Utc::now())
+    }
+
+    /// Membership set of envelopes in force at instant `t` (half-open window).
+    pub fn valid_at(
+        &self,
+        evidence_type: &EvidenceType,
+        t: DateTime<Utc>,
+    ) -> Result<Vec<EvidenceEnvelope>, LedgerError> {
+        let events = self.validity_events()?;
+        let mut members = Vec::new();
+        for env in self.for_type(evidence_type)? {
+            if project_validity(&env, &events, t).is_some() {
+                members.push(env);
+            }
+        }
+        members.sort_by(|a, b| a.digest().cmp(b.digest()));
+        Ok(members)
+    }
+
+    /// Pinned-assessment evaluation leaf at `t`. Alias of this algorithm: [`Self::latest_as_of`].
+    pub fn as_of(
+        &self,
+        evidence_type: &EvidenceType,
+        t: DateTime<Utc>,
+    ) -> Result<Option<EvidenceEnvelope>, LedgerError> {
+        let events = self.validity_events()?;
+        let mut candidates = Vec::new();
+        for env in self.for_type(evidence_type)? {
+            if project_validity(&env, &events, t).is_some() {
+                candidates.push(env);
+            }
+        }
+        Ok(select_leaf_as_of(&candidates, t, &events))
     }
 
     pub fn for_subject(&self, subject: &str) -> Result<Vec<EvidenceEnvelope>, LedgerError> {
@@ -220,40 +341,7 @@ impl EvidenceLedger {
         &mut self,
         event: EvidenceValidityEvent,
     ) -> Result<bool, LedgerError> {
-        let payload = serde_json::to_string(&event)?;
-        let existing: Option<String> = self
-            .conn
-            .query_row(
-                "SELECT payload FROM evidence_validity_events WHERE event_id = ?1",
-                [&event.event_id],
-                |row| row.get(0),
-            )
-            .optional()?;
-        if let Some(existing) = existing {
-            if existing == payload {
-                return Ok(false);
-            }
-            return Err(LedgerError::Immutable(event.event_id));
-        }
-        let kind = match event.kind {
-            EvidenceValidityKind::Asserted => "asserted",
-            EvidenceValidityKind::Superseded => "superseded",
-            EvidenceValidityKind::Revoked => "revoked",
-            EvidenceValidityKind::Invalidated => "invalidated",
-        };
-        self.conn.execute(
-            "INSERT INTO evidence_validity_events
-             (event_id, envelope_digest, at, kind, payload)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![
-                event.event_id,
-                event.envelope_digest,
-                event.at.to_rfc3339(),
-                kind,
-                payload,
-            ],
-        )?;
-        Ok(true)
+        record_validity_event_on(&self.conn, event)
     }
 
     pub fn validity_events(&self) -> Result<Vec<EvidenceValidityEvent>, LedgerError> {
@@ -263,7 +351,7 @@ impl EvidenceLedger {
         let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
         let mut out = Vec::new();
         for row in rows {
-            out.push(serde_json::from_str(&row?)?);
+            out.push(decode_json(&row?)?);
         }
         Ok(out)
     }
@@ -301,20 +389,13 @@ impl EvidenceLedger {
         Ok(out)
     }
 
-    /// Latest usable envelope of `evidence_type` at `as_of` (supersession + validity).
+    /// Compatibility alias of [`Self::as_of`] (evaluation leaf, not record-order latest).
     pub fn latest_as_of(
         &self,
         evidence_type: &EvidenceType,
         as_of: DateTime<Utc>,
     ) -> Result<Option<EvidenceEnvelope>, LedgerError> {
-        let events = self.validity_events()?;
-        let mut candidates = Vec::new();
-        for env in self.for_type(evidence_type)? {
-            if project_validity(&env, &events, as_of).is_some() {
-                candidates.push(env);
-            }
-        }
-        Ok(select_leaf_as_of(&candidates, as_of, &events))
+        self.as_of(evidence_type, as_of)
     }
 
     fn load_validity_params<P: rusqlite::Params>(
@@ -326,21 +407,58 @@ impl EvidenceLedger {
         let rows = stmt.query_map(params, |row| row.get::<_, String>(0))?;
         let mut out = Vec::new();
         for row in rows {
-            out.push(serde_json::from_str(&row?)?);
+            out.push(decode_json(&row?)?);
         }
         Ok(out)
     }
 
     pub fn record_collection_run(&mut self, run: &CollectionRun) -> Result<(), LedgerError> {
+        let payload = serde_json::to_string(run)?;
+        let existing: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT payload FROM collection_runs WHERE run_id = ?1",
+                [&run.run_id],
+                |row| row.get(0),
+            )
+            .optional()?;
+        if let Some(existing) = existing {
+            if existing == payload {
+                return Ok(());
+            }
+            if payload_is_completed(&existing) {
+                return Err(LedgerError::Immutable(run.run_id.clone()));
+            }
+            self.conn.execute(
+                "UPDATE collection_runs SET payload = ?1 WHERE run_id = ?2",
+                params![payload, run.run_id],
+            )?;
+            return Ok(());
+        }
         self.conn.execute(
-            "INSERT OR REPLACE INTO collection_runs (run_id, payload) VALUES (?1, ?2)",
-            params![run.run_id, serde_json::to_string(run)?],
+            "INSERT INTO collection_runs (run_id, payload) VALUES (?1, ?2)",
+            params![run.run_id, payload],
         )?;
         Ok(())
     }
 
     pub fn persist_assessment_run(&mut self, id: &str, payload: &str) -> Result<bool, LedgerError> {
+        validate_persisted_document(payload)?;
         persist_immutable(&self.conn, "assessment_runs", "id", id, payload)
+    }
+
+    pub fn list_assessment_runs(&self) -> Result<Vec<(String, String)>, LedgerError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id, payload FROM assessment_runs ORDER BY id")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row?);
+        }
+        Ok(out)
     }
 
     pub fn load_assessment_run(&self, id: &str) -> Result<String, LedgerError> {
@@ -378,7 +496,7 @@ impl EvidenceLedger {
         let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
         let mut out = Vec::new();
         for row in rows {
-            out.push(serde_json::from_str(&row?)?);
+            out.push(decode_envelope_payload(&row?)?);
         }
         Ok(out)
     }
@@ -392,7 +510,7 @@ impl EvidenceLedger {
         let rows = stmt.query_map(params, |row| row.get::<_, String>(0))?;
         let mut out = Vec::new();
         for row in rows {
-            out.push(serde_json::from_str(&row?)?);
+            out.push(decode_envelope_payload(&row?)?);
         }
         Ok(out)
     }
@@ -404,6 +522,130 @@ impl EvidenceLedger {
         }
         Ok(map)
     }
+}
+
+fn append_envelope_row(
+    conn: &Connection,
+    envelope: &EvidenceEnvelope,
+) -> Result<bool, LedgerError> {
+    let inserted = conn.execute(
+        "INSERT OR IGNORE INTO evidence_envelopes
+         (digest, evidence_id, collection_run_id, evidence_type, subject, collected_at, supersedes, payload)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        params![
+            envelope.digest(),
+            envelope.evidence_id(),
+            envelope.collection_run_id(),
+            envelope.observation().evidence_type().as_str(),
+            envelope.provenance().asset().as_str(),
+            envelope.provenance().collected_at.to_rfc3339(),
+            envelope.supersedes(),
+            serde_json::to_string(envelope)?,
+        ],
+    )?;
+    Ok(inserted == 1)
+}
+
+fn record_validity_event_on(
+    conn: &Connection,
+    event: EvidenceValidityEvent,
+) -> Result<bool, LedgerError> {
+    let payload = serde_json::to_string(&event)?;
+    let existing: Option<String> = conn
+        .query_row(
+            "SELECT payload FROM evidence_validity_events WHERE event_id = ?1",
+            [&event.event_id],
+            |row| row.get(0),
+        )
+        .optional()?;
+    if let Some(existing) = existing {
+        if existing == payload {
+            remember_event(&event);
+            return Ok(false);
+        }
+        return Err(LedgerError::Immutable(event.event_id));
+    }
+    let kind = match event.kind {
+        EvidenceValidityKind::Asserted => "asserted",
+        EvidenceValidityKind::Superseded => "superseded",
+        EvidenceValidityKind::Revoked => "revoked",
+        EvidenceValidityKind::Invalidated => "invalidated",
+    };
+    conn.execute(
+        "INSERT INTO evidence_validity_events
+         (event_id, envelope_digest, at, kind, payload)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![
+            event.event_id,
+            event.envelope_digest,
+            event.at.to_rfc3339(),
+            kind,
+            payload,
+        ],
+    )?;
+    remember_event(&event);
+    Ok(true)
+}
+
+fn decode_json<T: serde::de::DeserializeOwned>(payload: &str) -> Result<T, LedgerError> {
+    serde_json::from_str(payload)
+        .map_err(|e| PersistenceIntegrity::from(Corrupt(e.to_string())).into())
+}
+
+fn decode_envelope_payload(payload: &str) -> Result<EvidenceEnvelope, LedgerError> {
+    let env: EvidenceEnvelope = decode_json(payload)?;
+    parse_envelope_payload(env.digest(), payload)
+}
+
+fn parse_envelope_payload(digest: &str, payload: &str) -> Result<EvidenceEnvelope, LedgerError> {
+    let env: EvidenceEnvelope = decode_json(payload)?;
+    if !digest.is_empty() && env.digest() != digest {
+        return Err(PersistenceIntegrity::from(Corrupt(format!(
+            "digest/key mismatch: key {digest} payload {}",
+            env.digest()
+        )))
+        .into());
+    }
+    if !env.schema_version().is_empty() && env.schema_version() != EVIDENCE_SCHEMA {
+        return Err(PersistenceIntegrity::from(IncompatibleSchema {
+            found: env.schema_version().into(),
+            expected: EVIDENCE_SCHEMA.into(),
+        })
+        .into());
+    }
+    remember_envelope(&env);
+    Ok(env)
+}
+
+fn validate_persisted_document(payload: &str) -> Result<(), LedgerError> {
+    let value: serde_json::Value = serde_json::from_str(payload).map_err(|_| {
+        PersistenceIntegrity::from(IncompatibleSchema {
+            found: "non-json".into(),
+            expected: "application/json".into(),
+        })
+    })?;
+    if let Some(found) = value
+        .get("schemaVersion")
+        .or_else(|| value.get("schema"))
+        .and_then(|v| v.as_str())
+    {
+        if !known_document_schema(found) {
+            return Err(PersistenceIntegrity::from(IncompatibleSchema {
+                found: found.into(),
+                expected: EVIDENCE_SCHEMA.into(),
+            })
+            .into());
+        }
+    }
+    Ok(())
+}
+
+fn known_document_schema(schema: &str) -> bool {
+    schema == EVIDENCE_SCHEMA
+        || schema == crate::EVIDENCE_VALIDITY_SCHEMA
+        || schema == "weeping-angel/assessment-lineage/v1"
+        || schema.starts_with("weeping-angel/")
+        || schema == "evidence/v1"
 }
 
 fn persist_immutable(
@@ -524,4 +766,93 @@ fn select_leaf_as_of(
             .then_with(|| a.digest().cmp(b.digest()))
     });
     leaves.into_iter().next_back().cloned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+    use weeping_angel_assurance_ir::AssetId;
+
+    use crate::{EvidenceObservation, EvidenceProvenance};
+
+    fn ts(h: u32) -> DateTime<Utc> {
+        Utc.with_ymd_and_hms(2026, 6, 1, h, 0, 0).unwrap()
+    }
+
+    fn seal(salt: &str, collected_at: DateTime<Utc>) -> EvidenceEnvelope {
+        EvidenceEnvelope::seal(
+            EvidenceObservation::new(EvidenceType::new("identity.privileged.mfa"))
+                .with_fact("salt", salt)
+                .with_narrative("privileged MFA is enabled"),
+            EvidenceProvenance {
+                collector_id: "fixture.ledger-crate".into(),
+                collected_at,
+                scope: "repo:in-scope".into(),
+                asset: AssetId::new("repo:in-scope"),
+            },
+        )
+        .expect("seal")
+    }
+
+    #[test]
+    fn current_is_not_latest_when_newest_is_expired() {
+        let mut ledger = EvidenceLedger::open_in_memory().unwrap();
+        let older = seal("older", ts(1));
+        let newer = seal("newer", ts(12))
+            .with_valid_from(ts(12))
+            .with_valid_until(ts(13));
+        ledger.append(older.clone()).unwrap();
+        ledger.append(newer.clone()).unwrap();
+        let ty = EvidenceType::new("identity.privileged.mfa");
+        let latest = ledger.latest(&ty).unwrap().unwrap();
+        assert_eq!(latest.digest(), newer.digest());
+        let current = ledger
+            .as_of(&ty, Utc.with_ymd_and_hms(2026, 6, 2, 0, 0, 0).unwrap())
+            .unwrap()
+            .unwrap();
+        assert_eq!(current.digest(), older.digest());
+        let members = ledger
+            .valid_at(&ty, Utc.with_ymd_and_hms(2026, 6, 2, 0, 0, 0).unwrap())
+            .unwrap();
+        assert!(members.iter().any(|e| e.digest() == older.digest()));
+        assert!(!members.iter().any(|e| e.digest() == newer.digest()));
+    }
+
+    #[test]
+    fn malformed_payload_is_corrupt_not_serialize() {
+        let dir = tempfile_dir();
+        let path = dir.join("corrupt.sqlite");
+        let mut ledger = EvidenceLedger::open(&path).unwrap();
+        let env = seal("c", ts(1));
+        let digest = env.digest().to_string();
+        ledger.append(env).unwrap();
+        drop(ledger);
+        let conn = rusqlite::Connection::open(&path).unwrap();
+        let col = "payload";
+        conn.execute(
+            &format!("UPDATE evidence_envelopes SET {col} = ?1 WHERE digest = ?2"),
+            ["{not-json", digest.as_str()],
+        )
+        .unwrap();
+        drop(conn);
+        let ledger = EvidenceLedger::open(&path).unwrap();
+        let err = ledger.get(&digest).expect_err("corrupt");
+        assert!(
+            matches!(err, LedgerError::Path(ref m) if m.contains("corrupt")),
+            "{err}"
+        );
+    }
+
+    fn tempfile_dir() -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "wa-evidence-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
 }

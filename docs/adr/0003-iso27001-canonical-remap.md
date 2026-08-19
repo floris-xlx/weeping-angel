@@ -1,5 +1,14 @@
 # ADR 0003 — ISO 27001:2022 pack remaps onto the canonical catalog
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |
@@ -98,7 +107,7 @@ Every framework, including ISO, resolves through:
 
 `AssessmentRun` and readiness snapshots pin **both** `frameworkPackDigest` and the catalog digest (`canonicalCatalogDigest` on the run/report; `catalogDigest` on readiness JSON). Assess records the catalog pin via `CanonicalCatalog::digest` at the orchestrator.
 
-Catalog ID resolution uses a narrow pack-loader index: discover `catalog/canonical/v1` by search roots and fail closed on unknown `control.*` mapping targets. The framework crate does **not** depend on `weeping-angel-canonical-catalog`.
+Catalog ID resolution uses IR `CatalogProjection` from `CanonicalCatalog::projection` (named pack load via workspace `inventory` adapter; no second TOML parser). Unknown `control.*` mapping targets fail closed. The framework crate does **not** depend on `weeping-angel-canonical-catalog`. Operational parse/digest/pin law: [ADR 0011](0011-catalog-framework-digest-and-pin-ownership.md).
 
 Readiness walks the **actual** mapping graph. A requirement whose mappings are only partial / support / related / evidence-for / subset stays `partially covered` even if every mapped test is `Effective`.
 
@@ -157,7 +166,7 @@ Governance/judgement requirements stay Manual/Hybrid. Do not invent automated te
 
 - Incomplete catalog projection: vuln / infrastructure / governance ISO requirements remain unmapped until a later honest remap.
 - Historical assessments that cited sliver IDs need digest pins to replay rather than silent reinterpretation.
-- Framework validate grows a catalog-aware check at the pack-loader / CLI seam (index, not a crate dependency).
+- Framework validate is catalog-aware via IR `CatalogProjection` at the pack-loader / CLI seam (not a crate dependency on `weeping-angel-canonical-catalog`).
 
 ## Non-goals
 
@@ -169,3 +178,4 @@ SOC 2 / NIS2 / DORA / PCI / HIPAA packs; renaming catalog IDs; provider APIs; au
 - MVP vertical (pack/legal/CLI still law): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
 - Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
+- Catalog/framework/readiness trust boundary: [`0011-catalog-framework-digest-and-pin-ownership.md`](0011-catalog-framework-digest-and-pin-ownership.md)

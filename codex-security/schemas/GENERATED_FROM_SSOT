@@ -1,0 +1,8 @@
+Generated packaging copy of schemas/codex-security/.
+Do not edit these JSON Schema files by hand.
+
+SSOT: schemas/codex-security/
+Files: coverage.schema.json, findings.schema.json, scan-manifest.schema.json
+
+Refresh (from repo root):
+  Copy-Item schemas/codex-security/*.schema.json codex-security/schemas/

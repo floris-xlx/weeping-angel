@@ -8,16 +8,16 @@ use crate::engine::scope::resolve_link;
 // Rust `regex` crate has no backreferences — match each quote style separately.
 static PATH_RE_DQ: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#""(https?://[^"\s]+|/api[^"\s]*|/[A-Za-z0-9][A-Za-z0-9._/-]{1,120})""#)
-        .expect("PATH_RE_DQ")
+        .expect("PATH_RE_DQ") // panic-ok: regex literal
 });
 static PATH_RE_SQ: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"'(https?://[^'\s]+|/api[^'\s]*|/[A-Za-z0-9][A-Za-z0-9._/-]{1,120})'"#)
-        .expect("PATH_RE_SQ")
+        .expect("PATH_RE_SQ") // panic-ok: regex literal
 });
 
 static FETCH_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?:fetch|axios\.(?:get|post|put|delete|patch)|\$\.(?:get|post))\s*\(\s*["']([^"']+)["']"#)
-        .expect("FETCH_RE")
+        .expect("FETCH_RE") // panic-ok: regex literal
 });
 
 pub fn script_srcs(base: &Url, html: &str) -> Vec<Url> {

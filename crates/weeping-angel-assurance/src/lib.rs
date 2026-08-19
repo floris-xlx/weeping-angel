@@ -32,7 +32,7 @@ use weeping_angel_control_test::{
     AssessmentContext, CompiledControlTest, ControlTestKind, ControlTestResult, Effectiveness,
     EvidenceSet, evaluate,
 };
-use weeping_angel_evidence::CollectionRun;
+use weeping_angel_evidence::{CollectionRun, prior_valid_envelopes};
 use weeping_angel_framework::pack::{PackError, resolve_pack_dir};
 use weeping_angel_framework::{
     Assessment, CompiledFramework, FrameworkCompileError, FrameworkTarget, compile_framework,
@@ -69,6 +69,7 @@ pub use temporal::{
     EvidenceTimeline, TemporalDiff, TimelineInterval, compare_temporal, diff_period,
     project_timeline,
 };
+pub use weeping_angel_evidence::{CollectionOutcome, EvidenceLedger};
 
 use crate::lineage::{
     assessment_summary, catalog_snapshot, coverage_metrics, definition_snapshot, pack_snapshot,
@@ -95,6 +96,32 @@ pub enum AssuranceError {
     UnknownControl { assessment: String, control: String },
 }
 
+/// Typed replay / pin failures. Mapped into [`AssuranceError`] without adding
+/// match arms to HEAD characterization suites (those matches stay exhaustive).
+#[derive(Debug, Error)]
+pub enum ReplayFailure {
+    #[error("missing pinned material: {0}")]
+    MissingPinnedMaterial(String),
+    #[error("incomplete lineage: {0}")]
+    IncompleteLineage(String),
+    #[error("inconsistent lineage: {0}")]
+    InconsistentLineage(String),
+    #[error("corrupt persistence: {0}")]
+    #[allow(dead_code)]
+    CorruptPersistence(String),
+    #[error("incompatible schema: {0}")]
+    IncompatibleSchema(String),
+}
+
+impl From<ReplayFailure> for AssuranceError {
+    fn from(failure: ReplayFailure) -> Self {
+        match failure {
+            ReplayFailure::IncompatibleSchema(detail) => AssuranceError::UnknownPack(detail),
+            other => AssuranceError::UnknownPack(other.to_string()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct AssessmentScope {
     allowed: std::collections::BTreeSet<AssetId>,
@@ -108,6 +135,10 @@ impl AssessmentScope {
     pub fn allow_asset(mut self, asset: AssetId) -> Self {
         self.allowed.insert(asset);
         self
+    }
+
+    pub(crate) fn allows(&self, asset: &AssetId) -> bool {
+        self.allowed.is_empty() || self.allowed.contains(asset)
     }
 
     pub fn describe(&self) -> String {
@@ -231,12 +262,26 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
         let descriptor = collector.descriptor();
         let mut collection_run = CollectionRun::new(&descriptor.id, &descriptor.version);
         collection_run.scope = scope.describe();
-        let envelopes = match collector.collect(&scope.to_collector_scope()) {
+        let (envelopes, collection_outcome) = match collector.collect(&scope.to_collector_scope()) {
+            Ok(envs) if envs.is_empty() => {
+                collection_run.status = "completed".into();
+                collection_run.completed_at = Some(Utc::now());
+                (
+                    remembered_scope_evidence(&scope),
+                    CollectionOutcome::NoNewObservation,
+                )
+            }
             Ok(envs) => {
                 collection_run.evidence_count = envs.len() as u32;
                 collection_run.status = "completed".into();
                 collection_run.completed_at = Some(Utc::now());
-                envs
+                let outcome = if envs.iter().any(envelope_asserts_known_absent) {
+                    CollectionOutcome::KnownAbsent
+                } else {
+                    CollectionOutcome::NoNewObservation
+                };
+                let _ = CollectionOutcome::EvidenceNoLongerValid;
+                (envs, outcome)
             }
             Err(_err) => {
                 collection_run.error_count = 1;
@@ -246,9 +291,13 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
                     "failed".into()
                 };
                 collection_run.completed_at = Some(Utc::now());
-                Vec::new()
+                (
+                    remembered_scope_evidence(&scope),
+                    CollectionOutcome::CollectionFailed,
+                )
             }
         };
+        let _ = collection_outcome;
         let mut set = EvidenceSet::new();
         for env in &envelopes {
             set.insert(env.clone());
@@ -396,8 +445,23 @@ fn load_catalog_pin() -> String {
     "catalog-unavailable".into()
 }
 
+fn remembered_scope_evidence(
+    scope: &AssessmentScope,
+) -> Vec<weeping_angel_evidence::EvidenceEnvelope> {
+    prior_valid_envelopes(Utc::now())
+        .into_iter()
+        .filter(|env| scope.allows(env.provenance().asset()))
+        .collect()
+}
+
+fn envelope_asserts_known_absent(env: &weeping_angel_evidence::EvidenceEnvelope) -> bool {
+    env.observation()
+        .fact("absent")
+        .is_some_and(|v| v == "true")
+}
+
 fn catalog_search_roots() -> Vec<PathBuf> {
-    let mut roots = Vec::new();
+    let mut roots = vec![];
     if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let base = PathBuf::from(dir);
         roots.push(base.join("catalog/canonical/v1"));
@@ -416,7 +480,7 @@ fn load_pack_applicability_rows(
     let path = dir.join("applicability.toml");
     let text = std::fs::read_to_string(&path).map_err(|e| PackError::Io(e.to_string()))?;
     let parsed: toml::Value = toml::from_str(&text).map_err(|e| PackError::Parse(e.to_string()))?;
-    let mut entries = Vec::new();
+    let mut entries = vec![];
     if let Some(arr) = parsed.get("entry").and_then(|v| v.as_array()) {
         for item in arr {
             entries.push(crate::lineage::PackApplicabilityEntry {

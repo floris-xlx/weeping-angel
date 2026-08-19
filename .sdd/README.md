@@ -14,3 +14,5 @@ Canonical surfaces:
 - Specs: [`docs/specs/`](../docs/specs/)
 - Decisions: [`docs/adr/`](../docs/adr/)
 - Executable invariants: [`tests/contracts/`](../tests/contracts/)
+
+Hygiene count snapshots (optional, gitignored): `runs/repository-hygiene-counts.md`. Do not copy those numbers into [`docs/debt/register.toml`](../docs/debt/register.toml).

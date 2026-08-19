@@ -3,6 +3,18 @@ schema = "weeping-angel/architecture/v1"
 # Canonical concept ownership. Package names are live workspace members only.
 # Do not invent weeping-angel-catalog or weeping-angel-assurance-cli.
 
+[policy]
+ownership_kinds = ["exclusive", "facade", "projection", "adapter", "shared-primitive"]
+required_concepts = [
+  "catalog",
+  "framework_compilation",
+  "readiness_projection",
+  "temporal_evidence_selection",
+  "assessment_lineage",
+  "evidence_persistence",
+  "assurance_cli",
+]
+
 [ownership.catalog]
 crate = "weeping-angel-canonical-catalog"
 kind = "exclusive"
@@ -39,3 +51,8 @@ paths = ["crates/weeping-angel-evidence"]
 crate = "weeping-angel"
 kind = "facade"
 paths = ["src/main.rs", "src/cli.rs"]
+
+[ownership.repository_guard]
+crate = "xtask"
+kind = "exclusive"
+paths = ["xtask"]

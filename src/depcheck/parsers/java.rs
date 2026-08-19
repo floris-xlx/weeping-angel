@@ -85,7 +85,7 @@ pub fn parse_build_gradle(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)>
         Regex::new(
             r#"(?:implementation|compile|api|runtimeOnly|testImplementation|compileOnly|testCompileOnly|annotationProcessor)\s*[\(]?\s*['"]([^'"]+):([^'"]+):([^'"]*?)['"]"#,
         )
-        .expect("gradle dep")
+        .expect("gradle dep") // panic-ok: regex literal
     });
     for c in pat.captures_iter(content) {
         packages.insert(format!("{}:{}", &c[1], &c[2]), c[3].to_string());

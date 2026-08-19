@@ -31,4 +31,7 @@ weeping-angel assurance catalog validate
 
 Shipped: `iso-27001/2022` (StructuralOnly ISO 27001 readiness pack) and
 `wa-baseline/1` (thin canonical baseline). Packs never contain GitHub/AWS
-types or ISO normative clause text. Digest: `FrameworkPackDigest`.
+types or ISO normative clause text. Pack identity: semantic `FrameworkPackDigest` (pack-authored
+requirements/mappings/applicability — not catalog injection or file formatting). Catalog identity
+is a separate pin (`CanonicalCatalog::digest`). `metadata.toml` must not declare `[[control]]` /
+`[[test]]` library rows. See [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../docs/adr/0011-catalog-framework-digest-and-pin-ownership.md).

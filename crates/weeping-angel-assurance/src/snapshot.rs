@@ -7,10 +7,33 @@ use weeping_angel_control_test::Effectiveness;
 
 use crate::readiness::FrameworkReadinessSnapshot;
 
+/// Live catalog walk for establishing a pin at assess start. Serialize must not call this.
+pub fn catalog_digest() -> String {
+    use std::path::PathBuf;
+    use weeping_angel_canonical_catalog::CanonicalCatalog;
+
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("catalog/canonical/v1"));
+        roots.push(base.join("../..").join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("catalog/canonical/v1"));
+    }
+    roots.push(PathBuf::from("catalog/canonical/v1"));
+    for root in roots {
+        if let Ok(catalog) = CanonicalCatalog::load(&root)
+            && let Ok(digest) = catalog.digest()
+        {
+            return digest.to_string();
+        }
+    }
+    "catalog-unavailable".into()
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentRun {
-    // `as_of` / asOf is serialized from started_at (pinned evaluation clock).
+    // `as_of` / asOf is serialized from the as_of field (pinned evaluation clock).
     pub id: AssessmentId,
     pub framework: String,
     pub framework_pack_digest: String,
@@ -34,11 +57,7 @@ pub struct AssessmentRun {
 
 impl Serialize for AssessmentRun {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let catalog = if self.canonical_catalog_pin.is_empty() {
-            catalog_digest()
-        } else {
-            self.canonical_catalog_pin.clone()
-        };
+        let catalog = self.canonical_catalog_pin.clone();
         let mut state = serializer.serialize_struct("AssessmentRun", 15)?;
         state.serialize_field("id", &self.id)?;
         state.serialize_field("framework", &self.framework)?;
@@ -57,8 +76,8 @@ impl Serialize for AssessmentRun {
         state.serialize_field("canonicalCatalogDigest", &catalog)?;
         state.serialize_field("catalogDigest", &catalog)?;
         state.serialize_field("applicabilitySnapshotId", &self.applicability_snapshot_id)?;
-        // Pinned evaluation clock (`as_of`) for historical replay.
-        state.serialize_field("asOf", &self.started_at)?;
+        // Pinned evaluation clock (`as_of`) for historical replay; independent of startedAt.
+        state.serialize_field("asOf", &self.as_of)?;
         state.end()
     }
 }
@@ -226,27 +245,4 @@ pub fn compare_runs(previous: &AssessmentRun, next: &AssessmentRun) -> SnapshotD
 
 pub fn compare_lineage(previous: &AssessmentRun, next: &AssessmentRun) -> SnapshotDiff {
     compare_runs(previous, next)
-}
-
-/// Pinned canonical catalog digest for snapshot documents. Missing catalog is explicit.
-pub fn catalog_digest() -> String {
-    use std::path::PathBuf;
-    use weeping_angel_canonical_catalog::CanonicalCatalog;
-
-    let mut roots = Vec::new();
-    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("../..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-    }
-    roots.push(PathBuf::from("catalog/canonical/v1"));
-    for root in roots {
-        if let Ok(catalog) = CanonicalCatalog::load(&root)
-            && let Ok(digest) = catalog.digest()
-        {
-            return digest.to_string();
-        }
-    }
-    "catalog-unavailable".into()
 }

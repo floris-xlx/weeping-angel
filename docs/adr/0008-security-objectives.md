@@ -1,5 +1,14 @@
 # ADR 0008 — Security objectives IR and pure evidence-backed evaluator
 
+<!-- weeping-angel-adr-meta
+id = "0008"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_security_objectives_target` GREEN (SO-T01–T20); `sdd_security_objectives_baseline` skip-superseded |

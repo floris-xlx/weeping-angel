@@ -19,12 +19,15 @@ use std::time::Duration;
 use chrono::Utc;
 use serde_json::Value;
 use weeping_angel_assurance_ir::{AssetId, canonical_digest};
-use weeping_angel_evidence::{CollectionRun, EvidenceEnvelope, EvidenceValue};
+use weeping_angel_evidence::{EvidenceEnvelope, EvidenceValue};
 
-use crate::{
-    CollectionBatch, CollectionRequest, CollectorDescriptor, CollectorError, CollectorScope,
-    EvidenceCollector,
+use crate::EvidenceCollector;
+use crate::application::CollectionEngine;
+use crate::domain::{
+    CollectionBatch, CollectionCoverage, CollectionRequest, CollectorDescriptor, CollectorError,
+    CollectorInstance, CollectorScope, CredentialRef, ObservationBatch, ObservationCandidate,
 };
+use crate::ports::CollectorAdapter;
 
 use branches::protection_path;
 use client::ClientError;
@@ -66,6 +69,21 @@ impl GitHubCollector {
         }
     }
 
+    fn instance(&self) -> CollectorInstance {
+        CollectorInstance::new(
+            "github:default",
+            "collector.github",
+            CredentialRef::new("github:default"),
+        )
+    }
+
+    fn engine_collect(
+        &self,
+        request: CollectionRequest,
+    ) -> Result<CollectionBatch, CollectorError> {
+        CollectionEngine::new().collect(self, &self.instance(), request)
+    }
+
     fn fetch(&self, path: &str) -> Fetch {
         match self.client.get_response(path) {
             Ok(resp) => match resp.status {
@@ -92,9 +110,9 @@ impl GitHubCollector {
         }
     }
 
-    fn collect_inner(&self, scope: &CollectorScope) -> (Vec<EvidenceEnvelope>, Vec<String>, bool) {
+    fn collect_inner(&self, scope: &CollectorScope) -> ObservationBatch {
         let parsed = parse_scope(scope);
-        let mut envelopes = Vec::new();
+        let mut candidates = Vec::new();
         let mut errors = Vec::new();
         let mut hole = false;
         let collected_at = Utc::now();
@@ -107,7 +125,15 @@ impl GitHubCollector {
                     errors.push(format!("OutOfScope: {u}"));
                 }
             }
-            return (envelopes, errors, true);
+            return ObservationBatch {
+                candidates,
+                diagnostics: errors,
+                coverage: CollectionCoverage {
+                    hole: true,
+                    strict_scope: false,
+                },
+                collected_at: Some(collected_at),
+            };
         }
         for u in &parsed.unknown {
             errors.push(format!("OutOfScope: {u}"));
@@ -219,7 +245,7 @@ impl GitHubCollector {
             }
 
             match normalize::repository_envelopes(&repo_json, owner, name, true, &ctx) {
-                Ok(mut envs) => envelopes.append(&mut envs),
+                Ok(mut envs) => candidates.append(&mut envs),
                 Err(e) => {
                     hole = true;
                     errors.push(sanitize_diagnostic(&e.to_string()));
@@ -227,13 +253,13 @@ impl GitHubCollector {
             }
 
             match security::from_repo_security(&repo_json, owner, name, &ctx) {
-                Ok(mut envs) => envelopes.append(&mut envs),
+                Ok(mut envs) => candidates.append(&mut envs),
                 Err(e) => errors.push(sanitize_diagnostic(&e.to_string())),
             }
 
             if let Some(branch) = default_branch_of(&repo_json) {
                 match self.collect_protection(owner, name, branch, &ctx, &mut errors) {
-                    Ok(mut envs) => envelopes.append(&mut envs),
+                    Ok(mut envs) => candidates.append(&mut envs),
                     Err(()) => hole = true,
                 }
             } else {
@@ -243,7 +269,7 @@ impl GitHubCollector {
                 ));
             }
 
-            self.collect_optional_repo(owner, name, &ctx, &mut envelopes, &mut errors, &mut hole);
+            self.collect_optional_repo(owner, name, &ctx, &mut candidates, &mut errors, &mut hole);
         }
 
         if !parsed.orgs.is_empty() {
@@ -261,7 +287,7 @@ impl GitHubCollector {
                         asset: AssetId::new(format!("org:{}", parsed.orgs[0])),
                     },
                 ) {
-                    envelopes.push(env);
+                    candidates.push(env);
                 }
             } else if let Ok(env) = emit(
                 "inventory.complete",
@@ -276,7 +302,7 @@ impl GitHubCollector {
                     asset: AssetId::new(format!("org:{}", parsed.orgs[0])),
                 },
             ) {
-                envelopes.push(env);
+                candidates.push(env);
             }
         } else if only_explicit
             && !hole
@@ -294,7 +320,7 @@ impl GitHubCollector {
                 },
             )
         {
-            envelopes.push(env);
+            candidates.push(env);
         }
 
         let _ = (
@@ -306,7 +332,15 @@ impl GitHubCollector {
             workflows::MODULE,
         );
 
-        (envelopes, errors, hole)
+        ObservationBatch {
+            candidates,
+            diagnostics: errors,
+            coverage: CollectionCoverage {
+                hole,
+                strict_scope: false,
+            },
+            collected_at: Some(collected_at),
+        }
     }
 
     fn collect_protection(
@@ -316,7 +350,7 @@ impl GitHubCollector {
         default_branch: &str,
         ctx: &EmitCtx<'_>,
         errors: &mut Vec<String>,
-    ) -> Result<Vec<EvidenceEnvelope>, ()> {
+    ) -> Result<Vec<ObservationCandidate>, ()> {
         let path = protection_path(owner, name, default_branch);
         match self.fetch(&path) {
             Fetch::Json(json) if looks_like_protection(&json) => {
@@ -332,8 +366,7 @@ impl GitHubCollector {
                         let extra = rulesets::from_rulesets_json(&rules, owner, name, ctx)
                             .unwrap_or_default();
                         if extra.iter().any(|e| {
-                            e.observation().evidence_type().as_str()
-                                == "evidence.repository.branch-protection"
+                            e.evidence_type.as_str() == "evidence.repository.branch-protection"
                         }) {
                             return Ok(extra);
                         }
@@ -389,7 +422,7 @@ impl GitHubCollector {
         owner: &str,
         name: &str,
         ctx: &EmitCtx<'_>,
-        envelopes: &mut Vec<EvidenceEnvelope>,
+        envelopes: &mut Vec<ObservationCandidate>,
         errors: &mut Vec<String>,
         hole: &mut bool,
     ) {
@@ -407,9 +440,8 @@ impl GitHubCollector {
                     "CODEOWNERS presence observation",
                     ctx,
                 ) && !envelopes.iter().any(|e| {
-                    e.observation().evidence_type().as_str()
-                        == "evidence.repository.review-ownership"
-                        && e.observation().fact("subject_id") == Some(subject.as_str())
+                    e.evidence_type.as_str() == "evidence.repository.review-ownership"
+                        && e.fact("subject_id") == Some(subject.as_str())
                 }) {
                     envelopes.push(env);
                 }
@@ -439,8 +471,7 @@ impl GitHubCollector {
                             "CODEOWNERS absent observation",
                             ctx,
                         ) && !envelopes.iter().any(|e| {
-                            e.observation().evidence_type().as_str()
-                                == "evidence.repository.review-ownership"
+                            e.evidence_type.as_str() == "evidence.repository.review-ownership"
                         }) {
                             envelopes.push(env);
                         }
@@ -615,9 +646,27 @@ impl GitHubCollector {
     }
 }
 
-impl EvidenceCollector for GitHubCollector {
+impl CollectorAdapter for GitHubCollector {
     fn descriptor(&self) -> CollectorDescriptor {
         descriptor::descriptor(&self.version)
+    }
+
+    fn collect_observations(
+        &self,
+        _instance: &CollectorInstance,
+        request: &CollectionRequest,
+    ) -> Result<ObservationBatch, CollectorError> {
+        Ok(self.collect_inner(&request.scope))
+    }
+
+    fn configuration_digest(&self, scope: &CollectorScope) -> String {
+        GitHubCollector::configuration_digest(self, scope)
+    }
+}
+
+impl EvidenceCollector for GitHubCollector {
+    fn descriptor(&self) -> CollectorDescriptor {
+        CollectorAdapter::descriptor(self)
     }
 
     fn collect(&self, scope: &CollectorScope) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
@@ -630,8 +679,10 @@ impl EvidenceCollector for GitHubCollector {
                 .unwrap_or_else(|| scope.as_label());
             return Err(CollectorError::OutOfScope { asset });
         }
-        let (envelopes, _errors, _hole) = self.collect_inner(scope);
-        Ok(envelopes)
+        let batch = self.engine_collect(CollectionRequest {
+            scope: scope.clone(),
+        })?;
+        Ok(batch.envelopes)
     }
 }
 
@@ -640,25 +691,7 @@ impl GitHubCollector {
         &self,
         request: CollectionRequest,
     ) -> Result<CollectionBatch, CollectorError> {
-        let mut run = CollectionRun::new("collector.github", &self.version);
-        run.scope = request.scope.as_label();
-        run.configuration_digest = self.configuration_digest(&request.scope);
-        let (envelopes, errors, hole) = self.collect_inner(&request.scope);
-        run.completed_at = Some(Utc::now());
-        run.evidence_count = envelopes.len() as u32;
-        run.error_count = errors.len() as u32;
-        run.status = if envelopes.is_empty() && !errors.is_empty() {
-            "failed".into()
-        } else if hole || !errors.is_empty() {
-            "partial".into()
-        } else {
-            "complete".into()
-        };
-        Ok(CollectionBatch {
-            run,
-            envelopes,
-            errors,
-        })
+        self.engine_collect(request)
     }
 
     pub fn backoff(attempt: u32, retry_after: Option<Duration>) -> Duration {

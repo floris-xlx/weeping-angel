@@ -1,0 +1,12 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+
+# @opennextjs/cloudflare imports esbuild from its published CLI, but lists
+# esbuild only as a devDependency. pnpm isolation then fails with
+# ERR_MODULE_NOT_FOUND unless esbuild is injected as a real dependency.
+packageExtensions:
+  "@opennextjs/cloudflare":
+    dependencies:
+      esbuild: "^0.27.0"

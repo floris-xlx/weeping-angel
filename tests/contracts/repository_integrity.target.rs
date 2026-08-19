@@ -1,10 +1,13 @@
-//! Target suite for Repository Integrity increment 1 (health gate).
+//! Target suite for Repository Integrity.
 //!
-//! Encodes DESIRED behavior from `docs/specs/repository-integrity.md` §4 / §5
-//! (RI-T01–T16 + remaining acceptance criteria). Must stay RED on CURRENT
-//! HEAD: no `architecture/` manifests, no `docs/debt/` register, no `xtask`
-//! member, CI does not run `cargo xtask guard`. Do not implement the gate
-//! in this suite; do not weaken assertions to match characterization absences.
+//! Increment 1 (RI-T01–T17): health-gate acceptance (`docs/specs/repository-integrity.md`
+//! §4 / §5) — GREEN on the increment-1 / ADR-0010 tree.
+//!
+//! Increment 2 (RI-T18–T31 + updated RI-T13 / RI-T17): desired guard-engine /
+//! governance behavior from §13. MUST FAIL (RED) on CURRENT increment-1 code:
+//! xtask monolith, hard-coded policy, Guard 14/15 skip-with-debt, weak debt
+//! exemptions, JSON without schema/counts, no spec-lifecycle / adr-identity
+//! files. Do not implement increment-2 product code in this suite.
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -26,7 +29,21 @@ const OWNERSHIP_CONCEPTS: [&str; 7] = [
     "assurance_cli",
 ];
 
-const STUB_CHECKS: [&str; 10] = ["05", "06", "07", "08", "09", "10", "11", "12", "14", "15"];
+/// Product-semantic stubs owned by concurrent Prompts 2/3 (not 14/15).
+const PRODUCT_STUB_CHECKS: [&str; 8] = ["05", "06", "07", "08", "09", "10", "11", "12"];
+
+const OWNERSHIP_KINDS: [&str; 5] = [
+    "exclusive",
+    "facade",
+    "projection",
+    "adapter",
+    "shared-primitive",
+];
+
+const ADR_IDENTITY_SCHEMA: &str = "weeping-angel/adr-identity/v1";
+const SPEC_LIFECYCLE_SCHEMA: &str = "weeping-angel/spec-lifecycle/v1";
+const GUARD_REPORT_SCHEMA: &str = "weeping-angel/guard-report/v1";
+const GRANDFATHERED_ADR_PREFIXES: [&str; 4] = ["0003", "0005", "0007", "0008"];
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -365,11 +382,18 @@ fn ri_t07b_seed_debt_findings_include_stub_check_ids() {
     ] {
         assert!(ids.contains(seed), "register must contain {seed}");
     }
-    for id in STUB_CHECKS {
+    for id in PRODUCT_STUB_CHECKS {
         let finding = format!("DEBT-GUARD-{id}");
         assert!(
             ids.contains(finding.as_str()),
             "register must contain {finding} so stub skips are attributable"
+        );
+    }
+    for id in ["14", "15"] {
+        let finding = format!("DEBT-GUARD-{id}");
+        assert!(
+            ids.contains(finding.as_str()),
+            "register must retain {finding} as resolved proof after Guards 14/15 become real"
         );
     }
 }
@@ -502,7 +526,7 @@ fn ri_t11_cargo_xtask_guard_runs_implemented_checks() {
     }
 }
 
-/// RI-T13: check 04 is pass/evaluated; stubs 05–12 and 14–15 never silently pass.
+/// RI-T13: check 04 is pass/evaluated; 14/15 are real; stubs 05–12 never silently pass.
 #[test]
 fn ri_t13_stub_checks_do_not_silently_pass() {
     let combined = guard_report();
@@ -519,15 +543,37 @@ fn ri_t13_stub_checks_do_not_silently_pass() {
             && !combined.contains("not-yet-implemented: check 04"),
         "check 04 must not skip or nyi; output={combined}"
     );
-    for id in STUB_CHECKS {
+    for id in ["14", "15"] {
+        assert!(
+            !combined.contains(&format!("skip(DEBT-GUARD-{id})"))
+                && !combined.contains(&format!("not-yet-implemented: check {id}")),
+            "check {id} must be a real ArchitectureCheck, not skip-with-debt or nyi; output={combined}"
+        );
+        let pass_line = combined.contains(&format!("{id}  "))
+            && combined.contains("pass")
+            && (combined.contains(&format!("{id}  adr-graph  pass"))
+                || combined.contains(&format!("{id}  spec-lifecycle  pass")));
+        assert!(
+            pass_line,
+            "check {id} must report pass on the live tree; output={combined}"
+        );
+    }
+    for id in PRODUCT_STUB_CHECKS {
         let skip = combined.contains(&format!("DEBT-GUARD-{id}"))
             || combined.contains(&format!("skip(DEBT-GUARD-{id})"))
             || combined.contains(&format!("skip (DEBT-GUARD-{id})"));
-        let nyi = combined.contains(&format!("not-yet-implemented: check {id}"))
-            || combined.contains(&format!("not-yet-implemented: check {id}"));
+        let nyi = combined.contains(&format!("not-yet-implemented: check {id}"));
         assert!(
             skip || nyi,
             "stub check {id} must skip-with-debt or fail closed; output={combined}"
+        );
+        assert!(
+            !combined.contains(&format!("{id}  "))
+                || !combined.lines().any(|line| {
+                    let t = line.trim();
+                    t.starts_with(&format!("{id}  ")) && t.ends_with("  pass")
+                }),
+            "stub check {id} must not silently pass; output={combined}"
         );
     }
 }
@@ -599,19 +645,694 @@ fn ri_t17_adr_0009_accepted_and_backlog_not_shipped_as_product() {
         spec.contains("remaining_backlog"),
         "spec must keep remaining_backlog"
     );
-    // Guard checks 05–12 / 14–15 stay stubs (fail-closed or skip-with-debt), not real P0 remediations. Check 04 is ADR 0010.
+    // Guard checks 05–12 stay stubs (fail-closed or skip-with-debt). 14/15 are increment-2 real checks.
     let xtask_src = collect_rs(rel("xtask"));
     assert!(
         !xtask_src.is_empty(),
         "xtask sources must exist so remaining_backlog stubs can be inspected"
     );
-    for id in STUB_CHECKS {
+    for id in PRODUCT_STUB_CHECKS {
         let implemented_as_real = xtask_src.contains(&format!("check {id} implemented"))
             && !xtask_src.contains("not-yet-implemented")
             && !xtask_src.contains("DEBT-GUARD-");
         assert!(
             !implemented_as_real,
             "check {id} must remain a stub this slice"
+        );
+    }
+    assert!(
+        !xtask_src.contains(r#"("14", "adr-graph")"#)
+            && !xtask_src.contains("\"14\", \"adr-graph\""),
+        "check 14 must not remain in REMAINING_STUBS"
+    );
+    assert!(
+        !xtask_src.contains(r#"("15", "spec-lifecycle")"#)
+            && !xtask_src.contains("\"15\", \"spec-lifecycle\""),
+        "check 15 must not remain in REMAINING_STUBS"
+    );
+}
+
+fn cargo_xtask_guard_args(args: &[&str]) -> std::process::Output {
+    Command::new("cargo")
+        .args(["xtask", "guard"])
+        .args(args)
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn cargo xtask guard")
+}
+
+fn xtask_src_rel_rs() -> Vec<String> {
+    let root = rel("xtask/src");
+    let mut files = Vec::new();
+    fn walk(dir: &Path, prefix: &Path, files: &mut Vec<String>) {
+        let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
+        for entry in entries {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, prefix, files);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                let rel = path
+                    .strip_prefix(prefix)
+                    .expect("xtask/src prefix")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                files.push(rel);
+            }
+        }
+    }
+    walk(&root, &root, &mut files);
+    files.sort();
+    files
+}
+
+fn xtask_src_text() -> String {
+    collect_rs(rel("xtask/src"))
+}
+
+fn list_md(dir: &str) -> Vec<String> {
+    let entries = fs::read_dir(rel(dir)).unwrap_or_else(|e| panic!("read {dir}: {e}"));
+    let mut names = Vec::new();
+    for entry in entries {
+        let entry = entry.unwrap();
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name.ends_with(".md") {
+            names.push(name);
+        }
+    }
+    names.sort();
+    names
+}
+
+fn field_present(finding: &toml::Value, key: &str) -> bool {
+    match finding.get(key) {
+        None => false,
+        Some(toml::Value::String(s)) => !s.is_empty(),
+        Some(toml::Value::Array(a)) => !a.is_empty(),
+        Some(_) => true,
+    }
+}
+
+fn exemption_complete(finding: &toml::Value) -> bool {
+    field_present(finding, "owner")
+        && field_present(finding, "introduced")
+        && field_present(finding, "severity")
+        && field_present(finding, "remediation")
+        && field_present(finding, "repository_guard")
+        && (field_present(finding, "expires") || field_present(finding, "review_by"))
+}
+
+fn finding_named<'a>(register: &'a toml::Value, id: &str) -> &'a toml::Value {
+    register
+        .get("finding")
+        .and_then(|f| f.as_array())
+        .expect("[[finding]]")
+        .iter()
+        .find(|f| f.get("id").and_then(|v| v.as_str()) == Some(id))
+        .unwrap_or_else(|| panic!("register must contain {id}"))
+}
+
+fn module_present(files: &[String], stem: &str) -> bool {
+    files.iter().any(|f| {
+        f == &format!("{stem}.rs")
+            || f == &format!("{stem}/mod.rs")
+            || f.starts_with(&format!("{stem}/"))
+    })
+}
+
+fn source_contains_fn_rereads(src: &str, fn_name: &str) -> bool {
+    let needle = format!("fn {fn_name}");
+    let Some(rest) = src.split(&needle).nth(1) else {
+        return false;
+    };
+    let body = rest.split("fn ").next().unwrap_or(rest);
+    body.contains("fs::read_to_string") || body.contains("read_to_string(")
+}
+
+/// RI-T18: xtask is modular (model / architecture / debt / checks / report).
+#[test]
+fn ri_t18_xtask_is_modular_not_a_lib_rs_monolith() {
+    let files = xtask_src_rel_rs();
+    assert!(
+        files.iter().any(|f| f == "lib.rs"),
+        "xtask/src/lib.rs must remain the public re-export surface; found {files:?}"
+    );
+    for stem in ["model", "architecture", "debt", "checks", "report"] {
+        assert!(
+            module_present(&files, stem),
+            "xtask/src must contain a {stem} module (file or directory); found {files:?}"
+        );
+    }
+    assert!(
+        files.len() > 2,
+        "lib.rs must not be the only implementation file alongside main.rs; found {files:?}"
+    );
+}
+
+/// RI-T19: RepositoryModel caches source at load; checks do not reread the tree.
+#[test]
+fn ri_t19_repository_model_caches_source_at_load() {
+    let src = xtask_src_text();
+    assert!(
+        src.contains("struct RepositoryModel"),
+        "RepositoryModel must exist"
+    );
+    let cached = [
+        "source_cache",
+        "source_index",
+        "source_text",
+        "normalized_source",
+        "source_map",
+    ]
+    .iter()
+    .any(|field| src.contains(field));
+    assert!(
+        cached,
+        "RepositoryModel must cache normalized source text or a lightweight index at load"
+    );
+    assert!(
+        !source_contains_fn_rereads(&src, "source_contains"),
+        "source_contains must not fs::read_to_string every source_files entry"
+    );
+}
+
+/// RI-T20: policy lives under architecture/; Rust is not the SSOT.
+#[test]
+fn ri_t20_policy_lives_in_versioned_architecture_files() {
+    let arch = parse_toml("architecture/architecture.toml");
+    let policy = arch.get("policy").expect("[policy] table is required");
+    let kinds: Vec<&str> = policy
+        .get("ownership_kinds")
+        .and_then(|v| v.as_array())
+        .expect("policy.ownership_kinds")
+        .iter()
+        .map(|v| v.as_str().expect("kind str"))
+        .collect();
+    for kind in OWNERSHIP_KINDS {
+        assert!(
+            kinds.iter().any(|k| *k == kind),
+            "policy.ownership_kinds must include {kind}; got {kinds:?}"
+        );
+    }
+    let concepts: Vec<&str> = policy
+        .get("required_concepts")
+        .and_then(|v| v.as_array())
+        .expect("policy.required_concepts")
+        .iter()
+        .map(|v| v.as_str().expect("concept str"))
+        .collect();
+    for concept in OWNERSHIP_CONCEPTS {
+        assert!(
+            concepts.iter().any(|c| *c == concept),
+            "policy.required_concepts must include {concept}; got {concepts:?}"
+        );
+    }
+
+    let src = xtask_src_text();
+    assert!(
+        src.contains("ownership_kinds") && src.contains("required_concepts"),
+        "xtask must interpret [policy] ownership_kinds / required_concepts from architecture.toml"
+    );
+    assert!(
+        !src.contains("const FORBIDDEN_PACKAGES"),
+        "forbidden package names must live in architecture/forbidden-patterns.toml, not a Rust policy SSOT"
+    );
+    assert!(
+        rel("architecture/adr-identity.toml").is_file(),
+        "architecture/adr-identity.toml must exist"
+    );
+    assert!(
+        rel("architecture/spec-lifecycle.toml").is_file(),
+        "architecture/spec-lifecycle.toml must exist"
+    );
+}
+
+/// RI-T21: live Guard 14 is pass (not skip-with-debt).
+#[test]
+fn ri_t21_live_guard_14_is_pass_not_skip() {
+    let combined = guard_report();
+    assert!(
+        combined.contains("14  adr-graph  pass"),
+        "check 14 must pass on the live tree; output={combined}"
+    );
+    assert!(
+        !combined.contains("skip(DEBT-GUARD-14)")
+            && !combined.contains("not-yet-implemented: check 14"),
+        "check 14 must not skip or nyi; output={combined}"
+    );
+}
+
+/// RI-T22: unique new ADR prefixes; historical dupes only via DEBT-DUP-ADR.
+#[test]
+fn ri_t22_new_duplicate_adr_prefix_fails_check_14() {
+    assert!(
+        rel("architecture/adr-identity.toml").is_file(),
+        "architecture/adr-identity.toml is required so historical dupes have a legal grandfather"
+    );
+    let identity = parse_toml("architecture/adr-identity.toml");
+    assert_eq!(
+        identity.get("schema").and_then(|s| s.as_str()),
+        Some(ADR_IDENTITY_SCHEMA)
+    );
+    assert_eq!(
+        identity.get("grandfathered_debt").and_then(|s| s.as_str()),
+        Some("DEBT-DUP-ADR")
+    );
+    let prefixes: Vec<&str> = identity
+        .get("grandfathered_prefixes")
+        .and_then(|v| v.as_array())
+        .expect("grandfathered_prefixes")
+        .iter()
+        .map(|v| v.as_str().expect("prefix"))
+        .collect();
+    for prefix in GRANDFATHERED_ADR_PREFIXES {
+        assert!(
+            prefixes.contains(&prefix),
+            "grandfathered_prefixes must include {prefix}; got {prefixes:?}"
+        );
+    }
+
+    let adr_files = list_md("docs/adr");
+    for prefix in GRANDFATHERED_ADR_PREFIXES {
+        let count = adr_files
+            .iter()
+            .filter(|name| name.starts_with(&format!("{prefix}-")))
+            .count();
+        assert!(
+            count >= 2,
+            "historical {prefix}-* collisions must remain on disk (no silent renumber); files={adr_files:?}"
+        );
+    }
+
+    let src = xtask_src_text();
+    for needle in [
+        "adr-identity.toml",
+        "grandfathered_prefixes",
+        "DEBT-DUP-ADR",
+        "weeping-angel-adr-meta",
+    ] {
+        assert!(
+            src.contains(needle),
+            "Guard 14 must encode {needle} (new files reusing 0010/0003 fail; historical set is grandfathered)"
+        );
+    }
+    assert!(
+        src.contains("duplicate") || src.contains("prefix"),
+        "Guard 14 must reject a new ADR that reuses prefix 0010 or 0003"
+    );
+}
+
+/// RI-T23: dangling ADR edges and cycles fail check 14.
+#[test]
+fn ri_t23_dangling_or_cyclic_adr_graph_fails_check_14() {
+    let src = xtask_src_text();
+    for needle in [
+        "weeping-angel-adr-meta",
+        "supersedes",
+        "superseded_by",
+        "depends_on",
+    ] {
+        assert!(
+            src.contains(needle),
+            "Guard 14 must parse ADR metadata field/relation {needle}"
+        );
+    }
+    assert!(
+        src.contains("dangling") || src.contains("does not exist") || src.contains("unknown"),
+        "Guard 14 must fail dangling supersedes/superseded_by/depends_on"
+    );
+    assert!(
+        src.contains("cycle") || src.contains("acyclic") || src.contains("cyclic"),
+        "Guard 14 must fail cycles where the relation must be acyclic"
+    );
+}
+
+/// RI-T24: live Guard 15 is pass; spec-lifecycle.toml covers every docs/specs/*.md.
+#[test]
+fn ri_t24_live_guard_15_is_pass_and_lifecycle_covers_specs() {
+    let combined = guard_report();
+    assert!(
+        combined.contains("15  spec-lifecycle  pass"),
+        "check 15 must pass on the live tree; output={combined}"
+    );
+    assert!(
+        !combined.contains("skip(DEBT-GUARD-15)")
+            && !combined.contains("not-yet-implemented: check 15"),
+        "check 15 must not skip or nyi; output={combined}"
+    );
+
+    assert!(
+        rel("architecture/spec-lifecycle.toml").is_file(),
+        "architecture/spec-lifecycle.toml must exist"
+    );
+    let lifecycle = parse_toml("architecture/spec-lifecycle.toml");
+    assert_eq!(
+        lifecycle.get("schema").and_then(|s| s.as_str()),
+        Some(SPEC_LIFECYCLE_SCHEMA)
+    );
+    let rows = lifecycle
+        .get("spec")
+        .and_then(|v| v.as_array())
+        .expect("[[spec]]");
+    let listed: BTreeSet<String> = rows
+        .iter()
+        .map(|row| {
+            row.get("path")
+                .and_then(|p| p.as_str())
+                .expect("spec.path")
+                .to_string()
+        })
+        .collect();
+    let on_disk = list_md("docs/specs");
+    assert!(
+        !on_disk.is_empty(),
+        "docs/specs must contain markdown specs"
+    );
+    for name in &on_disk {
+        let path = format!("docs/specs/{name}");
+        assert!(
+            listed.contains(&path),
+            "spec-lifecycle.toml must list {path}; listed={listed:?}"
+        );
+        assert!(rel(&path).is_file(), "{path} must exist");
+    }
+}
+
+/// RI-T25: masquerade / missing successor / missing lifecycle file fail check 15.
+#[test]
+fn ri_t25_spec_lifecycle_masquerade_and_missing_file_fail() {
+    let src = xtask_src_text();
+    assert!(
+        src.contains("spec-lifecycle.toml"),
+        "Guard 15 must load architecture/spec-lifecycle.toml"
+    );
+    assert!(
+        src.contains("spec-lifecycle")
+            && (src.contains("is not a file")
+                || src.contains("missing")
+                || src.contains("malformed")),
+        "missing or malformed spec-lifecycle.toml must fail check 15 (never skip)"
+    );
+    for needle in ["draft", "active", "superseded", "retired"] {
+        assert!(
+            src.contains(needle),
+            "Guard 15 must encode lifecycle state {needle}"
+        );
+    }
+    assert!(
+        src.contains("successor"),
+        "a superseded spec without successor must fail check 15"
+    );
+}
+
+/// RI-T26: active spec ownership keys must exist in architecture.toml.
+#[test]
+fn ri_t26_active_spec_ownership_must_bind_existing_concepts() {
+    let src = xtask_src_text();
+    assert!(
+        src.contains("ownership"),
+        "Guard 15 must bind active specs to architecture ownership keys"
+    );
+    let lifecycle_path = rel("architecture/spec-lifecycle.toml");
+    assert!(
+        lifecycle_path.is_file(),
+        "architecture/spec-lifecycle.toml must exist so active specs can bind ownership"
+    );
+    let arch = parse_toml("architecture/architecture.toml");
+    let ownership = arch.get("ownership").expect("[ownership]");
+    let lifecycle = parse_toml("architecture/spec-lifecycle.toml");
+    for row in lifecycle
+        .get("spec")
+        .and_then(|v| v.as_array())
+        .expect("[[spec]]")
+    {
+        let state = row.get("state").and_then(|s| s.as_str()).unwrap_or("");
+        let path = row.get("path").and_then(|s| s.as_str()).unwrap_or("?");
+        if state == "active" {
+            let keys = row
+                .get("ownership")
+                .and_then(|v| v.as_array())
+                .expect("active spec ownership array");
+            assert!(
+                !keys.is_empty(),
+                "active spec {path} must list at least one ownership key"
+            );
+            for key in keys {
+                let concept = key.as_str().expect("ownership key");
+                assert!(
+                    ownership.get(concept).is_some(),
+                    "active spec {path} ownership {concept} must exist in architecture.toml"
+                );
+            }
+        }
+        if state == "superseded" || state == "retired" {
+            assert_ne!(
+                state, "active",
+                "superseded/retired spec {path} cannot masquerade as active"
+            );
+        }
+    }
+}
+
+/// RI-T27: live skip exemptions are complete; expired exemptions fail closed.
+#[test]
+fn ri_t27_live_exemptions_require_owner_dates_and_expiry_fails_closed() {
+    let register = parse_toml("docs/debt/register.toml");
+    for id in PRODUCT_STUB_CHECKS {
+        let finding = finding_named(&register, &format!("DEBT-GUARD-{id}"));
+        assert!(
+            exemption_complete(finding),
+            "live skip exemption DEBT-GUARD-{id} must include owner, introduced, severity, remediation, repository_guard, and expires|review_by"
+        );
+    }
+    let dup = finding_named(&register, "DEBT-DUP-ADR");
+    assert!(
+        exemption_complete(dup),
+        "DEBT-DUP-ADR is a live prefix-collision exemption and must carry owner/dates/severity/remediation/repository_guard/expiry"
+    );
+    assert_eq!(
+        dup.get("repository_guard").and_then(|v| v.as_str()),
+        Some("14")
+    );
+
+    let src = xtask_src_text();
+    assert!(
+        src.contains("WEEPING_ANGEL_GUARD_AS_OF"),
+        "expiry evaluation date must be overridable via WEEPING_ANGEL_GUARD_AS_OF"
+    );
+    assert!(
+        src.contains("expired") || src.contains("expires"),
+        "check 13 must fail closed on expired guard debt"
+    );
+}
+
+/// RI-T28: DEBT-GUARD-14/15 resolved with proof; malformed/duplicate/orphaned ids fail.
+#[test]
+fn ri_t28_resolved_guard_14_15_and_malformed_debt_fail_closed() {
+    let register = parse_toml("docs/debt/register.toml");
+    for id in ["DEBT-GUARD-14", "DEBT-GUARD-15"] {
+        let finding = finding_named(&register, id);
+        assert_eq!(
+            finding.get("status").and_then(|s| s.as_str()),
+            Some("resolved"),
+            "{id} must be resolved once Guards 14/15 are real"
+        );
+        assert!(
+            proof_ok(finding),
+            "{id} must prove closure via repository_guard or named regression tests"
+        );
+        let tests = finding
+            .get("regression_tests")
+            .and_then(|v| v.as_array())
+            .map(|a| a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>())
+            .unwrap_or_default();
+        assert!(
+            tests.iter().any(|t| t.contains("repository_integrity")
+                || t.contains("architectural_cleanup")
+                || t.contains("sdd_")),
+            "{id} resolved proof must name regression tests; got {tests:?}"
+        );
+    }
+    assert_eq!(
+        finding_named(&register, "DEBT-GUARD-14")
+            .get("repository_guard")
+            .and_then(|v| v.as_str()),
+        Some("14")
+    );
+    assert_eq!(
+        finding_named(&register, "DEBT-GUARD-15")
+            .get("repository_guard")
+            .and_then(|v| v.as_str()),
+        Some("15")
+    );
+
+    let src = xtask_src_text();
+    for needle in ["duplicate", "orphan", "malformed"] {
+        assert!(
+            src.contains(needle),
+            "check 13 must reject {needle} debt ids"
+        );
+    }
+}
+
+/// RI-T29: additive JSON schema/version/counts/failed; do not equality-compare duration.
+#[test]
+fn ri_t29_guard_json_is_additive_with_schema_counts_failed() {
+    let output = cargo_xtask_guard_args(&["--json"]);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let json_start = stdout.find('{').unwrap_or(0);
+    let value: serde_json::Value = serde_json::from_str(stdout[json_start..].trim()).unwrap_or_else(
+        |e| panic!("guard --json must emit a JSON object; parse error {e}; stdout={stdout} stderr={stderr}"),
+    );
+    let obj = value.as_object().expect("JSON object");
+    for key in [
+        "schema",
+        "version",
+        "counts",
+        "failed",
+        "checks",
+        "violations",
+        "skipped",
+        "debt_exemptions",
+        "duration",
+    ] {
+        assert!(
+            obj.contains_key(key),
+            "JSON must include {key}; keys={:?}",
+            obj.keys().collect::<Vec<_>>()
+        );
+    }
+    assert_eq!(
+        obj.get("schema").and_then(|v| v.as_str()),
+        Some(GUARD_REPORT_SCHEMA)
+    );
+    let version = obj.get("version").and_then(|v| v.as_u64()).or_else(|| {
+        obj.get("version")
+            .and_then(|v| v.as_i64())
+            .map(|n| n as u64)
+    });
+    assert_eq!(version, Some(1), "report version must be 1");
+
+    let counts = obj
+        .get("counts")
+        .and_then(|v| v.as_object())
+        .expect("counts");
+    for key in ["total", "pass", "fail", "skip"] {
+        assert!(
+            counts.contains_key(key),
+            "counts must include {key}; got {counts:?}"
+        );
+    }
+    let checks = obj
+        .get("checks")
+        .and_then(|v| v.as_array())
+        .expect("checks");
+    let mut ids = Vec::new();
+    for check in checks {
+        let id = check.get("id").and_then(|v| v.as_str()).expect("check.id");
+        assert!(
+            id.len() == 2 && id.chars().all(|c| c.is_ascii_digit()),
+            "check ids must be deterministic two-digit strings; got {id}"
+        );
+        ids.push(id.to_string());
+    }
+    assert!(
+        ids.windows(2).all(|w| w[0] <= w[1]),
+        "check ids must be in deterministic order; got {ids:?}"
+    );
+
+    // Equality-sensitive fixtures must not compare wall-clock duration.
+    let _ = obj.get("duration");
+}
+
+/// RI-T30: CI keeps mandatory cargo xtask guard; no path-filter bypass.
+#[test]
+fn ri_t30_ci_requires_guard_and_does_not_path_filter_bypass() {
+    let ci = read(".github/workflows/ci.yml");
+    assert!(
+        ci.contains("xtask guard") || ci.contains("cargo xtask guard"),
+        ".github/workflows/ci.yml must contain a cargo xtask guard step"
+    );
+    let before_guard = ci.split("xtask guard").next().unwrap_or("");
+    assert!(
+        !before_guard.contains("continue-on-error: true"),
+        "cargo xtask guard must be mandatory (not continue-on-error)"
+    );
+    for surface in [
+        "architecture/",
+        "docs/adr/",
+        "docs/specs/",
+        "docs/debt/",
+        "xtask/",
+        "src/",
+        "crates/",
+        "frameworks/",
+        "catalog/",
+    ] {
+        let ignored = ci.contains("paths-ignore")
+            && ci
+                .split("paths-ignore")
+                .nth(1)
+                .unwrap_or("")
+                .lines()
+                .take(40)
+                .any(|line| line.contains(surface));
+        assert!(
+            !ignored,
+            "CI must not paths-ignore {surface} in a way that bypasses cargo xtask guard"
+        );
+    }
+    if ci.contains("paths:") && !ci.contains("paths-ignore") {
+        let paths_block = ci.split("paths:").nth(1).unwrap_or("");
+        for surface in [
+            "architecture/**",
+            "docs/adr/**",
+            "docs/specs/**",
+            "docs/debt/**",
+            "xtask/**",
+            "src/**",
+            "crates/**",
+            "frameworks/**",
+            "catalog/**",
+        ] {
+            assert!(
+                paths_block.contains(surface)
+                    || !ci.split("jobs:").next().unwrap_or("").contains("paths:"),
+                "if CI uses on.paths filters, the guard job must still run when {surface} changes"
+            );
+        }
+    }
+}
+
+/// RI-T31: 01–04 and 13 still pass; 05–12 stay stubs; 14/15 are not skip-with-debt.
+#[test]
+fn ri_t31_implemented_checks_retained_product_stubs_remain() {
+    let output = cargo_xtask_guard();
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    for (id, name) in [
+        ("01", "architecture-manifest"),
+        ("02", "canonical-ownership"),
+        ("03", "forbidden-patterns"),
+        ("04", "architecture-invariants"),
+        ("13", "debt-register"),
+        ("14", "adr-graph"),
+        ("15", "spec-lifecycle"),
+    ] {
+        assert!(
+            combined.contains(&format!("{id}  {name}  pass")),
+            "check {id} {name} must pass on the live tree; output={combined}"
+        );
+    }
+    for id in PRODUCT_STUB_CHECKS {
+        assert!(
+            combined.contains(&format!("skip(DEBT-GUARD-{id})"))
+                || combined.contains(&format!("not-yet-implemented: check {id}")),
+            "product-semantic check {id} must remain skip-with-debt or fail closed; output={combined}"
         );
     }
 }

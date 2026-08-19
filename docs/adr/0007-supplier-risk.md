@@ -1,5 +1,14 @@
 # ADR 0007 — Operational supplier-security lifecycle (expand `Vendor`)
 
+<!-- weeping-angel-adr-meta
+id = "0007"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_supplier_risk_target` GREEN (SR-001–SR-015); baseline found-case tests fail as expected |

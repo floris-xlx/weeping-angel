@@ -1,5 +1,14 @@
 # ADR 0003 — Operational Statement of Applicability (graph projection + immutable snapshots)
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_operational_soa_target` GREEN; baseline skip-superseded after proving the `implementation_state = assessed` shortcut failed |
@@ -131,7 +140,7 @@ Live `project_soa` does **not** fail closed for missing treatment engines. Parti
 
 Disclaimer: `"This Statement of Applicability projection is a readiness aid and is not certification."`
 
-`src/assurance_soa.rs` dispatches `assurance soa`: banner then JSON. `latest` / empty assessment uses live `iso-27001`/`2022` convenience. Unknown pinned assessment id exits non-zero. No `compilerTopology`. Never emit `ISO 27001 certified` / `compliant` / `certification guaranteed` / `audit passed`.
+`src/assurance_soa.rs` dispatches `assurance soa`: banner then JSON. `latest` / empty / named assessment reconstructs from `assurance-ledger.sqlite` via `replay_assessment` + `project_soa_from_snapshot` ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)). Missing ledger, missing run, or replay failure exits non-zero — live `project_soa` is **not** history. No `compilerTopology`. Never emit `ISO 27001 certified` / `compliant` / `certification guaranteed` / `audit passed`.
 
 ## Crate homes (no new crate)
 
@@ -164,3 +173,4 @@ Disclaimer: `"This Statement of Applicability projection is a readiness aid and 
 - Remap SoA: [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md) §4.6
 - Runtime contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - Lineage persist: [`docs/specs/assessment-lineage.md`](../specs/assessment-lineage.md)
+- Historical SoA / four-clock evidence: [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)

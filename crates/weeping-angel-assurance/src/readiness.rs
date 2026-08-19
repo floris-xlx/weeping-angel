@@ -8,8 +8,6 @@ use weeping_angel_assurance_ir::{
 use weeping_angel_control_test::{ControlTestResult, Effectiveness};
 use weeping_angel_framework::CompiledFramework;
 
-use crate::snapshot::catalog_digest;
-
 /// Explicit graph verbs used when projecting readiness.
 #[allow(dead_code)]
 const GRAPH_VERBS: &[&str] = &[
@@ -28,6 +26,8 @@ pub struct FrameworkReadinessSnapshot {
     pub framework: String,
     pub framework_version: String,
     pub framework_pack_digest: String,
+    #[serde(default)]
+    pub catalog_digest: String,
     pub assessment_digest: String,
     pub evaluated_at: String,
     pub requirements: Vec<RequirementReadiness>,
@@ -44,13 +44,49 @@ pub struct FrameworkReadinessSnapshot {
 
 impl Serialize for FrameworkReadinessSnapshot {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let metrics = coverage_metrics(self);
+        let total_controls = self.controls.len();
+        let automated = self
+            .controls
+            .iter()
+            .filter(|c| {
+                !matches!(
+                    c.effectiveness,
+                    Effectiveness::ManualReviewRequired | Effectiveness::NotTested
+                )
+            })
+            .count();
+        let evidenced = self
+            .controls
+            .iter()
+            .filter(|c| {
+                !matches!(
+                    c.effectiveness,
+                    Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
+                )
+            })
+            .count();
+        let subjects = self
+            .controls
+            .iter()
+            .filter(|c| {
+                !matches!(
+                    c.effectiveness,
+                    Effectiveness::InsufficientEvidence | Effectiveness::NotTested
+                )
+            })
+            .count();
+        let req_total = self.requirements.len();
+        let req_covered = self
+            .requirements
+            .iter()
+            .filter(|r| !r.mapped_controls.is_empty())
+            .count();
         let mut state = serializer.serialize_struct("FrameworkReadinessSnapshot", 22)?;
         state.serialize_field("assessmentId", &self.assessment_id)?;
         state.serialize_field("framework", &self.framework)?;
         state.serialize_field("frameworkVersion", &self.framework_version)?;
         state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
-        state.serialize_field("catalogDigest", &catalog_digest())?;
+        state.serialize_field("catalogDigest", &self.catalog_digest)?;
         state.serialize_field("assessmentDigest", &self.assessment_digest)?;
         state.serialize_field("evaluatedAt", &self.evaluated_at)?;
         state.serialize_field("requirements", &self.requirements)?;
@@ -61,11 +97,26 @@ impl Serialize for FrameworkReadinessSnapshot {
         state.serialize_field("manualReview", &self.manual_review)?;
         state.serialize_field("insufficientEvidence", &self.insufficient_evidence)?;
         state.serialize_field("notApplicable", &self.not_applicable)?;
-        state.serialize_field("automationCoverage", &metrics.automation)?;
-        state.serialize_field("evidenceCoverage", &metrics.evidence)?;
-        state.serialize_field("subjectCoverage", &metrics.subject)?;
-        state.serialize_field("controlCoverage", &metrics.control)?;
-        state.serialize_field("frameworkRequirementCoverage", &metrics.requirement)?;
+        state.serialize_field(
+            "automationCoverage",
+            &coverage_counts(automated, total_controls),
+        )?;
+        state.serialize_field(
+            "evidenceCoverage",
+            &coverage_counts(evidenced, total_controls),
+        )?;
+        state.serialize_field(
+            "subjectCoverage",
+            &coverage_counts(subjects, total_controls),
+        )?;
+        state.serialize_field(
+            "controlCoverage",
+            &coverage_counts(total_controls, total_controls),
+        )?;
+        state.serialize_field(
+            "frameworkRequirementCoverage",
+            &coverage_counts(req_covered, req_total),
+        )?;
         state.end()
     }
 }
@@ -93,66 +144,11 @@ struct CoverageCounts {
     count: usize,
 }
 
-struct CoverageBundle {
-    automation: CoverageCounts,
-    evidence: CoverageCounts,
-    subject: CoverageCounts,
-    control: CoverageCounts,
-    requirement: CoverageCounts,
-}
-
 fn coverage_counts(covered: usize, total: usize) -> CoverageCounts {
     CoverageCounts {
         covered,
         total,
         count: covered,
-    }
-}
-
-fn coverage_metrics(snapshot: &FrameworkReadinessSnapshot) -> CoverageBundle {
-    let total_controls = snapshot.controls.len();
-    let automated = snapshot
-        .controls
-        .iter()
-        .filter(|c| {
-            !matches!(
-                c.effectiveness,
-                Effectiveness::ManualReviewRequired | Effectiveness::NotTested
-            )
-        })
-        .count();
-    let evidenced = snapshot
-        .controls
-        .iter()
-        .filter(|c| {
-            !matches!(
-                c.effectiveness,
-                Effectiveness::InsufficientEvidence | Effectiveness::StaleEvidence
-            )
-        })
-        .count();
-    let subjects = snapshot
-        .controls
-        .iter()
-        .filter(|c| {
-            !matches!(
-                c.effectiveness,
-                Effectiveness::InsufficientEvidence | Effectiveness::NotTested
-            )
-        })
-        .count();
-    let req_total = snapshot.requirements.len();
-    let req_covered = snapshot
-        .requirements
-        .iter()
-        .filter(|r| !r.mapped_controls.is_empty())
-        .count();
-    CoverageBundle {
-        automation: coverage_counts(automated, total_controls),
-        evidence: coverage_counts(evidenced, total_controls),
-        subject: coverage_counts(subjects, total_controls),
-        control: coverage_counts(total_controls, total_controls),
-        requirement: coverage_counts(req_covered, req_total),
     }
 }
 
@@ -270,6 +266,7 @@ pub fn project_readiness(
         framework: framework.into(),
         framework_version: framework_version.into(),
         framework_pack_digest: framework_pack_digest.into(),
+        catalog_digest: compiled.catalog_digest.clone(),
         assessment_digest: compiled.digest.clone(),
         evaluated_at: chrono::Utc::now().to_rfc3339(),
         requirements,

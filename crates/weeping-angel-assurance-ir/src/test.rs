@@ -54,6 +54,9 @@ pub struct PlannedControlTest {
     pub freshness_policy: Option<FreshnessRequirement>,
     #[serde(default, skip_serializing_if = "is_medium")]
     pub severity: TestFailureSeverity,
+    /// Lossless JSON `TestExpr` projected from catalog `[test.expression]`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expr: Option<serde_json::Value>,
 }
 
 fn evaluation_empty(value: &TestEvaluationRef) -> bool {
@@ -78,6 +81,7 @@ impl PlannedControlTest {
             evaluation: TestEvaluationRef::default(),
             freshness_policy: None,
             severity: TestFailureSeverity::Medium,
+            expr: None,
         }
     }
 

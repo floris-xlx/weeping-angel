@@ -67,7 +67,9 @@ pub fn parse_pipfile(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
             continue;
         }
         if in_pkgs && s.contains('=') && !s.starts_with('#') {
-            let (name, value) = s.split_once('=').unwrap();
+            let Some((name, value)) = s.split_once('=') else {
+                continue;
+            };
             let name = name.trim();
             let value = value.trim();
             if git.is_match(value) {
@@ -126,7 +128,7 @@ pub fn parse_pyproject_toml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem
         Regex::new(
             r"^\[tool\.poetry\.(dev-)?dependencies\]|^\[tool\.poetry\.group\.\w+\.dependencies\]",
         )
-        .expect("poetry section")
+        .expect("poetry section") // panic-ok: regex literal
     });
     static PATH: OnceLock<Regex> = OnceLock::new();
     let path = PATH.get_or_init(|| Regex::new(r"\b(git|path|url)\s*=").expect("poetry path"));
@@ -188,7 +190,7 @@ pub fn parse_pyproject_toml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem
     static OPT: OnceLock<Regex> = OnceLock::new();
     let opt = OPT.get_or_init(|| {
         Regex::new(r"(?ms)^\[project\.optional-dependencies\.\w+\]\s*$\n(.*?)(?=^\[|\z)")
-            .expect("optional deps")
+            .expect("optional deps") // panic-ok: regex literal
     });
     for c in opt.captures_iter(content) {
         for m in quoted.captures_iter(&c[1]) {

@@ -18,6 +18,7 @@
 | SDLC / vuln / infra / governance | Product landed after this SHA. ISO remap mapped identity + landed `control.source.*` only. Governance / vuln / infra catalog IDs exist and stay **unmapped** here (governance catalog does not remap ISO). |
 | Concurrent (do not collide) | GitHub collector [`github-collector.md`](github-collector.md); applicability engine applicability engine (**landed** — consume `weeping-angel-assurance::applicability`, map SoA `Unresolved` ↔ `ManualDeterminationRequired`); assessment lineage [`assessment-lineage.md`](assessment-lineage.md) |
 | Workspace verify | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings`; `cargo test --workspace --features demo`; `weeping-angel assurance catalog validate`; `weeping-angel assurance framework validate frameworks/iso-27001/2022`; `cargo test --test sdd_iso27001_remap_target --offline` |
+| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — pack parse / digest / expression / pins; does not remap new Annex A. ADR: [`0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) |
 
 This document is the durable SSOT for **ISO remap**. It owns ISO 27001:2022 **framework content**, **mappings**, **applicability references**, and **projection integration**. It must **not** redesign canonical controls, provider collectors, the catalog loader, or the control-test evaluator.
 
@@ -688,3 +689,25 @@ ISO 27001:2022 is a clean **framework projection** over the canonical assurance 
 - 2026-08-19: remapped `frameworks/iso-27001/2022` onto landed catalog IDs (`control.identity.*` plus landed `control.source.*` SDLC). Pack slivers retired. Loader accepts all eight IR relations + provenance/`valid_for`. Generic `(id, version)` load/serialize; `catalogDigest` / `canonicalCatalogDigest` pinned. SoA is three-state. IAM-008 / IAM-016 / EXPECTED_CANONICAL_CONTROLS / CANONICAL_CONTROL_PREFIXES superseded. Remap baseline skip-superseded. ADR accepted (dropped `-draft`).
 - 2026-08-19: Operational ISMS Prompt 11 landed `project_operational_soa` (Kleene + pack structural defaults, `notImplemented` ≠ NA, NA approval gaps, `pin_soa_snapshot` / `diff_soa_snapshots`). Remap pack IDs and `to =` unchanged. See [`operational-soa.md`](operational-soa.md).
 - Catalog families mapped: identity (required remaps) + SDLC (A.8.25 / A.8.26). Vuln / infra / governance catalog families later landed and remain **unmapped** (governance catalog does not project `control.governance.*` / `control.incident.*` onto ISO).
+
+---
+
+## 14. Increment — pack parse, semantic digest, expression preservation (Prompt 2)
+
+**Status:** implemented. Remap mapping tables, legal structural pack, and ISO-R-001…020 remain law.
+
+Cleanup Prompt 2 **extends** this file for fail-closed pack parse, semantic `FrameworkPackDigest`, lossless catalog expression carry through compile, and pin-pure catalog/pack identity. It does **not** remap additional Annex A clauses or re-own SoA (`soa.rs` is Prompt 3).
+
+Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+
+Closed seams (do not regress):
+
+- No second catalog TOML parser in `pack.rs`. Mapping `to` resolves against IR `CatalogProjection`.
+- Unknown mapping `completeness` / `direction` / provenance `source` are typed `PackError`, not Partial / Forward / BuiltIn.
+- `FrameworkPackDigest` is semantic pack content (requirements, mappings including completeness/direction/rationale, applicability). Catalog injection is a **separate** `catalogDigest`.
+- `construct_test_plan` copies `PlannedControlTest.expr` from the catalog projection.
+- Snapshot / `AssessmentRun` serialize and scheduler projection emit stored pins; they do not reload live catalog/pack files.
+
+`Equivalent`, `PartiallySatisfies`, and `Supports` stay distinct. Packs project onto `control.*`; `metadata.toml` `[[control]]`/`[[test]]` is `PackError::CompetingLibrary`.
+
+Extend `tests/contracts/iso27001_remap.{baseline,target}.rs` for increment cases. Do not create `tests/sdd/`. Do not reuse this section to rewrite ISO-R goldens unless they encode a closed bug.

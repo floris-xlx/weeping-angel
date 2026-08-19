@@ -14,6 +14,7 @@
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) |
 | Catalog schema (this program) | `weeping-angel/canonical-catalog/v1` |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
+| Trust-boundary increment (Prompt 2, **implemented**) | [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md) — extends this file; does not fork ID grammar or CAT-001…016. ADR: [`0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md) |
 
 This document is the durable SSOT for **catalog infrastructure only**: on-disk format, loader, validator, digest, stable-ID rules, offline compilation contract, CLI surface, crate boundaries, and dual-suite protocol. It does **not** own IAM / SDLC / vulnerability / infrastructure / governance domain catalogs, ISO remapping (ISO remap), typed-evidence redesign (typed evidence — landed separately: [`docs/specs/typed-evidence.md`](typed-evidence.md)), or population runtime. The IAM family is listed in the catalog manifest; its SSOT is [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md). The SDLC family (SDLC catalog) SSOT is [`docs/specs/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml`). The vulnerability family (vulnerability catalog) has landed; its SSOT is [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). The infrastructure family (infrastructure catalog) SSOT is [`docs/specs/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md). The governance family (governance catalog) has landed; its SSOT is [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/governance.toml`; first-class `evidence.manual.attestation`). Personnel-security lifecycle (Prompt 17) is additive `catalog/canonical/v1/{controls,evidence,tests}/personnel.toml`; SSOT [`docs/specs/personnel-security.md`](personnel-security.md) — it does not replace the five governance `control.personnel.*` rows.
 
@@ -587,6 +588,7 @@ CanonicalCatalog::validate(&self) -> Result<(), CatalogError>
 CanonicalCatalog::digest(&self) -> Result<CatalogDigest, CatalogError>
 CanonicalCatalog::stats(&self) -> Result<CatalogStats, CatalogError>
 CanonicalCatalog::control(&self, id) -> Result<&CatalogControl, CatalogError>
+CanonicalCatalog::projection(&self) -> Result<CatalogProjection, CatalogError>  # IR adapter; ADR 0011
 CanonicalCatalog::controls() / evidence() / tests() -> &BTreeMap<…>
 CanonicalCatalog::root() -> &Path
 ```
@@ -688,3 +690,17 @@ Spec first (this file + draft ADR)
 ```
 
 Prefer delete/move/skip of baseline assertions so CI does not keep “there is no catalog” as required green. Target suite `sdd_canonical_assurance_catalog_target` is the CI gate.
+
+---
+
+## 10. Increment — catalog / framework / readiness trust boundary (Prompt 2)
+
+**Status:** implemented. Product loader API in §8 remains law. Adapter: `CanonicalCatalog::projection()` → IR `CatalogProjection`.
+
+Cleanup Prompt 2 (architectural-cleanup phases 2 + 3 + 7 + 21) **extends** this file. It does **not** fork catalog ID grammar, schema `weeping-angel/canonical-catalog/v1`, crate name `weeping-angel-canonical-catalog`, or CAT-001…016.
+
+Increment SSOT: [`catalog-framework-readiness-trust-boundary.md`](catalog-framework-readiness-trust-boundary.md). Accepted: [`docs/adr/0011-catalog-framework-digest-and-pin-ownership.md`](../adr/0011-catalog-framework-digest-and-pin-ownership.md).
+
+This crate remains the **only** parser of `catalog/canonical/v1` TOML. `weeping-angel-framework` must not grow a second `discover_catalog_index` (or equivalent) and must not depend on this crate. Packs consume `CatalogProjection` (named load via `inventory` `WorkspaceCatalogLoader`; explicit `load_framework_pack_from_with`). Nested expression `op` values are validated recursively. Catalog loading stays fail-closed; silent `continue` / `Option` drops are defects.
+
+Dual-suite home stays `tests/contracts/canonical_assurance_catalog.{baseline,target}.rs`. Do not create `tests/sdd/`.

@@ -169,6 +169,7 @@ fn empty_readiness() -> FrameworkReadinessSnapshot {
         framework: "iso-27001".into(),
         framework_version: "2022".into(),
         framework_pack_digest: "pack".into(),
+        catalog_digest: String::new(),
         assessment_digest: "def".into(),
         evaluated_at: "2026-08-01T00:00:00Z".into(),
         requirements: Vec::new(),

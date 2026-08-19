@@ -1,5 +1,14 @@
 # ADR 0003 — Remediation workflow engine (canonical ISMS work records)
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_remediation_engine_target` GREEN; `sdd_remediation_engine_baseline` skip-superseded. |

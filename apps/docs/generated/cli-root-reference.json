@@ -1,14 +1,14 @@
 {
   "generated_by": "weeping-angel-docs-export",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "command_path": [],
   "command": {
     "name": "weeping-angel",
     "display_name": "weeping-angel",
     "usage": "Usage: weeping-angel [OPTIONS] <COMMAND>",
-    "about": "Authorized dual-domain security toolchain (web recon + code analysis)",
-    "long_about": "Authorized security toolchain: live web recon/DAST and algorithmic code scans.\n\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nTargets accept bare hosts (example.com), //host, http://, or https://.\nConsent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\nCode/diff scans produce Codex Security–compatible sealed bundles.",
-    "after_help": "Examples:\n  weeping-angel -v\n  weeping-angel --version\n  weeping-angel version\n  weeping-angel completions powershell\n  weeping-angel scan example.com --i-own-this --allow-host example.com\n  weeping-angel scan-code . -o out/code --fail-on high\n  weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD\n  weeping-angel workbench list\n  weeping-angel depcheck package.json\n  weeping-angel depcheck --list Cargo.lock\n  weeping-angel depcheck --web --port 8443\n\nVersion flags work without a subcommand: -v, -V, --version.\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nIncrease engine logs with --verbose (repeat: --verbose --verbose).\n",
+    "about": "Authorized security toolchain (web recon, code SAST, depcheck)",
+    "long_about": "Authorized security toolchain: live web recon/DAST, algorithmic code scans, and dependency-confusion detection (depcheck).\n\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nTargets accept bare hosts (example.com), //host, http://, or https://.\nConsent: --i-own-this or --i-own-this=true|yes|1 (value requires =).\n\nCode/diff scans produce Codex Security–compatible sealed bundles.\ndepcheck is detection-only (no auto-publish / exploit payloads).",
+    "after_help": "Examples:\n  weeping-angel -v\n  weeping-angel --version\n  weeping-angel version\n  weeping-angel completions powershell\n  weeping-angel scan example.com --i-own-this --allow-host example.com\n  weeping-angel scan-code . -o out/code --fail-on high\n  weeping-angel scan-diff --repo . -o out/diff --base main --head HEAD\n  weeping-angel workbench list\n  weeping-angel depcheck package.json\n  weeping-angel depcheck -l npm package.json\n  weeping-angel depcheck -l npm -s '@mycompany/*' package.json\n  weeping-angel depcheck --provider pypi --path ./project\n  weeping-angel depcheck --provider npm --dependency left-pad:1.3.0 --check-email\n  weeping-angel depcheck -d ./app -i --entrypoint index.js\n  cat hosts.txt | weeping-angel depcheck --stdin --i-own-this --threads 20\n  weeping-angel depcheck --hosts-file hosts.txt --i-own-this --link --silent\n  weeping-angel depcheck --list Cargo.lock\n  weeping-angel depcheck --web --port 8443\n\nVersion flags work without a subcommand: -v, -V, --version.\nWeb scans require --i-own-this and --allow-host (or --allow-host-from-target).\nIncrease engine logs with --verbose (repeat: --verbose --verbose).\n",
     "aliases": [],
     "visible_aliases": [],
     "arguments": [
@@ -1112,7 +1112,22 @@
             "display": "<TARGET>",
             "short": null,
             "long": null,
-            "help": "Dependency file or project directory (omit with --url / --web)",
+            "help": "Dependency file or project directory (omit with --url / --web / --dependency)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "path",
+            "kind": "option",
+            "display": "--path <PATH>",
+            "short": "-d",
+            "long": "--path",
+            "help": "Path to folder(s) to analyze (DepFuzzer / Loki alias for positional target)",
             "long_help": null,
             "required": false,
             "global": false,
@@ -1137,12 +1152,126 @@
             "possible_values": []
           },
           {
+            "id": "dependency",
+            "kind": "option",
+            "display": "--dependency <NAME[:VERSION]>",
+            "short": null,
+            "long": "--dependency",
+            "help": "Check one dependency: NAME or NAME:VERSION (DepFuzzer-compatible)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "language",
+            "kind": "option",
+            "display": "--language <LANG>",
+            "short": "-l",
+            "long": "--language",
+            "help": "Package repository system. Values: npm, pip/pypi, composer, mvn/maven, gradle, rubygems, cargo, go, nuget, all",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
             "id": "list",
             "kind": "option",
             "display": "--list",
-            "short": "-l",
+            "short": null,
             "long": "--list",
             "help": "List packages only (no registry checks)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "secure_namespaces",
+            "kind": "option",
+            "display": "--secure-namespace <PATTERN>",
+            "short": "-s",
+            "long": "--secure-namespace",
+            "help": "Known-secure namespaces (confused `-s`). Comma-separated; `*` wildcards. Repeatable",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": true,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "print_takeover",
+            "kind": "option",
+            "display": "--print-takeover",
+            "short": null,
+            "long": "--print-takeover",
+            "help": "Stream takeover candidates as they are found (DepFuzzer `--print-takeover`)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "output_file",
+            "kind": "option",
+            "display": "--output-file <PATH>",
+            "short": null,
+            "long": "--output-file",
+            "help": "Write takeover candidates to a text file (NAME:VERSION per line)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "check_email",
+            "kind": "option",
+            "display": "--check-email",
+            "short": null,
+            "long": "--check-email",
+            "help": "For packages that exist: check maintainer emails for disposable / purchasable domains (DepFuzzer `--check-email`)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "transitive",
+            "kind": "option",
+            "display": "--transitive",
+            "short": null,
+            "long": "--transitive",
+            "help": "Also walk transitive deps via deps.dev (DepFuzzer-style; slower)",
             "long_help": null,
             "required": false,
             "global": false,
@@ -1255,6 +1384,179 @@
             ]
           },
           {
+            "id": "scan_verbose",
+            "kind": "option",
+            "display": "--scan-verbose",
+            "short": null,
+            "long": "--scan-verbose",
+            "help": "Verbose scan progress (confused `-v` style)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "inspect",
+            "kind": "option",
+            "display": "--inspect",
+            "short": "-i",
+            "long": "--inspect",
+            "help": "Loki inspector: show git commit that introduced each free-namespace dependency",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "entrypoint",
+            "kind": "option",
+            "display": "--entrypoint <FILE>",
+            "short": null,
+            "long": "--entrypoint",
+            "help": "Application entry file for impact context (Loki `--entrypoint`; defaults to package.json main / index.js)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "no_hardening",
+            "kind": "option",
+            "display": "--no-hardening",
+            "short": null,
+            "long": "--no-hardening",
+            "help": "Skip npm hardening recon (.npmrc / floating ranges / scopes)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "stdin",
+            "kind": "option",
+            "display": "--stdin",
+            "short": null,
+            "long": "--stdin",
+            "help": "DepenFusion-style: read hosts/URLs from stdin and probe package.json + package-lock.json",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "hosts_file",
+            "kind": "option",
+            "display": "--hosts-file <PATH>",
+            "short": null,
+            "long": "--hosts-file",
+            "help": "File of hosts/URLs to probe (one per line; DepenFusion-style remote hunt)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": []
+          },
+          {
+            "id": "append",
+            "kind": "option",
+            "display": "--append <SUFFIX>",
+            "short": null,
+            "long": "--append",
+            "help": "Append string to each probe URL (DepenFusion `-a`, e.g. `?token=foo`)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [
+              ""
+            ],
+            "possible_values": []
+          },
+          {
+            "id": "strip_path",
+            "kind": "option",
+            "display": "--strip-path",
+            "short": null,
+            "long": "--strip-path",
+            "help": "Ignore path from input URLs; probe host root only (DepenFusion `-p`)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "link",
+            "kind": "option",
+            "display": "--link",
+            "short": null,
+            "long": "--link",
+            "help": "Print full https://registry.npmjs.org/… links for missing packages (DepenFusion `-link`)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
+            "id": "silent",
+            "kind": "option",
+            "display": "--silent",
+            "short": null,
+            "long": "--silent",
+            "help": "Silent remote-hunt output: only missing package names/links (DepenFusion `-s` silent)",
+            "long_help": null,
+            "required": false,
+            "global": false,
+            "repeatable": false,
+            "positional_index": null,
+            "default_values": [],
+            "possible_values": [
+              "true",
+              "false"
+            ]
+          },
+          {
             "id": "web",
             "kind": "option",
             "display": "--web",
@@ -1323,6 +1625,614 @@
           }
         ],
         "subcommands": []
+      },
+      {
+        "name": "assurance",
+        "display_name": "weeping-angel assurance",
+        "usage": "Usage: weeping-angel assurance <COMMAND>",
+        "about": "Automated readiness / assurance (not certification)",
+        "long_about": null,
+        "after_help": null,
+        "aliases": [],
+        "visible_aliases": [],
+        "arguments": [],
+        "subcommands": [
+          {
+            "name": "framework",
+            "display_name": "weeping-angel assurance framework",
+            "usage": "Usage: weeping-angel assurance framework <COMMAND>",
+            "about": "Framework pack list / validate / show",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [],
+            "subcommands": [
+              {
+                "name": "list",
+                "display_name": "weeping-angel assurance framework list",
+                "usage": "Usage: weeping-angel assurance framework list",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [],
+                "subcommands": []
+              },
+              {
+                "name": "validate",
+                "display_name": "weeping-angel assurance framework validate",
+                "usage": "Usage: weeping-angel assurance framework validate [PATH]",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "path",
+                    "kind": "positional",
+                    "display": "<PATH>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "frameworks/iso-27001/2022"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              },
+              {
+                "name": "show",
+                "display_name": "weeping-angel assurance framework show",
+                "usage": "Usage: weeping-angel assurance framework show <FRAMEWORK>",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "framework",
+                    "kind": "positional",
+                    "display": "<FRAMEWORK>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": true,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              }
+            ]
+          },
+          {
+            "name": "collect",
+            "display_name": "weeping-angel assurance collect",
+            "usage": "Usage: weeping-angel assurance collect [OPTIONS]",
+            "about": "Collect evidence",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "collector",
+                "kind": "option",
+                "display": "--collector <COLLECTOR>",
+                "short": null,
+                "long": "--collector",
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "evidence",
+            "display_name": "weeping-angel assurance evidence",
+            "usage": "Usage: weeping-angel assurance evidence <COMMAND>",
+            "about": "List, show, or add evidence",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [],
+            "subcommands": [
+              {
+                "name": "list",
+                "display_name": "weeping-angel assurance evidence list",
+                "usage": "Usage: weeping-angel assurance evidence list",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [],
+                "subcommands": []
+              },
+              {
+                "name": "show",
+                "display_name": "weeping-angel assurance evidence show",
+                "usage": "Usage: weeping-angel assurance evidence show [ID]",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "id",
+                    "kind": "positional",
+                    "display": "<ID>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "latest"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              },
+              {
+                "name": "add",
+                "display_name": "weeping-angel assurance evidence add",
+                "usage": "Usage: weeping-angel assurance evidence add [OPTIONS] --type <EVIDENCE_TYPE> --subject <SUBJECT> --attested-by <ATTESTED_BY>",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "evidence_type",
+                    "kind": "option",
+                    "display": "--type <EVIDENCE_TYPE>",
+                    "short": null,
+                    "long": "--type",
+                    "help": null,
+                    "long_help": null,
+                    "required": true,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  },
+                  {
+                    "id": "subject",
+                    "kind": "option",
+                    "display": "--subject <SUBJECT>",
+                    "short": null,
+                    "long": "--subject",
+                    "help": null,
+                    "long_help": null,
+                    "required": true,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  },
+                  {
+                    "id": "file",
+                    "kind": "option",
+                    "display": "--file <FILE>",
+                    "short": null,
+                    "long": "--file",
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  },
+                  {
+                    "id": "attested_by",
+                    "kind": "option",
+                    "display": "--attested-by <ATTESTED_BY>",
+                    "short": null,
+                    "long": "--attested-by",
+                    "help": null,
+                    "long_help": null,
+                    "required": true,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              }
+            ]
+          },
+          {
+            "name": "assess",
+            "display_name": "weeping-angel assurance assess",
+            "usage": "Usage: weeping-angel assurance assess [OPTIONS] --framework <FRAMEWORK>",
+            "about": "Run a readiness assessment",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "framework",
+                "kind": "option",
+                "display": "--framework <FRAMEWORK>",
+                "short": null,
+                "long": "--framework",
+                "help": null,
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "scope",
+                "kind": "option",
+                "display": "--scope <SCOPE>",
+                "short": null,
+                "long": "--scope",
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [
+                  "."
+                ],
+                "possible_values": []
+              },
+              {
+                "id": "github_repo",
+                "kind": "option",
+                "display": "--github-repo <GITHUB_REPO>",
+                "short": null,
+                "long": "--github-repo",
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "github_token_env",
+                "kind": "option",
+                "display": "--github-token-env <GITHUB_TOKEN_ENV>",
+                "short": null,
+                "long": "--github-token-env",
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "result",
+            "display_name": "weeping-angel assurance result",
+            "usage": "Usage: weeping-angel assurance result <COMMAND>",
+            "about": "Show a stored result",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [],
+            "subcommands": [
+              {
+                "name": "show",
+                "display_name": "weeping-angel assurance result show",
+                "usage": "Usage: weeping-angel assurance result show [ID]",
+                "about": null,
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "id",
+                    "kind": "positional",
+                    "display": "<ID>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "latest"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              }
+            ]
+          },
+          {
+            "name": "compare",
+            "display_name": "weeping-angel assurance compare",
+            "usage": "Usage: weeping-angel assurance compare [BEFORE] [AFTER]",
+            "about": "Compare two assessment snapshots",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "before",
+                "kind": "positional",
+                "display": "<BEFORE>",
+                "short": null,
+                "long": null,
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [
+                  "previous"
+                ],
+                "possible_values": []
+              },
+              {
+                "id": "after",
+                "kind": "positional",
+                "display": "<AFTER>",
+                "short": null,
+                "long": null,
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [
+                  "latest"
+                ],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "soa",
+            "display_name": "weeping-angel assurance soa",
+            "usage": "Usage: weeping-angel assurance soa [ASSESSMENT]",
+            "about": "Statement of Applicability projection",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "assessment",
+                "kind": "positional",
+                "display": "<ASSESSMENT>",
+                "short": null,
+                "long": null,
+                "help": null,
+                "long_help": null,
+                "required": false,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [
+                  "latest"
+                ],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          },
+          {
+            "name": "catalog",
+            "display_name": "weeping-angel assurance catalog",
+            "usage": "Usage: weeping-angel assurance catalog <COMMAND>",
+            "about": "Offline canonical assurance catalog",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [],
+            "subcommands": [
+              {
+                "name": "validate",
+                "display_name": "weeping-angel assurance catalog validate",
+                "usage": "Usage: weeping-angel assurance catalog validate [PATH]",
+                "about": "Validate a canonical catalog tree",
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "path",
+                    "kind": "positional",
+                    "display": "<PATH>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "catalog/canonical/v1"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              },
+              {
+                "name": "stats",
+                "display_name": "weeping-angel assurance catalog stats",
+                "usage": "Usage: weeping-angel assurance catalog stats [PATH]",
+                "about": "Print catalog statistics and digest",
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "path",
+                    "kind": "positional",
+                    "display": "<PATH>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "catalog/canonical/v1"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              },
+              {
+                "name": "inspect",
+                "display_name": "weeping-angel assurance catalog inspect",
+                "usage": "Usage: weeping-angel assurance catalog inspect <CONTROL_ID> [PATH]",
+                "about": "Inspect one control and its linked evidence/tests",
+                "long_about": null,
+                "after_help": null,
+                "aliases": [],
+                "visible_aliases": [],
+                "arguments": [
+                  {
+                    "id": "control_id",
+                    "kind": "positional",
+                    "display": "<CONTROL_ID>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": true,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [],
+                    "possible_values": []
+                  },
+                  {
+                    "id": "path",
+                    "kind": "positional",
+                    "display": "<PATH>",
+                    "short": null,
+                    "long": null,
+                    "help": null,
+                    "long_help": null,
+                    "required": false,
+                    "global": false,
+                    "repeatable": false,
+                    "positional_index": null,
+                    "default_values": [
+                      "catalog/canonical/v1"
+                    ],
+                    "possible_values": []
+                  }
+                ],
+                "subcommands": []
+              }
+            ]
+          },
+          {
+            "name": "explain",
+            "display_name": "weeping-angel assurance explain",
+            "usage": "Usage: weeping-angel assurance explain --assessment <ASSESSMENT> --control <CONTROL>",
+            "about": "Explain a control result from a pinned assessment",
+            "long_about": null,
+            "after_help": null,
+            "aliases": [],
+            "visible_aliases": [],
+            "arguments": [
+              {
+                "id": "assessment",
+                "kind": "option",
+                "display": "--assessment <ASSESSMENT>",
+                "short": null,
+                "long": "--assessment",
+                "help": null,
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              },
+              {
+                "id": "control",
+                "kind": "option",
+                "display": "--control <CONTROL>",
+                "short": null,
+                "long": "--control",
+                "help": null,
+                "long_help": null,
+                "required": true,
+                "global": false,
+                "repeatable": false,
+                "positional_index": null,
+                "default_values": [],
+                "possible_values": []
+              }
+            ],
+            "subcommands": []
+          }
+        ]
       },
       {
         "name": "version",

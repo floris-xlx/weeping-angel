@@ -216,6 +216,7 @@ Human map: [`docs/README.md`](docs/README.md).
 | [`architecture/`](architecture/) | ownership, invariants, forbidden patterns |
 | [`docs/debt/`](docs/debt/) | technical-debt register |
 | [`tests/contracts/`](tests/contracts/) | executable dual-suite invariants |
+| [`schemas/codex-security/`](schemas/codex-security/) | Codex Security JSON Schema SSOT |
 | [`frameworks/`](frameworks/) | versioned regime packs |
 | [`catalog/canonical/v1`](catalog/canonical/v1) | canonical controls / tests / evidence |
 | [`apps/docs`](apps/docs/) | Fumadocs CLI site (generated from clap) |
@@ -228,6 +229,7 @@ Start here if you are reading architecture, not running scans:
 - [ISO 27001 vertical](docs/adr/0002-iso-27001-assurance-vertical.md)
 - [Documentation layout](docs/adr/0004-documentation-architecture.md)
 - [Repository health gate](docs/adr/0009-repository-health-gate.md)
+- [Repository hygiene](docs/specs/repository-hygiene.md)
 
 ```bash
 pnpm --dir apps/docs install

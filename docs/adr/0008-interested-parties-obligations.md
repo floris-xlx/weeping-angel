@@ -1,5 +1,14 @@
 # ADR 0008 — Interested parties and obligations (governance inputs ≠ controls)
 
+<!-- weeping-angel-adr-meta
+id = "0008"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_interested_parties_obligations_target` GREEN (IPO-001–018); `sdd_interested_parties_obligations_baseline` skip-superseded. |

@@ -47,6 +47,18 @@ edition = "2024"
         root.join("architecture/architecture.toml"),
         r#"schema = "weeping-angel/architecture/v1"
 
+[policy]
+ownership_kinds = ["exclusive", "facade", "projection", "adapter", "shared-primitive"]
+required_concepts = [
+  "catalog",
+  "framework_compilation",
+  "readiness_projection",
+  "temporal_evidence_selection",
+  "assessment_lineage",
+  "evidence_persistence",
+  "assurance_cli",
+]
+
 [ownership.catalog]
 crate = "weeping-angel-canonical-catalog"
 kind = "exclusive"
@@ -133,6 +145,50 @@ guard_check = "04"
     .unwrap();
     fs::write(root.join("src/main.rs"), "").unwrap();
     fs::write(root.join("src/cli.rs"), "").unwrap();
+    fs::create_dir_all(root.join("docs/adr")).unwrap();
+    fs::create_dir_all(root.join("docs/specs")).unwrap();
+    fs::write(
+        root.join("docs/adr/0010-architecture-as-law.md"),
+        r#"# ADR 0010
+
+<!-- weeping-angel-adr-meta
+id = "0010"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("docs/specs/architectural-cleanup-program.md"),
+        "# spec\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("architecture/adr-identity.toml"),
+        r#"schema = "weeping-angel/adr-identity/v1"
+grandfathered_debt = "DEBT-DUP-ADR"
+grandfathered_prefixes = ["0003", "0005", "0007", "0008"]
+grandfathered_files = []
+"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("architecture/spec-lifecycle.toml"),
+        r#"schema = "weeping-angel/spec-lifecycle/v1"
+
+[[spec]]
+path = "docs/specs/architectural-cleanup-program.md"
+state = "active"
+ownership = ["catalog"]
+depends_on = []
+supersedes = []
+successor = ""
+"#,
+    )
+    .unwrap();
     fs::write(root.join("docs/debt/register.toml"), register).unwrap();
 }
 
@@ -147,9 +203,8 @@ fn seed_findings() -> String {
         "DEBT-GUARD-10",
         "DEBT-GUARD-11",
         "DEBT-GUARD-12",
-        "DEBT-GUARD-14",
-        "DEBT-GUARD-15",
     ] {
+        let nn = id.trim_start_matches("DEBT-GUARD-");
         body.push_str(&format!(
             r#"
 [[finding]]
@@ -157,9 +212,31 @@ id = "{id}"
 title = "stub"
 status = "open"
 summary = "stub skip"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "product-semantic stub"
+repository_guard = "{nn}"
+skip_check = "{nn}"
+expires = "2027-12-31"
 "#
         ));
     }
+    body.push_str(
+        r#"
+[[finding]]
+id = "DEBT-DUP-ADR"
+title = "duplicate adr prefixes"
+status = "confirmed"
+summary = "historical prefix collisions"
+owner = "fixture"
+introduced = "2026-08-19"
+severity = "medium"
+remediation = "pin historical files"
+repository_guard = "14"
+review_by = "2027-12-31"
+"#,
+    );
     body
 }
 
@@ -247,10 +324,16 @@ fn guard_on_fixture_repo_runs_implemented_checks_and_skips_stubs() {
         rendered.contains("04  architecture-invariants  pass"),
         "Guard 04 must evaluate invariants: {rendered}"
     );
-    for id in ["05", "06", "07", "08", "09", "10", "11", "12", "14", "15"] {
+    for id in ["05", "06", "07", "08", "09", "10", "11", "12"] {
         assert!(
             rendered.contains(&format!("skip(DEBT-GUARD-{id})")),
             "stub {id} must skip-with-debt: {rendered}"
+        );
+    }
+    for id in ["14", "15"] {
+        assert!(
+            rendered.contains(&format!("{id}  ")) && rendered.contains("pass"),
+            "check {id} must be a real pass: {rendered}"
         );
     }
 }

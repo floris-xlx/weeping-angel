@@ -1,5 +1,14 @@
 # ADR 0003 — Immutable assessment lineage and pure report serialization
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** |
@@ -78,7 +87,7 @@ status = completed | partial | failed
 
 Collector failure no longer aborts `assess`. A failed or partial `CollectionRun` yields `AssessmentRun.status` `failed` or `partial` and an explainable (possibly empty) result set. History is a new row, never a rewrite of a completed run.
 
-Replay: `reconstruct` / `replay_assessment` / `load_lineage` rebuild an `AssessmentReport` from a `LineageBundle`. They do not consult current pack/catalog files. `verify_current_against_pins` / `detect_digest_mismatch` compare pins to current digests; mismatch is `DigestMismatch`, never a silent rewrite.
+Replay: `replay_assessment` verifies pins then reconstructs; `reconstruct` / `load_lineage` clone an already-trusted bundle. They do not consult current pack/catalog files to fill gaps. Missing / mismatched / incomplete / inconsistent lineage is `ReplayFailure` (mapped to `AssuranceError::UnknownPack`). `verify_current_against_pins` / `detect_digest_mismatch` compare pins to current digests; mismatch is `DigestMismatch`, never a silent rewrite. JSON `asOf` is the run `as_of` field ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)).
 
 ### 2. Ledger is the storage seam; evidence crate does not conclude
 
@@ -96,7 +105,7 @@ Envelope `append` remains `INSERT OR IGNORE`. Lineage persist is `INSERT OR IGNO
 
 `assess` does **not** open a ledger. Callers persist the returned run (CLI explain reads `assurance-ledger.sqlite`).
 
-`record_collection_run` remains `INSERT OR REPLACE` for in-flight collection identity. Assessment and control-test rows are not silently replaced.
+`record_collection_run` is idempotent on identical bytes. A **completed** collection-run payload with different bytes is `LedgerError::Immutable` ([ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md)). In-flight (non-completed) identity may still update. Assessment and control-test rows are not silently replaced.
 
 ### 3. Serialization is pure
 
@@ -194,4 +203,4 @@ Multi-tenant SaaS, UI, new frameworks, domain catalog redesign, applicability en
 
 ## Status
 
-Accepted after target GREEN. Public types are frozen in `weeping-angel-assurance::{lineage,snapshot}` and `EvidenceLedger` persist/load APIs. Baseline absence characterization is ignored so CI does not require the pre-lineage HEAD.
+Accepted after target GREEN. Public types are frozen in `weeping-angel-assurance::{lineage,snapshot}` and `EvidenceLedger` persist/load APIs. Baseline absence characterization is ignored so CI does not require the pre-lineage HEAD. Fail-closed replay, independent `asOf`, and collection-run immutability are [ADR 0011](0011-temporal-lineage-evidence-soa-integrity.md).

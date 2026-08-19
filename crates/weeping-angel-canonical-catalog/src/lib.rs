@@ -10,7 +10,10 @@ use std::path::{Component, Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use weeping_angel_assurance_ir::canonical_digest;
+use weeping_angel_assurance_ir::{
+    CatalogProjection, Control, ControlId, ControlTestId, EvidenceType, PlannedControlTest,
+    PlannedTestKind, WorkspaceCatalogLoader, canonical_digest,
+};
 
 pub const CATALOG_SCHEMA: &str = "weeping-angel/canonical-catalog/v1";
 pub const DIGEST_PREFIX: &str = "wa:canonical-catalog:weeping-angel/canonical-catalog/v1:";
@@ -391,6 +394,260 @@ impl CanonicalCatalog {
     pub fn root(&self) -> &Path {
         &self.root
     }
+
+    /// IR-shaped projection for pack compile. Not a second authoring SSOT.
+    pub fn projection(&self) -> Result<CatalogProjection, CatalogError> {
+        let mut controls = Vec::new();
+        for control in self.controls.values() {
+            controls.push(
+                Control::new(
+                    ControlId::new(&control.id),
+                    control.title.clone(),
+                    control.description.clone(),
+                )
+                .with_objective(control.objective.clone()),
+            );
+        }
+        let mut tests = Vec::new();
+        for test in self.tests.values() {
+            tests.push(planned_test_from_catalog(test)?);
+        }
+        Ok(CatalogProjection {
+            digest: self.digest()?.to_string(),
+            controls,
+            tests,
+        })
+    }
+}
+
+fn planned_test_from_catalog(test: &CatalogTest) -> Result<PlannedControlTest, CatalogError> {
+    let kind = if test.kind.eq_ignore_ascii_case("manual") {
+        PlannedTestKind::Manual
+    } else if test.kind.eq_ignore_ascii_case("hybrid") {
+        PlannedTestKind::Hybrid
+    } else {
+        PlannedTestKind::Automated
+    };
+    let mut planned =
+        PlannedControlTest::new(ControlTestId::new(&test.id), ControlId::new(&test.control));
+    planned.kind = kind;
+    planned.required_evidence = test
+        .required_evidence
+        .iter()
+        .map(|ty| EvidenceType::new(ty.as_str()))
+        .collect();
+    planned.break_on = test
+        .break_on
+        .iter()
+        .map(|ty| EvidenceType::new(ty.as_str()))
+        .collect();
+    if !test.expression.is_empty() {
+        planned.expr = Some(expression_to_json(
+            &test.expression,
+            &test.subjects,
+            &test.id,
+        )?);
+    }
+    Ok(planned)
+}
+
+fn expression_to_json(
+    expression: &BTreeMap<String, toml::Value>,
+    subjects: &[BTreeMap<String, toml::Value>],
+    test_id: &str,
+) -> Result<serde_json::Value, CatalogError> {
+    let op = expression
+        .get("op")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| CatalogError::MalformedExpression {
+            id: test_id.into(),
+            reason: "missing op".into(),
+        })?;
+    match op {
+        "all" => Ok(serde_json::json!({
+            "All": child_exprs(expression, subjects, test_id)?
+        })),
+        "any" => Ok(serde_json::json!({
+            "Any": child_exprs(expression, subjects, test_id)?
+        })),
+        "none" => Ok(serde_json::json!({
+            "None": child_exprs(expression, subjects, test_id)?
+        })),
+        "not" => {
+            let children = child_exprs(expression, subjects, test_id)?;
+            let inner =
+                children
+                    .into_iter()
+                    .next()
+                    .ok_or_else(|| CatalogError::MalformedExpression {
+                        id: test_id.into(),
+                        reason: "not requires a child expression".into(),
+                    })?;
+            Ok(serde_json::json!({ "Not": inner }))
+        }
+        "manual-review" | "manual_review" | "ManualReview" => {
+            Ok(serde_json::Value::String("ManualReview".into()))
+        }
+        other => population_or_leaf_json(other, expression, subjects, test_id),
+    }
+}
+
+fn child_exprs(
+    expression: &BTreeMap<String, toml::Value>,
+    subjects: &[BTreeMap<String, toml::Value>],
+    test_id: &str,
+) -> Result<Vec<serde_json::Value>, CatalogError> {
+    let mut out = Vec::new();
+    for key in ["children", "of", "args", "expressions"] {
+        if let Some(arr) = expression.get(key).and_then(|v| v.as_array()) {
+            for item in arr {
+                let table: BTreeMap<String, toml::Value> = item
+                    .as_table()
+                    .cloned()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .collect();
+                out.push(expression_to_json(&table, subjects, test_id)?);
+            }
+        }
+    }
+    if let Some(child) = expression.get("child").and_then(|v| v.as_table()) {
+        let table: BTreeMap<String, toml::Value> = child.clone().into_iter().collect();
+        out.push(expression_to_json(&table, subjects, test_id)?);
+    }
+    Ok(out)
+}
+
+fn population_or_leaf_json(
+    op: &str,
+    expression: &BTreeMap<String, toml::Value>,
+    subjects: &[BTreeMap<String, toml::Value>],
+    test_id: &str,
+) -> Result<serde_json::Value, CatalogError> {
+    let evidence = expression
+        .get("evidence")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let field = expression
+        .get("field")
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
+    let kind = subjects
+        .first()
+        .and_then(|row| row.get("kind"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("organization");
+    let selector = serde_json::json!({
+        "kind": kind,
+        "id": serde_json::Value::Null,
+    });
+    let evidence_sel = serde_json::json!({
+        "evidenceType": evidence,
+        "subjectSelector": selector.clone(),
+        "field": field,
+        "freshness": serde_json::Value::Null,
+    });
+    let percentage = expression
+        .get("percentage")
+        .and_then(|v| {
+            v.as_str()
+                .map(ToOwned::to_owned)
+                .or_else(|| v.as_integer().map(|n| n.to_string()))
+        })
+        .unwrap_or_else(|| "100".into());
+    match op {
+        "exists" => Ok(serde_json::json!({ "Exists": evidence_sel })),
+        "missing" => Ok(serde_json::json!({ "Missing": evidence_sel })),
+        "coverage-at-least" | "coverage_at_least" | "CoverageAtLeast" => Ok(serde_json::json!({
+            "CoverageAtLeast": {
+                "selector": selector,
+                "evidence": evidence_sel,
+                "percentage": percentage,
+            }
+        })),
+        "coverage-exactly" | "coverage_exactly" | "CoverageExactly" => Ok(serde_json::json!({
+            "CoverageExactly": {
+                "selector": selector,
+                "evidence": evidence_sel,
+                "percentage": percentage,
+            }
+        })),
+        "all-subjects" | "all_subjects" | "AllSubjects" => Ok(serde_json::json!({
+            "AllSubjects": {
+                "selector": selector,
+                "evidence": evidence_sel,
+            }
+        })),
+        "any-subject" | "any_subject" | "AnySubject" => Ok(serde_json::json!({
+            "AnySubject": {
+                "selector": selector,
+                "evidence": evidence_sel,
+            }
+        })),
+        "none-subjects" | "none_subjects" | "NoneSubjects" => Ok(serde_json::json!({
+            "NoneSubjects": {
+                "selector": selector,
+                "evidence": evidence_sel,
+            }
+        })),
+        "missing-subjects" | "missing_subjects" | "MissingSubjects" => Ok(serde_json::json!({
+            "MissingSubjects": {
+                "selector": selector,
+                "evidence": evidence_sel,
+            }
+        })),
+        "count" => Ok(serde_json::json!({
+            "Count": {
+                "selector": evidence_sel,
+                "predicate": { "Gte": 1 },
+            }
+        })),
+        "count-where" | "count_where" | "CountWhere" => Ok(serde_json::json!({
+            "CountWhere": {
+                "selector": selector,
+                "evidence": evidence_sel,
+                "predicate": { "Gte": 1 },
+            }
+        })),
+        "fresh-within" | "fresh_within" | "FreshWithin" => Ok(serde_json::json!({
+            "FreshWithin": {
+                "selector": evidence_sel,
+                "duration": { "secs": 0, "nanos": 0 },
+            }
+        })),
+        other => Err(CatalogError::UnknownOperator {
+            op: other.into(),
+            id: test_id.into(),
+        }),
+    }
+}
+
+fn load_workspace_catalog() -> Option<CatalogProjection> {
+    for root in workspace_catalog_roots() {
+        if root.join("manifest.toml").is_file()
+            && let Ok(catalog) = CanonicalCatalog::load(&root)
+            && let Ok(projection) = catalog.projection()
+        {
+            return Some(projection);
+        }
+    }
+    None
+}
+
+fn workspace_catalog_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let base = PathBuf::from(dir);
+        roots.push(base.join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("catalog/canonical/v1"));
+        roots.push(base.join("..").join("..").join("catalog/canonical/v1"));
+    }
+    roots.push(PathBuf::from("catalog/canonical/v1"));
+    roots
+}
+
+inventory::submit! {
+    WorkspaceCatalogLoader(load_workspace_catalog)
 }
 
 #[derive(Serialize)]
@@ -660,21 +917,8 @@ fn validate_id(expected_kind: &str, id: &str) -> Result<(), CatalogError> {
 }
 
 fn validate_expression(test: &CatalogTest) -> Result<(), CatalogError> {
-    if test.expression.is_empty() {
-        return Ok(());
-    }
-    if let Some(op) = test.expression.get("op").and_then(|v| v.as_str()) {
-        if !ALLOWED_OPS.contains(&op) {
-            return Err(CatalogError::UnknownOperator {
-                op: op.to_string(),
-                id: test.id.clone(),
-            });
-        }
-    } else {
-        return Err(CatalogError::MalformedExpression {
-            id: test.id.clone(),
-            reason: "missing op".into(),
-        });
+    if !test.expression.is_empty() {
+        validate_expression_table(&test.expression, &test.id)?;
     }
     for subject in &test.subjects {
         if let Some(kind) = subject.get("kind").and_then(|v| v.as_str())
@@ -685,6 +929,40 @@ fn validate_expression(test: &CatalogTest) -> Result<(), CatalogError> {
                 id: test.id.clone(),
             });
         }
+    }
+    Ok(())
+}
+
+fn validate_expression_table(
+    expression: &BTreeMap<String, toml::Value>,
+    test_id: &str,
+) -> Result<(), CatalogError> {
+    if let Some(op) = expression.get("op").and_then(|v| v.as_str()) {
+        if !ALLOWED_OPS.contains(&op) {
+            return Err(CatalogError::UnknownOperator {
+                op: op.to_string(),
+                id: test_id.to_string(),
+            });
+        }
+    } else if !expression.is_empty() {
+        return Err(CatalogError::MalformedExpression {
+            id: test_id.to_string(),
+            reason: "missing op".into(),
+        });
+    }
+    for key in ["children", "of", "args", "expressions"] {
+        if let Some(arr) = expression.get(key).and_then(|v| v.as_array()) {
+            for item in arr {
+                if let Some(table) = item.as_table() {
+                    let map: BTreeMap<String, toml::Value> = table.clone().into_iter().collect();
+                    validate_expression_table(&map, test_id)?;
+                }
+            }
+        }
+    }
+    if let Some(child) = expression.get("child").and_then(|v| v.as_table()) {
+        let map: BTreeMap<String, toml::Value> = child.clone().into_iter().collect();
+        validate_expression_table(&map, test_id)?;
     }
     Ok(())
 }

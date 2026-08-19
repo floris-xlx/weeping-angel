@@ -12,6 +12,7 @@ demo = []
 
 [dependencies]
 hex = "0.4"
+inventory = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"

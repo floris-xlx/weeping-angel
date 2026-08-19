@@ -223,7 +223,7 @@ pub fn collect_from_html(base: &Url, html: &str) -> Vec<ImageCandidate> {
         Regex::new(
             r#"(?i)["']((?:https?://[^"']+|/[^"']+)\.(?:png|jpe?g|webp|gif|svg|avif|ico)(?:\?[^"']*)?)["']"#,
         )
-        .unwrap()
+        .unwrap() // panic-ok: regex literal
     });
 
     let mut map: HashMap<String, ImageCandidate> = HashMap::new();

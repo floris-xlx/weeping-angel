@@ -125,7 +125,7 @@ static QUOTED_IMAGE_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
         r#"(?i)["']((?:https?://[^"']+|/[^"']+)\.(?:png|jpe?g|webp|gif|svg|avif|ico)(?:\?[^"']*)?)["']"#,
     )
-    .unwrap()
+    .unwrap() // panic-ok: regex literal
 });
 
 static SRCSET_PART_RE: Lazy<Regex> = Lazy::new(|| {

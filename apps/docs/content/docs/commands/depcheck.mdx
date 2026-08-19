@@ -17,15 +17,33 @@ Usage: weeping-angel depcheck [OPTIONS] [TARGET]
 
 | Flag / arg | Description | Default |
 |---|---|---|
-| `<TARGET>` | Dependency file or project directory (omit with --url / --web) | `—` |
+| `<TARGET>` | Dependency file or project directory (omit with --url / --web / --dependency) | `—` |
+| `--path <PATH>` | Path to folder(s) to analyze (DepFuzzer / Loki alias for positional target) | `—` |
 | `--url <URL>` | Fetch dependency file from URL (requires --i-own-this) | `—` |
+| `--dependency <NAME[:VERSION]>` | Check one dependency: NAME or NAME:VERSION (DepFuzzer-compatible) | `—` |
+| `--language <LANG>` | Package repository system. Values: npm, pip/pypi, composer, mvn/maven, gradle, rubygems, cargo, go, nuget, all | `—` |
 | `--list` | List packages only (no registry checks) | `—` |
+| `--secure-namespace <PATTERN>` | Known-secure namespaces (confused `-s`). Comma-separated; `*` wildcards. Repeatable | `—` |
+| `--print-takeover` | Stream takeover candidates as they are found (DepFuzzer `--print-takeover`) | `—` |
+| `--output-file <PATH>` | Write takeover candidates to a text file (NAME:VERSION per line) | `—` |
+| `--check-email` | For packages that exist: check maintainer emails for disposable / purchasable domains (DepFuzzer `--check-email`) | `—` |
+| `--transitive` | Also walk transitive deps via deps.dev (DepFuzzer-style; slower) | `—` |
 | `--convert` | Convert extracted packages to package.json for other tools | `—` |
 | `--export <PATH>` | Export scan results JSON | `—` |
 | `--threads <THREADS>` | Concurrent registry checks (default: 20) | `20` |
 | `--timeout <TIMEOUT>` | Registry request timeout seconds (default: 10) | `10` |
 | `--type <KIND>` | Override file type detection (e.g. package_lock_json, requirements_txt) | `—` |
 | `--quiet` | Only print vulnerable package names | `—` |
+| `--scan-verbose` | Verbose scan progress (confused `-v` style) | `—` |
+| `--inspect` | Loki inspector: show git commit that introduced each free-namespace dependency | `—` |
+| `--entrypoint <FILE>` | Application entry file for impact context (Loki `--entrypoint`; defaults to package.json main / index.js) | `—` |
+| `--no-hardening` | Skip npm hardening recon (.npmrc / floating ranges / scopes) | `—` |
+| `--stdin` | DepenFusion-style: read hosts/URLs from stdin and probe package.json + package-lock.json | `—` |
+| `--hosts-file <PATH>` | File of hosts/URLs to probe (one per line; DepenFusion-style remote hunt) | `—` |
+| `--append <SUFFIX>` | Append string to each probe URL (DepenFusion `-a`, e.g. `?token=foo`) | `` |
+| `--strip-path` | Ignore path from input URLs; probe host root only (DepenFusion `-p`) | `—` |
+| `--link` | Print full https://registry.npmjs.org/… links for missing packages (DepenFusion `-link`) | `—` |
+| `--silent` | Silent remote-hunt output: only missing package names/links (DepenFusion `-s` silent) | `—` |
 | `--web` | Start scan-only local Web UI | `—` |
 | `--port <PORT>` | Web UI port (default: 8443) | `8443` |
 | `--bind <BIND>` | Web UI bind address (default: 127.0.0.1) | `127.0.0.1` |

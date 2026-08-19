@@ -1,5 +1,14 @@
 # ADR 0003 — Control implementation registry (organizational state ≠ effectiveness)
 
+<!-- weeping-angel-adr-meta
+id = "0003"
+status = "accepted"
+supersedes = []
+superseded_by = []
+depends_on = []
+-->
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted** — `sdd_control_implementation_registry_target` GREEN (CIR-001–015); baseline skip-superseded after it failed on the new contract. |

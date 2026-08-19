@@ -38,14 +38,18 @@ Target `sdd_temporal_assurance_target` GREEN. Types exist once (sibling dual-sui
 | --- | --- |
 | `EvidenceValidityEvent`, `project_validity`, `window_contains` | `weeping-angel-evidence::validity` |
 | Out-of-digest clocks | `EvidenceEnvelope` `observedAt?` / `validFrom?` / `validUntil?` / `sourceRevision?` (accessors default `observed_at → collected_at`, `valid_from → observed_at`) |
-| Ledger | `append` records `asserted`; `supersede` records `superseded` without mutating the prior row; `record_validity_event` (idempotent `eventId`; conflict → `Immutable`); `validity_events` / `validity_events_for`; `valid_during([start,end))`; `latest_as_of`. `within_window` / `latest` stay collection-time. |
+| Ledger | `append` records `asserted`; `supersede` records `superseded` without mutating the prior row; `record_validity_event` (idempotent `eventId`; conflict → `Immutable`); `validity_events` / `validity_events_for`; `valid_during([start,end))`; `as_of` / `latest_as_of` (alias). `within_window` / `latest` stay collection-time. `current` / `valid_at` are four-clock law ([ADR 0011](../adr/0011-temporal-lineage-evidence-soa-integrity.md)). |
 | Selection | `select_latest_as_of`, `select_evidence(TemporalQuery)`, `build_index_as_of`; evaluate `first_selector` uses the as-of leaf |
-| Clock | `AssessmentContext { now, max_age }`; `as_of()` = `now`; `FreshnessPolicy { max_age, as_of, period }` |
+| Clock | `AssessmentContext { now, max_age }`; `as_of()` = injected `now` (not ledger `current()`); `FreshnessPolicy { max_age, as_of, period }` |
 | Period | `PeriodEffectiveness` on `ControlTestResult.period`; default `TemporalSemantics::instant`; sampling = validity-event / envelope boundaries plus `[start, end)` |
 | Timeline | `weeping-angel-assurance::{project_timeline, compare_temporal, diff_period}` |
-| Replay pin | `AssessmentRun` JSON `asOf` (live `assess` serializes from `startedAt`) |
+| Replay pin | `AssessmentRun` JSON `asOf` from the `as_of` field (live `assess` may default it to `startedAt`) |
 
 Half-open window: `valid_from <= T` and (`valid_until` is none or `T < valid_until`). Future / expired / revoked-at-T envelopes are not candidates. One `Exists` hit is point-in-time `Effective` and period `insufficientObservationCoverage` unless semantics explicitly allow continuity.
+
+### Remaining increment (Prompt 3 — do not fork this spec)
+
+This file and `sdd_temporal_assurance_*` remain the Prompt 14 as-of / period SSOT (GREEN / skip-superseded). Trust-boundary closure (`latest` / `current` / `valid-at` / `as-of`, pinned `asOf`, fail-closed replay, persistence, historical SoA) is implemented in [`temporal-lineage-evidence-soa.md`](temporal-lineage-evidence-soa.md) (`sdd_temporal_lineage_evidence_soa_target` GREEN). ADR [`0011-temporal-lineage-evidence-soa-integrity.md`](../adr/0011-temporal-lineage-evidence-soa-integrity.md). Keep Instant period conservatism.
 
 ---
 

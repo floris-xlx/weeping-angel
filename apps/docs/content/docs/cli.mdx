@@ -5,7 +5,7 @@ description: "Root command tree"
 
 {/* Generated from clap export by scripts/generate-docs.mjs */}
 
-> Authorized dual-domain security toolchain (web recon + code analysis)
+> Authorized security toolchain (web recon, code SAST, depcheck)
 
 ## Usage
 
@@ -15,13 +15,14 @@ Usage: weeping-angel [OPTIONS] <COMMAND>
 
 ## Details
 
-Authorized security toolchain: live web recon/DAST and algorithmic code scans.
+Authorized security toolchain: live web recon/DAST, algorithmic code scans, and dependency-confusion detection (depcheck).
 
 Web scans require --i-own-this and --allow-host (or --allow-host-from-target).
 Targets accept bare hosts (example.com), //host, http://, or https://.
 Consent: --i-own-this or --i-own-this=true|yes|1 (value requires =).
 
 Code/diff scans produce Codex Security–compatible sealed bundles.
+depcheck is detection-only (no auto-publish / exploit payloads).
 
 ## Arguments
 
@@ -38,5 +39,6 @@ Code/diff scans produce Codex Security–compatible sealed bundles.
 - [`scan-diff`](/docs/commands/scan-diff) — Algorithmic code SAST on a Git change-set (PR/commit/working-tree)
 - [`workbench`](/docs/commands/workbench) — Local SQLite workbench: register / list sealed scans
 - [`depcheck`](/docs/commands/depcheck) — Dependency confusion scanner (multi-format, detection only)
+- [`assurance`](/docs/commands/assurance) — Automated readiness / assurance (not certification)
 - [`version`](/docs/commands/version) — Print version and package description
 - [`completions`](/docs/commands/completions) — Write shell completions to stdout

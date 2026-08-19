@@ -10,7 +10,7 @@
 | Slice | Increment 1 of the 29-phase (0–28) architectural-cleanup PROGRAM: Phase 0 freeze + Phase 1 architecture-as-law only. **Not** phases 2–28. |
 | Spec (human SSOT) | [`docs/specs/architectural-cleanup-program.md`](../specs/architectural-cleanup-program.md) |
 | ADR | Accepted [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md) |
-| Telemetry | [`architectural-cleanup-program-telemetry.json`](architectural-cleanup-program-telemetry.json) |
+| Telemetry | [`.sdd/runs/architectural-cleanup-program-telemetry.json`](../../.sdd/runs/architectural-cleanup-program-telemetry.json) |
 | Dual-suite | `xtask/tests/*.rs` via `cargo test -p xtask` — **not** `tests/sdd/` |
 | Baseline | [`xtask/tests/sdd_architectural_cleanup_baseline.rs`](../../xtask/tests/sdd_architectural_cleanup_baseline.rs) (ACP-B01–B06; skip-retired, 11 ignored) |
 | Target | [`xtask/tests/sdd_architectural_cleanup_target.rs`](../../xtask/tests/sdd_architectural_cleanup_target.rs) (ACP-T01–T17; 17/17 pass) |
@@ -251,4 +251,4 @@ Iterate used 0 of `max_iters` 3 (target already GREEN after implement).
 - Decision: [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md)
 - Predecessor: [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md), [ADR 0009](../adr/0009-repository-health-gate.md)
 - Debt register: [`docs/debt/register.toml`](../debt/register.toml)
-- Telemetry: [`architectural-cleanup-program-telemetry.json`](architectural-cleanup-program-telemetry.json)
+- Telemetry: [`.sdd/runs/architectural-cleanup-program-telemetry.json`](../../.sdd/runs/architectural-cleanup-program-telemetry.json)
