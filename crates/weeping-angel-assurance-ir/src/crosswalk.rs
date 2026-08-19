@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    ControlId, ControlTestId, EvidenceRequirementId, ExceptionId, MappingCompleteness,
+    ControlId, ControlTestId, EvidenceRequirementId, ExceptionId, IncidentId, MappingCompleteness,
     MappingDirection, MappingProvenance, MappingRelation, RequirementId, RiskId,
 };
 
@@ -30,6 +30,7 @@ pub enum ComplianceNodeRef {
     EvidenceRequirement(EvidenceRequirementId),
     Risk(RiskId),
     Exception(ExceptionId),
+    Incident(IncidentId),
 }
 
 #[derive(Debug, Clone)]

@@ -2,6 +2,7 @@
 
 pub mod assurance_catalog;
 pub mod assurance_explain;
+pub mod assurance_soa;
 pub mod authz;
 pub mod checks;
 pub mod cli;

@@ -208,116 +208,304 @@ required-features = ["demo"]
 
 [[test]]
 name = "sdd_assurance_runtime_baseline"
-path = "tests/sdd/assurance_runtime.baseline.rs"
+path = "tests/contracts/assurance_runtime.baseline.rs"
 
 [[test]]
 name = "sdd_assurance_runtime_target"
-path = "tests/sdd/assurance_runtime.target.rs"
+path = "tests/contracts/assurance_runtime.target.rs"
 
 [[test]]
 name = "sdd_iso27001_assurance_baseline"
-path = "tests/sdd/iso27001_assurance.baseline.rs"
+path = "tests/contracts/iso27001_assurance.baseline.rs"
 
 [[test]]
 name = "sdd_iso27001_assurance_target"
-path = "tests/sdd/iso27001_assurance.target.rs"
+path = "tests/contracts/iso27001_assurance.target.rs"
 
 [[test]]
 name = "sdd_iso27001_remap_baseline"
-path = "tests/sdd/iso27001_remap.baseline.rs"
+path = "tests/contracts/iso27001_remap.baseline.rs"
 
 [[test]]
 name = "sdd_iso27001_remap_target"
-path = "tests/sdd/iso27001_remap.target.rs"
+path = "tests/contracts/iso27001_remap.target.rs"
 
 [[test]]
 name = "sdd_compliance_ir_target"
-path = "tests/sdd/compliance_ir.target.rs"
+path = "tests/contracts/compliance_ir.target.rs"
 
 [[test]]
 name = "sdd_population_runtime_baseline"
-path = "tests/sdd/population_runtime.baseline.rs"
+path = "tests/contracts/population_runtime.baseline.rs"
 
 [[test]]
 name = "sdd_population_runtime_target"
-path = "tests/sdd/population_runtime.target.rs"
+path = "tests/contracts/population_runtime.target.rs"
 
 [[test]]
 name = "sdd_typed_evidence_baseline"
-path = "tests/sdd/typed_evidence.baseline.rs"
+path = "tests/contracts/typed_evidence.baseline.rs"
 
 [[test]]
 name = "sdd_typed_evidence_target"
-path = "tests/sdd/typed_evidence.target.rs"
+path = "tests/contracts/typed_evidence.target.rs"
 
 [[test]]
 name = "sdd_iam_catalog_baseline"
-path = "tests/sdd/iam_catalog.baseline.rs"
+path = "tests/contracts/iam_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_iam_catalog_target"
-path = "tests/sdd/iam_catalog.target.rs"
+path = "tests/contracts/iam_catalog.target.rs"
 
 [[test]]
 name = "sdd_canonical_assurance_catalog_baseline"
-path = "tests/sdd/canonical_assurance_catalog.baseline.rs"
+path = "tests/contracts/canonical_assurance_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_canonical_assurance_catalog_target"
-path = "tests/sdd/canonical_assurance_catalog.target.rs"
+path = "tests/contracts/canonical_assurance_catalog.target.rs"
 
 [[test]]
 name = "sdd_github_collector_baseline"
-path = "tests/sdd/github_collector.baseline.rs"
+path = "tests/contracts/github_collector.baseline.rs"
 
 [[test]]
 name = "sdd_github_collector_target"
-path = "tests/sdd/github_collector.target.rs"
+path = "tests/contracts/github_collector.target.rs"
 
 [[test]]
 name = "sdd_assessment_lineage_baseline"
-path = "tests/sdd/assessment_lineage.baseline.rs"
+path = "tests/contracts/assessment_lineage.baseline.rs"
 
 [[test]]
 name = "sdd_assessment_lineage_target"
-path = "tests/sdd/assessment_lineage.target.rs"
+path = "tests/contracts/assessment_lineage.target.rs"
 
 [[test]]
 name = "sdd_vulnerability_catalog_baseline"
-path = "tests/sdd/vulnerability_catalog.baseline.rs"
+path = "tests/contracts/vulnerability_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_vulnerability_catalog_target"
-path = "tests/sdd/vulnerability_catalog.target.rs"
+path = "tests/contracts/vulnerability_catalog.target.rs"
 
 [[test]]
 name = "sdd_sdlc_catalog_baseline"
-path = "tests/sdd/sdlc_catalog.baseline.rs"
+path = "tests/contracts/sdlc_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_sdlc_catalog_target"
-path = "tests/sdd/sdlc_catalog.target.rs"
+path = "tests/contracts/sdlc_catalog.target.rs"
 
 [[test]]
 name = "sdd_infrastructure_catalog_baseline"
-path = "tests/sdd/infrastructure_catalog.baseline.rs"
+path = "tests/contracts/infrastructure_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_infrastructure_catalog_target"
-path = "tests/sdd/infrastructure_catalog.target.rs"
+path = "tests/contracts/infrastructure_catalog.target.rs"
 
 [[test]]
 name = "sdd_applicability_engine_baseline"
-path = "tests/sdd/applicability_engine.baseline.rs"
+path = "tests/contracts/applicability_engine.baseline.rs"
 
 [[test]]
 name = "sdd_applicability_engine_target"
-path = "tests/sdd/applicability_engine.target.rs"
+path = "tests/contracts/applicability_engine.target.rs"
 
 [[test]]
 name = "sdd_governance_catalog_baseline"
-path = "tests/sdd/governance_catalog.baseline.rs"
+path = "tests/contracts/governance_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_governance_catalog_target"
-path = "tests/sdd/governance_catalog.target.rs"
+path = "tests/contracts/governance_catalog.target.rs"
+
+[[test]]
+name = "sdd_risk_register_baseline"
+path = "tests/contracts/risk_register.baseline.rs"
+
+[[test]]
+name = "sdd_risk_register_target"
+path = "tests/contracts/risk_register.target.rs"
+
+[[test]]
+name = "sdd_operational_soa_baseline"
+path = "tests/contracts/operational_soa.baseline.rs"
+
+[[test]]
+name = "sdd_operational_soa_target"
+path = "tests/contracts/operational_soa.target.rs"
+
+[[test]]
+name = "sdd_controlled_documents_baseline"
+path = "tests/contracts/controlled_documents.baseline.rs"
+
+[[test]]
+name = "sdd_controlled_documents_target"
+path = "tests/contracts/controlled_documents.target.rs"
+
+[[test]]
+name = "sdd_documentation_layout"
+path = "tests/contracts/documentation_layout.rs"
+
+[[test]]
+name = "sdd_risk_methodology_baseline"
+path = "tests/contracts/risk_methodology.baseline.rs"
+
+[[test]]
+name = "sdd_risk_methodology_target"
+path = "tests/contracts/risk_methodology.target.rs"
+
+[[test]]
+name = "sdd_risk_treatment_baseline"
+path = "tests/contracts/risk_treatment.baseline.rs"
+
+[[test]]
+name = "sdd_risk_treatment_target"
+path = "tests/contracts/risk_treatment.target.rs"
+
+[[test]]
+name = "sdd_risk_identification_baseline"
+path = "tests/contracts/risk_identification.baseline.rs"
+
+[[test]]
+name = "sdd_risk_identification_target"
+path = "tests/contracts/risk_identification.target.rs"
+
+[[test]]
+name = "sdd_residual_risk_baseline"
+path = "tests/contracts/residual_risk.baseline.rs"
+
+[[test]]
+name = "sdd_residual_risk_target"
+path = "tests/contracts/residual_risk.target.rs"
+
+[[test]]
+name = "sdd_continuous_assurance_scheduler_baseline"
+path = "tests/contracts/continuous_assurance_scheduler.baseline.rs"
+
+[[test]]
+name = "sdd_continuous_assurance_scheduler_target"
+path = "tests/contracts/continuous_assurance_scheduler.target.rs"
+
+[[test]]
+name = "sdd_continuity_resilience_baseline"
+path = "tests/contracts/continuity_resilience.baseline.rs"
+
+[[test]]
+name = "sdd_continuity_resilience_target"
+path = "tests/contracts/continuity_resilience.target.rs"
+
+[[test]]
+name = "sdd_temporal_assurance_baseline"
+path = "tests/contracts/temporal_assurance.baseline.rs"
+
+[[test]]
+name = "sdd_temporal_assurance_target"
+path = "tests/contracts/temporal_assurance.target.rs"
+
+[[test]]
+name = "sdd_evidence_validity_temporal_assurance_baseline"
+path = "tests/contracts/evidence_validity_temporal_assurance.baseline.rs"
+
+[[test]]
+name = "sdd_evidence_validity_temporal_assurance_target"
+path = "tests/contracts/evidence_validity_temporal_assurance.target.rs"
+
+[[test]]
+name = "sdd_control_implementation_registry_baseline"
+path = "tests/contracts/control_implementation_registry.baseline.rs"
+
+[[test]]
+name = "sdd_control_implementation_registry_target"
+path = "tests/contracts/control_implementation_registry.target.rs"
+
+[[test]]
+name = "sdd_incident_governance_baseline"
+path = "tests/contracts/incident_governance.baseline.rs"
+
+[[test]]
+name = "sdd_incident_governance_target"
+path = "tests/contracts/incident_governance.target.rs"
+
+[[test]]
+name = "sdd_supplier_risk_baseline"
+path = "tests/contracts/supplier_risk.baseline.rs"
+
+[[test]]
+name = "sdd_supplier_risk_target"
+path = "tests/contracts/supplier_risk.target.rs"
+
+[[test]]
+name = "sdd_isms_events_drift_baseline"
+path = "tests/contracts/isms_events_drift.baseline.rs"
+
+[[test]]
+name = "sdd_isms_events_drift_target"
+path = "tests/contracts/isms_events_drift.target.rs"
+
+[[test]]
+name = "sdd_isms_context_baseline"
+path = "tests/contracts/isms_context.baseline.rs"
+
+[[test]]
+name = "sdd_isms_context_target"
+path = "tests/contracts/isms_context.target.rs"
+
+[[test]]
+name = "sdd_remediation_engine_baseline"
+path = "tests/contracts/remediation_engine.baseline.rs"
+
+[[test]]
+name = "sdd_remediation_engine_target"
+path = "tests/contracts/remediation_engine.target.rs"
+
+[[test]]
+name = "sdd_personnel_security_baseline"
+path = "tests/contracts/personnel_security.baseline.rs"
+
+[[test]]
+name = "sdd_security_objectives_baseline"
+path = "tests/contracts/security_objectives.baseline.rs"
+
+[[test]]
+name = "sdd_security_objectives_target"
+path = "tests/contracts/security_objectives.target.rs"
+
+[[test]]
+name = "sdd_personnel_security_target"
+path = "tests/contracts/personnel_security.target.rs"
+
+[[test]]
+name = "sdd_interested_parties_obligations_baseline"
+path = "tests/contracts/interested_parties_obligations.baseline.rs"
+
+[[test]]
+name = "sdd_interested_parties_obligations_target"
+path = "tests/contracts/interested_parties_obligations.target.rs"
+
+[[test]]
+name = "sdd_internal_audit_baseline"
+path = "tests/contracts/internal_audit.baseline.rs"
+
+[[test]]
+name = "sdd_internal_audit_target"
+path = "tests/contracts/internal_audit.target.rs"
+
+[[test]]
+name = "sdd_scope_engine_baseline"
+path = "tests/contracts/scope_engine.baseline.rs"
+
+[[test]]
+name = "sdd_scope_engine_target"
+path = "tests/contracts/scope_engine.target.rs"
+
+[[test]]
+name = "sdd_nonconformity_capa_baseline"
+path = "tests/contracts/nonconformity_capa.baseline.rs"
+
+[[test]]
+name = "sdd_nonconformity_capa_target"
+path = "tests/contracts/nonconformity_capa.target.rs"

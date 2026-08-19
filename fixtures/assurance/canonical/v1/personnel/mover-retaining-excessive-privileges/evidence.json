@@ -1,0 +1,35 @@
+{
+  "fixture": "mover-retaining-excessive-privileges",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:mo",
+      "facts": { "kind": "user", "id": "user:mo", "lifecycle": "mover" }
+    },
+    {
+      "type": "evidence.identity.lifecycle-event",
+      "subject_id": "user:mo",
+      "facts": {
+        "subject_id": "user:mo",
+        "event": "moved",
+        "occurred_at": "2026-08-08T12:00:00Z",
+        "approved": true
+      }
+    },
+    {
+      "type": "evidence.identity.role-membership",
+      "subject_id": "user:mo",
+      "facts": {
+        "subject_id": "user:mo",
+        "excessive": true
+      }
+    }
+  ]
+}

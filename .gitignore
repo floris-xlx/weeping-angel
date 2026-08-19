@@ -10,6 +10,11 @@ apps/docs/.next/
 apps/docs/.source/
 apps/docs/out/
 
+# Generated SDD execution history and snapshots.
+# Architecture SSOT is docs/specs, docs/adr, and tests/contracts — not agent traces.
+.sdd/runs/
+.sdd/artifacts/
+
 # xbp secrets (local only - never commit)
 .env
 .env.local
@@ -19,3 +24,22 @@ scan-mirror3.json
 scan-mirror3-rerun.json
 .xbp/releases/service-weeping-angel/service-weeping-angel-0.1.1.toml
 .xbp/versioning/history.jsonl
+/.sdd
+/target-cas/debug
+/target-so-baseline/debug
+/target-soa/debug
+/target-cir-supersede/debug
+/target-ia/debug
+/target-ig-supersede/debug
+/target-ipo/debug
+/target-isms-context/debug
+/target-p20/debug
+/target-residual-sdd/debug
+/target-ri-supersede/debug
+/target-risk-methodology-sdd/debug
+/target-risk-treatment/debug
+/target-so-target-red/debug
+/target-soa-verify/debug
+/target-sr-supersede/debug
+/target-temporal-sdd/debug
+/target-temporal-verify/debug

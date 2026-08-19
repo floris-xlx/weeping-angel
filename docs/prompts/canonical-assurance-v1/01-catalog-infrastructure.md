@@ -18,7 +18,7 @@ The catalog must be framework-neutral and provider-neutral.
 
 ## First actions
 
-1. Fetch latest `main` and record the exact baseline SHA in `docs/sdd/canonical-assurance-catalog-v1.md`.
+1. Fetch latest `main` and record the exact baseline SHA in `docs/specs/canonical-assurance-catalog-v1.md`.
 2. Run:
    - `cargo test --workspace --features demo`
    - `cargo fmt --all -- --check`
@@ -117,7 +117,7 @@ Downstream prompts must be able to rely on:
 - fixture examples showing how to declare controls/evidence/tests;
 - documented extension points.
 
-Update `docs/sdd/canonical-assurance-catalog-v1.md` with the final API and file format.
+Update `docs/specs/canonical-assurance-catalog-v1.md` with the final API and file format.
 
 ## Definition of done
 

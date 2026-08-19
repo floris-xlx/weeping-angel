@@ -7,9 +7,8 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The **pack-local canonical library** in [ADR 0002](0002-iso-27001-assurance-vertical.md) §3 (`access.mfa.privileged`, `source.branch-protection`, … in `metadata.toml`) and ISO-only compile/serialize branches as a long-term contract. Does **not** supercede ADR 0002’s structural pack, legal boundary, ledger, TestExpr, collectors, or non-certification language. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [catalog infrastructure](0003-canonical-assurance-catalog-v1.md), [IAM family](0003-iam-canonical-assurance-catalog.md), [applicability engine](0003-applicability-engine.md), [assessment lineage](0003-assessment-lineage.md) |
-| Spec | [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/12-iso27001-remap.md`](../prompts/canonical-assurance-v1/12-iso27001-remap.md) |
+| Spec | [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests | `sdd_iso27001_remap_target` GREEN (ISO-R-001…020 + goldens + architecture-boundary). `sdd_iso27001_remap_baseline` skip-superseded. Do **not** reuse `sdd_iso27001_assurance_*` as the remap suite. |
 
@@ -17,13 +16,13 @@
 
 ## Context
 
-ADR 0002 shipped the first ISO 27001:2022 vertical as a versioned structural pack. Because no catalog tree existed yet, reusable controls lived **inside the pack** (`frameworks/iso-27001/2022/metadata.toml`) — 22 sliver IDs (`access.mfa.privileged`, `source.branch-protection`, `vulnerability.remediation`, …) with 27 mappings onto them. IAM-008 and `sdd_iso27001_assurance_target` froze those IDs so Prompts 04–08 could land without rewriting the pack.
+ADR 0002 shipped the first ISO 27001:2022 vertical as a versioned structural pack. Because no catalog tree existed yet, reusable controls lived **inside the pack** (`frameworks/iso-27001/2022/metadata.toml`) — 22 sliver IDs (`access.mfa.privileged`, `source.branch-protection`, `vulnerability.remediation`, …) with 27 mappings onto them. IAM-008 and `sdd_iso27001_assurance_target` froze those IDs so domain catalog families could land without rewriting the pack.
 
 Canonical catalog infrastructure plus the IAM and SDLC families moved the reusable library to `catalog/canonical/v1/` (`control.*` / `evidence.*` / `test.*`). Two libraries represented the same semantics.
 
 The generic runtime still special-cased ISO: `normalize`, `stub_catalog`, `assessment_for_target`, and report serialize called `load_framework_pack("iso-27001", "2022")`. SoA reread `applicability.toml` booleans. `AssessmentRun` pinned only `frameworkPackDigest`. The pack loader rejected IR relations `EvidenceFor`, `SupersetOf`, and `SubsetOf`, and validated mapping targets against pack metadata, not the catalog.
 
-Prompt 12 remaps ISO onto landed catalog IDs without becoming a certification product, without renaming catalog IDs, and without GitHub→ISO shortcuts.
+ISO remap remaps ISO onto landed catalog IDs without becoming a certification product, without renaming catalog IDs, and without GitHub→ISO shortcuts.
 
 Questions this decision answers:
 
@@ -115,6 +114,8 @@ Applicable | NotApplicable | Unresolved
 
 Each SoA entry lists mapped catalog controls, rationale, implementation/evidence state, effectiveness, exceptions, and manual-review flags.
 
+This remap slice owns three-state + justified NA + representable unresolved. Operational-graph rows, NA approval lifecycle, and snapshot diffs with causes are [`0003-operational-soa.md`](0003-operational-soa.md).
+
 ### 5. Neighbor tests that froze the sliver are superseded
 
 In the same implement slice:
@@ -122,7 +123,7 @@ In the same implement slice:
 - IAM-008 / IAM-016: ISO maps onto `control.identity.*`; pack does not keep the IAM sliver.
 - MVP `EXPECTED_CANONICAL_CONTROLS` / `CANONICAL_CONTROL_PREFIXES` require catalog prefixes (`control.identity.`, landed `control.source.*`), not pack-local `access.*` / `source.*` slivers.
 
-`sdd_iso27001_remap_{baseline,target}` is the Prompt 12 gate. `sdd_iso27001_assurance_*` remains the historical MVP EVD/CTL/GH contract.
+`sdd_iso27001_remap_{baseline,target}` is the ISO remap gate. `sdd_iso27001_assurance_*` remains the historical MVP EVD/CTL/GH contract.
 
 ### 6. Readiness language and coverage stay non-certifying
 
@@ -136,7 +137,7 @@ Governance/judgement requirements stay Manual/Hybrid. Do not invent automated te
 
 ## Alternatives considered
 
-1. **Keep slivers and add catalog aliases** — two IDs per semantic control; rejected by Prompt 12 and catalog ownership.
+1. **Keep slivers and add catalog aliases** — two IDs per semantic control; rejected by ISO remap and catalog ownership.
 2. **Rename catalog IDs to match slivers** (`control.access.mfa.privileged`) — rejected; catalog IDs are stable and framework-neutral.
 3. **ISO-specific compile path that embeds catalog** — rejected; collectors/tests stay framework-blind; generic registry is the law.
 4. **Treat every Annex A row as `Equivalent` to the nearest technical control** — rejected; would falsify readiness and certification language.
@@ -164,7 +165,7 @@ SOC 2 / NIS2 / DORA / PCI / HIPAA packs; renaming catalog IDs; provider APIs; au
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md)
+- Spec SSOT: [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md)
 - MVP vertical (pack/legal/CLI still law): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)

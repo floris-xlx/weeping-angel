@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "isms:acme",
+  "organization": {
+    "id": "org:acme",
+    "legalName": "Acme Corp",
+    "businessUnits": [
+      {
+        "id": "bu:finance",
+        "name": "Finance"
+      },
+      {
+        "id": "bu:engineering",
+        "name": "Engineering"
+      }
+    ],
+    "scopeId": "scope:acme-ms"
+  },
+  "scope": {
+    "id": "scope:acme-ms",
+    "title": "Acme management system",
+    "summary": "Provider-neutral ISMS boundary handle"
+  },
+  "issues": [
+    {
+      "id": "issue:internal:staffing",
+      "kind": "internal",
+      "title": "Specialist staffing coverage",
+      "description": "Internal capacity for security operations"
+    },
+    {
+      "id": "issue:external:regulation",
+      "kind": "external",
+      "title": "External regulatory pressure",
+      "description": "External obligation climate for customer data"
+    }
+  ],
+  "interestedParties": [
+    {
+      "id": "party:customers",
+      "name": "Customers",
+      "kind": "customer",
+      "obligationIds": [
+        "obligation:customer-security"
+      ]
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obligation:customer-security",
+      "title": "Customer security commitments",
+      "description": "Protect customer information in contracted services",
+      "interestedPartyId": "party:customers"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "objective:reduce-incidents",
+      "title": "Reduce security incidents",
+      "description": "Declared objective; not a point-in-time score",
+      "owner": {
+        "team": "security-governance"
+      }
+    }
+  ],
+  "riskMethodologyId": "risk-method:acme-v1",
+  "cadence": {
+    "managementReview": {
+      "count": 1,
+      "unit": "quarter"
+    },
+    "internalAudit": {
+      "count": 1,
+      "unit": "year"
+    },
+    "riskAssessment": {
+      "count": 1,
+      "unit": "year"
+    }
+  },
+  "lifecycle": "active"
+}

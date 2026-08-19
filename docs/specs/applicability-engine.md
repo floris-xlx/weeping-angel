@@ -3,19 +3,19 @@
 | Field | Value |
 | --- | --- |
 | Status | **Implemented** — Kleene evaluator + snapshot GREEN on `sdd_applicability_engine_target`; absence baseline tests skip-superseded |
-| Program | Canonical Assurance Catalog v1 — Prompt 10 |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
+| Program | Canonical Assurance Catalog v1 — applicability engine |
 | Slice | Deterministic organization-context + Kleene three-state evaluator over existing IR `ApplicabilityRule` / `ApplicabilityPredicate`; applicability snapshot for lineage; population scope constraint |
 | Dual-suite (register at implement) | `sdd_applicability_engine_baseline` · `sdd_applicability_engine_target` |
 | ADR | Accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
-| ISO vertical (must stay green) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
-| Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
-| Typed evidence | [`docs/sdd/typed-evidence.md`](typed-evidence.md) |
-| Population (consumed) | [`docs/sdd/population-runtime.md`](population-runtime.md), ADR [`0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
-| Lineage (neighbor, persist landed) | [`docs/sdd/assessment-lineage.md`](assessment-lineage.md), [ADR](../adr/0003-assessment-lineage.md) — Kleene snapshot stays in this module; lineage persist/explain is Prompt 11 |
-| GitHub collector (collision fence) | [`docs/sdd/github-collector.md`](github-collector.md) — do not touch |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
+| ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
+| Catalog infra | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
+| Typed evidence | [`docs/specs/typed-evidence.md`](typed-evidence.md) |
+| Population (consumed) | [`docs/specs/population-runtime.md`](population-runtime.md), ADR [`0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
+| Lineage (neighbor, persist landed) | [`docs/specs/assessment-lineage.md`](assessment-lineage.md), [ADR](../adr/0003-assessment-lineage.md) — Kleene snapshot stays in this module; lineage persist/explain is assessment lineage |
+| Scope engine (neighbor, landed) | [`docs/specs/scope-engine.md`](scope-engine.md) — `ScopeResolution` is the ISMS boundary SSOT; this crate no longer synthesizes `excluded by assessment scope[{index}]`. Kleene `All`/`Any`/`Not` is unchanged. |
+| GitHub collector (collision fence) | [`docs/specs/github-collector.md`](github-collector.md) — do not touch |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
@@ -25,7 +25,7 @@
 | Snapshot schema (new, not IR) | `weeping-angel/applicability-snapshot/v1` |
 | Workspace verify (after implement) | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for Prompt 10. It owns **organization-context construction**, **three-state rule evaluation**, **selected-subject / exclusion traces**, and the **in-memory `ApplicabilitySnapshot`** that Prompt 11 will persist. It does **not** own catalog TOML, ISO pack `applicability.toml` as an evaluator, provider APIs, explain/ledger, or a generic ontology engine.
+This document is the durable SSOT for the applicability engine. It owns **organization-context construction**, **three-state rule evaluation**, **selected-subject / exclusion traces**, and the **in-memory `ApplicabilitySnapshot`** that assessment lineage will persist. It does **not** own catalog TOML, ISO pack `applicability.toml` as an evaluator, provider APIs, explain/ledger, or a generic ontology engine.
 
 Architecture law (frozen):
 
@@ -47,7 +47,7 @@ Today:
 - Framework compile `resolve_applicability` keeps a requirement unless that fold is `Some(false)`. Unknown predicates therefore stay in the compiled set, but **no rationale, no facts, no selected subjects**.
 - SoA (`project_soa`) rereads pack `applicability.toml` booleans from disk. That is a **second**, ISO-shaped applicability path — not the IR rule tree.
 - Control-test populations resolve subjects for **coverage**, not for **whether the control applies**.
-- There is no `ApplicabilitySnapshot`. Prompt 11 has reserved the persist shape and currently characterizes Prompt 10 as **absent**.
+- There is no `ApplicabilitySnapshot`. assessment lineage has reserved the persist shape and currently characterizes applicability engine as **absent**.
 
 Unknown facts are accidentally safe only because predicates never become `false`. They are not operational: a reviewer cannot ask why control X applied, why Y did not, which fact was unknown, or which exclusion removed subject Z.
 
@@ -87,12 +87,12 @@ Pinned at characterization SHA `e430980c0d27a8138a153d49b62ddf3c57827891`.
 | `AssessmentDefinition` inventories | `assessment.rs` | Context source: `assets`, `identities`, `vendors`, `processing_activities`, `risks`, `scope`. |
 | `AssessmentScope` / `ScopeExclusion` | IR | `{ organizations, subjects, exclusions }`. Do not collapse with facade `AssessmentScope` (`BTreeSet<AssetId>` collector allow-set). |
 | `Asset` / `Identity` / `Vendor` / `ProcessingActivity` / `Risk` | IR | **The inventory.** Do not invent a parallel org graph. Thin records stay thin; use `Asset.tags` and explicit tri-state facts for attributes IR does not store. |
-| `SubjectSelector` | IR | Population + exclusion SSOT. Reuse Prompt 03 resolution semantics. |
+| `SubjectSelector` | IR | Population + exclusion SSOT. Reuse population runtime resolution semantics. |
 | `Control.subjects` / `PlannedControlTest.subjects` | IR | Constrain selected subjects. Tiny allowed: public `Control::subjects()` getter (field exists, no accessor today). |
 | `Population` / `resolve_population` / `EvidenceSet::set_population` | control-test | **Consume.** Applicability selected-scope is injected as an explicit population; do not fork a second resolver. |
 | `resolve_applicability` | `weeping-angel-framework` | May **consume** generic decisions (drop only `NotApplicable`). Must not grow ISO/provider branches. Without a context, keep today’s `statically_applicable != Some(false)` filter. |
 | `project_soa` / `frameworks/iso-27001/2022/applicability.toml` | assurance + pack | **Not a second evaluator.** Do not rewrite pack TOML or teach the engine ISO booleans. |
-| `ApplicabilitySnapshot` persist shape | Prompt 11 spec §4.3 | **Fill this shape** from the generic evaluator. Do **not** implement ledger persist, `ControlExplanation`, or `assurance explain`. |
+| `ApplicabilitySnapshot` persist shape | assessment lineage spec §4.3 | **Fill this shape** from the generic evaluator. Do **not** implement ledger persist, `ControlExplanation`, or `assurance explain`. |
 | Catalog TOML | `catalog/canonical/v1/` | Do not edit. |
 | Collectors / `GITHUB_EVIDENCE_TYPES` | collector crate | **Collision fence.** Do not touch. |
 | Dual-suite neighbors | root `Cargo.toml` | Register `sdd_applicability_engine_*` next to existing `sdd_*`. Do not rewrite github/lineage/population suites. |
@@ -165,7 +165,7 @@ Product crates have **no**:
 - `struct ApplicabilitySnapshot`
 - module path `applicability` under `weeping-angel-assurance` or `weeping-angel-control-test` that evaluates predicates against facts
 
-Prompt 11 baseline (`applicability_rule_is_static_only_prompt_10_absent`, `product_crates_lack_explanation_and_snapshot_types`) encodes this absence. That is **their** characterization of pre-Prompt-10 HEAD, not a ban on landing these types in this slice.
+assessment lineage baseline (`applicability_rule_is_static_only_engine_absent`, `product_crates_lack_explanation_and_snapshot_types`) encodes this absence. That is **their** characterization of pre-applicability-engine HEAD, not a ban on landing these types in this slice.
 
 ### 3.6 Inventories exist; nothing reads them for applicability
 
@@ -180,7 +180,7 @@ Prompt 11 baseline (`applicability_rule_is_static_only_prompt_10_absent`, `produ
 - `Control.subjects: Vec<SubjectSelector>` is stored/serialized; **no public getter**
 - Facade `AssessmentScope` is an asset allow-set for collectors — different type
 
-Population runtime (Prompt 03) resolves subjects **inside control-test** from explicit `Population`, selector ids, or inventory evidence. It does **not** walk IR `AssessmentDefinition` inventories. Callers inject via `EvidenceSet::set_population`.
+Population runtime (population runtime) resolves subjects **inside control-test** from explicit `Population`, selector ids, or inventory evidence. It does **not** walk IR `AssessmentDefinition` inventories. Callers inject via `EvidenceSet::set_population`.
 
 ### 3.7 Effectiveness `NotApplicable` is unrelated
 
@@ -235,7 +235,7 @@ Map from Kleene `FactValue`:
 | `False` | `NotApplicable` |
 | `Unknown` | `ManualDeterminationRequired` |
 
-`Unresolved` may be a serde alias of `ManualDeterminationRequired` if Prompt 12/SoA language prefers it; the stored variant name in this slice is `ManualDeterminationRequired`.
+`Unresolved` may be a serde alias of `ManualDeterminationRequired` if ISO remap/SoA language prefers it; the stored variant name in this slice is `ManualDeterminationRequired`.
 
 ### 4.3 Kleene semantics (normative)
 
@@ -345,17 +345,17 @@ Which exclusion removed subject Z?
 After the rule decision:
 
 1. Start from in-scope inventory ids of the kinds named by `Control.subjects` / `Requirement` (if a requirement has no subjects, selected subjects may be empty even when `Applicable`).
-2. Intersect with `Control.subjects` selectors (IR `SubjectSelector` + Prompt 03 include/exclude/tag rules).
+2. Intersect with `Control.subjects` selectors (IR `SubjectSelector` + population runtime include/exclude/tag rules).
 3. Subtract assessment `exclusions` (already applied in context) and record reasons.
 4. The selected set is attached to the decision and **handed to population evaluation** via `EvidenceSet::set_population` (completeness = context family completeness for that kind).
 
-**Zero selected subjects does not change the rule decision** unless a predicate in the tree is false. `Always` + empty inventory → `Applicable` + `selected_subjects = []`. Downstream tests remain fail-closed (Prompt 03: empty authoritative population is never `Effective`).
+**Zero selected subjects does not change the rule decision** unless a predicate in the tree is false. `Always` + empty inventory → `Applicable` + `selected_subjects = []`. Downstream tests remain fail-closed (population runtime: empty authoritative population is never `Effective`).
 
 Do **not** map `selected_subjects.is_empty()` → `NotApplicable`.
 
 When the control decision **is** `NotApplicable`, callers may skip tests or record `Effectiveness::NotApplicable`. When it is `ManualDeterminationRequired`, tests must not treat missing org facts as a pass.
 
-### 4.7 ApplicabilitySnapshot (fill Prompt 11’s reserved shape)
+### 4.7 ApplicabilitySnapshot (fill assessment lineage’s reserved shape)
 
 ```text
 ApplicabilitySnapshot {
@@ -371,7 +371,7 @@ ApplicabilitySnapshot {
 
 `evaluate_assessment_applicability(definition, context) -> ApplicabilitySnapshot` walks `definition.requirements` and `definition.controls` in **id lexicographic order**, evaluates each rule, and seals `digest` over the snapshot body (exclude the digest field itself).
 
-Prompt 11 persists this document. This slice **returns it**. No `persist_assessment_run`, no explain CLI, no `ControlExplanation`.
+assessment lineage persists this document. This slice **returns it**. No `persist_assessment_run`, no explain CLI, no `ControlExplanation`.
 
 `pack_entries` exists so lineage can attach ISO `applicability.toml` rows **as artifacts**. The engine must not interpret `applicable = true/false` as Kleene facts.
 
@@ -385,7 +385,7 @@ When a context is available, `resolve_applicability` (or the facade immediately 
 
 Without a context, preserve today’s filter (`statically_applicable != Some(false)`).
 
-Do not change `project_soa` in this slice (Prompt 11/12 own SoA purity / remap). The snapshot is what those slices will consume.
+Do not change `project_soa` in this slice (lineage and ISO remap own SoA purity / remap). The snapshot is what those slices will consume.
 
 ### 4.9 Public functions (normative names; module path may nest)
 
@@ -400,7 +400,7 @@ fn evaluate_assessment_applicability(definition: &AssessmentDefinition, context:
   -> ApplicabilitySnapshot
 ```
 
-Prefer these names over `OrgContext` / `evaluate_org_context` so concurrent Prompt 11 **absence** string-scans stay meaningful until this slice actually lands the engine. Once landed, `ManualDeterminationRequired` and `struct ApplicabilitySnapshot` **will** appear — that is this slice’s job. Prompt 11 implement then persists the snapshot instead of asserting absence.
+Prefer these names over `OrgContext` / `evaluate_org_context` so concurrent assessment lineage **absence** string-scans stay meaningful until this slice actually lands the engine. Once landed, `ManualDeterminationRequired` and `struct ApplicabilitySnapshot` **will** appear — that is this slice’s job. assessment lineage implement then persists the snapshot instead of asserting absence.
 
 ---
 
@@ -424,7 +424,7 @@ Testable. Dual-suite target encodes these; titles should stay stable (`P10: …`
 14. Rationale / predicate traces / selected and excluded subject ids are deterministically ordered; two evaluations of the same inputs yield the same digest.
 15. Zero selected subjects + `Always` → `Applicable` with empty `selected_subjects`.
 16. Same engine evaluates `Requirement.applicability` and `Control.applicability`. No `FrameworkProfile` / collector_id / ISO annex branch in the evaluator.
-17. `evaluate_assessment_applicability` produces `ApplicabilitySnapshot` with Prompt 11’s reserved fields (`schema`, `assessment_id`, `scope`, `requirement_decisions`, `control_decisions`, `pack_entries`, `digest`).
+17. `evaluate_assessment_applicability` produces `ApplicabilitySnapshot` with assessment lineage’s reserved fields (`schema`, `assessment_id`, `scope`, `requirement_decisions`, `control_decisions`, `pack_entries`, `digest`).
 18. Selected scope can be applied as a `Population` (via existing `EvidenceSet::set_population`) without a second inventory model.
 19. IR crate still does not evaluate platform facts (`statically_applicable` unchanged in meaning). Catalog TOML and ISO `applicability.toml` are unmodified.
 20. After implement: `cargo test --workspace --features demo`, `cargo fmt --all -- --check`, and `cargo clippy --workspace --all-targets --all-features -- -D warnings` hold for files this slice touches. Neighbor targets (`sdd_population_runtime_target`, `sdd_canonical_assurance_catalog_target`, `sdd_assurance_runtime_target`, `sdd_iso27001_assurance_target`) stay GREEN.
@@ -450,11 +450,11 @@ Register at implement (do **not** register in this spec-only phase unless a late
 ```toml
 [[test]]
 name = "sdd_applicability_engine_baseline"
-path = "tests/sdd/applicability_engine.baseline.rs"
+path = "tests/contracts/applicability_engine.baseline.rs"
 
 [[test]]
 name = "sdd_applicability_engine_target"
-path = "tests/sdd/applicability_engine.target.rs"
+path = "tests/contracts/applicability_engine.target.rs"
 ```
 
 ### 6.1 Baseline suite (GREEN on CURRENT)
@@ -476,7 +476,7 @@ Source/API characterization of §3, for example:
 
 ### 6.2 Target suite (RED on CURRENT, GREEN after)
 
-Stable titles. Encode the **original found case** from the prompt:
+Stable titles. Encode the **original found case** from the slice:
 
 | ID | Title / assertion |
 | --- | --- |
@@ -506,15 +506,15 @@ Protocol: write the failing target test first (RED) → implement → GREEN. One
 - Framework-specific applicability branches (ISO Annex A, GDPR territorial scope engines, SOC 2 TSC trees)
 - Teaching the evaluator to parse pack `applicability.toml` as Kleene truth
 - Provider API calls / collector changes (`crates/weeping-angel-collector/**`)
-- `tests/sdd/github_collector.*`, `docs/sdd/github-collector.md`, `GITHUB_EVIDENCE_TYPES`
+- `tests/contracts/github_collector.*`, `docs/specs/github-collector.md`, `GITHUB_EVIDENCE_TYPES`
 - Generic ontology / description-logic engine
 - Canonical catalog TOML redesign or new catalog families
-- Prompt 11 explain CLI, ledger persist/load, `ControlExplanation`, pure report serialization
+- assessment lineage explain CLI, ledger persist/load, `ControlExplanation`, pure report serialization
 - Collapsing facade `AssessmentScope` with IR `AssessmentScope`
 - Growing IR `Risk` / `ProcessingActivity` / `Vendor` into full RoPA / risk / vendor-management models
 - Rewriting `statically_applicable` to consult inventories
 - Certification / compliant / audit-passed language
-- Prompt 12 ISO remap content
+- ISO remap ISO remap content
 
 ---
 
@@ -527,12 +527,12 @@ Protocol: write the failing target test first (RED) → implement → GREEN. One
 | Second inventory / org-graph crate | Derived `ApplicabilityContext` over existing IR types only |
 | IR becomes a fact engine | Evaluator lives in assurance; IR comment + `statically_applicable` stay |
 | Zero subjects auto-NA | T12; decision independent of selected-set cardinality |
-| Collision with Prompt 09 collector SDD | Hard fence: no collector / github-collector / `GITHUB_EVIDENCE_TYPES` edits |
-| Collision with Prompt 11 lineage (`struct ApplicabilitySnapshot` absence asserts) | Prompt 10 **fills** the reserved shape; Prompt 11 persist/explain stays out. After this implement, Prompt 11 baseline absence tests are expected to fail for the right reason and must be skip-superseded by the lineage run — not avoided by renaming the snapshot |
+| Collision with GitHub collector collector SDD | Hard fence: no collector / github-collector / `GITHUB_EVIDENCE_TYPES` edits |
+| Collision with assessment lineage lineage (`struct ApplicabilitySnapshot` absence asserts) | applicability engine **fills** the reserved shape; assessment lineage persist/explain stays out. After this implement, assessment lineage baseline absence tests are expected to fail for the right reason and must be skip-superseded by the lineage run — not avoided by renaming the snapshot |
 | SoA boolean path remains a silent second evaluator | This slice does not change `project_soa`; snapshot is the generic SSOT those slices must consume |
 | Completeness defaulted to authoritative-empty | Empty list without an explicit completeness flag is `Unknown` |
 | Facade vs IR `AssessmentScope` confusion | Keep both; context uses IR scope only |
-| Prompt 11 needles `OrgContext` / `evaluate_org_context` | Use `ApplicabilityContext` / `evaluate_applicability` |
+| assessment lineage needles `OrgContext` / `evaluate_org_context` | Use `ApplicabilityContext` / `evaluate_applicability` |
 | Workspace fmt/clippy already red on unrelated crates | Do not mix unrelated rustfmt; new files must be clean |
 
 ---
@@ -545,9 +545,9 @@ This is an architecture/contract decision (Kleene law, crate home, derived conte
 
 ## 10. Handoff / done
 
-**Done:** applicability is a real deterministic three-state evaluation layer; it integrates with assessment scope / populations; it preserves rationale and unknown facts; the same engine can drive canonical controls and framework projections without provider/framework coupling; `ApplicabilitySnapshot` is producible for Prompt 11; catalog/workspace validation holds for this slice’s files.
+**Done:** applicability is a real deterministic three-state evaluation layer; it integrates with assessment scope / populations; it preserves rationale and unknown facts; the same engine can drive canonical controls and framework projections without provider/framework coupling; `ApplicabilitySnapshot` is producible for assessment lineage; catalog/workspace validation holds for this slice’s files.
 
-Prior session attempt for this prompt never started (4-run cap). Treat implement as a **fresh start** against this spec.
+Prior session attempt for this slice never started (4-run cap). Treat implement as a **fresh start** against this spec.
 
 ---
 
@@ -561,4 +561,4 @@ Prior session attempt for this prompt never started (4-run cap). Treat implement
 - Compile: still static `!= Some(false)` without a context; callers filter `NotApplicable` via `ApplicabilityDecision::remains_in_compiled_set`
 - Dual-suite: target GREEN; baseline B06/B07/B09 skip-superseded
 - ADR: accepted [`docs/adr/0003-applicability-engine.md`](../adr/0003-applicability-engine.md)
-- Contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) § Applicability engine
+- Contract: [`docs/specs/assurance-runtime.md`](assurance-runtime.md) § Applicability engine

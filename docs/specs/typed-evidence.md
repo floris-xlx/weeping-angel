@@ -3,23 +3,22 @@
 | Field | Value |
 | --- | --- |
 | Status | **Implemented** — `sdd_typed_evidence_target` GREEN; baseline superseded |
-| Program | Canonical Assurance Catalog v1 — Prompt 02 |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/02-typed-evidence.md`](../prompts/canonical-assurance-v1/02-typed-evidence.md) |
+| Program | Canonical Assurance Catalog v1 — typed evidence |
 | Slice | Typed evidence values + canonical serialization + digest compatibility + evidence-level validation + control-test typed comparisons |
 | Dual-suite | `sdd_typed_evidence_target` GREEN; `sdd_typed_evidence_baseline` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) Evidence + `evidence-value/v1` |
-| Consumes | Spine ADR 0001, ISO vertical ADR 0002 (string-bag clauses superseded). Prompt 01 catalog infrastructure is a sibling — consumed, not redesigned. |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) Evidence + `evidence-value/v1` |
+| Consumes | Spine ADR 0001, ISO vertical ADR 0002 (string-bag clauses superseded). catalog infrastructure catalog infrastructure is a sibling — consumed, not redesigned. |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Planning baseline SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
 | Characterization SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (HEAD when `sdd_typed_evidence_baseline` was written; still string-bag facts) |
-| Baseline suite | `tests/sdd/typed_evidence.baseline.rs` (`sdd_typed_evidence_baseline`) — GREEN on this SHA |
+| Baseline suite | `tests/contracts/typed_evidence.baseline.rs` (`sdd_typed_evidence_baseline`) — GREEN on this SHA |
 | Evidence schema | remains `evidence/v1` (`EVIDENCE_SCHEMA`) |
 | Value encoding | `evidence-value/v1` (this slice; nested inside observation facts) |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for Prompt 02. The slice has landed: one `EvidenceValue` in `weeping-angel-evidence`, hybrid `evidence-value/v1` codec, control-test re-export + stored-type comparisons, `with_fact` string compatibility. Prompt 01 catalog infrastructure is a sibling (`docs/sdd/canonical-assurance-catalog-v1.md`); this slice does **not** invent a catalog format.
+This document is the durable SSOT for typed evidence. The slice has landed: one `EvidenceValue` in `weeping-angel-evidence`, hybrid `evidence-value/v1` codec, control-test re-export + stored-type comparisons, `with_fact` string compatibility. catalog infrastructure catalog infrastructure is a sibling (`docs/specs/canonical-assurance-catalog-v1.md`); this slice does **not** invent a catalog format.
 
 ---
 
@@ -32,7 +31,7 @@ Canonical evidence today is a string bag (`BTreeMap<String, String>`). Collector
 - `EvidenceValue` lives in `weeping-angel-control-test` and is **not** what the envelope stores, so there are two unrelated value systems.
 - Ordinary `f64` probing (`trimmed.parse::<f64>()`) is on a path that influences evaluation, which must never enter digest-critical canonical bytes.
 
-**User-visible goal:** one typed evidence value model, stored on the observation, serialized canonically, digested deterministically, compared by the control-test runtime without reparsing arbitrary strings. Downstream population / catalog / collector prompts receive a single documented API:
+**User-visible goal:** one typed evidence value model, stored on the observation, serialized canonically, digested deterministically, compared by the control-test runtime without reparsing arbitrary strings. Downstream population / catalog / collector slices receive a single documented API:
 
 ```text
 branch_protected   = true
@@ -45,17 +44,17 @@ This remains **facts**, never compliance conclusions. Typed `true` is not “ISO
 
 ---
 
-## 2. Dependency on Prompt 01
+## 2. Dependency on catalog infrastructure
 
 | Surface | Status on `5fa3a23` | This slice |
 | --- | --- | --- |
-| `docs/sdd/canonical-assurance-catalog-v1.md` | absent | do not create as a substitute catalog spec |
+| `docs/specs/canonical-assurance-catalog-v1.md` | absent | do not create as a substitute catalog spec |
 | `catalog/canonical/v1/` | absent | do not invent |
 | Catalog loader / validator / digest | absent | do not implement |
-| Domain catalog content (IAM, SDLC, …) | later prompts | out of scope |
+| Domain catalog content (IAM, SDLC, …) | later slices | out of scope |
 | Evidence envelopes, ledger, `TestExpr` | present (ADR 0001/0002) | **this slice consumes and extends** |
 
-If Prompt 01 lands first: rebase onto it; keep evidence-value types independent of catalog documents. Catalog entries may *name* fields and expected types later; this slice does not add schema-driven coercion.
+If catalog infrastructure lands first: rebase onto it; keep evidence-value types independent of catalog documents. Catalog entries may *name* fields and expected types later; this slice does not add schema-driven coercion.
 
 ---
 
@@ -107,13 +106,13 @@ schema_version = "evidence/v1"
 
 `canonical_digest` is **not** a typed evidence codec. It is compact `serde_json` bytes (struct field order + `BTreeMap` key order). Equivalent string facts inserted in any order already share a digest because facts are a `BTreeMap`. Map insertion order is therefore already irrelevant **for string bags**. There is no documented canonical form for decimals, timestamps-as-values, empty lists/objects, or nested objects.
 
-Envelope identity fields (ISO vertical) sit **outside** `DigestBody`: `evidenceId`, `artifactRef`, `collectionRunId`, `sensitivity`, `scope`, `supersedes`. Collection-run identity is not a fact.
+Envelope identity fields (ISO vertical) sit **outside** `DigestBody`: `evidenceId`, `artifactRef`, `collectionRunId`, `sensitivity`, `scope`, `supersedes`. Optional temporal fields (`observedAt`, `validFrom`, `validUntil`, `sourceRevision`) are also outside the digest (serde-default / omitted). Collection-run identity is not a fact. Validity / revocation is a sibling `evidence-validity/v1` event, not a reseal ([`temporal-assurance.md`](temporal-assurance.md)).
 
 Envelope JSON has no `frameworks`, `iso27001`, `gdpr`, `soc2`, `controlTestResult`, or provider-specific compliance columns.
 
 ### 3.3 Ledger
 
-[`crates/weeping-angel-evidence/src/ledger.rs`](../../crates/weeping-angel-evidence/src/ledger.rs): SQLite (file or memory). `append` stores `serde_json::to_string(&envelope)` in `payload`; `get` / query paths `from_str` it back. Idempotent by digest (`INSERT OR IGNORE`). No `set_compliant` / `set_control_status`. Round-trips **string** facts. There is no remote ledger.
+[`crates/weeping-angel-evidence/src/ledger.rs`](../../crates/weeping-angel-evidence/src/ledger.rs): SQLite (file or memory). `append` stores `serde_json::to_string(&envelope)` in `payload`; `get` / query paths `from_str` it back. Idempotent by digest (`INSERT OR IGNORE`). Validity events live in `evidence_validity_events` (append-only; not envelope payload). No `set_compliant` / `set_control_status`. Round-trips **string** facts. There is no remote ledger.
 
 ### 3.4 Control-test `EvidenceValue` is a second system
 
@@ -144,7 +143,7 @@ enum EvidenceValue {
 - Bridge tests: `obs.fact("iso27001").is_none()`.
 - No workspace test asserts typed storage, object/list/timestamp/duration natives, or insertion-order digest for **typed** nested maps.
 
-### 3.6 Prompt 01 / catalog
+### 3.6 catalog infrastructure / catalog
 
 Not on this SHA. Baseline characterization must not require `catalog/canonical/v1`.
 
@@ -292,7 +291,7 @@ Fixed millisecond precision (zero-padded). Offset timestamps normalize to UTC be
 - Determinism: equivalent **semantic** typed evidence ⇒ identical canonical bytes ⇒ identical digest, regardless of map insertion order.
 - Historical **string** observations: same keys/values/provenance ⇒ same digest as on this planning SHA (because `String` still encodes as a JSON string).
 - Do not add framework/provider fields to `DigestBody` or the envelope.
-- `collection_run_id` / `supersedes` / artifact refs remain outside fact values. Changing only `collection_run_id` after seal (builder helper) still must not rewrite `digest` / `content_digest` unless a later ADR says otherwise — current code assigns run id inside `seal` from provenance; keep that.
+- `collection_run_id` / `supersedes` / artifact refs / optional validity clocks remain outside fact values. Changing only `collection_run_id` after seal (builder helper) still must not rewrite `digest` / `content_digest` unless a later ADR says otherwise — current code assigns run id inside `seal` from provenance; keep that. Validity windows are events, not digest fields ([ADR 0003 temporal assurance](../adr/0003-temporal-assurance.md)).
 
 ### 4.5 Evidence-level validation (invariants kept)
 
@@ -332,26 +331,26 @@ Literal `TestExpr` values use the same `EvidenceValue`. Drop or alias obsolete v
 - Do **not** rewrite GitHub/AWS/local production semantics.
 - Keep `with_fact(..., "true")` working (stores `String`).
 - Tests/fixtures **may** start using `with_value` to prove the typed path.
-- Population runtime and domain catalogs are later prompts.
+- Population runtime and domain catalogs are later slices.
 
 ### 4.9 Public contract / docs (implementation phase)
 
-Landed: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) Evidence documents `BTreeMap<String, EvidenceValue>` and `evidence-value/v1`. ADR 0002 §5 points at [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md).
+Landed: [`docs/specs/assurance-runtime.md`](assurance-runtime.md) Evidence documents `BTreeMap<String, EvidenceValue>` and `evidence-value/v1`. ADR 0002 §5 points at [ADR 0003](../adr/0003-typed-evidence-canonical-serialization.md).
 
 ---
 
 ## 5. Dual-suite protocol (HARD SDD)
 
-`tests/sdd` is **not** auto-discovered. Register in root [`Cargo.toml`](../../Cargo.toml) (same pattern as `assurance_runtime` / `iso27001_assurance`):
+`tests/contracts` is **not** auto-discovered. Register in root [`Cargo.toml`](../../Cargo.toml) (same pattern as `assurance_runtime` / `iso27001_assurance`):
 
 ```toml
 [[test]]
 name = "sdd_typed_evidence_baseline"
-path = "tests/sdd/typed_evidence.baseline.rs"
+path = "tests/contracts/typed_evidence.baseline.rs"
 
 [[test]]
 name = "sdd_typed_evidence_target"
-path = "tests/sdd/typed_evidence.target.rs"
+path = "tests/contracts/typed_evidence.target.rs"
 ```
 
 Protocol:
@@ -411,9 +410,9 @@ After implement, the same tests pass and cover:
 
 ## 7. Out of scope
 
-- Canonical catalog domain content (Prompt 01+; IAM/SDLC/vuln/infra/governance catalogs).
+- Canonical catalog domain content (catalog infrastructure+; IAM/SDLC/vuln/infra/governance catalogs).
 - GitHub / AWS / Cloudflare / local collector **semantics** (normalization rules, permissions, hosted APIs) beyond keeping string `with_fact` and allowing fixtures to use the new API.
-- Population runtime (Prompt 03).
+- Population runtime (population runtime).
 - Redesigning the evidence ledger into a remote service.
 - Inferring compliance / effectiveness from typed facts (a `Bool(true)` named `branch_protected` is still only a fact).
 - Changing `SemanticFinding` / scanner engines / Codex security contract.
@@ -435,7 +434,7 @@ After implement, the same tests pass and cover:
 | `f64` sneaks back via serde or compare | Ban `f64`/`f32` in evidence + control-test comparison/canonical modules; decimal compare is string scale-align. |
 | Existing collectors/SDD go red | Keep `with_fact(key, impl Into<String>)`. Do not require collectors to emit typed values in this slice. |
 | Nested credential keys bypass reject | Walk `Object` keys recursively. |
-| Prompt 01 rebase conflict | Consume catalog contracts if present; do not fork them. Evidence-value API stays in the evidence crate. |
+| catalog infrastructure rebase conflict | Consume catalog contracts if present; do not fork them. Evidence-value API stays in the evidence crate. |
 | `TestExpr` serde change | No committed TestExpr fixtures on this SHA; adapt compile-time AST only. |
 | List vs set identity | Document list-order-significant; set-like collectors sort+dedup before insert. |
 | Timestamp precision drift | Fixed `.sssZ` form; constructor rejects or documents non-millis. |
@@ -453,7 +452,7 @@ Do not expand `DigestBody`. Do not add provider fields.
 
 ---
 
-## 10. Handoff contract (downstream prompts)
+## 10. Handoff contract (downstream slices)
 
 One typed API. Documented canonical representation is §4.3. Digest rule is §4.4.
 
@@ -486,8 +485,8 @@ All evidence paths use or cleanly adapt to one typed representation; the control
 | Observation API / seal / nested credential walk | `crates/weeping-angel-evidence/src/lib.rs` (`with_fact`, `with_value`, `fact`, `fact_value`) |
 | Control-test re-export | `crates/weeping-angel-control-test/src/expr.rs` (`pub use weeping_angel_evidence::EvidenceValue`) |
 | Comparisons | `EvidenceValue::{typed_eq,cmp_numeric,list_contains}`; evaluator reads `fact_value` |
-| Target suite | `tests/sdd/typed_evidence.target.rs` (`sdd_typed_evidence_target`) GREEN 15/15 |
-| Baseline suite | `tests/sdd/typed_evidence.baseline.rs` superseded (`#[ignore]`) |
+| Target suite | `tests/contracts/typed_evidence.target.rs` (`sdd_typed_evidence_target`) GREEN 15/15 |
+| Baseline suite | `tests/contracts/typed_evidence.baseline.rs` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-typed-evidence-canonical-serialization.md`](../adr/0003-typed-evidence-canonical-serialization.md) |
 
-Stable digest rule remains §4.4. Stable encoding remains §4.3. Downstream prompts consume this API; they do not fork a second value enum.
+Stable digest rule remains §4.4. Stable encoding remains §4.3. Downstream slices consume this API; they do not fork a second value enum.

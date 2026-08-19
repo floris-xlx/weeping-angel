@@ -6,8 +6,8 @@
 | Date | 2026-08-18 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). |
-| Spec | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](../sdd/iso-27001-automated-assurance-mvp.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
+| Spec | [`docs/specs/iso-27001-automated-assurance-mvp.md`](../specs/iso-27001-automated-assurance-mvp.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Planning baseline | `8c0f36ed873c51a21aa3e6d377d2fdbc4bb458d7` |
 | IR revision consumed | `assurance-ir/v1`. Canonical types were not forked. `Mapping` gained `relation` + `rationale` on the same type. |
 | Tests | `sdd_iso27001_assurance_target` GREEN (ISO/EVD/CTL/GH + MVP assess); `sdd_iso27001_assurance_baseline` superseded. ACT-001…015 and COL-001…006 remain GREEN. |
@@ -60,7 +60,7 @@ Content modes exist as `FrameworkContentProvider`: `StructuralOnly` | `LicensedC
 
 Reusable library originally shipped as pack-local slivers (`source.branch-protection`, `access.mfa.privileged`, `security.tls`, … in `metadata.toml`). ISO requirement ids (`iso27001:4.1`, `iso27001:a.8.25`, …) mapped **into** that library.
 
-**Superseded for the control library:** Prompt 12 / [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired those slivers. Mapping `to` values are now catalog IDs (`control.identity.*`, landed `control.source.*`). Pack `metadata.toml` is annotations only.
+**Superseded for the control library:** ISO remap / [ADR 0003 remap](0003-iso27001-canonical-remap.md) retired those slivers. Mapping `to` values are now catalog IDs (`control.identity.*`, landed `control.source.*`). Pack `metadata.toml` is annotations only.
 
 `Mapping` on `assurance-ir/v1` carries:
 
@@ -105,9 +105,9 @@ Shipped collectors:
 | `LocalCollector` | `collector.local` | Structural local files (`CODEOWNERS`, policy, workflow presence) |
 | `ManualEvidence` | `collector.manual` | Explicit attestation (`attested-by` required; never synthesized) |
 
-**Superseded for newly emitted observations:** [GitHub collector mapping](0003-github-collector-canonical-evidence-mapping.md). `GitHubCollector` now emits Prompt 04/05 `evidence.*` types (plus `inventory.subject` / `inventory.complete`). Historical `source.*` names remain as a mapping-table const for ISO GH-012 / IAM-015; they are not sealed envelopes. HTTP 403 remains `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
+**Superseded for newly emitted observations:** [GitHub collector mapping](0003-github-collector-canonical-evidence-mapping.md). `GitHubCollector` now emits IAM/SDLC catalogs `evidence.*` types (plus `inventory.subject` / `inventory.complete`). Historical `source.*` names remain as a mapping-table const for ISO GH-012 / IAM-015; they are not sealed envelopes. HTTP 403 remains `PermissionDenied` (downstream `InsufficientEvidence`), not boolean false and not `Ineffective` unless the permission itself is under test. Tokens are redacted and never persisted.
 
-Required GitHub permissions advertised by the descriptor after Prompt 09: `contents:read`, `metadata:read`, `administration:read`, `actions:read`, `members:read`, `security_events:read`.
+Required GitHub permissions advertised by the descriptor after GitHub collector: `contents:read`, `metadata:read`, `administration:read`, `actions:read`, `members:read`, `security_events:read`.
 
 Scanner bridge remains one-way (`security_finding` plus a `canonical_type` fact). Absence of findings is not positive evidence. `security.no_vulnerabilities` is not a passable evidence type.
 
@@ -183,12 +183,12 @@ ACT-001…015 and COL-001…006 remain the spine contract.
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/iso-27001-automated-assurance-mvp.md`](../sdd/iso-27001-automated-assurance-mvp.md)
-- Remap SSOT: [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md)
+- Spec SSOT: [`docs/specs/iso-27001-automated-assurance-mvp.md`](../specs/iso-27001-automated-assurance-mvp.md)
+- Remap SSOT: [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md)
 - Canonical catalog (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - ISO remap onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)
-- Spine SDD: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
+- Spine SDD: [`docs/specs/assurance-runtime-spine.md`](../specs/assurance-runtime-spine.md)
 - ADR 0001: [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - Typed evidence (accepted; supersedes string-only facts): [`docs/adr/0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Packs: [`frameworks/README.md`](../../frameworks/README.md)
-- Concurrent IR (do not own): [`docs/sdd/xylex/weeping-angel-assurance-ir/`](../sdd/xylex/weeping-angel-assurance-ir/)
+- Concurrent IR (do not own): [`.sdd/artifacts/xylex/weeping-angel-assurance-ir/`](../../.sdd/artifacts/xylex/weeping-angel-assurance-ir/)

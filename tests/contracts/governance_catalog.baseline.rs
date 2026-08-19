@@ -1,14 +1,14 @@
-//! Baseline suite for Prompt 08 (governance / vendor / personnel / incident /
+//! Baseline suite for governance catalog (governance / vendor / personnel / incident /
 //! continuity-governance catalog).
 //!
 //! Characterization of CURRENT tree (spec SHA `e430980c0d27a8138a153d49b62ddf3c57827891`
-//! plus parallel Prompt 05/06 catalog files that may already be listed):
-//! Prompt 01 catalog ships `fixture.example` + IAM `identity` (and possibly
+//! plus parallel SDLC and vulnerability catalogs catalog files that may already be listed):
+//! catalog infrastructure catalog ships `fixture.example` + IAM `identity` (and possibly
 //! sibling SDLC/vulnerability families). There is no
 //! governance/risk/personnel/vendor/incident family TOML, no
 //! `evidence.manual.attestation` catalog type, and no
 //! `fixtures/assurance/canonical/v1/governance/*`. The ISO-pack
-//! organizational sliver and Prompt 04 IAM sibling remain.
+//! organizational sliver and IAM catalog IAM sibling remain.
 //!
 //! SUPERSEDED by `sdd_governance_catalog_target` after the governance family
 //! landed. Tests are ignored so absence-of-family is not required CI green.
@@ -213,10 +213,10 @@ const ISO_ORG_MAPPINGS: &[(&str, &str)] = &[
 const GRC_PRODUCT_TOKENS: &[&str] = &["vanta", "drata", "servicenow", "jira"];
 
 const SSOT_01_04: &[&str] = &[
-    "docs/sdd/canonical-assurance-catalog-v1.md",
-    "docs/sdd/typed-evidence.md",
-    "docs/sdd/population-runtime.md",
-    "docs/sdd/iam-canonical-assurance-catalog.md",
+    "docs/specs/canonical-assurance-catalog-v1.md",
+    "docs/specs/typed-evidence.md",
+    "docs/specs/population-runtime.md",
+    "docs/specs/iam-canonical-assurance-catalog.md",
 ];
 
 fn manifest_dir() -> PathBuf {
@@ -257,7 +257,7 @@ fn crate_sources_joined(name: &str) -> String {
 fn load_catalog() -> CanonicalCatalog {
     CanonicalCatalog::load(catalog_v1()).unwrap_or_else(|e| {
         panic!(
-            "Prompt 01 catalog must already load offline at {}: {e}",
+            "catalog infrastructure catalog must already load offline at {}: {e}",
             catalog_v1().display()
         )
     })
@@ -378,10 +378,10 @@ fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_governance_catalog_baseline")
-            && toml.contains("tests/sdd/governance_catalog.baseline.rs")
+            && toml.contains("tests/contracts/governance_catalog.baseline.rs")
             && toml.contains("sdd_governance_catalog_target")
-            && toml.contains("tests/sdd/governance_catalog.target.rs"),
-        "Prompt 08 dual-suite must be listed in root Cargo.toml (tests/sdd/*.rs is not auto-discovered)"
+            && toml.contains("tests/contracts/governance_catalog.target.rs"),
+        "governance catalog dual-suite must be listed in root Cargo.toml (tests/contracts/*.rs is not auto-discovered)"
     );
 }
 
@@ -391,7 +391,7 @@ fn catalog_manifest_lists_only_fixture_example_and_identity() {
     let manifest = fs::read_to_string(catalog_v1().join("manifest.toml")).unwrap();
     assert!(
         manifest.contains(CATALOG_SCHEMA),
-        "Prompt 01 schema must remain on the shipped manifest"
+        "catalog infrastructure schema must remain on the shipped manifest"
     );
     assert!(
         manifest.contains("controls/fixture.example.toml")
@@ -478,7 +478,7 @@ fn loaded_catalog_has_no_governance_family() {
     for id in PROMPT08_CONTROLS {
         assert!(
             !catalog.controls().contains_key(*id),
-            "Prompt 08 control `{id}` is not in the shipped catalog"
+            "governance catalog control `{id}` is not in the shipped catalog"
         );
     }
     match catalog.control("control.governance.information-security-policy") {
@@ -539,7 +539,7 @@ fn required_governance_tests_are_undeclared() {
     for id in PROMPT08_TESTS {
         assert!(
             !catalog.tests().contains_key(*id),
-            "Prompt 08 test `{id}` is not declared"
+            "governance catalog test `{id}` is not declared"
         );
     }
     for test in catalog.tests().values() {
@@ -567,7 +567,7 @@ fn iam_sibling_and_identity_fixtures_remain() {
     assert_eq!(
         CANONICAL_IDENTITY_CONTROLS.len(),
         23,
-        "Prompt 04 shipped 23 independently assessable identity controls"
+        "IAM catalog shipped 23 independently assessable identity controls"
     );
 
     let identity = manifest_dir().join("fixtures/assurance/canonical/v1/identity");
@@ -612,7 +612,7 @@ fn iso_pack_holds_the_organizational_sliver() {
     }
     assert!(
         !control_ids.contains("control.governance.information-security-policy"),
-        "ISO pack projection must not already host Prompt-08 governance controls"
+        "ISO pack projection must not already host governance catalog governance controls"
     );
 
     let metadata =
@@ -620,7 +620,7 @@ fn iso_pack_holds_the_organizational_sliver() {
     assert!(
         metadata.contains("library = \"catalog/canonical/v1\"")
             || metadata.contains("Canonical controls/tests live in catalog/canonical/v1"),
-        "ISO pack is a projection over the canonical catalog after Prompt 12 remap"
+        "ISO pack is a projection over the canonical catalog after ISO remap remap"
     );
     assert!(
         !metadata.contains("control.governance.")
@@ -641,7 +641,7 @@ fn iso_mappings_still_point_at_pack_organizational_ids() {
     assert!(
         mappings.contains("to = \"control.identity.")
             || mappings.contains("to = \"control.source."),
-        "Prompt 12 remapped ISO mappings onto landed catalog families, not pack-local slivers"
+        "ISO remap remapped ISO mappings onto landed catalog families, not pack-local slivers"
     );
     assert!(
         !mappings.contains("to = \"control.governance.")
@@ -649,7 +649,7 @@ fn iso_mappings_still_point_at_pack_organizational_ids() {
             && !mappings.contains("to = \"control.vendor.")
             && !mappings.contains("to = \"control.personnel.")
             && !mappings.contains("to = \"control.risk."),
-        "ISO mappings must not already target the Prompt-08 governance family"
+        "ISO mappings must not already target the governance catalog governance family"
     );
     let _ = ISO_ORG_MAPPINGS;
 }
@@ -762,7 +762,7 @@ fn document_present_is_not_a_population_or_freshness_test() {
     assert_ne!(
         pop.effectiveness,
         Effectiveness::Effective,
-        "Prompt 03 AllSubjects already refuses Effective on an incomplete training population"
+        "population runtime AllSubjects already refuses Effective on an incomplete training population"
     );
     assert_eq!(
         pop.effectiveness,
@@ -1070,7 +1070,7 @@ fn validator_omits_grc_product_tokens() {
     let src = crate_sources_joined("weeping-angel-canonical-catalog");
     assert!(
         src.contains("const PROVIDER_SEGMENTS") && src.contains("const FRAMEWORK_SEGMENTS"),
-        "Prompt 01 reserved-segment lists remain the only validator token gates"
+        "catalog infrastructure reserved-segment lists remain the only validator token gates"
     );
     for token in GRC_PRODUCT_TOKENS {
         let needle = format!("\"{token}\"");
@@ -1169,7 +1169,7 @@ fn subject_kinds_and_domains_already_cover_governance() {
 #[test]
 fn public_contract_documents_iam_not_governance() {
     let contract =
-        fs::read_to_string(manifest_dir().join("docs/contracts/assurance-runtime.md")).unwrap();
+        fs::read_to_string(manifest_dir().join("docs/specs/assurance-runtime.md")).unwrap();
     assert!(
         contract.contains("control.identity.")
             && contract.contains("fixtures/assurance/canonical/v1/identity/"),
@@ -1194,30 +1194,34 @@ fn public_contract_documents_iam_not_governance() {
 
 #[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
-fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
+fn catalog_and_iam_ssot_docs_are_not_overwritten() {
     for rel in SSOT_01_04 {
         let path = manifest_dir().join(rel);
-        assert!(path.is_file(), "Prompt 01–04 SSOT must remain at {rel}");
+        assert!(
+            path.is_file(),
+            "catalog infrastructure through IAM SSOT must remain at {rel}"
+        );
     }
-    let cat = fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
-        .unwrap();
+    let cat =
+        fs::read_to_string(manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md"))
+            .unwrap();
     assert!(
         cat.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
-        "Prompt 01 SSOT title must remain"
+        "catalog infrastructure SSOT title must remain"
     );
     let iam =
-        fs::read_to_string(manifest_dir().join("docs/sdd/iam-canonical-assurance-catalog.md"))
+        fs::read_to_string(manifest_dir().join("docs/specs/iam-canonical-assurance-catalog.md"))
             .unwrap();
     assert!(
         iam.starts_with("# SDD: IAM Canonical Assurance Catalog (v1 slice)"),
-        "Prompt 04 SSOT title must remain"
+        "IAM catalog SSOT title must remain"
     );
 }
 
 #[ignore = "superseded by sdd_governance_catalog_target"]
 #[test]
 fn spec_and_draft_adr_exist_as_spec_phase_artifacts() {
-    let spec = manifest_dir().join("docs/sdd/governance-canonical-assurance-catalog.md");
+    let spec = manifest_dir().join("docs/specs/governance-canonical-assurance-catalog.md");
     let adr = manifest_dir().join("docs/adr/0003-governance-canonical-assurance-catalog.md");
     assert!(
         spec.is_file(),

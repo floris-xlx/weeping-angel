@@ -3,21 +3,20 @@
 | Field | Value |
 | --- | --- |
 | Status | **Implemented** — target LIN-001–015 GREEN; baseline skip-superseded. |
-| Program | Canonical Assurance Catalog v1 — Prompt 11 |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/11-assessment-lineage.md`](../prompts/canonical-assurance-v1/11-assessment-lineage.md) |
+| Program | Canonical Assurance Catalog v1 — assessment lineage |
 | Slice | Persistable execution lineage, explanation projection, pure report serialization, generic framework facade, snapshot compare |
-| Dual-suite | `sdd_assessment_lineage_baseline` · `sdd_assessment_lineage_target` (`tests/sdd/assessment_lineage.{baseline,target}.rs`) — **already registered** in root `Cargo.toml` |
+| Dual-suite | `sdd_assessment_lineage_baseline` · `sdd_assessment_lineage_target` (`tests/contracts/assessment_lineage.{baseline,target}.rs`) — **already registered** in root `Cargo.toml` |
 | ADR | Accepted [`docs/adr/0003-assessment-lineage.md`](../adr/0003-assessment-lineage.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Protocol report | [`docs/sdd/sdd-assessment-lineage.md`](sdd-assessment-lineage.md) |
-| Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
-| ISO vertical (must stay green) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
-| Catalog infra | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
-| Typed evidence | [`docs/sdd/typed-evidence.md`](typed-evidence.md) |
-| Population | [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Applicability engine (Prompt 10) | **Landed** in `weeping-angel-assurance::applicability`. Kleene snapshot stays `applicability::ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`). Crate-root persist document is `lineage::ApplicabilitySnapshot` (`weeping-angel/assessment-lineage/v1`); `assess` pins its digest. Do **not** reimplement Kleene evaluation. |
-| GitHub collector (Prompt 09) | **Collision fence.** Do not edit `tests/sdd/github_collector.*` or `crates/weeping-angel-collector/src/github/**`. |
-| ISO remap (Prompt 12) | **Collision fence.** Do not rewrite `catalog/canonical/v1` domain TOML or ISO pack IDs / `to =` mappings. |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Protocol report | [`.sdd/runs/sdd-assessment-lineage.md`](../../.sdd/runs/sdd-assessment-lineage.md) |
+| Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
+| ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
+| Catalog infra | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
+| Typed evidence | [`docs/specs/typed-evidence.md`](typed-evidence.md) |
+| Population | [`docs/specs/population-runtime.md`](population-runtime.md) |
+| Applicability engine (applicability engine) | **Landed** in `weeping-angel-assurance::applicability`. Kleene snapshot stays `applicability::ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`). Crate-root persist document is `lineage::ApplicabilitySnapshot` (`weeping-angel/assessment-lineage/v1`); `assess` pins its digest. Do **not** reimplement Kleene evaluation. |
+| GitHub collector | **Collision fence.** Do not edit `tests/contracts/github_collector.*` or `crates/weeping-angel-collector/src/github/**`. |
+| ISO remap | **Collision fence.** Do not rewrite `catalog/canonical/v1` domain TOML or ISO pack IDs / `to =` mappings. |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
@@ -26,7 +25,7 @@
 | Pack schema | `weeping-angel/framework-pack/v1` |
 | Workspace verify | `cargo test --workspace --features demo`; keep `sdd_assurance_runtime_target`, `sdd_iso27001_assurance_target`, `sdd_canonical_assurance_catalog_target` GREEN |
 
-This document is the durable SSOT for Prompt 11. It owns **persistence/orchestration lineage**, **explanation projections**, **generic report cleanup**, and **framework-generic facade fixes**. It does **not** own domain catalog content, Prompt 09 collector mapping, Prompt 10 evaluation semantics, Prompt 12 ISO remapping, UI, or multi-tenant SaaS.
+This document is the durable SSOT for assessment lineage. It owns **persistence/orchestration lineage**, **explanation projections**, **generic report cleanup**, and **framework-generic facade fixes**. It does **not** own domain catalog content, GitHub collector collector mapping, applicability engine evaluation semantics, ISO remap ISO remapping, UI, or multi-tenant SaaS. Operational SoA *projection* (graph rows, NA governance, `pin_soa_snapshot` / `diff_soa_snapshots`) is owned by [`docs/specs/operational-soa.md`](operational-soa.md); this slice still owns persist type `StatementOfApplicabilitySnapshot`. Typed ISMS observations (`detect_events` / `IsmsEvent`) are [`isms-events-drift.md`](isms-events-drift.md); `compare` / `SnapshotDiff` stay readiness string bags (`newSubjects` remain control ids).
 
 Architecture law (frozen):
 
@@ -44,10 +43,10 @@ This slice may edit only lineage / explain / report-serialization / snapshot / l
 
 | Do not touch | Owner |
 | --- | --- |
-| `tests/sdd/github_collector.*`, `crates/weeping-angel-collector/src/github/**` | Prompt 09 |
-| `OrgContext`, `ManualDeterminationRequired`, `evaluate_org_context`, Prompt 10 evaluator modules | Prompt 10 |
-| `catalog/canonical/v1/**` domain TOML, ISO pack requirement/control IDs, pack `to =` remaps | Prompt 12 / catalog owners |
-| `tests/sdd/iso27001_remap.*` | Prompt 12 |
+| `tests/contracts/github_collector.*`, `crates/weeping-angel-collector/src/github/**` | GitHub collector |
+| `OrgContext`, `ManualDeterminationRequired`, `evaluate_org_context`, applicability engine evaluator modules | applicability engine |
+| `catalog/canonical/v1/**` domain TOML, ISO pack requirement/control IDs, pack `to =` remaps | ISO remap / catalog owners |
+| `tests/contracts/iso27001_remap.*` | ISO remap |
 
 Suggested **new** product modules stay in **existing crates** (no new crate):
 
@@ -95,20 +94,20 @@ Pinned at characterization SHA `e430980c0d27a8138a153d49b62ddf3c57827891`.
 
 | Surface | Location | Rule for this slice |
 | --- | --- | --- |
-| `AssessmentRun` | `weeping-angel-assurance::snapshot` | Grow into a real persisted record. Keep existing camelCase field names. Add pins this prompt requires (catalog digest, collector ids/versions, applicability snapshot id, status that can be partial/failed). |
+| `AssessmentRun` | `weeping-angel-assurance::snapshot` | Grow into a real persisted record. Keep existing camelCase field names. Add pins this slice requires (catalog digest, collector ids/versions, applicability snapshot id, status that can be partial/failed). |
 | `SnapshotDiff` | same | Fields already exist for subjects / applicability / exceptions. **Populate them.** Prefer extending this struct for digest-change fields. |
 | `compare` | same | Today only effectiveness + stale. Must identify the change classes in §4.8. |
 | `AssessmentReport` | `weeping-angel-assurance::lib` | Rust fields today are `{assessmentId, profile, digest, results, evidenceCount}`. Serialization must become **pure**. Carry explicit summary / metrics / pack+catalog digests on the value; do not load packs in `Serialize`. |
 | `assessment_for_target` | facade | Remove production stub + ISO-only branch. One registry/loader path. |
 | `stub_catalog` | `weeping-angel-framework` | ISO-only pack fallback today. Must not remain a hidden production catalog. Test fixtures only. |
 | `normalize` | framework compile | ISO-only `load_framework_pack("iso-27001","2022")`. Must use target identity, not a hardcoded pack. |
-| `project_soa` | `soa.rs` | Must project from a **pinned** pack/applicability snapshot, not live disk. Persist `StatementOfApplicabilitySnapshot`. |
+| `project_soa` | `soa.rs` | Lineage: persist `StatementOfApplicabilitySnapshot`. Operational projection (live convenience vs pin/replay, `notImplemented` ≠ NA) is [`operational-soa.md`](operational-soa.md). |
 | `project_readiness` | `readiness.rs` | Keep as a projection. Persist `FrameworkReadinessSnapshot`. Do not collapse metrics into one compliance %. |
 | Ledger tables | `weeping-angel-evidence::ledger` | `assessment_runs`, `control_test_runs`, `framework_snapshots` already exist with `(id/digest, payload)` and **no** persist/load APIs. Add APIs. Do not redesign envelope append-only semantics. |
 | `CollectionRun` | evidence crate | Already has `status`, `error_count`, `collector_id`, `collector_version`. Record them on the run and in the ledger. |
 | `CanonicalCatalog::{load,validate,digest}` | catalog crate | Consume digest string for `CanonicalCatalogSnapshot`. Do not fork the loader. |
 | `FrameworkPackDigest` / `load_framework_pack` | framework pack | One loader. `load_framework_pack(id, version)` and `load_framework_pack_from` stay the only resolution path. `wa-baseline/1` uses the same path. |
-| `ApplicabilityRule` | IR | Prompt 10 evaluator **landed**. Persist `evaluate_assessment_applicability` output. Do not re-evaluate rules here. |
+| `ApplicabilityRule` | IR | applicability engine evaluator **landed**. Persist `evaluate_assessment_applicability` output. Do not re-evaluate rules here. |
 | `Exception` | IR | Already has `subjects`, `status`, `expires_at`. Lineage and compare must surface them. Evaluator already can hold exceptions on `EvidenceSet`. |
 | `AssessmentDefinition` | IR (`type Assessment = AssessmentDefinition`) | Snapshot it. Do not fork a second definition type. |
 | `ControlTestResult` | control-test `result.inc` | Already carries `evidence_refs`, `missing_evidence`, `test_version`, `input_digest`, `population`, `evaluatedAt` (`checked_at`), `duration`. Result identity **excludes** `duration` and `evaluatedAt`. |
@@ -119,7 +118,7 @@ Pinned at characterization SHA `e430980c0d27a8138a153d49b62ddf3c57827891`.
 
 ## 3. Current behavior (baseline — GREEN on characterization SHA)
 
-Characterized against `e430980c0d27a8138a153d49b62ddf3c57827891`. Encoded by `tests/sdd/assessment_lineage.baseline.rs`. The baseline suite **must stay GREEN on this HEAD** until the target suite is GREEN and the baseline is skip-superseded.
+Characterized against `e430980c0d27a8138a153d49b62ddf3c57827891`. Encoded by `tests/contracts/assessment_lineage.baseline.rs`. The baseline suite **must stay GREEN on this HEAD** until the target suite is GREEN and the baseline is skip-superseded.
 
 ### 3.1 `AssessmentRun` is built then dropped
 
@@ -245,17 +244,17 @@ There is no `persist_assessment_run` / `load_assessment_run` / `persist_control_
 
 `CollectionRun` already models `status` (constructor starts as `"started"`), `error_count`, `evidence_count`, collector id/version, but `assess` never constructs or records one. `collector.collect` returning `Err` aborts `assess`; there is no partial assessment path.
 
-### 3.8 Prompt 10 applicability engine (characterization vs now)
+### 3.8 applicability engine applicability engine (characterization vs now)
 
 At characterization SHA `e430980c…` the org-context evaluator was absent: `statically_applicable()` returned `Some(true|false)` only for `Always`/`Never` (and boolean combinations); **predicates were `None`**. Compile kept a requirement unless that fold was `Some(false)`. There was no `ApplicabilitySnapshot`.
 
-**After Prompt 10:** `weeping-angel-assurance::applicability` produces in-memory `ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`) with three-state decisions, rationale, unknown facts, and selected/excluded subjects. This lineage slice still does **not** persist or explain that snapshot.
+**After applicability engine:** `weeping-angel-assurance::applicability` produces in-memory `ApplicabilitySnapshot` (`weeping-angel/applicability-snapshot/v1`) with three-state decisions, rationale, unknown facts, and selected/excluded subjects. This lineage slice still does **not** persist or explain that snapshot.
 
 Pack `applicability.toml` is only consumed by `project_soa` (live disk).
 
 ### 3.9 Missing explanation and explicit metric types
 
-No `ControlExplanation`. No `AssessmentSummary` / `CoverageMetrics` types. No `EvidenceSnapshot` / `FrameworkPackSnapshot` / `CanonicalCatalogSnapshot` / `AssessmentDefinitionSnapshot` / `StatementOfApplicabilitySnapshot` persist types. In-memory `ApplicabilitySnapshot` exists (Prompt 10); it is not persisted. No `ControlTestRun` type (only an empty ledger table name).
+No `ControlExplanation`. No `AssessmentSummary` / `CoverageMetrics` types. No `EvidenceSnapshot` / `FrameworkPackSnapshot` / `CanonicalCatalogSnapshot` / `AssessmentDefinitionSnapshot` / `StatementOfApplicabilitySnapshot` persist types. In-memory `ApplicabilitySnapshot` exists (applicability engine); it is not persisted. No `ControlTestRun` type (only an empty ledger table name).
 
 Coverage is two formatted percent strings on serialize / readiness, not separate first-class metrics for:
 
@@ -274,8 +273,8 @@ manual-review burden
 Root [`Cargo.toml`](../../Cargo.toml) registers lineage binaries:
 
 ```text
-sdd_assessment_lineage_baseline → tests/sdd/assessment_lineage.baseline.rs
-sdd_assessment_lineage_target   → tests/sdd/assessment_lineage.target.rs
+sdd_assessment_lineage_baseline → tests/contracts/assessment_lineage.baseline.rs
+sdd_assessment_lineage_target   → tests/contracts/assessment_lineage.target.rs
 ```
 
 Baseline encodes §3 shortcuts and must stay GREEN. Target currently asserts only:
@@ -283,7 +282,7 @@ Baseline encodes §3 shortcuts and must stay GREEN. Target currently asserts onl
 - LIN-009: dual-suite names present in `Cargo.toml`
 - LIN-015: neighbor `sdd_assurance_runtime_target` / `sdd_iso27001_assurance_target` / `sdd_canonical_assurance_catalog_target` remain registered
 
-Those two tests **PASS** on CURRENT. LIN-001–008 and LIN-010–014 are authored in `tests/sdd/assessment_lineage.target.rs` and must stay **RED** on CURRENT (compile-safe, fail for the right reason) **before** product feature code.
+Those two tests **PASS** on CURRENT. LIN-001–008 and LIN-010–014 are authored in `tests/contracts/assessment_lineage.target.rs` and must stay **RED** on CURRENT (compile-safe, fail for the right reason) **before** product feature code.
 
 ---
 
@@ -342,7 +341,7 @@ Without a ledger, the run object must still be **returned** (or attached to `Ass
 
 Result digest is SHA-256 hex of canonical JSON over the semantic result document (test ids, effectiveness, evidence refs, missing evidence, population, exception ids) — **not** the compile digest and **not** wall-clock `duration` / `evaluatedAt` (`checked_at`). Domain-separate snapshot/result hashes from raw compile-digest reuse (schema field inside the hashed body, or `typed_canonical_digest`).
 
-### 4.3 ApplicabilitySnapshot (persist Prompt 10 output)
+### 4.3 ApplicabilitySnapshot (persist applicability engine output)
 
 Do **not** reimplement the org-context three-state engine. Persist the document `evaluate_assessment_applicability` already produces (`weeping-angel/applicability-snapshot/v1`):
 
@@ -495,11 +494,11 @@ Already registered in root `Cargo.toml`:
 ```toml
 [[test]]
 name = "sdd_assessment_lineage_baseline"
-path = "tests/sdd/assessment_lineage.baseline.rs"
+path = "tests/contracts/assessment_lineage.baseline.rs"
 
 [[test]]
 name = "sdd_assessment_lineage_target"
-path = "tests/sdd/assessment_lineage.target.rs"
+path = "tests/contracts/assessment_lineage.target.rs"
 ```
 
 | Gate | Suite | Expected |
@@ -529,14 +528,14 @@ Assert **today’s** shortcuts (already authored in `assessment_lineage.baseline
 9. `AssuranceCommand` debug/source has no `Explain` variant.
 10. `src/main.rs` non-catalog assurance arm prints the banner and returns `0`.
 11. Ledger `init` creates `assessment_runs` / `control_test_runs` / `framework_snapshots` but the ledger impl has no `persist_assessment_run` / `load_assessment_run` (or equivalent) methods.
-12. No `ControlExplanation` / `EvidenceSnapshot` persist type in product crates (string scan of `crates/`). `ApplicabilitySnapshot` now exists in `weeping-angel-assurance::applicability` (Prompt 10) — persist it; do not treat its presence as a lineage-implement failure.
+12. No `ControlExplanation` / `EvidenceSnapshot` persist type in product crates (string scan of `crates/`). `ApplicabilitySnapshot` now exists in `weeping-angel-assurance::applicability` (applicability engine) — persist it; do not treat its presence as a lineage-implement failure.
 13. IR still exposes `ApplicabilityRule` and `statically_applicable`; org-context evaluation is `weeping-angel-assurance::applicability`, not this slice.
 
 After implement they should fail or be `#[ignore = "superseded by sdd_assessment_lineage_target"]`.
 
 ### 4.12 Target suite contents (RED on CURRENT, GREEN after)
 
-Stable titles. Prompt 11 proof list — **author these before product feature code** (compile-safe; fail because persist/explain/pure-serialize/generic facade are missing):
+Stable titles. assessment lineage proof list — **author these before product feature code** (compile-safe; fail because persist/explain/pure-serialize/generic facade are missing):
 
 | ID | Assertion |
 | --- | --- |
@@ -588,9 +587,9 @@ One regression test per later review comment must be titled `P?: <exact subject>
 - UI / dashboards / HTML report engine
 - New frameworks (SOC 2, NIS2, DORA, GDPR, ISO 27701 production packs)
 - Domain catalog redesign or new IAM/SDLC/vuln/infra/governance content (`catalog/canonical/v1` TOML rewrite)
-- Prompt 09 GitHub collector mapping (`crates/weeping-angel-collector/src/github/**`, `tests/sdd/github_collector.*`)
-- Prompt 10 organization-context applicability evaluator reimplementation (`OrgContext`, `evaluate_org_context`). Persist the landed `ApplicabilitySnapshot`.
-- Prompt 12 ISO remapping of pack `to =` onto `control.*` or ISO pack ID changes
+- GitHub collector GitHub collector mapping (`crates/weeping-angel-collector/src/github/**`, `tests/contracts/github_collector.*`)
+- applicability engine organization-context applicability evaluator reimplementation (`OrgContext`, `evaluate_org_context`). Persist the landed `ApplicabilitySnapshot`.
+- ISO remap ISO remapping of pack `to =` onto `control.*` or ISO pack ID changes
 - Forking `assurance-ir/v1` or redesigning `Control` / `Requirement` / `Mapping` / `EvidenceRequirement` / `PlannedControlTest` / `AssessmentDefinition`
 - Teaching `compile_framework` to load `catalog/canonical/v1` as a pack substitute
 - Certification claims or licensed ISO normative wording
@@ -605,7 +604,7 @@ One regression test per later review comment must be titled `P?: <exact subject>
 | --- | --- |
 | Spine ACT tests depend on the production stub assessment for non-ISO profiles | Target suite + ACT updates use explicit **test fixtures**; production path fail-closes on missing pack. Keep ACT-003 / collector-blindness. |
 | ISO target `iso_007` / serialize tests require `frameworkPackDigest` and may needle `load_framework_pack` | Keep pack digest **on the snapshot**; move load to assess/load-pack time, not `Serialize`. Update ISO tests only if they assert serialize-time loading. |
-| Prompt 10 snapshot already in product crates | Persist `weeping-angel-assurance::applicability::ApplicabilitySnapshot`; unknown predicates stay unresolved, never false. Do not reimplement Kleene evaluation. |
+| applicability engine snapshot already in product crates | Persist `weeping-angel-assurance::applicability::ApplicabilitySnapshot`; unknown predicates stay unresolved, never false. Do not reimplement Kleene evaluation. |
 | `INSERT OR REPLACE` on `collection_runs` already overwrites | Assessment/control-test/framework snapshot APIs must be append-only or digest-keyed; document collection-run replace as “same run_id update while started” only. |
 | Result digest including `evaluatedAt` / `duration` becomes non-deterministic | Exclude wall-clock fields from result identity (same as population contract). |
 | Hashing live TOML bytes breaks Windows CRLF | Digest canonicalized structures (existing pack/catalog digest law), not raw files. |
@@ -635,11 +634,11 @@ Frozen after target GREEN. Public composition:
 | Persist/load opaque JSON | `EvidenceLedger::{persist,load}_{assessment_run,control_test_run,framework_snapshot}` |
 | CLI | `src/cli.rs` `AssuranceCommand::Explain` → `src/assurance_explain.rs` |
 
-`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `scope`, `status` (`completed` \| `partial` \| `failed`).
+`AssessmentRun` pins: `frameworkPackDigest`, `canonicalCatalogDigest`, `assessmentDefinitionDigest`, `applicabilitySnapshotId`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `startedAt` / `completedAt`, `asOf` (JSON from `startedAt`; evaluation clock), `scope`, `status` (`completed` \| `partial` \| `failed`). Historical replay uses evidence that was a candidate at that `asOf` ([`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md)).
 
 `assess` returns `AssessmentReport.run`; it does not open a ledger. Replay is `reconstruct` / `replay_assessment` from a `LineageBundle`. Current-file consult is `verify_current_against_pins` → `DigestMismatch`.
 
-Crate-root `ApplicabilitySnapshot` is the lineage persist document (static fold + pack artifacts). Prompt 10 Kleene snapshot remains `applicability::ApplicabilitySnapshot`.
+Crate-root `ApplicabilitySnapshot` is the lineage persist document (static fold + pack artifacts). applicability engine Kleene snapshot remains `applicability::ApplicabilitySnapshot`.
 
 `AssessmentReport::serialize` is pure (no `load_framework_pack`). `CoverageMetrics` has the seven families; no `compliancePercent`.
 
@@ -651,7 +650,7 @@ Crate-root `ApplicabilitySnapshot` is the lineage persist document (static fold 
 
 Dual-suite protocol complete: target LIN-001–015 GREEN; baseline skip-superseded; ADR accepted; contract updated.
 
-Do **not**: edit GitHub collector files; reimplement Prompt 10 evaluator types; rewrite catalog domain TOML or ISO pack IDs.
+Do **not**: edit GitHub collector files; reimplement applicability engine evaluator types; rewrite catalog domain TOML or ISO pack IDs.
 
 ---
 

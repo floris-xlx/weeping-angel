@@ -1,0 +1,61 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[control]]
+id = "control.personnel.screening"
+title = "Required personnel screening"
+description = "Where screening is required, a dated screening record exists for each in-scope person."
+objective = "Record that screening happened; do not infer fitness or legal clearance from the envelope."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.screening", "evidence.personnel.population-membership"]
+tests = ["test.personnel.screening-recorded"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.joiner-grace"
+title = "New-joiner grace"
+description = "New joiners inside the documented grace window are not treated as overdue on the grace test."
+objective = "Honor within_grace facts; grace is not an exception record."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.joiner-grace", "evidence.identity.lifecycle-event"]
+tests = ["test.personnel.joiner-grace-honored"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.access-provisioning"
+title = "Access provisioning"
+description = "Joiners have a dated lifecycle event and account-status fact for provisioned access."
+objective = "Prove join-time provisioning across the joiner population, not one envelope."
+domains = ["personnelSecurity", "accessControl"]
+evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+tests = ["test.personnel.joiner-access-provisioned"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.role-change"
+title = "Role-change least privilege"
+description = "Movers do not retain excessive role membership after a role change."
+objective = "Fail the mover population when excessive privileges remain."
+domains = ["personnelSecurity", "accessControl"]
+evidence = ["evidence.identity.lifecycle-event", "evidence.identity.role-membership"]
+tests = ["test.personnel.mover-privileges-reduced"]
+automation = "hybrid"
+
+[[control]]
+id = "control.personnel.leaver-access"
+title = "Leaver access removal"
+description = "Leavers do not retain active access after a leave event."
+objective = "Name every leaver whose account-status.active fact is still true."
+domains = ["personnelSecurity", "accessControl"]
+evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+tests = ["test.personnel.no-leaver-active-access"]
+automation = "automated"
+
+[[control]]
+id = "control.personnel.asset-return"
+title = "Asset-return reference"
+description = "Where an asset-return reference is available, leavers have a recorded return fact."
+objective = "Absence of a return envelope is missing evidence, not a pass."
+domains = ["personnelSecurity"]
+evidence = ["evidence.personnel.asset-return"]
+tests = ["test.personnel.asset-return-recorded"]
+automation = "hybrid"

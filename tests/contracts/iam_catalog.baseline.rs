@@ -179,7 +179,7 @@ fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_iam_catalog_baseline")
-            && toml.contains("tests/sdd/iam_catalog.baseline.rs"),
+            && toml.contains("tests/contracts/iam_catalog.baseline.rs"),
         "IAM baseline suite must be listed in root Cargo.toml"
     );
 }

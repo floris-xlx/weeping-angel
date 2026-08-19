@@ -3,12 +3,11 @@
 | Field | Value |
 | --- | --- |
 | Status | **Implemented** (target suite is the CI gate; baseline absence asserts are `#[ignore]` superseded) |
-| Program | Canonical Assurance Catalog v1 — prompt 01 (catalog infrastructure) |
+| Program | Canonical Assurance Catalog v1 — catalog infrastructure |
 | Dual-suite (to register at implement) | `sdd_canonical_assurance_catalog_baseline` · `sdd_canonical_assurance_catalog_target` |
 | ADR | Accepted [`docs/adr/0003-canonical-assurance-catalog-v1.md`](../adr/0003-canonical-assurance-catalog-v1.md) |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/01-catalog-infrastructure.md`](../prompts/canonical-assurance-v1/01-catalog-infrastructure.md) |
-| Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md), ADR 0001 |
-| ISO vertical (must stay green) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
+| Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/assurance-runtime.md`](assurance-runtime.md), ADR 0001 |
+| ISO vertical (must stay green) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Planning / baseline SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
@@ -16,7 +15,7 @@
 | Catalog schema (this program) | `weeping-angel/canonical-catalog/v1` |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for **catalog infrastructure only**: on-disk format, loader, validator, digest, stable-ID rules, offline compilation contract, CLI surface, crate boundaries, and dual-suite protocol. It does **not** own IAM / SDLC / vulnerability / infrastructure / governance domain catalogs, ISO remapping (prompt 12), typed-evidence redesign (prompt 02 — landed separately: [`docs/sdd/typed-evidence.md`](typed-evidence.md)), or population runtime (prompt 03). The IAM family is listed in the catalog manifest; its SSOT is [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md). The SDLC family (Prompt 05) SSOT is [`docs/sdd/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml`). The vulnerability family (Prompt 06) has landed; its SSOT is [`docs/sdd/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). The infrastructure family (Prompt 07) SSOT is [`docs/sdd/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md). The governance family (Prompt 08) has landed; its SSOT is [`docs/sdd/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/governance.toml`; first-class `evidence.manual.attestation`).
+This document is the durable SSOT for **catalog infrastructure only**: on-disk format, loader, validator, digest, stable-ID rules, offline compilation contract, CLI surface, crate boundaries, and dual-suite protocol. It does **not** own IAM / SDLC / vulnerability / infrastructure / governance domain catalogs, ISO remapping (ISO remap), typed-evidence redesign (typed evidence — landed separately: [`docs/specs/typed-evidence.md`](typed-evidence.md)), or population runtime. The IAM family is listed in the catalog manifest; its SSOT is [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md). The SDLC family (SDLC catalog) SSOT is [`docs/specs/sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml`). The vulnerability family (vulnerability catalog) has landed; its SSOT is [`docs/specs/vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). The infrastructure family (infrastructure catalog) SSOT is [`docs/specs/infrastructure-canonical-assurance-catalog.md`](infrastructure-canonical-assurance-catalog.md). The governance family (governance catalog) has landed; its SSOT is [`docs/specs/governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (`catalog/canonical/v1/{controls,evidence,tests}/governance.toml`; first-class `evidence.manual.attestation`). Personnel-security lifecycle (Prompt 17) is additive `catalog/canonical/v1/{controls,evidence,tests}/personnel.toml`; SSOT [`docs/specs/personnel-security.md`](personnel-security.md) — it does not replace the five governance `control.personnel.*` rows.
 
 Architecture law (frozen):
 
@@ -37,7 +36,7 @@ Today, “canonical” controls and tests live as **thin stubs inside framework 
 Without a catalog contract:
 
 - every new domain catalog would invent its own files and IDs;
-- ISO remapping (prompt 12) has nothing stable to map onto;
+- ISO remapping (ISO remap) has nothing stable to map onto;
 - collectors cannot target a public evidence namespace;
 - framework packs keep owning the canonical library (coupling regimes to content);
 - accidental `control.github.*` / `control.iso27001.*` IDs cannot be rejected at a catalog boundary.
@@ -64,7 +63,7 @@ Pinned at planning SHA `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b`.
 | `FRAMEWORK_PACK_SCHEMA` | framework pack | Stay `weeping-angel/framework-pack/v1`. Catalog is a **different** schema. |
 | `Control`, `Requirement`, `Mapping`, `EvidenceRequirement`, `PlannedControlTest`, `AssessmentDefinition` | IR | Do **not** redesign. Tiny compile-compat only if a new crate cannot build otherwise. |
 | `ControlId` / `EvidenceRequirementId` / `ControlTestId` | IR `id.rs` | Remain **permissive** charset validators. ISO pack IDs (`source.branch-protection`) must still construct. Catalog-layer IDs are **stricter** and live in the catalog crate. |
-| `validate_stable_id` / `IdError::InvalidNamespace` | IR | `InvalidNamespace` is defined and **never returned**. Do not start rejecting `control.github.*` on the IR newtype in this slice (would break ISO fixtures and remap is prompt 12). |
+| `validate_stable_id` / `IdError::InvalidNamespace` | IR | `InvalidNamespace` is defined and **never returned**. Do not start rejecting `control.github.*` on the IR newtype in this slice (would break ISO fixtures and remap is ISO remap). |
 | ISO / wa-baseline packs | `frameworks/` | Keep owning thin canonical stubs. **Do not remap** pack IDs here. |
 | Compile pipeline | `weeping-angel-framework` | Eight stages unchanged. Do not load the canonical catalog from `compile_framework` in this slice. |
 | Evidence / collectors / TestExpr | evidence, collector, control-test | Unchanged. Catalog may **store** a bounded expression/selector encoding; it must not pull those crates in. |
@@ -75,7 +74,7 @@ Tiny allowed adjustments: re-exports, optional fields already on IR types, or a 
 
 ## 3. Current behavior (characterization on `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b`)
 
-Inspected: `crates/weeping-angel-assurance-ir`, `weeping-angel-framework`, `weeping-angel-control-test`, `weeping-angel-collector`, `weeping-angel-assurance`, `frameworks/`, `src/cli.rs`, `src/main.rs`, `tests/sdd/*`, `docs/sdd/*`, `docs/contracts/assurance-runtime.md`.
+Inspected: `crates/weeping-angel-assurance-ir`, `weeping-angel-framework`, `weeping-angel-control-test`, `weeping-angel-collector`, `weeping-angel-assurance`, `frameworks/`, `src/cli.rs`, `src/main.rs`, `tests/contracts/*`, `docs/specs/*`, `docs/specs/assurance-runtime.md`.
 
 ### 3.1 Workspace verify (this SHA)
 
@@ -421,14 +420,14 @@ Register in root `Cargo.toml` (same pattern as ISO):
 ```toml
 [[test]]
 name = "sdd_canonical_assurance_catalog_baseline"
-path = "tests/sdd/canonical_assurance_catalog.baseline.rs"
+path = "tests/contracts/canonical_assurance_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_canonical_assurance_catalog_target"
-path = "tests/sdd/canonical_assurance_catalog.target.rs"
+path = "tests/contracts/canonical_assurance_catalog.target.rs"
 ```
 
-`tests/sdd` is **not** auto-discovered.
+`tests/contracts` is **not** auto-discovered.
 
 | Gate | Suite | Expected |
 | --- | --- | --- |
@@ -483,7 +482,7 @@ Use stable titles so proof tables can cite them (`P?: <exact subject>` if later 
 
 One regression test per comment later must be titled `P?: <exact subject>` and encode the original found case (write test first, RED, fix, GREEN).
 
-### 4.12 Extension points (handoff for prompts 02–12)
+### 4.12 Extension points (handoff for later catalog slices)
 
 Downstream agents must be able to rely on:
 
@@ -494,8 +493,8 @@ Downstream agents must be able to rely on:
 5. **Fixture examples** under `catalog/canonical/v1/{controls,evidence,tests}/` showing how to declare each kind.
 6. **Extension:** add a new `*.toml`, append it to `manifest.toml` `[files]`, re-validate. Loader code stays unchanged.
 7. **Non-extension:** do not put framework mappings or provider collector config in this tree (packs stay under `frameworks/`; collectors stay in `weeping-angel-collector`).
-8. Prompt 11 may persist `CanonicalCatalogSnapshot { schema, catalogVersion, digest }`. This slice must expose a digest string suitable for that snapshot.
-9. Prompt 12 remaps ISO pack `to =` onto `control.*` IDs. This slice must **not** perform that remap.
+8. assessment lineage may persist `CanonicalCatalogSnapshot { schema, catalogVersion, digest }`. This slice must expose a digest string suitable for that snapshot.
+9. ISO remap remaps ISO pack `to =` onto `control.*` IDs. This slice must **not** perform that remap.
 
 After implement, update **§8 Final API** in this file with the landed function signatures, error enum, and exact fixture IDs.
 
@@ -520,9 +519,9 @@ After implement, update **§8 Final API** in this file with the landed function 
 
 ## 6. Out of scope
 
-- Full IAM, SDLC, vulnerability, infrastructure, or governance catalogs (prompts 04–08).
-- Typed evidence value model (prompt 02) and population / `CoverageAtLeast` completion (prompt 03).
-- GitHub collector work (prompt 09), applicability engine (prompt 10), assessment lineage snapshots (prompt 11), ISO remapping (prompt 12).
+- Full IAM, SDLC, vulnerability, infrastructure, or governance catalogs (domain catalog families).
+- Typed evidence value model (typed evidence) and population / `CoverageAtLeast` completion (population runtime).
+- GitHub collector work (GitHub collector), applicability engine, assessment lineage snapshots (assessment lineage), ISO remapping (ISO remap).
 - Redesign of `AssessmentDefinition`, `Control`, `Requirement`, `Mapping`, `EvidenceRequirement`, `PlannedControlTest`.
 - Enforcing `control.*` on IR `ControlId` (would break ISO packs).
 - SOC 2 / NIS2 / DORA / GDPR / ISO 27701 production content.
@@ -538,7 +537,7 @@ After implement, update **§8 Final API** in this file with the landed function 
 
 | Risk | Mitigation |
 | --- | --- |
-| Tightening IR `ControlId` breaks ISO-004 / pack load | Catalog-only ID law; IR newtypes stay permissive; remap is prompt 12. |
+| Tightening IR `ControlId` breaks ISO-004 / pack load | Catalog-only ID law; IR newtypes stay permissive; remap is ISO remap. |
 | Loader in `weeping-angel-framework` couples packs to catalog | Dedicated crate; CAT-012 forbids framework → catalog. |
 | Catalog crate depends on collector or control-test | CAT-014; expression validated as TOML subset. |
 | Raw-byte digest differs on CRLF vs LF | Parse TOML then canonical JSON; never hash raw bytes. |

@@ -5,9 +5,9 @@ id = "canonical"
 version = "1"
 
 [files]
-controls = ["controls/fixture.example.toml", "controls/identity.toml", "controls/sdlc.toml", "controls/vulnerability.toml", "controls/network.toml", "controls/crypto.toml", "controls/data.toml", "controls/database.toml", "controls/logging.toml", "controls/backup.toml", "controls/resilience.toml", "controls/governance.toml"]
-evidence = ["evidence/fixture.example.toml", "evidence/identity.toml", "evidence/sdlc.toml", "evidence/vulnerability.toml", "evidence/network.toml", "evidence/crypto.toml", "evidence/data.toml", "evidence/database.toml", "evidence/logging.toml", "evidence/backup.toml", "evidence/resilience.toml", "evidence/governance.toml"]
-tests = ["tests/fixture.example.toml", "tests/identity.toml", "tests/sdlc.toml", "tests/vulnerability.toml", "tests/network.toml", "tests/crypto.toml", "tests/data.toml", "tests/database.toml", "tests/logging.toml", "tests/backup.toml", "tests/resilience.toml", "tests/governance.toml"]
+controls = ["controls/fixture.example.toml", "controls/identity.toml", "controls/sdlc.toml", "controls/vulnerability.toml", "controls/network.toml", "controls/crypto.toml", "controls/data.toml", "controls/database.toml", "controls/logging.toml", "controls/backup.toml", "controls/resilience.toml", "controls/governance.toml", "controls/personnel.toml"]
+evidence = ["evidence/fixture.example.toml", "evidence/identity.toml", "evidence/sdlc.toml", "evidence/vulnerability.toml", "evidence/network.toml", "evidence/crypto.toml", "evidence/data.toml", "evidence/database.toml", "evidence/logging.toml", "evidence/backup.toml", "evidence/resilience.toml", "evidence/governance.toml", "evidence/personnel.toml"]
+tests = ["tests/fixture.example.toml", "tests/identity.toml", "tests/sdlc.toml", "tests/vulnerability.toml", "tests/network.toml", "tests/crypto.toml", "tests/data.toml", "tests/database.toml", "tests/logging.toml", "tests/backup.toml", "tests/resilience.toml", "tests/governance.toml", "tests/personnel.toml"]
 
 [digest]
 algorithm = "sha256"

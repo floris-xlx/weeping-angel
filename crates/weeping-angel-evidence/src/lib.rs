@@ -1,6 +1,7 @@
 //! Immutable evidence envelopes. Observations are facts, never compliance claims.
 
 pub mod ledger;
+pub mod validity;
 pub mod value;
 
 use std::collections::BTreeMap;
@@ -11,6 +12,10 @@ use thiserror::Error;
 use weeping_angel_assurance_ir::{AssetId, canonical_digest};
 
 pub use ledger::{EvidenceLedger, LedgerError};
+pub use validity::{
+    EVIDENCE_VALIDITY_SCHEMA, EvidenceValidityEvent, EvidenceValidityKind, ValidityEventKind,
+    ValidityProjection, ValidityView, is_candidate_at, project_validity, window_contains,
+};
 pub use value::{
     DecimalText, EVIDENCE_VALUE_SCHEMA, EVIDENCE_VALUE_TAG, EvidenceValue, EvidenceValueError,
 };
@@ -188,6 +193,14 @@ pub struct EvidenceEnvelope {
     sensitivity: String,
     scope: String,
     supersedes: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    observed_at: Option<DateTime<Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    valid_from: Option<DateTime<Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    valid_until: Option<DateTime<Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    source_revision: Option<String>,
     observation: EvidenceObservation,
     provenance: EvidenceProvenance,
     digest: String,
@@ -217,6 +230,10 @@ impl EvidenceEnvelope {
             sensitivity: "normal".into(),
             scope,
             supersedes: None,
+            observed_at: None,
+            valid_from: None,
+            valid_until: None,
+            source_revision: None,
             observation,
             provenance,
             digest,
@@ -236,6 +253,53 @@ impl EvidenceEnvelope {
     pub fn with_supersedes(mut self, previous: impl Into<String>) -> Self {
         self.supersedes = Some(previous.into());
         self
+    }
+
+    pub fn with_observed_at(mut self, observed_at: DateTime<Utc>) -> Self {
+        self.observed_at = Some(observed_at);
+        self
+    }
+
+    pub fn with_valid_from(mut self, valid_from: DateTime<Utc>) -> Self {
+        self.valid_from = Some(valid_from);
+        self
+    }
+
+    pub fn with_valid_until(mut self, valid_until: DateTime<Utc>) -> Self {
+        self.valid_until = Some(valid_until);
+        self
+    }
+
+    pub fn with_source_revision(mut self, source_revision: impl Into<String>) -> Self {
+        self.source_revision = Some(source_revision.into());
+        self
+    }
+
+    /// World-fact instant. Defaults to `collected_at` when not asserted.
+    pub fn observed_at(&self) -> DateTime<Utc> {
+        self.observed_at.unwrap_or(self.provenance.collected_at)
+    }
+
+    /// Inclusive start of the half-open assurance window. Defaults to `observed_at`.
+    pub fn valid_from(&self) -> DateTime<Utc> {
+        self.valid_from.unwrap_or_else(|| self.observed_at())
+    }
+
+    /// Exclusive end of the half-open assurance window (`None` = open).
+    pub fn valid_until(&self) -> Option<DateTime<Utc>> {
+        self.valid_until
+    }
+
+    pub fn source_revision(&self) -> Option<&str> {
+        self.source_revision.as_deref()
+    }
+
+    /// Artifact digest from `EvidenceArtifactRef.digest` when present.
+    pub fn artifact_digest(&self) -> Option<&str> {
+        self.artifact_ref
+            .as_ref()
+            .map(|r| r.digest.as_str())
+            .filter(|d| !d.is_empty())
     }
 
     pub fn observation(&self) -> &EvidenceObservation {
@@ -264,6 +328,10 @@ impl EvidenceEnvelope {
 
     pub fn supersedes(&self) -> Option<&str> {
         self.supersedes.as_deref()
+    }
+
+    pub fn artifact_ref(&self) -> Option<&EvidenceArtifactRef> {
+        self.artifact_ref.as_ref()
     }
 }
 
@@ -301,6 +369,11 @@ pub fn looks_like_compliance_claim(text: &str) -> bool {
         || lower.contains("dora compliant")
         || lower.contains("pci-dss compliant")
         || lower.contains("pci dss compliant")
+        || lower.contains("risk accepted")
+        || lower.contains("risk is accepted")
+        || lower.contains("iso control failed")
+        || lower.contains("iso 27001 control failed")
+        || lower.contains("iso27001 control failed")
 }
 
 /// Redact credential-shaped tokens from diagnostics. Never persist tokens.

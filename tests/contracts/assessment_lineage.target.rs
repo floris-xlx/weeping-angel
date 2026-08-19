@@ -1,6 +1,6 @@
-//! Target suite for immutable assessment lineage (Prompt 11).
+//! Target suite for immutable assessment lineage.
 //!
-//! Encodes DESIRED behavior in `docs/sdd/assessment-lineage.md` §4 / §4.12
+//! Encodes DESIRED behavior in `docs/specs/assessment-lineage.md` §4 / §4.12
 //! (LIN-001–015). Must stay RED on CURRENT shortcuts until persist, explain,
 //! pure serialize, generic facade, and compare land. Do not weaken these
 //! assertions to match today's `let _run` / serialize-time ISO pack load, and
@@ -222,6 +222,7 @@ fn sample_result(effectiveness: Effectiveness) -> ControlTestResult {
         status: None,
         reason: None,
         population: None,
+        period: None,
     }
 }
 
@@ -823,8 +824,8 @@ fn lin_009_dual_suite_binaries_are_registered() {
     assert!(
         toml.contains("sdd_assessment_lineage_baseline")
             && toml.contains("sdd_assessment_lineage_target")
-            && toml.contains("tests/sdd/assessment_lineage.baseline.rs")
-            && toml.contains("tests/sdd/assessment_lineage.target.rs"),
+            && toml.contains("tests/contracts/assessment_lineage.baseline.rs")
+            && toml.contains("tests/contracts/assessment_lineage.target.rs"),
         "LIN-009: dual-suite binaries must be registered in root Cargo.toml"
     );
 }

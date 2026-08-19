@@ -7,9 +7,8 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md) or [ISO remap](0003-iso27001-canonical-remap.md). |
 | Extends | [Catalog infrastructure](0003-canonical-assurance-catalog-v1.md), [typed evidence](0003-typed-evidence-canonical-serialization.md), [population / coverage](0003-subject-population-runtime-and-coverage-semantics.md), [IAM family](0003-iam-canonical-assurance-catalog.md) |
-| Spec | [`docs/sdd/governance-canonical-assurance-catalog.md`](../sdd/governance-canonical-assurance-catalog.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/08-governance-catalog.md`](../prompts/canonical-assurance-v1/08-governance-catalog.md) |
+| Spec | [`docs/specs/governance-canonical-assurance-catalog.md`](../specs/governance-canonical-assurance-catalog.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Fixture clock | `2026-08-18T12:00:00Z` (`stale-documents` uses `2024-08-01T12:00:00Z`) |
 | Tests | `sdd_governance_catalog_target` GREEN (GOV-001…016). Absence-characterization baseline `sdd_governance_catalog_baseline` superseded / `#[ignore]`. |
@@ -18,15 +17,15 @@
 
 ## Context
 
-ADR 0001 delivered the inwardly extensible assurance spine. ADR 0002 shipped the first ISO 27001 vertical, including a **thin organizational sliver inside the ISO pack** (`incident.response-process`, `supplier.security-assessment`, `personnel.access-termination`, `access.periodic-review`) tested as presence/hybrid/manual checks on pack evidence (`policy.security.reviewed`, `policy.supplier.assessed`, `personnel.access.terminated`, `policy.access.reviewed`). [Prompt 12 remap](0003-iso27001-canonical-remap.md) later retired those pack-local slivers and left the corresponding ISO clauses **unmapped**.
+ADR 0001 delivered the inwardly extensible assurance spine. ADR 0002 shipped the first ISO 27001 vertical, including a **thin organizational sliver inside the ISO pack** (`incident.response-process`, `supplier.security-assessment`, `personnel.access-termination`, `access.periodic-review`) tested as presence/hybrid/manual checks on pack evidence (`policy.security.reviewed`, `policy.supplier.assessed`, `personnel.access.terminated`, `policy.access.reviewed`). [ISO remap remap](0003-iso27001-canonical-remap.md) later retired those pack-local slivers and left the corresponding ISO clauses **unmapped**.
 
-Canonical catalog infrastructure (Prompt 01), typed evidence (Prompt 02), subject-population coverage (Prompt 03), and the IAM family (Prompt 04) landed as sibling ADRs. They provide the loader/validator/digest, fact encoding, `AllSubjects` / `CoverageAtLeast` / `FreshWithin` / `ManualReview` runtime, Exception subject binding, and an identity **technical** library. They do not own policy, risk-governance, personnel-process, supplier, incident-governance, or continuity-plan content.
+Canonical catalog infrastructure, typed evidence, subject-population coverage (population runtime), and the IAM family (IAM catalog) landed as sibling ADRs. They provide the loader/validator/digest, fact encoding, `AllSubjects` / `CoverageAtLeast` / `FreshWithin` / `ManualReview` runtime, Exception subject binding, and an identity **technical** library. They do not own policy, risk-governance, personnel-process, supplier, incident-governance, or continuity-plan content.
 
 `manual_attestation` was a compile capability and a legacy envelope type. It was not first-class catalog evidence with principal, timestamp, subject, artifact, freshness, and review state.
 
 Without a provider-neutral governance family, a future GRC/ITSM collector has nowhere canonical to emit organizational facts, and tests such as “all required personnel have current training” cannot be declared without pretending a PDF is effectiveness.
 
-Parallel Prompts 05–07 specify (and later landed) SDLC, vulnerability, and infrastructure families. This decision must not overwrite those files or steal their evidence ids.
+Parallel SDLC, vulnerability, and infrastructure families specify (and later landed) SDLC, vulnerability, and infrastructure families. This decision must not overwrite those files or steal their evidence ids.
 
 Questions this decision answers:
 
@@ -35,7 +34,7 @@ Questions this decision answers:
 3. How is manual evidence first-class and immutable rather than a boolean bypass?
 4. How are organizational tests freshness/population predicates rather than “document exists”?
 5. Do we fork the catalog loader, evidence values, population evaluator, or Exception/Risk types for this family?
-6. How do we coexist with Prompt 04 IAM, Prompt 05 SDLC policy, Prompt 06 finding-level risk, and Prompt 07 operational resilience?
+6. How do we coexist with IAM catalog IAM, SDLC catalog SDLC policy, vulnerability catalog finding-level risk, and infrastructure catalog operational resilience?
 7. How do approved unexpired IR exceptions avoid silent `Effective` when excepted subjects leave the coverage denominator?
 
 ## Decision
@@ -44,7 +43,7 @@ This is what shipped.
 
 ### 1. Governance is canonical catalog content, not a pack and not a GRC product
 
-Independently assessable governance controls live in the Prompt 01 tree (single files, not a split):
+Independently assessable governance controls live in the catalog infrastructure tree (single files, not a split):
 
 ```text
 catalog/canonical/v1/controls/governance.toml
@@ -52,7 +51,7 @@ catalog/canonical/v1/evidence/governance.toml
 catalog/canonical/v1/tests/governance.toml
 ```
 
-Listed in `catalog/canonical/v1/manifest.toml` `[files]`. Loaded by `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — **no second loader**. Continuity/DR **governance** IDs live here even though Prompt 07 owns `resilience.toml` for operational restore (`evidence.resilience.recovery-plan`). This slice did **not** create or overwrite `resilience.toml`.
+Listed in `catalog/canonical/v1/manifest.toml` `[files]`. Loaded by `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — **no second loader**. Continuity/DR **governance** IDs live here even though infrastructure catalog owns `resilience.toml` for operational restore (`evidence.resilience.recovery-plan`). This slice did **not** create or overwrite `resilience.toml`.
 
 Public IDs:
 
@@ -129,7 +128,7 @@ Legacy `manual_attestation` (capability / pack type / `collector.manual`) remain
 
 ### 4. Tests are freshness, population, and manual-review predicates
 
-Thirty-four tests, one per control. Required Prompt-08 scenarios:
+Thirty-four tests, one per control. Required governance catalog scenarios:
 
 ```text
 test.governance.policy-current
@@ -148,21 +147,21 @@ Missing evidence ⇒ `InsufficientEvidence`. Partial populations cannot be `Effe
 
 Approved unexpired subject-bound IR `Exception` ⇒ `ExceptionApproved` for that subject — **never silent `Effective`**. Expired exceptions must not suppress failing results. Empty `subjects` is not the whole inventory.
 
-IR `Risk` is reused as an attestation record, not grown into a GRC engine. Finding-level `evidence.vulnerability.exception` remains Prompt 06.
+IR `Risk` is reused as an attestation record, not grown into a GRC engine. Finding-level `evidence.vulnerability.exception` remains vulnerability catalog.
 
-**Shipped runtime honesty (Prompt 03 evaluator, not a second engine):** `evaluate_coverage` still removes excepted subjects from the coverage denominator, and still promotes `Ineffective` → `ExceptionApproved` when every remaining failing subject is identity break-glass. Additionally, when `conclude` would return `Effective` solely because approved unexpired bound exceptions emptied the remainder (`excepted` non-empty; `failing` / `missing` / `stale` / `technical` empty), overall effectiveness is `ExceptionApproved` with rationale `approved unexpired exception bound to excepted subjects; not silent Effective`. Same IR `Exception` type. No `GovernanceException`.
+**Shipped runtime honesty (population runtime evaluator, not a second engine):** `evaluate_coverage` still removes excepted subjects from the coverage denominator, and still promotes `Ineffective` → `ExceptionApproved` when every remaining failing subject is identity break-glass. Additionally, when `conclude` would return `Effective` solely because approved unexpired bound exceptions emptied the remainder (`excepted` non-empty; `failing` / `missing` / `stale` / `technical` empty), overall effectiveness is `ExceptionApproved` with rationale `approved unexpired exception bound to excepted subjects; not silent Effective`. Same IR `Exception` type. No `GovernanceException`.
 
 ### 6. Coexist with siblings; ISO organizational clauses stay unmapped
 
 | Sibling | Boundary |
 | --- | --- |
-| Prompt 04 IAM | Technical MFA / membership / account status vs personnel *process* / training / confidentiality |
-| Prompt 05 SDLC | Secure-development policy / change source vs IS policy / AUP / document-control / retention |
-| Prompt 06 vuln | Finding-level risk acceptance vs organizational risk attestations |
-| Prompt 07 infra | Operational restore / `evidence.resilience.recovery-plan` / `resilience.toml` vs BCP/DR governance / `evidence.resilience.continuity-plan` in `governance.toml` |
-| ISO pack | This slice does **not** retarget mappings. Prompt 12 already retired pack-local organizational slivers; `iso27001:a.5.19` / `a.5.24` / `a.5.1` / `5.2` and clauses 4–10 stay unmapped rather than claimed as `control.governance.*` / `control.incident.*` |
+| IAM catalog IAM | Technical MFA / membership / account status vs personnel *process* / training / confidentiality |
+| SDLC catalog SDLC | Secure-development policy / change source vs IS policy / AUP / document-control / retention |
+| vulnerability catalog vuln | Finding-level risk acceptance vs organizational risk attestations |
+| infrastructure catalog infra | Operational restore / `evidence.resilience.recovery-plan` / `resilience.toml` vs BCP/DR governance / `evidence.resilience.continuity-plan` in `governance.toml` |
+| ISO pack | This slice does **not** retarget mappings. ISO remap already retired pack-local organizational slivers; `iso27001:a.5.19` / `a.5.24` / `a.5.1` / `5.2` and clauses 4–10 stay unmapped rather than claimed as `control.governance.*` / `control.incident.*` |
 
-Reserved Prompt-07 `control.resilience.*` slugs (`recovery-procedure`, `disaster-recovery-exercise`, `redundancy`, `recovery-objectives`, `recovery-evidence-freshness`) are not reused here.
+Reserved infrastructure catalog `control.resilience.*` slugs (`recovery-procedure`, `disaster-recovery-exercise`, `redundancy`, `recovery-objectives`, `recovery-evidence-freshness`) are not reused here.
 
 ### 7. Deterministic fixtures
 
@@ -179,11 +178,11 @@ Eight frozen sets under `fixtures/assurance/canonical/v1/governance/`:
 | `expired-exception` | Expired exception does **not** suppress fail/missing |
 | `manual-review-despite-evidence` | Supporting document present; `op = "manual-review"` → `ManualReviewRequired` |
 
-Populations use Prompt 03 generic `inventory.subject` / `inventory.complete` (or explicit fixture population). No personnel/vendor resolver fork. Fixtures emit canonical `evidence.{governance,risk,personnel,vendor,incident,resilience,manual}.*` only.
+Populations use population runtime generic `inventory.subject` / `inventory.complete` (or explicit fixture population). No personnel/vendor resolver fork. Fixtures emit canonical `evidence.{governance,risk,personnel,vendor,incident,resilience,manual}.*` only.
 
-### 8. Consume Prompts 01–03; do not fork infrastructure
+### 8. Consume catalog infrastructure, typed evidence, and population runtime; do not fork infrastructure
 
-No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt 01’s SSOT is not overwritten (pointer-only). No ServiceNow / Jira / Vanta / Drata collector. Validator GRC-product gaps are covered by target greps of **catalog TOML**, never by a self-referential “this test file does not contain `vanta`” assert.
+No second catalog loader, typed `EvidenceValue`, or population evaluator. catalog infrastructure’s SSOT is not overwritten (pointer-only). No ServiceNow / Jira / Vanta / Drata collector. Validator GRC-product gaps are covered by target greps of **catalog TOML**, never by a self-referential “this test file does not contain `vanta`” assert.
 
 ## Consequences
 
@@ -197,8 +196,8 @@ No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt
 
 - ISO organizational clauses remain unmapped; catalog `control.incident.*` is not an ISO projection.
 - Hybrid/manual tests will not auto-pass from documents alone; assessments need real attestations.
-- Continuity IDs share the `control.resilience.*` namespace with Prompt 07; filenames and slugs must stay disjoint (`governance.toml` vs `resilience.toml`).
-- The generic ExceptionApproved promotion changes Prompt 03 coverage conclusions for every family that binds IR exceptions (not governance-only).
+- Continuity IDs share the `control.resilience.*` namespace with infrastructure catalog; filenames and slugs must stay disjoint (`governance.toml` vs `resilience.toml`).
+- The generic ExceptionApproved promotion changes population runtime coverage conclusions for every family that binds IR exceptions (not governance-only).
 
 **Rejected**
 
@@ -207,7 +206,7 @@ No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt
 - Building a document editor or GRC workflow.
 - Rewriting ISO `metadata.toml` / `mappings.toml` in this slice.
 - Inventing a second exception/risk engine or catalog loader.
-- Implementing Prompts 05–07 in this slice.
+- Implementing SDLC, vulnerability, and infrastructure families in this slice.
 
 ## Non-goals (reaffirmed)
 
@@ -221,8 +220,8 @@ GRC SaaS; document editors; ISO/SOC2/NIS2 mappings; generic rule-engine expansio
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/governance-canonical-assurance-catalog.md`](../sdd/governance-canonical-assurance-catalog.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spec SSOT: [`docs/specs/governance-canonical-assurance-catalog.md`](../specs/governance-canonical-assurance-catalog.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - Catalog infrastructure: [`0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - Typed evidence: [`0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Population runtime: [`0003-subject-population-runtime-and-coverage-semantics.md`](0003-subject-population-runtime-and-coverage-semantics.md)

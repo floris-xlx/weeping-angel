@@ -23,4 +23,6 @@ pub struct ControlTestResult {
     pub reason: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub population: Option<crate::PopulationEvaluation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub period: Option<crate::PeriodEffectiveness>,
 }

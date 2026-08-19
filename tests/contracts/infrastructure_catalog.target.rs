@@ -1,14 +1,14 @@
-//! Target suite for the Infrastructure Canonical Assurance Catalog (Prompt 07).
+//! Target suite for the Infrastructure Canonical Assurance Catalog (infrastructure catalog).
 //!
 //! Encodes DESIRED behavior in
-//! `docs/sdd/infrastructure-canonical-assurance-catalog.md` §4 / §5
+//! `docs/specs/infrastructure-canonical-assurance-catalog.md` §4 / §5
 //! (INFRA-001…016). Must stay RED on the current tree: no
 //! `control.network.*` family, no required `evidence.database.*` contracts,
 //! and no population fixtures. Do not `#[ignore]` these tests and do not
 //! implement catalog content here.
 //!
-//! Consumes Prompt 01 `CanonicalCatalog::{load,validate,digest}`, Prompt 02
-//! `EvidenceValue` / `with_value`, and Prompt 03 `AllSubjects` /
+//! Consumes catalog infrastructure `CanonicalCatalog::{load,validate,digest}`, typed evidence
+//! `EvidenceValue` / `with_value`, and population runtime `AllSubjects` /
 //! `NoneSubjects` / `CoverageAtLeast`. Does not fork a second loader,
 //! `EvidenceValue`, or `resolve_database_inventory`.
 //!
@@ -270,7 +270,7 @@ fn catalog_v1() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
     assert!(
         dir.is_dir(),
-        "INFRA-001: Prompt 01 catalog tree catalog/canonical/v1 must exist"
+        "INFRA-001: catalog infrastructure catalog tree catalog/canonical/v1 must exist"
     );
     dir
 }
@@ -668,9 +668,9 @@ fn infra_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_infrastructure_catalog_baseline")
-            && toml.contains("tests/sdd/infrastructure_catalog.baseline.rs")
+            && toml.contains("tests/contracts/infrastructure_catalog.baseline.rs")
             && toml.contains("sdd_infrastructure_catalog_target")
-            && toml.contains("tests/sdd/infrastructure_catalog.target.rs"),
+            && toml.contains("tests/contracts/infrastructure_catalog.target.rs"),
         "dual-suite sdd_infrastructure_catalog_baseline + sdd_infrastructure_catalog_target must be listed in root Cargo.toml"
     );
 }
@@ -681,7 +681,7 @@ fn infra_001_catalog_loader_loads_infrastructure_family_offline() {
     let crate_dir = manifest_dir().join("crates/weeping-angel-canonical-catalog");
     assert!(
         crate_dir.is_dir(),
-        "INFRA-001: consume Prompt 01 crate weeping-angel-canonical-catalog; do not invent a second loader"
+        "INFRA-001: consume catalog infrastructure crate weeping-angel-canonical-catalog; do not invent a second loader"
     );
     let rust = product_rs_joined();
     for needle in [
@@ -925,7 +925,7 @@ fn infra_005_required_population_tests_are_declared_and_not_exists() {
             CLASSIFIABLE_FIELDS
                 .iter()
                 .any(|f| field == *f || field.ends_with("_at")),
-            "INFRA-005: {id} must bind a Prompt-03-classifiable field, not raw retention_days; got `{field}`"
+            "INFRA-005: {id} must bind a population-runtime-classifiable field, not raw retention_days; got `{field}`"
         );
         assert_ne!(
             field, "retention_days",
@@ -944,7 +944,7 @@ fn infra_006_validator_rejects_provider_tokens_in_ids() {
     for token in ["aws", "azure", "gcp", "cloudflare", "google", "vercel"] {
         assert!(
             rust.contains(&format!("\"{token}\"")),
-            "INFRA-006: Prompt 01 validator must reserve provider token `{token}`"
+            "INFRA-006: catalog infrastructure validator must reserve provider token `{token}`"
         );
     }
     let text = infrastructure_catalog_text();
@@ -1018,7 +1018,7 @@ fn infra_008_iso_pack_is_not_grown_or_retargeted_by_this_slice() {
             && !mappings.contains("to = \"control.logging.")
             && !mappings.contains("to = \"control.backup.")
             && !mappings.contains("to = \"control.resilience."),
-        "INFRA-008: this slice must not retarget ISO mappings onto infrastructure catalog ids (Prompt 12 owns remap)"
+        "INFRA-008: this slice must not retarget ISO mappings onto infrastructure catalog ids (ISO remap owns remap)"
     );
 }
 
@@ -1475,7 +1475,7 @@ fn infra_015_no_cloud_collectors_or_secret_exposure_or_population_fork() {
     .join("\n");
     assert!(
         !infra_text.contains("evidence.secret.exposure"),
-        "INFRA-015: evidence.secret.exposure is Prompt 06, not this slice"
+        "INFRA-015: evidence.secret.exposure is vulnerability catalog, not this slice"
     );
     assert!(
         catalog
@@ -1499,10 +1499,10 @@ fn infra_016_iso_and_iam_siblings_remain_the_gate() {
         .expect("INFRA-016: fixture.example control.source.protected-branch must remain");
 
     for path in [
-        "tests/sdd/iso27001_assurance.target.rs",
-        "tests/sdd/iam_catalog.target.rs",
-        "docs/sdd/canonical-assurance-catalog-v1.md",
-        "docs/sdd/iam-canonical-assurance-catalog.md",
+        "tests/contracts/iso27001_assurance.target.rs",
+        "tests/contracts/iam_catalog.target.rs",
+        "docs/specs/canonical-assurance-catalog-v1.md",
+        "docs/specs/iam-canonical-assurance-catalog.md",
     ] {
         assert!(
             manifest_dir().join(path).is_file(),
@@ -1510,19 +1510,19 @@ fn infra_016_iso_and_iam_siblings_remain_the_gate() {
         );
     }
 
-    let prompt01 =
-        fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
+    let catalog_ssot =
+        fs::read_to_string(manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md"))
             .unwrap();
     assert!(
-        prompt01.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
-        "INFRA-016: do not overwrite Prompt 01 SSOT"
+        catalog_ssot.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
+        "INFRA-016: do not overwrite catalog infrastructure SSOT"
     );
     let iam =
-        fs::read_to_string(manifest_dir().join("docs/sdd/iam-canonical-assurance-catalog.md"))
+        fs::read_to_string(manifest_dir().join("docs/specs/iam-canonical-assurance-catalog.md"))
             .unwrap();
     assert!(
         iam.starts_with("# SDD: IAM Canonical Assurance Catalog (v1 slice)"),
-        "INFRA-016: do not overwrite Prompt 04 SSOT"
+        "INFRA-016: do not overwrite IAM catalog SSOT"
     );
 }
 
@@ -1558,7 +1558,7 @@ fn infra_017_secret_storage_lives_in_crypto_toml() {
 #[test]
 fn infra_018_public_contract_names_the_infrastructure_family() {
     let contract =
-        fs::read_to_string(manifest_dir().join("docs/contracts/assurance-runtime.md")).unwrap();
+        fs::read_to_string(manifest_dir().join("docs/specs/assurance-runtime.md")).unwrap();
     for needle in [
         "control.network.",
         "control.crypto.",

@@ -1,15 +1,15 @@
-//! Target suite for Prompt 08 (governance / risk / personnel / vendor /
+//! Target suite for governance catalog (governance / risk / personnel / vendor /
 //! incident / continuity-governance catalog).
 //!
 //! Encodes DESIRED behavior in
-//! `docs/sdd/governance-canonical-assurance-catalog.md` §4 / §5
+//! `docs/specs/governance-canonical-assurance-catalog.md` §4 / §5
 //! (GOV-001…016). Must stay RED on the current tree: no
 //! `control.governance.*` family, no first-class `evidence.manual.attestation`,
 //! and no `fixtures/assurance/canonical/v1/governance/*`. Do not `#[ignore]`
 //! these tests and do not implement catalog content here.
 //!
 //! Consumes `CanonicalCatalog::{load,validate,digest}`, `EvidenceValue::with_value`,
-//! Prompt 03 population evaluation, and IR `Exception` / `Risk`. Does not fork
+//! population runtime population evaluation, and IR `Exception` / `Risk`. Does not fork
 //! a second loader, value enum, personnel/vendor resolver, or exception engine.
 //!
 //! Scan **catalog TOML and product crates** only (xylex-sdd AC-2 / I4a). Never
@@ -344,7 +344,7 @@ fn catalog_v1_dir() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
     assert!(
         dir.is_dir(),
-        "GOV-001: Prompt 01 catalog tree catalog/canonical/v1 must exist"
+        "GOV-001: catalog infrastructure catalog tree catalog/canonical/v1 must exist"
     );
     dir
 }
@@ -869,10 +869,10 @@ fn gov_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_governance_catalog_baseline")
-            && toml.contains("tests/sdd/governance_catalog.baseline.rs")
+            && toml.contains("tests/contracts/governance_catalog.baseline.rs")
             && toml.contains("sdd_governance_catalog_target")
-            && toml.contains("tests/sdd/governance_catalog.target.rs"),
-        "Prompt 08 dual-suite must be listed in root Cargo.toml (tests/sdd/*.rs is not auto-discovered)"
+            && toml.contains("tests/contracts/governance_catalog.target.rs"),
+        "governance catalog dual-suite must be listed in root Cargo.toml (tests/contracts/*.rs is not auto-discovered)"
     );
 }
 
@@ -901,14 +901,14 @@ fn gov_001_catalog_loader_loads_governance_family_offline() {
             || catalog
                 .control("control.resilience.business-continuity-plan")
                 .is_ok(),
-        "GOV-001: this slice must not invent Prompt-07 resilience.toml as its home"
+        "GOV-001: this slice must not invent infrastructure catalog resilience.toml as its home"
     );
 
     let rust = crate_sources_joined("weeping-angel-canonical-catalog");
     assert_eq!(
         rust.matches("struct CanonicalCatalog").count(),
         1,
-        "GOV-001: consume the single Prompt 01 loader; do not invent a second one"
+        "GOV-001: consume the single catalog infrastructure loader; do not invent a second one"
     );
 }
 
@@ -1137,7 +1137,7 @@ fn gov_008_iso_pack_sliver_unchanged_and_has_no_control_governance() {
     for id in ISO_ORG_CONTROLS {
         assert!(
             !control_ids.contains(id),
-            "GOV-008: pack-local sliver `{id}` was remapped by Prompt 12; do not reintroduce it"
+            "GOV-008: pack-local sliver `{id}` was remapped by ISO remap; do not reintroduce it"
         );
     }
 
@@ -1514,12 +1514,12 @@ fn gov_015_iam_fixture_example_and_siblings_remain() {
         );
     }
 
-    let prompt01 =
-        fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
+    let catalog_ssot =
+        fs::read_to_string(manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md"))
             .unwrap();
     assert!(
-        prompt01.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
-        "GOV-015: do not overwrite Prompt 01 SSOT"
+        catalog_ssot.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
+        "GOV-015: do not overwrite catalog infrastructure SSOT"
     );
 }
 
@@ -1539,7 +1539,7 @@ fn gov_016_iso_and_iam_gates_stay_intact() {
     assert!(
         !metadata.contains("control.governance.")
             && !metadata.contains("evidence.manual.attestation"),
-        "GOV-016: ISO pack metadata must stay free of Prompt-08 catalog ids"
+        "GOV-016: ISO pack metadata must stay free of governance catalog catalog ids"
     );
 
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();

@@ -13,13 +13,13 @@ pub fn from_collaborators(
     people: &[Value],
     ctx: &EmitCtx<'_>,
 ) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-    let mut out = Vec::new();
+    let mut out: Vec<EvidenceEnvelope> = Vec::new();
     for person in people {
-        let login = match person.get("login").and_then(Value::as_str) {
+        let login: &str = match person.get("login").and_then(Value::as_str) {
             Some(l) => l,
             None => continue,
         };
-        let admin = person
+        let admin: bool = person
             .pointer("/permissions/admin")
             .and_then(Value::as_bool)
             .unwrap_or(false)
@@ -31,8 +31,8 @@ pub fn from_collaborators(
         if !admin {
             continue;
         }
-        let subject = format!("user:{login}");
-        let ident_ctx = EmitCtx {
+        let subject: String = format!("user:{login}");
+        let ident_ctx: EmitCtx<'_> = EmitCtx {
             collected_at: ctx.collected_at,
             scope: ctx.scope,
             asset: AssetId::new(&subject),
@@ -64,14 +64,14 @@ pub fn from_outside_collaborators(
     people: &[Value],
     ctx: &EmitCtx<'_>,
 ) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-    let mut out = Vec::new();
+    let mut out: Vec<EvidenceEnvelope> = Vec::new();
     for person in people {
-        let login = match person.get("login").and_then(Value::as_str) {
+        let login: &str = match person.get("login").and_then(Value::as_str) {
             Some(l) => l,
             None => continue,
         };
-        let subject = format!("user:{login}");
-        let ident_ctx = EmitCtx {
+        let subject: String = format!("user:{login}");
+        let ident_ctx: EmitCtx<'_> = EmitCtx {
             collected_at: ctx.collected_at,
             scope: ctx.scope,
             asset: AssetId::new(&subject),

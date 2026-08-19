@@ -21,6 +21,7 @@ pub fn evaluate(
         status: None,
         reason: None,
         population: None,
+        period: None,
     };
 
     if let Some(broken) = first_matching(&envelopes, &test.break_on) {
@@ -31,11 +32,11 @@ pub fn evaluate(
             broken.provenance().asset()
         );
         evidence_refs.push(broken.digest().to_string());
-        return finalize(result, evidence, &evidence_refs, &missing_evidence);
+        return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
     }
 
     if let Some(expr) = &test.expr {
-        let index = build_index(evidence);
+        let index = build_index_as_of(evidence, context.as_of());
         return run_expr(test, expr, &envelopes, evidence, &index, context);
     }
 
@@ -46,13 +47,13 @@ pub fn evaluate(
                 result.effectiveness = Effectiveness::ManualReviewRequired;
                 result.rationale = "manual control cannot auto-pass without attestation".into();
                 missing_evidence.push("manual_attestation".into());
-                return finalize(result, evidence, &evidence_refs, &missing_evidence);
+                return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
             }
             Some(env) if is_stale(env, context) => {
                 result.effectiveness = Effectiveness::StaleEvidence;
                 result.rationale = "manual attestation is stale".into();
                 evidence_refs.push(env.digest().to_string());
-                return finalize(result, evidence, &evidence_refs, &missing_evidence);
+                return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
             }
             Some(env) => evidence_refs.push(env.digest().to_string()),
         }
@@ -61,7 +62,7 @@ pub fn evaluate(
     if test.required.is_empty() {
         result.effectiveness = Effectiveness::InsufficientEvidence;
         result.rationale = "no required evidence types; absence is not effectiveness".into();
-        return finalize(result, evidence, &evidence_refs, &missing_evidence);
+        return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
     }
 
     for required in &test.required {
@@ -70,13 +71,13 @@ pub fn evaluate(
                 result.effectiveness = Effectiveness::InsufficientEvidence;
                 result.rationale = format!("missing required evidence {required}");
                 missing_evidence.push(required.to_string());
-                return finalize(result, evidence, &evidence_refs, &missing_evidence);
+                return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
             }
             Some(env) if is_stale(env, context) => {
                 result.effectiveness = Effectiveness::StaleEvidence;
                 result.rationale = format!("stale required evidence {required}");
                 evidence_refs.push(env.digest().to_string());
-                return finalize(result, evidence, &evidence_refs, &missing_evidence);
+                return finalize(result, test, evidence, context, &evidence_refs, &missing_evidence);
             }
             Some(env) => evidence_refs.push(env.digest().to_string()),
         }
@@ -84,7 +85,7 @@ pub fn evaluate(
 
     result.effectiveness = Effectiveness::Effective;
     result.rationale = "fresh matching observations satisfy the compiled test".into();
-    finalize(result, evidence, &evidence_refs, &missing_evidence)
+    finalize(result, test, evidence, context, &evidence_refs, &missing_evidence)
 }
 
 fn run_expr(
@@ -120,6 +121,7 @@ fn run_expr(
         status: None,
         reason: None,
         population: outcome.population,
+        period: None,
     };
-    finalize(result, evidence, &refs, &missing)
+    finalize(result, test, evidence, context, &refs, &missing)
 }

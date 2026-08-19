@@ -1,7 +1,7 @@
 //! SUPERSEDED by `sdd_applicability_engine_target`.
 //!
 //! Historical static-only characterization on SHA
-//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/sdd/applicability-engine.md`
+//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/specs/applicability-engine.md`
 //! §3 / §6.1). Kleene evaluator + snapshot are now the SSOT in the target
 //! suite. Tests are `#[ignore]` so CI does not require the old absence and
 //! static-only characterization. Dual-suite registration remains.
@@ -155,9 +155,9 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_applicability_engine_baseline")
             && toml.contains("sdd_applicability_engine_target")
-            && toml.contains("tests/sdd/applicability_engine.baseline.rs")
-            && toml.contains("tests/sdd/applicability_engine.target.rs"),
-        "dual-suite must be listed in root Cargo.toml (tests/sdd is not auto-discovered)"
+            && toml.contains("tests/contracts/applicability_engine.baseline.rs")
+            && toml.contains("tests/contracts/applicability_engine.target.rs"),
+        "dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
     );
 }
 
@@ -439,7 +439,7 @@ fn p10_b09_control_has_no_public_subjects_getter() {
 #[test]
 #[ignore = "superseded by sdd_applicability_engine_target"]
 fn p10_b10_collision_fence_does_not_import_github_collector() {
-    let me = read_repo_file("tests/sdd/applicability_engine.baseline.rs");
+    let me = read_repo_file("tests/contracts/applicability_engine.baseline.rs");
     for line in me.lines() {
         let trimmed = line.trim_start();
         if trimmed.starts_with("use ") {
@@ -518,6 +518,7 @@ fn inventories_exist_but_are_unused_for_applicability() {
     let _exclusion = ScopeExclusion {
         subjects: Vec::new(),
         rationale: Some("out of scope".into()),
+        ..Default::default()
     };
     let _scope = AssessmentScope {
         organizations: vec!["org:acme".into()],
@@ -624,12 +625,12 @@ fn effectiveness_not_applicable_is_unrelated_to_ir_rules() {
 
 #[test]
 #[ignore = "superseded by sdd_applicability_engine_target"]
-fn prompt_11_needles_for_prompt_10_remain_absent() {
+fn lineage_needles_for_applicability_remain_absent() {
     let crates = product_crates_joined();
     for needle in ["OrgContext", "org_context", "fn evaluate_org_context"] {
         assert!(
             !crates.contains(needle),
-            "Prompt 11 still characterizes Prompt 10 as absent; found `{needle}`"
+            "assessment lineage still characterizes applicability engine as absent; found `{needle}`"
         );
     }
 }

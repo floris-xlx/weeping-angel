@@ -252,10 +252,15 @@ impl Inventories<'_> {
 
     fn apply_exclusions(&mut self, scope: &AssessmentScope, excluded: &mut Vec<ExcludedSubject>) {
         for (index, exclusion) in scope.exclusions.iter().enumerate() {
-            let reason = exclusion
+            let Some(reason) = exclusion
                 .rationale
-                .clone()
-                .unwrap_or_else(|| format!("excluded by assessment scope[{index}]"));
+                .as_deref()
+                .map(str::trim)
+                .filter(|r| !r.is_empty())
+                .map(ToString::to_string)
+            else {
+                continue;
+            };
             self.drop_matching(&exclusion.subjects, index, &reason, excluded);
         }
     }

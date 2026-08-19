@@ -1,7 +1,7 @@
 //! Baseline characterization of ISO 27001:2022 pack-local slivers and ISO
-//! special-cases (`docs/sdd/iso-27001-canonical-remap.md` §3 / §4.11).
+//! special-cases (`docs/specs/iso-27001-canonical-remap.md` §3 / §4.11).
 //!
-//! SUPERSEDED by `sdd_iso27001_remap_target` after Prompt 12 implement.
+//! SUPERSEDED by `sdd_iso27001_remap_target` after ISO remap implement.
 //! Encodes what HEAD does today: mappings target `access.*` / `source.*`
 //! slivers, `metadata.toml` is the control library, the pack loader rejects
 //! `EvidenceFor` / `SupersetOf` / `SubsetOf`, generic serialize/assess hard-load
@@ -92,21 +92,21 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_iso27001_remap_baseline")
             && toml.contains("sdd_iso27001_remap_target")
-            && toml.contains("tests/sdd/iso27001_remap.baseline.rs")
-            && toml.contains("tests/sdd/iso27001_remap.target.rs"),
-        "Prompt 12 dual-suite must be listed in root Cargo.toml (tests/sdd is not auto-discovered)"
+            && toml.contains("tests/contracts/iso27001_remap.baseline.rs")
+            && toml.contains("tests/contracts/iso27001_remap.target.rs"),
+        "ISO remap dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
     );
     assert!(
-        !toml.contains("tests/sdd/iso27001_assurance.baseline.rs")
+        !toml.contains("tests/contracts/iso27001_assurance.baseline.rs")
             || toml.contains("sdd_iso27001_assurance_baseline"),
         "must not reuse the MVP dual-suite names for the remap suite"
     );
     assert!(
         manifest_dir()
-            .join("tests/sdd/iso27001_remap.baseline.rs")
+            .join("tests/contracts/iso27001_remap.baseline.rs")
             .is_file()
             && manifest_dir()
-                .join("tests/sdd/iso27001_remap.target.rs")
+                .join("tests/contracts/iso27001_remap.target.rs")
                 .is_file(),
         "remap dual-suite files must exist and must not be iso27001_assurance.*"
     );
@@ -613,7 +613,8 @@ fn pack_loader_rejects_evidence_for_superset_of_subset_of() {
 #[test]
 #[ignore = "superseded by sdd_iso27001_remap_target"]
 fn neighbor_tests_still_freeze_the_sliver() {
-    let iam = fs::read_to_string(manifest_dir().join("tests/sdd/iam_catalog.target.rs")).unwrap();
+    let iam =
+        fs::read_to_string(manifest_dir().join("tests/contracts/iam_catalog.target.rs")).unwrap();
     assert!(
         iam.contains("fn iam_008_iso_pack_is_unchanged_and_has_no_control_identity"),
         "IAM-008 still lives in the IAM target suite"
@@ -625,7 +626,8 @@ fn neighbor_tests_still_freeze_the_sliver() {
     );
 
     let iso_mvp =
-        fs::read_to_string(manifest_dir().join("tests/sdd/iso27001_assurance.target.rs")).unwrap();
+        fs::read_to_string(manifest_dir().join("tests/contracts/iso27001_assurance.target.rs"))
+            .unwrap();
     assert!(
         iso_mvp.contains("const EXPECTED_CANONICAL_CONTROLS")
             && iso_mvp.contains("\"access.mfa.privileged\""),

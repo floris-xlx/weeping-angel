@@ -1,0 +1,68 @@
+{
+  "fixture": "new-joiner-grace",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:ada",
+      "facts": { "kind": "user", "id": "user:ada" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:bea",
+      "facts": { "kind": "user", "id": "user:bea", "lifecycle": "joiner" }
+    },
+    {
+      "type": "evidence.identity.lifecycle-event",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "event": "joined",
+        "occurred_at": "2026-08-15T12:00:00Z",
+        "approved": true
+      }
+    },
+    {
+      "type": "evidence.personnel.joiner-grace",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "joined_at": "2026-08-15T12:00:00Z",
+        "grace_until": "2026-08-29T12:00:00Z",
+        "within_grace": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "attested_by": "lms",
+        "attested_at": "2026-08-15T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-15T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": false
+      }
+    }
+  ]
+}

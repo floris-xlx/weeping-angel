@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OptionalExtension, params};
 use thiserror::Error;
 
+use crate::validity::{EvidenceValidityEvent, EvidenceValidityKind, project_validity};
 use crate::{CollectionRun, EvidenceEnvelope, EvidenceType};
 
 #[derive(Debug, Error)]
@@ -88,6 +89,13 @@ impl EvidenceLedger {
                 digest TEXT PRIMARY KEY,
                 payload TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS evidence_validity_events (
+                event_id TEXT PRIMARY KEY,
+                envelope_digest TEXT NOT NULL,
+                at TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                payload TEXT NOT NULL
+            );
             ",
         )?;
         Ok(())
@@ -109,6 +117,11 @@ impl EvidenceLedger {
                 serde_json::to_string(&envelope)?,
             ],
         )?;
+        if inserted == 1 {
+            let event = EvidenceValidityEvent::asserted_for(&envelope)
+                .map_err(|e| LedgerError::Path(e.to_string()))?;
+            self.record_validity_event(event)?;
+        }
         Ok(inserted == 1)
     }
 
@@ -194,7 +207,128 @@ impl EvidenceLedger {
         let _previous = self.get(previous_digest)?;
         next = next.with_supersedes(previous_digest);
         self.append(next.clone())?;
+        let at = next.provenance().collected_at;
+        let superseded = EvidenceValidityEvent::superseded(previous_digest, at)
+            .map_err(|e| LedgerError::Path(e.to_string()))?;
+        self.record_validity_event(superseded)?;
         Ok(next)
+    }
+
+    /// Persist an append-only validity event. Identical bytes are a no-op;
+    /// a second write of different bytes for the same `eventId` is `Immutable`.
+    pub fn record_validity_event(
+        &mut self,
+        event: EvidenceValidityEvent,
+    ) -> Result<bool, LedgerError> {
+        let payload = serde_json::to_string(&event)?;
+        let existing: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT payload FROM evidence_validity_events WHERE event_id = ?1",
+                [&event.event_id],
+                |row| row.get(0),
+            )
+            .optional()?;
+        if let Some(existing) = existing {
+            if existing == payload {
+                return Ok(false);
+            }
+            return Err(LedgerError::Immutable(event.event_id));
+        }
+        let kind = match event.kind {
+            EvidenceValidityKind::Asserted => "asserted",
+            EvidenceValidityKind::Superseded => "superseded",
+            EvidenceValidityKind::Revoked => "revoked",
+            EvidenceValidityKind::Invalidated => "invalidated",
+        };
+        self.conn.execute(
+            "INSERT INTO evidence_validity_events
+             (event_id, envelope_digest, at, kind, payload)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                event.event_id,
+                event.envelope_digest,
+                event.at.to_rfc3339(),
+                kind,
+                payload,
+            ],
+        )?;
+        Ok(true)
+    }
+
+    pub fn validity_events(&self) -> Result<Vec<EvidenceValidityEvent>, LedgerError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT payload FROM evidence_validity_events ORDER BY at, event_id")?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(serde_json::from_str(&row?)?);
+        }
+        Ok(out)
+    }
+
+    pub fn validity_events_for(
+        &self,
+        envelope_digest: &str,
+    ) -> Result<Vec<EvidenceValidityEvent>, LedgerError> {
+        self.load_validity_params(
+            "SELECT payload FROM evidence_validity_events
+             WHERE envelope_digest = ?1 ORDER BY at, event_id",
+            [envelope_digest],
+        )
+    }
+
+    /// Envelopes whose validity window overlaps `[start, end)` (half-open).
+    /// Distinct from [`Self::within_window`], which filters inclusive `collected_at`.
+    pub fn valid_during(
+        &self,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+    ) -> Result<Vec<EvidenceEnvelope>, LedgerError> {
+        let events = self.validity_events()?;
+        let mut out = Vec::new();
+        for env in self.query()? {
+            if validity_overlaps(&env, &events, start, end) {
+                out.push(env);
+            }
+        }
+        out.sort_by(|a, b| {
+            a.valid_from()
+                .cmp(&b.valid_from())
+                .then_with(|| a.digest().cmp(b.digest()))
+        });
+        Ok(out)
+    }
+
+    /// Latest usable envelope of `evidence_type` at `as_of` (supersession + validity).
+    pub fn latest_as_of(
+        &self,
+        evidence_type: &EvidenceType,
+        as_of: DateTime<Utc>,
+    ) -> Result<Option<EvidenceEnvelope>, LedgerError> {
+        let events = self.validity_events()?;
+        let mut candidates = Vec::new();
+        for env in self.for_type(evidence_type)? {
+            if project_validity(&env, &events, as_of).is_some() {
+                candidates.push(env);
+            }
+        }
+        Ok(select_leaf_as_of(&candidates, as_of, &events))
+    }
+
+    fn load_validity_params<P: rusqlite::Params>(
+        &self,
+        sql: &str,
+        params: P,
+    ) -> Result<Vec<EvidenceValidityEvent>, LedgerError> {
+        let mut stmt = self.conn.prepare(sql)?;
+        let rows = stmt.query_map(params, |row| row.get::<_, String>(0))?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(serde_json::from_str(&row?)?);
+        }
+        Ok(out)
     }
 
     pub fn record_collection_run(&mut self, run: &CollectionRun) -> Result<(), LedgerError> {
@@ -319,4 +453,75 @@ fn load_payload(
 
 fn payload_is_completed(payload: &str) -> bool {
     payload.contains("\"status\":\"completed\"") || payload.contains("\"status\": \"completed\"")
+}
+
+fn validity_overlaps(
+    env: &EvidenceEnvelope,
+    events: &[EvidenceValidityEvent],
+    start: DateTime<Utc>,
+    end: DateTime<Utc>,
+) -> bool {
+    if start >= end {
+        return false;
+    }
+    // Sample the half-open range at start and at each event/envelope boundary.
+    if project_validity(env, events, start).is_some() {
+        return true;
+    }
+    let view = envelope_window(env, events, start);
+    let vf = view.0;
+    let vu = view.1;
+    vf < end && vu.is_none_or(|until| start < until) && env.provenance().collected_at < end
+}
+
+fn envelope_window(
+    env: &EvidenceEnvelope,
+    events: &[EvidenceValidityEvent],
+    t: DateTime<Utc>,
+) -> (DateTime<Utc>, Option<DateTime<Utc>>) {
+    let mut valid_from = env.valid_from();
+    let mut valid_until = env.valid_until();
+    let mut relevant: Vec<&EvidenceValidityEvent> = events
+        .iter()
+        .filter(|e| e.envelope_digest == env.digest() && e.at <= t)
+        .collect();
+    relevant.sort_by(|a, b| a.at.cmp(&b.at).then_with(|| a.event_id.cmp(&b.event_id)));
+    for event in relevant {
+        if matches!(event.kind, EvidenceValidityKind::Asserted) {
+            if let Some(from) = event.valid_from {
+                valid_from = from;
+            }
+            valid_until = event.valid_until;
+        }
+    }
+    (valid_from, valid_until)
+}
+
+fn select_leaf_as_of(
+    candidates: &[EvidenceEnvelope],
+    as_of: DateTime<Utc>,
+    events: &[EvidenceValidityEvent],
+) -> Option<EvidenceEnvelope> {
+    let usable: Vec<&EvidenceEnvelope> = candidates
+        .iter()
+        .filter(|env| project_validity(env, events, as_of).is_some())
+        .collect();
+    let superseded: std::collections::BTreeSet<&str> = usable
+        .iter()
+        .filter_map(|e| e.supersedes())
+        .filter(|prev| usable.iter().any(|e| e.digest() == *prev))
+        .collect();
+    let mut leaves: Vec<&EvidenceEnvelope> = usable
+        .into_iter()
+        .filter(|e| !superseded.contains(e.digest()))
+        .collect();
+    leaves.sort_by(|a, b| {
+        let va = project_validity(a, events, as_of).expect("candidate");
+        let vb = project_validity(b, events, as_of).expect("candidate");
+        va.observed_at
+            .cmp(&vb.observed_at)
+            .then_with(|| va.collected_at.cmp(&vb.collected_at))
+            .then_with(|| a.digest().cmp(b.digest()))
+    });
+    leaves.into_iter().next_back().cloned()
 }

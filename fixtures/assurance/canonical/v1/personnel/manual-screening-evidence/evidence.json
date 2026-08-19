@@ -1,0 +1,54 @@
+{
+  "fixture": "manual-screening-evidence",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:ada",
+      "facts": { "kind": "user", "id": "user:ada", "population": "finance" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:cai",
+      "facts": { "kind": "user", "id": "user:cai", "population": "security" }
+    },
+    {
+      "type": "evidence.personnel.population-membership",
+      "subject_id": "user:ada",
+      "facts": { "subject_id": "user:ada", "population_id": "finance", "member": true }
+    },
+    {
+      "type": "evidence.personnel.population-membership",
+      "subject_id": "user:cai",
+      "facts": { "subject_id": "user:cai", "population_id": "security", "member": true }
+    },
+    {
+      "type": "evidence.personnel.screening",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "required": true,
+        "recorded": true,
+        "kind": "background",
+        "screened_at": "2026-07-01T12:00:00Z"
+      }
+    },
+    {
+      "type": "evidence.personnel.screening",
+      "subject_id": "user:cai",
+      "facts": {
+        "subject_id": "user:cai",
+        "required": true,
+        "recorded": true,
+        "kind": "background",
+        "screened_at": "2026-07-15T12:00:00Z"
+      }
+    }
+  ]
+}

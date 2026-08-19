@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "rm:acme-qual-3x3:1",
+  "logicalId": "rm:acme-qual-3x3",
+  "revision": 1,
+  "title": "ACME qualitative 3x3",
+  "scoringMode": "qualitative",
+  "likelihoodScale": {
+    "id": "likelihood.lmh",
+    "levels": [
+      { "id": "low", "label": "Low", "ordinal": 1 },
+      { "id": "medium", "label": "Medium", "ordinal": 2 },
+      { "id": "high", "label": "High", "ordinal": 3 }
+    ]
+  },
+  "impactScale": {
+    "id": "impact.lmh",
+    "levels": [
+      { "id": "low", "label": "Low", "ordinal": 1 },
+      { "id": "medium", "label": "Medium", "ordinal": 2 },
+      { "id": "high", "label": "High", "ordinal": 3 }
+    ]
+  },
+  "ratingScale": {
+    "levels": [
+      { "id": "low", "label": "Low", "ordinal": 1 },
+      { "id": "medium", "label": "Medium", "ordinal": 2 },
+      { "id": "high", "label": "High", "ordinal": 3 }
+    ]
+  },
+  "combination": "matrix",
+  "matrix": {
+    "cells": [
+      { "likelihoodOrdinal": 1, "impactOrdinal": 1, "ratingId": "low" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 2, "ratingId": "low" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 3, "ratingId": "medium" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 1, "ratingId": "low" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 2, "ratingId": "medium" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 3, "ratingId": "high" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 1, "ratingId": "medium" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 2, "ratingId": "high" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 3, "ratingId": "high" }
+    ]
+  },
+  "appetite": { "maxRatingId": "medium" },
+  "tolerance": { "maxRatingId": "high" },
+  "acceptanceThreshold": { "maxRatingId": "medium" },
+  "locked": false
+}

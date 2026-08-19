@@ -6,8 +6,8 @@
 | Date | 2026-08-18 |
 | Deciders | Weeping Angel maintainers |
 | Slice | Phases 0–8 (spine). Catalogs and hosted collectors are later phases. |
-| Spec | [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
+| Spec | [`docs/specs/assurance-runtime-spine.md`](../specs/assurance-runtime-spine.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Tests | `sdd_assurance_runtime_target` GREEN; `sdd_assurance_runtime_baseline` superseded |
 
 ## Context
@@ -130,8 +130,8 @@ ISO 27001 pack, evidence ledger, `TestExpr` DSL, GitHub/local/manual collectors,
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/assurance-runtime-spine.md`](../sdd/assurance-runtime-spine.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spec SSOT: [`docs/specs/assurance-runtime-spine.md`](../specs/assurance-runtime-spine.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - ISO 27001 vertical (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Canonical catalog infrastructure (accepted): [`docs/adr/0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - ISO pack remapped onto catalog (accepted): [`docs/adr/0003-iso27001-canonical-remap.md`](0003-iso27001-canonical-remap.md)

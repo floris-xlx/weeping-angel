@@ -1,8 +1,8 @@
-//! Baseline suite for typed evidence + canonical serialization (Prompt 02).
+//! Baseline suite for typed evidence + canonical serialization (typed evidence).
 //!
 //! Encodes CURRENT string-bag / `parse_fact` behavior on characterization SHA
 //! `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` as specified in
-//! `docs/sdd/typed-evidence.md` §3 / §6.1. Must stay GREEN until the target
+//! `docs/specs/typed-evidence.md` §3 / §6.1. Must stay GREEN until the target
 //! suite is GREEN and this file is superseded. Does not implement typed storage.
 
 use std::fs;
@@ -124,7 +124,7 @@ fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_typed_evidence_baseline")
-            && toml.contains("tests/sdd/typed_evidence.baseline.rs"),
+            && toml.contains("tests/contracts/typed_evidence.baseline.rs"),
         "baseline suite must be listed in root Cargo.toml"
     );
 }
@@ -188,7 +188,7 @@ fn evidence_crate_has_no_stored_typed_value_model() {
             .join("canonical")
             .join("v1")
             .is_dir(),
-        "Prompt 01 catalog tree is absent on this SHA; baseline must not require it"
+        "catalog infrastructure catalog tree is absent on this SHA; baseline must not require it"
     );
 }
 

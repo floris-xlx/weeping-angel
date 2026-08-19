@@ -114,6 +114,14 @@ pub fn index_envelopes(evidence: &EvidenceSet) -> EvidenceIndex<'_> {
 }
 
 pub fn build_index(evidence: &EvidenceSet) -> EvidenceIndex<'_> {
+    build_index_inner(evidence, None)
+}
+
+pub fn build_index_as_of(evidence: &EvidenceSet, as_of: DateTime<Utc>) -> EvidenceIndex<'_> {
+    build_index_inner(evidence, Some(as_of))
+}
+
+fn build_index_inner(evidence: &EvidenceSet, as_of: Option<DateTime<Utc>>) -> EvidenceIndex<'_> {
     let mut by_type: BTreeMap<&str, Vec<&EvidenceEnvelope>> = BTreeMap::new();
     let mut by_type_and_subject: BTreeMap<(&str, &str), Vec<&EvidenceEnvelope>> = BTreeMap::new();
     for env in evidence.iter() {
@@ -127,7 +135,13 @@ pub fn build_index(evidence: &EvidenceSet) -> EvidenceIndex<'_> {
     }
     let mut latest = BTreeMap::new();
     for (&key, group) in &by_type_and_subject {
-        latest.insert(key, select_latest(group));
+        if let Some(t) = as_of {
+            if let Some(env) = crate::temporal::select_latest_as_of(group, t, evidence) {
+                latest.insert(key, env);
+            }
+        } else {
+            latest.insert(key, select_latest(group));
+        }
     }
     EvidenceIndex {
         by_type,
@@ -370,6 +384,21 @@ fn is_truthy(value: &EvidenceValue) -> bool {
     matches!(classify_value(value), Outcome::Passing)
 }
 
+/// Personnel lifecycle flags `active` and `excessive` are defects when true
+/// (`none-subjects` names the still-live leaver / over-privileged mover).
+fn classify_predicate(field: &str, value: &EvidenceValue) -> Outcome {
+    let outcome = classify_value(value);
+    if matches!(field, "active" | "excessive") {
+        match outcome {
+            Outcome::Passing => Outcome::Failing,
+            Outcome::Failing => Outcome::Passing,
+            other => other,
+        }
+    } else {
+        outcome
+    }
+}
+
 fn classify_value(value: &EvidenceValue) -> Outcome {
     match value {
         EvidenceValue::Bool(true) => Outcome::Passing,
@@ -461,7 +490,7 @@ fn partition(
             None => parts.passing.push(id.clone()),
             Some(name) => match env.observation().fact_value(name) {
                 None => parts.missing.push(id.clone()),
-                Some(value) => match classify_value(value) {
+                Some(value) => match classify_predicate(name, value) {
                     Outcome::Passing => parts.passing.push(id.clone()),
                     Outcome::Failing => parts.failing.push(id.clone()),
                     Outcome::Technical => parts.technical.push(id.clone()),

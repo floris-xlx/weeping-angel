@@ -1,6 +1,6 @@
-//! Target suite for typed evidence + canonical serialization (Prompt 02).
+//! Target suite for typed evidence + canonical serialization (typed evidence).
 //!
-//! Encodes DESIRED behavior in `docs/sdd/typed-evidence.md` §4 / §6.2 and
+//! Encodes DESIRED behavior in `docs/specs/typed-evidence.md` §4 / §6.2 and
 //! `docs/adr/0003-typed-evidence-canonical-serialization.md`. Must stay RED on
 //! the current string-bag / `parse_fact` HEAD. Do not weaken these assertions
 //! to match today's model, and do not implement the feature in this suite.
@@ -185,7 +185,7 @@ fn dual_suite_target_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_typed_evidence_target")
-            && toml.contains("tests/sdd/typed_evidence.target.rs"),
+            && toml.contains("tests/contracts/typed_evidence.target.rs"),
         "target suite must be listed in root Cargo.toml"
     );
 }

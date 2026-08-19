@@ -6,11 +6,11 @@
 | Slice | Phases **0–8** (key checkpoint) |
 | Dual-suite | Baseline characterized pre-spine HEAD → Target RED → implement → Target GREEN → **baseline superseded** |
 | ADR | Accepted [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
 | Head | Workspace: root scanner `weeping-angel` + assurance crates under `crates/` (six from this slice; `weeping-angel-canonical-catalog` is ADR 0003). ISO pack + `assurance` clap family: ADR 0002. |
 | Analog | Athena query/compiler: `Statement` IR → `CompileTarget` + capabilities → fail-closed `compile` → dialect adapters internally |
 
-This document is the durable SDD for the assurance spine. Phases 0–8 landed as six workspace crates. Later phases must not invent a Vanta-style pile of framework-specific checks. Machine contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md).
+This document is the durable SDD for the assurance spine. Phases 0–8 landed as six workspace crates. Later phases must not invent a Vanta-style pile of framework-specific checks. Machine contract: [`docs/specs/assurance-runtime.md`](assurance-runtime.md).
 
 ---
 
@@ -33,7 +33,7 @@ Frozen 2026-08-18 against the scanner-only tree. Kept as rollback narrative. **`
 - Root [`Cargo.toml`](../../Cargo.toml) was a **single package** (`name = "weeping-angel"`, edition `2024`) with no `[workspace]`.
 - Bins: `weeping-angel` (`src/main.rs`), `weeping-angel-docs-export`.
 - Features: `default = ["web"]`, `demo` (lab + e2e).
-- Integration tests are either auto-discovered under `tests/*.rs` or explicitly listed (`e2e_demo`, `e2e_recon`). **`tests/sdd/` is not auto-discovered** (must be listed).
+- Integration tests are either auto-discovered under `tests/*.rs` or explicitly listed (`e2e_demo`, `e2e_recon`). **`tests/contracts/` is not auto-discovered** (must be listed).
 - README test command was `cargo test --features demo`.
 - `pnpm` is packager + `apps/docs` only.
 
@@ -189,7 +189,7 @@ This slice: profile **dispatch stubs** sufficient for `compile_framework` (empty
 | `supports_risk_treatment` | Risk/treatment objects in context |
 | `supports_manual_attestation` | Tests may be `Manual` (never auto-Effective) |
 | `supports_sampling` | Sampling plan in audit context |
-| `supports_audit_program` | ISO 27007-style program objects |
+| `supports_audit_program` | Compile gate for IR `AuditProgram` objects ([`internal-audit.md`](internal-audit.md)); `Iso27007` remains pack-less |
 | `supports_nonconformities` | Nonconformity records in projection |
 
 Requesting a compile step that needs a flag the target does not set → **`CapabilityViolation`** (fail-closed). Never silently drop the step.
@@ -385,16 +385,16 @@ Stubs exist so `compile_framework` can dispatch on profile without shipping cata
 
 ## 15. Dual-suite TDD protocol
 
-Cargo does not auto-discover `tests/sdd/`. Implementation MUST add:
+Cargo does not auto-discover `tests/contracts/`. Implementation MUST add:
 
 ```toml
 [[test]]
 name = "sdd_assurance_runtime_baseline"
-path = "tests/sdd/assurance_runtime.baseline.rs"
+path = "tests/contracts/assurance_runtime.baseline.rs"
 
 [[test]]
 name = "sdd_assurance_runtime_target"
-path = "tests/sdd/assurance_runtime.target.rs"
+path = "tests/contracts/assurance_runtime.target.rs"
 ```
 
 Existing `cargo test --workspace --features demo` must stay green for scanner tests.
@@ -411,9 +411,9 @@ Characterize today’s product. Must **pass now** and remain the rollback charac
 | `EngineHit::to_semantic_finding` extensions stay security-only | true |
 | `contract_spine` + engines types still construct and serialize | true |
 
-After target GREEN, mark baseline **superseded** (file banner + `#[ignore = "superseded by sdd_assurance_runtime_target"]` or move to `tests/sdd/superseded/`). Do not delete the characterization text.
+After target GREEN, mark baseline **superseded** (file banner + `#[ignore = "superseded by sdd_assurance_runtime_target"]` or move to `tests/contracts/superseded/`). Do not delete the characterization text.
 
-**Done:** `tests/sdd/assurance_runtime.baseline.rs` is superseded; target suite is GREEN.
+**Done:** `tests/contracts/assurance_runtime.baseline.rs` is superseded; target suite is GREEN.
 
 ### 15.2 Target suite (RED until Phases 0–8 exist; then GREEN)
 
@@ -513,17 +513,17 @@ Encodes ACT-001…015 and collector rules.
 
 | Artifact | Path |
 | --- | --- |
-| This spec | `docs/sdd/assurance-runtime-spine.md` |
+| This spec | `docs/specs/assurance-runtime-spine.md` |
 | Accepted ADR | `docs/adr/0001-inwardly-extensible-assurance-runtime.md` |
 | ISO 27001 vertical ADR | `docs/adr/0002-iso-27001-assurance-vertical.md` |
 | Assessment lineage ADR | `docs/adr/0003-assessment-lineage.md` |
-| Public contract | `docs/contracts/assurance-runtime.md` |
+| Public contract | `docs/specs/assurance-runtime.md` |
 | IR | `crates/weeping-angel-assurance-ir` |
 | Framework compile | `crates/weeping-angel-framework` |
 | Evidence | `crates/weeping-angel-evidence` |
 | Collector | `crates/weeping-angel-collector` |
 | Control-test | `crates/weeping-angel-control-test` |
 | Facade + bridge | `crates/weeping-angel-assurance` |
-| Baseline test (superseded) | `tests/sdd/assurance_runtime.baseline.rs` |
-| Target test (normative) | `tests/sdd/assurance_runtime.target.rs` |
+| Baseline test (superseded) | `tests/contracts/assurance_runtime.baseline.rs` |
+| Target test (normative) | `tests/contracts/assurance_runtime.target.rs` |
 | Athena analogue | `athena-query`: `Statement` + `CompileTarget` + `compile` + `CapabilityViolation` |

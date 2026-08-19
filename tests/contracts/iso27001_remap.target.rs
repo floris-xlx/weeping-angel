@@ -1,5 +1,5 @@
 //! Target suite for ISO 27001:2022 remapping onto the Canonical Assurance
-//! Catalog (Prompt 12 / `docs/sdd/iso-27001-canonical-remap.md` §4).
+//! Catalog (ISO remap / `docs/specs/iso-27001-canonical-remap.md` §4).
 //!
 //! Encodes ISO-R-001…020, golden scenarios 1–10, and architecture-boundary
 //! asserts. Must stay RED on current sliver HEAD (pack-local `access.*`
@@ -263,6 +263,7 @@ fn synthetic_result(control: &str, test: &str, effectiveness: Effectiveness) -> 
         status: Some(effectiveness),
         reason: None,
         population: None,
+        period: None,
     }
 }
 
@@ -430,8 +431,8 @@ fn iso_r_000_dual_suite_remains_registered() {
     assert!(
         toml.contains("sdd_iso27001_remap_baseline")
             && toml.contains("sdd_iso27001_remap_target")
-            && toml.contains("tests/sdd/iso27001_remap.baseline.rs")
-            && toml.contains("tests/sdd/iso27001_remap.target.rs"),
+            && toml.contains("tests/contracts/iso27001_remap.baseline.rs")
+            && toml.contains("tests/contracts/iso27001_remap.target.rs"),
         "ISO-R: dual-suite sdd_iso27001_remap_{{baseline,target}} must stay registered"
     );
     assert!(
@@ -441,7 +442,7 @@ fn iso_r_000_dual_suite_remains_registered() {
     );
     assert!(
         !toml.contains("name = \"sdd_iso27001_assurance_target\"")
-            || toml.contains("path = \"tests/sdd/iso27001_assurance.target.rs\""),
+            || toml.contains("path = \"tests/contracts/iso27001_assurance.target.rs\""),
         "ISO-R: remap suite files are not iso27001_assurance.*"
     );
 }
@@ -1775,7 +1776,8 @@ fn iso_r_016_collectors_and_control_test_stay_framework_neutral() {
 
 #[test]
 fn iso_r_017_iam_008_and_expected_canonical_controls_are_superseded() {
-    let iam = fs::read_to_string(manifest_dir().join("tests/sdd/iam_catalog.target.rs")).unwrap();
+    let iam =
+        fs::read_to_string(manifest_dir().join("tests/contracts/iam_catalog.target.rs")).unwrap();
     let iam_008 = iam
         .split("fn iam_008_iso_pack_is_unchanged_and_has_no_control_identity")
         .nth(1)
@@ -1799,7 +1801,8 @@ fn iso_r_017_iam_008_and_expected_canonical_controls_are_superseded() {
     );
 
     let iso_mvp =
-        fs::read_to_string(manifest_dir().join("tests/sdd/iso27001_assurance.target.rs")).unwrap();
+        fs::read_to_string(manifest_dir().join("tests/contracts/iso27001_assurance.target.rs"))
+            .unwrap();
     let expected_still_sliver = iso_mvp.contains("const EXPECTED_CANONICAL_CONTROLS")
         && iso_mvp.contains("\"access.mfa.privileged\"");
     let prefixes_still_sliver =
@@ -1897,7 +1900,8 @@ fn iso_r_020_neighbor_suites_stay_registered_after_sliver_supersession() {
             "ISO-R-020: neighbor suite `{name}` must stay registered"
         );
     }
-    let iam = fs::read_to_string(manifest_dir().join("tests/sdd/iam_catalog.target.rs")).unwrap();
+    let iam =
+        fs::read_to_string(manifest_dir().join("tests/contracts/iam_catalog.target.rs")).unwrap();
     assert!(
         !iam.contains("ISO mappings must not retarget control.identity.*")
             || iam.contains("superseded by sdd_iso27001_remap_target"),

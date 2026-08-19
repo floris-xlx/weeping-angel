@@ -1,6 +1,6 @@
-//! Target suite for Canonical Assurance Catalog v1 infrastructure (Prompt 01).
+//! Target suite for Canonical Assurance Catalog v1 infrastructure (catalog infrastructure).
 //!
-//! Encodes DESIRED behavior in `docs/sdd/canonical-assurance-catalog-v1.md`
+//! Encodes DESIRED behavior in `docs/specs/canonical-assurance-catalog-v1.md`
 //! §4 / §5 (CAT-001…016). Must stay RED on the current tree (no catalog
 //! crate, no `catalog/canonical/v1`, no `assurance catalog` CLI). Do not
 //! weaken these assertions to match today's absence, and do not implement
@@ -303,8 +303,8 @@ fn cat_016_dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_canonical_assurance_catalog_baseline")
             && toml.contains("sdd_canonical_assurance_catalog_target")
-            && toml.contains("tests/sdd/canonical_assurance_catalog.baseline.rs")
-            && toml.contains("tests/sdd/canonical_assurance_catalog.target.rs"),
+            && toml.contains("tests/contracts/canonical_assurance_catalog.baseline.rs")
+            && toml.contains("tests/contracts/canonical_assurance_catalog.target.rs"),
         "dual-suite binaries must stay registered in root Cargo.toml"
     );
 }
@@ -370,11 +370,11 @@ fn shipped_catalog_is_minimal_and_regime_free() {
         control_files
             .iter()
             .any(|e| e.file_name() == "fixture.example.toml"),
-        "Prompt 01 fixture.example.toml must remain under catalog/canonical/v1/controls"
+        "catalog infrastructure fixture.example.toml must remain under catalog/canonical/v1/controls"
     );
     assert!(
         !control_files.is_empty(),
-        "catalog/canonical/v1/controls must ship at least the Prompt 01 fixture"
+        "catalog/canonical/v1/controls must ship at least the catalog infrastructure fixture"
     );
 }
 

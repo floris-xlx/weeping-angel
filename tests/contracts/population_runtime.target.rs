@@ -1,6 +1,6 @@
-//! Target suite for subject population runtime (Prompt 03).
+//! Target suite for subject population runtime.
 //!
-//! Encodes DESIRED semantics in `docs/sdd/population-runtime.md` §4–§7.
+//! Encodes DESIRED semantics in `docs/specs/population-runtime.md` §4–§7.
 //! Must stay RED on current placeholder / linear / no-population code.
 //! Do not `#[ignore]` these tests and do not weaken them to match today's evaluator.
 
@@ -379,8 +379,8 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_population_runtime_baseline")
             && toml.contains("sdd_population_runtime_target")
-            && toml.contains("tests/sdd/population_runtime.baseline.rs")
-            && toml.contains("tests/sdd/population_runtime.target.rs")
+            && toml.contains("tests/contracts/population_runtime.baseline.rs")
+            && toml.contains("tests/contracts/population_runtime.target.rs")
     );
 }
 
@@ -1105,7 +1105,8 @@ fn perf_fixture_100000_envelopes_index_contract() {
         "100,000 evidence envelopes require an index constructor, not nested scans"
     );
     let this =
-        fs::read_to_string(manifest_dir().join("tests/sdd/population_runtime.target.rs")).unwrap();
+        fs::read_to_string(manifest_dir().join("tests/contracts/population_runtime.target.rs"))
+            .unwrap();
     for needle in [
         "100 subjects",
         "1,000 subjects",

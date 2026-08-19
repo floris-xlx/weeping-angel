@@ -4,18 +4,17 @@
 | --- | --- |
 | Status | **Implemented — target GREEN; baseline superseded** |
 | Program | Canonical Assurance Catalog v1 |
-| Slice | Prompt 04 — identity / authentication / authorization / privileged access / account lifecycle |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/04-iam-catalog.md`](../prompts/canonical-assurance-v1/04-iam-catalog.md) |
+| Slice | IAM catalog — identity / authentication / authorization / privileged access / account lifecycle |
 | Planning baseline SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`main`, 2026-08-18) |
 | Dual-suite | `sdd_iam_catalog_target` GREEN (IAM-001…016); `sdd_iam_catalog_baseline` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — owned by Prompt 01 |
-| Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Spine / ISO law | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — owned by catalog infrastructure |
+| Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
+| Spine / ISO law | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for the **IAM catalog slice**. It does not replace the Prompt 01 catalog-infrastructure SSOT, the Prompt 02 typed-evidence contract, or the Prompt 03 population-runtime contract. Prompts 01–03 have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
+This document is the durable SSOT for the **IAM catalog slice**. It does not replace the catalog infrastructure catalog-infrastructure SSOT, the typed evidence typed-evidence contract, or the population runtime population-runtime contract. catalog infrastructure, typed evidence, and population runtime have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
 
 Architecture law (unchanged):
 
@@ -33,19 +32,19 @@ That SHA had no IAM family in `catalog/canonical/v1/`, no `control.identity.*` l
 
 **User-visible goal:** a coherent IAM catalog (~20–30 independently assessable controls) that can evaluate realistic identity populations from **any** future identity provider’s canonical evidence, produce deterministic and explainable results (missing ≠ stale ≠ failure ≠ manual review ≠ approved exception), and pass the catalog validator plus full workspace verification.
 
-This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12 — landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13.
+This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is ISO remap — landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13.
 
 ---
 
 ## 2. Dependencies and fail-closed blockers
 
-| Prompt | Owns | Planning SHA `5fa3a23a…` | At implement | This slice may |
+| Slice | Owns | Planning SHA `5fa3a23a…` | At implement | This slice may |
 | --- | --- | --- | --- | --- |
 | 01 catalog contract | `catalog/canonical/v1/`, `CanonicalCatalog::{load,validate,digest}`, stable-ID rules, CLI validate/stats/inspect | Absent | **Landed.** Consume `weeping-angel-canonical-catalog`. | Add identity TOML + manifest lines. Do not invent a second loader/validator/digest. |
 | 02 typed evidence | Typed `EvidenceValue`, canonical serialization, control-test typed comparisons | Landed | **Landed.** Consume `weeping-angel-evidence::EvidenceValue`. | Declare required fact *names* and semantic types. No second value enum. |
 | 03 population runtime | Subject populations, `AllSubjects` / `CoverageAtLeast` real coverage, missing/stale/failing subject split | Stub `CoverageAtLeast` | **Landed.** Consume `weeping-angel-control-test` population arms / `PopulationEvaluation`. | Declare population-based tests. **Do not locally reimplement coverage math.** |
 
-Rebase rule: if Prompts 01–03 land before or during implementation, rebase onto their file layout, ID validator, evidence value API, and population evaluator. Prefer adapting IAM content to those contracts over extending this slice’s scope.
+Rebase rule: if catalog infrastructure, typed evidence, and population runtime land before or during implementation, rebase onto their file layout, ID validator, evidence value API, and population evaluator. Prefer adapting IAM content to those contracts over extending this slice’s scope.
 
 ---
 
@@ -53,7 +52,7 @@ Rebase rule: if Prompts 01–03 land before or during implementation, rebase ont
 
 Historical. Product IAM content now exists (§13). Do not treat this section as current tree state.
 
-Recorded against workspace HEAD `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (merge of `agent/canonical-assurance-prompts-v1`). Prompt markdown exists under `docs/prompts/canonical-assurance-v1/`; product code for Prompts 01–03 does not.
+Recorded against workspace HEAD `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (merge of `agent/canonical-assurance-v1`). This spec is the SSOT; product code for catalog infrastructure, typed evidence, and population runtime does not exist on that SHA.
 
 ### 3.1 Catalog infrastructure
 
@@ -73,18 +72,18 @@ Recorded against workspace HEAD `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (merg
 | `access.periodic-review` | Hybrid / test `manual` | `policy.access.reviewed` |
 | `personnel.access-termination` | Hybrid | `personnel.access.terminated` |
 
-IDs are **not** in the Prompt 01 `control.*` namespace. They contain no provider token, but they are GitHub-shaped in evidence and live inside a **framework pack**, not a canonical catalog.
+IDs are **not** in the catalog infrastructure `control.*` namespace. They contain no provider token, but they are GitHub-shaped in evidence and live inside a **framework pack**, not a canonical catalog.
 
-ISO mappings (`mappings.toml`) on the planning SHA pointed `iso27001:a.8.5` / `a.8.2` / `a.8.3` / `a.5.15` / `a.5.18` / `a.5.16` / `a.6.5` at those four IDs with `partial` completeness. This slice **must not** retarget those mappings. Prompt 12 remapped them onto `control.identity.*` and retired the slivers ([§13 of the remap spec](iso-27001-canonical-remap.md#13-implement-log)).
+ISO mappings (`mappings.toml`) on the planning SHA pointed `iso27001:a.8.5` / `a.8.2` / `a.8.3` / `a.5.15` / `a.5.18` / `a.5.16` / `a.6.5` at those four IDs with `partial` completeness. This slice **must not** retarget those mappings. ISO remap remapped them onto `control.identity.*` and retired the slivers ([§13 of the remap spec](iso-27001-canonical-remap.md#13-implement-log)).
 
-### 3.3 Evidence and evaluation (planning SHA `5fa3a23a…`; superseded by Prompt 02)
+### 3.3 Evidence and evaluation (planning SHA `5fa3a23a…`; superseded by typed evidence)
 
 On the planning SHA:
 
 - `EvidenceObservation.facts` was `BTreeMap<String, String>` (`crates/weeping-angel-evidence/src/lib.rs`).
 - Control-test `EvidenceValue` (`Null`, `Boolean`, `Integer`, `Decimal`, `String`, `Timestamp`, `Duration`, `StringSet`, `Identifier`) was produced by `parse_fact` (string `"true"` → bool, integer parse, else string).
 
-**Now (Prompt 02 landed):** facts are `BTreeMap<String, EvidenceValue>` in `weeping-angel-evidence`; control-test re-exports that enum. IAM fixtures declare typed names (`mfa_enabled = Bool`, counts as `Integer`, role lists as `StringList`) and must not fork a second value type. See [`docs/sdd/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md).
+**Now (typed evidence landed):** facts are `BTreeMap<String, EvidenceValue>` in `weeping-angel-evidence`; control-test re-exports that enum. IAM fixtures declare typed names (`mfa_enabled = Bool`, counts as `Integer`, role lists as `StringList`) and must not fork a second value type. See [`docs/specs/typed-evidence.md`](typed-evidence.md) and [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md).
 
 Still on the planning SHA (population, not facts):
 
@@ -107,7 +106,7 @@ rationale = "subject coverage remains partial unless the threshold is met"
 
 IR `SubjectKind` includes `Identity`, `User`, `PrivilegedIdentity` — **not** `ServiceAccount`. `SubjectSelector` is `{ kind, ids, tags, scope }`.
 
-A **second**, thinner `SubjectSelector` lives in `weeping-angel-control-test` (`kind: Option<String>`, `id: Option<String>`). Prompt 03 owns unifying population resolution; this slice must not create a third selector type.
+A **second**, thinner `SubjectSelector` lives in `weeping-angel-control-test` (`kind: Option<String>`, `id: Option<String>`). population runtime owns unifying population resolution; this slice must not create a third selector type.
 
 ### 3.5 Collectors
 
@@ -119,7 +118,7 @@ A **second**, thinner `SubjectSelector` lives in `weeping-angel-control-test` (`
 
 Root `Cargo.toml` now registers `sdd_iam_catalog_baseline` + `sdd_iam_catalog_target` alongside the other SDD suites. Product IAM catalog content is still absent.
 
-ISO target suite (`tests/sdd/iso27001_assurance.target.rs`) freezes prefixes `access.`, `personnel.`, and expected ids including `access.mfa.privileged`. This slice must not break that suite by rewriting the ISO pack.
+ISO target suite (`tests/contracts/iso27001_assurance.target.rs`) freezes prefixes `access.`, `personnel.`, and expected ids including `access.mfa.privileged`. This slice must not break that suite by rewriting the ISO pack.
 
 ### 3.7 What “IAM assessment” means today
 
@@ -138,7 +137,7 @@ The baseline suite for this slice therefore characterizes **absence of a canonic
 
 ### 4.1 Placement
 
-IAM domain content lands in the Prompt 01 catalog tree (rebase if the exact filenames differ):
+IAM domain content lands in the catalog infrastructure catalog tree (rebase if the exact filenames differ):
 
 ```text
 catalog/canonical/v1/
@@ -148,9 +147,9 @@ catalog/canonical/v1/
   tests/             # includes test.identity.*
 ```
 
-If Prompt 01 uses a different split (single TOML vs per-file), follow that contract. Do **not** add IAM controls to `frameworks/iso-27001/2022/metadata.toml`.
+If catalog infrastructure uses a different split (single TOML vs per-file), follow that contract. Do **not** add IAM controls to `frameworks/iso-27001/2022/metadata.toml`.
 
-Optional deterministic fixtures (preferred path; rebase to Prompt 01 fixture convention if it lands):
+Optional deterministic fixtures (preferred path; rebase to catalog infrastructure fixture convention if it lands):
 
 ```text
 fixtures/assurance/canonical/v1/identity/
@@ -216,15 +215,15 @@ Do not split these into micro-controls to inflate count. Titles and objectives a
 | `control.identity.access-revocation-timeliness` | Access revocation timeliness | Hybrid | user | `lifecycle-event`, `account-status` | `test.identity.revocation-timely` |
 | `control.identity.segregation-of-duties` | Segregation of duties | Manual / hybrid | identity / role | `role-membership` + manual SoD matrix / attestation | `test.identity.sod-review` |
 
-Each control record (once Prompt 01 schema exists) must carry: stable id, title, description/objective, domain(s) from existing `ControlDomain` (`Authentication`, `Authorization`, `AccessControl`, `PersonnelSecurity` as appropriate), evidence-requirement refs, test refs, and an honest automation class (`Automated` | `Hybrid` | `Manual`).
+Each control record (once catalog infrastructure schema exists) must carry: stable id, title, description/objective, domain(s) from existing `ControlDomain` (`Authentication`, `Authorization`, `AccessControl`, `PersonnelSecurity` as appropriate), evidence-requirement refs, test refs, and an honest automation class (`Automated` | `Hybrid` | `Manual`).
 
 **Do not invent technical automation** for access approval, SoD, or periodic review. Those controls must remain Hybrid or Manual even if a single technical signal exists.
 
 ### 4.4 Canonical evidence (facts, not conclusions)
 
-Reuse Prompt 01/02 evidence declarations when present. This slice **defines** the IAM family if the central contract has not already reserved the ids.
+Reuse catalog infrastructure and typed evidence evidence declarations when present. This slice **defines** the IAM family if the central contract has not already reserved the ids.
 
-| Evidence type | Observed facts (canonical names; types are semantic — store via Prompt 02 `EvidenceValue` when available) | Not allowed |
+| Evidence type | Observed facts (canonical names; types are semantic — store via typed evidence `EvidenceValue` when available) | Not allowed |
 | --- | --- | --- |
 | `evidence.identity.inventory` | `subject_id`, `account_kind` (`user` \| `service` \| `shared` \| `guest` \| `break-glass`), `display_name?`, `unique_key` (login/UPN hash or durable id — **not** a secret) | `compliant`, provider user-object dumps as type id |
 | `evidence.identity.authentication-state` | `subject_id`, `auth_methods` (string list), `password_age_days?`, `phish_resistant?` (bool) | password / token / cookie values |
@@ -245,7 +244,7 @@ Additional supporting evidence types may be added only if referenced by a contro
 
 ### 4.5 Tests (population-based, not existence checks)
 
-Required reusable tests (Prompt 04 list + the minimum extras so no control is untested):
+Required reusable tests (IAM catalog list + the minimum extras so no control is untested):
 
 ```text
 test.identity.mfa-enabled
@@ -257,7 +256,7 @@ test.identity.access-review-current
 test.identity.no-unapproved-guest-access
 ```
 
-Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 once landed):
+Semantics (authoritative intent; exact `TestExpr` spelling follows population runtime once landed):
 
 | Test | Population | Pass | Fail | Missing | Stale | Manual / exception |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -271,7 +270,7 @@ Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 onc
 
 **Forbidden encoding:** `Exists(evidence.identity.mfa-status)` as the body of `test.identity.mfa-enabled`. Existence of some MFA fact is not MFA on the population.
 
-Result metadata (from Prompt 03 evaluation detail, not invented here) must be sufficient to explain: population size, evaluated, passing, failing, missing, coverage, failing subject ids, missing subject ids.
+Result metadata (from population runtime evaluation detail, not invented here) must be sufficient to explain: population size, evaluated, passing, failing, missing, coverage, failing subject ids, missing subject ids.
 
 Unknown / non-authoritative population **must not** produce `Effective` for an all-subjects test.
 
@@ -307,11 +306,11 @@ Fixtures emit **canonical** `evidence.identity.*` only. No `source.admin.permiss
 
 ### 4.8 Integration rules (consume, do not redesign)
 
-- Loader / validate / digest: Prompt 01 `CanonicalCatalog`. IAM files must pass `validate` (no orphans, no provider/framework tokens, deterministic digest).
-- Typed facts: Prompt 02 landed. Store via `weeping-angel-evidence::EvidenceValue` (`with_value`). `with_fact` remains string-compat only; do not rely on `parse_fact` (deleted from the evaluate path).
-- Population evaluation: Prompt 03 (`evaluate_coverage`, identity inventory resolution). IAM tests are **declarations**. Do not implement `AllSubjects` in this slice.
-- Exception: reuse IR `Exception` + existing `Effectiveness::ExceptionApproved`. If the evaluator still never emits that state, record a Prompt 03 / runtime blocker rather than adding a parallel exception engine.
-- Subject kinds: consume Prompt 03 IR kinds (`Identity`, `User`, `PrivilegedIdentity`, `ServiceAccount`). Select service accounts by evidence type `evidence.identity.service-account` and/or `account_kind=service` on inventory. Do not add a third `SubjectSelector` type.
+- Loader / validate / digest: catalog infrastructure `CanonicalCatalog`. IAM files must pass `validate` (no orphans, no provider/framework tokens, deterministic digest).
+- Typed facts: typed evidence landed. Store via `weeping-angel-evidence::EvidenceValue` (`with_value`). `with_fact` remains string-compat only; do not rely on `parse_fact` (deleted from the evaluate path).
+- Population evaluation: population runtime (`evaluate_coverage`, identity inventory resolution). IAM tests are **declarations**. Do not implement `AllSubjects` in this slice.
+- Exception: reuse IR `Exception` + existing `Effectiveness::ExceptionApproved`. If the evaluator still never emits that state, record a population runtime / runtime blocker rather than adding a parallel exception engine.
+- Subject kinds: consume population runtime IR kinds (`Identity`, `User`, `PrivilegedIdentity`, `ServiceAccount`). Select service accounts by evidence type `evidence.identity.service-account` and/or `account_kind=service` on inventory. Do not add a third `SubjectSelector` type.
 - ISO pack, GitHub collector, framework compiler, generic `TestExpr` semantics: **untouched** unless a documented compile blocker requires a one-line compatibility fix, which must be called out in the implement-phase SDD log.
 
 ### 4.9 Dual-suite protocol
@@ -320,8 +319,8 @@ Follow the existing root `[[test]]` pattern.
 
 | Suite | Path (planned) | Role |
 | --- | --- | --- |
-| Baseline | `tests/sdd/iam_catalog.baseline.rs` · `sdd_iam_catalog_baseline` | Historical: GREEN on planning SHA (no IAM family). Now `#[ignore]` so absence-of-catalog is not CI green. |
-| Target | `tests/sdd/iam_catalog.target.rs` · `sdd_iam_catalog_target` | **GREEN** — CI gate (IAM-001…016). |
+| Baseline | `tests/contracts/iam_catalog.baseline.rs` · `sdd_iam_catalog_baseline` | Historical: GREEN on planning SHA (no IAM family). Now `#[ignore]` so absence-of-catalog is not CI green. |
+| Target | `tests/contracts/iam_catalog.target.rs` · `sdd_iam_catalog_target` | **GREEN** — CI gate (IAM-001…016). |
 
 After target GREEN: `#[ignore]` or delete/move the baseline so CI does **not** keep “absence of IAM catalog” as required green (`supersede_kind=skip` preferred, matching ISO). Target remains the gate.
 
@@ -329,7 +328,7 @@ Suggested target assertion clusters (titles include the id):
 
 | ID | Asserts |
 | --- | --- |
-| IAM-001 | Catalog tree / loader (Prompt 01 API) loads IAM content offline |
+| IAM-001 | Catalog tree / loader (catalog infrastructure API) loads IAM content offline |
 | IAM-002 | Digest of IAM slice is deterministic |
 | IAM-003 | All 23 `control.identity.*` ids present, stable, prefixed `control.identity.` |
 | IAM-004 | Required `evidence.identity.*` types declared; no orphans |
@@ -348,7 +347,7 @@ Suggested target assertion clusters (titles include the id):
 
 ### 4.10 Documentation after implement
 
-Done in the docs pass: this file’s §13, accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), IAM pointer on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md). Prompt 01 SSOT is not overwritten. No Entra/Okta collection or ISO remap is claimed.
+Done in the docs pass: this file’s §13, accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md), IAM pointer on [`docs/specs/assurance-runtime.md`](assurance-runtime.md). catalog infrastructure SSOT is not overwritten. No Entra/Okta collection or ISO remap is claimed.
 
 ---
 
@@ -361,32 +360,32 @@ Testable. Implementation is out of this spec phase.
 3. After implement (**met**): target GREEN; baseline ignored so absence-of-catalog is not a CI requirement; `cargo test --workspace --features demo`, `fmt --check`, and `clippy -D warnings` stay green.
 4. Twenty-three `control.identity.*` controls exist with stable ids, domains, evidence requirements, test refs, and honest automation class; count stays in 20–30 with no artificial micro-controls.
 5. Evidence types `evidence.identity.{inventory,authentication-state,mfa-status,privileged-membership,role-membership,last-active,account-status,account-owner,access-review,lifecycle-event,service-account,external-access}` are declared as facts, not conclusions.
-6. Tests include at least the seven Prompt-04 ids and evaluate **populations** (all privileged identities have MFA), not existence of one envelope.
+6. Tests include at least the seven IAM catalog ids and evaluate **populations** (all privileged identities have MFA), not existence of one envelope.
 7. Evaluator outcomes distinguish missing data, stale data, actual failure, manual review, and approved exception on the eight named fixtures.
 8. Access-approval, segregation-of-duties, and periodic-access-review are Hybrid or Manual; they cannot auto-pass without attestation.
-9. Catalog validator (Prompt 01) accepts the IAM slice: no duplicate/orphan/dangling ids, no provider names, no ISO/SOC2/NIS2 references in canonical IAM content.
+9. Catalog validator (catalog infrastructure) accepts the IAM slice: no duplicate/orphan/dangling ids, no provider names, no ISO/SOC2/NIS2 references in canonical IAM content.
 10. ISO pack control ids and mappings are unchanged; `sdd_iso27001_assurance_target` remains green.
 11. No Entra / Okta / Google Workspace / GitHub IAM collector is added; GitHub continues to emit `source.*` only.
-12. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no local `IamPopulation` / `iam_all_subjects` fork. Prompt 03 coverage is consumed as-is.
+12. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no local `IamPopulation` / `iam_all_subjects` fork. population runtime coverage is consumed as-is.
 13. Break-glass approved-exception fixture uses existing Exception IR and `ExceptionApproved`; expired/revoked exceptions do not pass.
 14. Credential keys and compliance narratives remain rejected on IAM evidence.
-15. Prompt 01 SSOT path `docs/sdd/canonical-assurance-catalog-v1.md` is not overwritten by this slice.
+15. catalog infrastructure SSOT path `docs/specs/canonical-assurance-catalog-v1.md` is not overwritten by this slice.
 
 ---
 
 ## 6. Out of scope
 
 - Entra ID, Okta, Google Workspace, AD, Cognito, or GitHub-identity collector implementations.
-- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.identity.*` (Prompt 12 — ISO identity remaps landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13).
-- Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
-- Redesign of typed evidence / digest canonicalization (Prompt 02).
-- Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes (Prompt 03 owns them).
-- Changing generic `TestExpr` semantics unless Prompt 03 owner agrees a documented blocker exists.
-- Rewriting ISO `metadata.toml` / `mappings.toml` control ids (`access.mfa.privileged` stayed until Prompt 12 remapped identity clauses; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
-- Adding further `SubjectKind` variants or a third `SubjectSelector` type in this slice (`ServiceAccount` already exists from Prompt 03).
+- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.identity.*` (ISO remap — ISO identity remaps landed; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13).
+- Redesign of `CanonicalCatalog` loader/validator/digest (catalog infrastructure).
+- Redesign of typed evidence / digest canonicalization (typed evidence).
+- Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes (population runtime owns them).
+- Changing generic `TestExpr` semantics unless population runtime owner agrees a documented blocker exists.
+- Rewriting ISO `metadata.toml` / `mappings.toml` control ids (`access.mfa.privileged` stayed until ISO remap remapped identity clauses; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
+- Adding further `SubjectKind` variants or a third `SubjectSelector` type in this slice (`ServiceAccount` already exists from population runtime).
 - HRIS, IGA, PAM, or ticket-system product integrations.
 - Certification, “compliant”, or audit-passed language.
-- SDLC / vulnerability / infrastructure / governance catalog families (Prompts 05–08).
+- SDLC / vulnerability / infrastructure / governance catalog families (SDLC, vulnerability, infrastructure, and governance families).
 
 ---
 
@@ -394,16 +393,16 @@ Testable. Implementation is out of this spec phase.
 
 | Risk | Mitigation |
 | --- | --- |
-| Prompts 01–03 have not landed; implementers invent a parallel catalog/runtime | Hard rebase rule + AC 12; fail-closed if loader/population missing. |
-| `CoverageAtLeast` stub makes “all privileged have MFA” look PartiallyEffective always | Target suite must assert real population outcomes; stay RED until Prompt 03. Do not locally finish the runtime. |
+| catalog infrastructure, typed evidence, and population runtime have not landed; implementers invent a parallel catalog/runtime | Hard rebase rule + AC 12; fail-closed if loader/population missing. |
+| `CoverageAtLeast` stub makes “all privileged have MFA” look PartiallyEffective always | Target suite must assert real population outcomes; stay RED until population runtime. Do not locally finish the runtime. |
 | Existence checks sneak in as IAM tests | IAM-009: privileged-without-mfa fixture must fail; a lone MFA envelope must not pass. |
 | ISO pack rewritten or broken by new ids | AC 10; do not touch `frameworks/iso-27001/2022` IAM rows. |
 | Provider names leak into IDs or fixture type strings | Validator + IAM-006/007. |
 | Hybrid controls auto-pass from one technical fact | Honest automation class; approval/SoD/review cannot Effective without attestation. |
 | ExceptionApproved never emitted; break-glass fixture can’t green | Reuse IR Exception; if evaluator lacks the arm, document runtime blocker — do not invent a second exception type. |
-| Two SubjectSelector types confuse IAM tests | Consume Prompt 03 population API; do not add a third. |
-| Typed vs string facts double system | Declare semantic types; store via Prompt 02 when present; no second enum. |
-| Prompt 01 SSOT overwritten | This file is the IAM slice SSOT; `canonical-assurance-catalog-v1.md` is off-limits. |
+| Two SubjectSelector types confuse IAM tests | Consume population runtime population API; do not add a third. |
+| Typed vs string facts double system | Declare semantic types; store via typed evidence when present; no second enum. |
+| catalog infrastructure SSOT overwritten | This file is the IAM slice SSOT; `canonical-assurance-catalog-v1.md` is off-limits. |
 | Baseline remains a CI green that asserts catalog absence | After target GREEN, ignore/delete/move baseline. |
 | Secrets in identity fixtures (tokens, passwords) | Seal + IAM-014; fixtures use booleans/timestamps/ids only. |
 
@@ -439,11 +438,11 @@ Accepted: [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-c
 ```text
 planning_sha = 5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b
 branch       = main
-note         = prompts 01–03 markdown present; catalog/canonical/v1 absent;
+note         = catalog infrastructure, typed evidence, and population runtime markdown present; catalog/canonical/v1 absent;
                CoverageAtLeast stub; ISO IAM sliver only
 ```
 
-Implementers re-ran characterization against in-tree Prompt 01–03 outputs on this planning SHA (catalog fixture, typed `EvidenceValue`, `population.rs`) before adding IAM content.
+Implementers re-ran characterization against in-tree catalog infrastructure, typed evidence, and population runtime outputs on this planning SHA (catalog fixture, typed `EvidenceValue`, `population.rs`) before adding IAM content.
 
 ---
 
@@ -452,7 +451,7 @@ Implementers re-ran characterization against in-tree Prompt 01–03 outputs on t
 | Field | Value |
 | --- | --- |
 | Planning SHA | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
-| Suite | `sdd_iam_catalog_baseline` · [`tests/sdd/iam_catalog.baseline.rs`](../../tests/sdd/iam_catalog.baseline.rs) |
+| Suite | `sdd_iam_catalog_baseline` · [`tests/contracts/iam_catalog.baseline.rs`](../../tests/contracts/iam_catalog.baseline.rs) |
 | Expected now | **ignored** (`#[ignore = "superseded by sdd_iam_catalog_target"]`) so absence-of-catalog is not CI green |
 | Command | `cargo test --workspace --features demo --test sdd_iam_catalog_baseline` |
 
@@ -475,15 +474,15 @@ Baseline asserts (found case):
 
 | Field | Value |
 | --- | --- |
-| Suite | `sdd_iam_catalog_target` · [`tests/sdd/iam_catalog.target.rs`](../../tests/sdd/iam_catalog.target.rs) |
+| Suite | `sdd_iam_catalog_target` · [`tests/contracts/iam_catalog.target.rs`](../../tests/contracts/iam_catalog.target.rs) |
 | Expected | **GREEN** (CI gate) |
 | Command | `cargo test --workspace --features demo --test sdd_iam_catalog_target` |
 | Landed catalog | `catalog/canonical/v1/{controls,evidence,tests}/identity.toml` listed in `manifest.toml` |
 | Landed fixtures | `fixtures/assurance/canonical/v1/identity/{healthy-org,privileged-without-mfa,inactive-admin-active,terminated-employee-active,service-account-without-owner,partial-inventory,stale-access-review,break-glass-approved-exception}/` |
-| Loader | Prompt 01 `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — no second loader |
-| Population | Prompt 03 `evaluate_coverage` / identity inventory resolution — no `IamPopulation` fork |
+| Loader | catalog infrastructure `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — no second loader |
+| Population | population runtime `evaluate_coverage` / identity inventory resolution — no `IamPopulation` fork |
 
-Implement-phase note: workspace HEAD at implement was still `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` plus in-tree Prompt 01–03 outputs (`catalog/` fixture, typed `EvidenceValue`, `population.rs`). IAM content consumes those contracts.
+Implement-phase note: workspace HEAD at implement was still `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` plus in-tree catalog infrastructure, typed evidence, and population runtime outputs (`catalog/` fixture, typed `EvidenceValue`, `population.rs`). IAM content consumes those contracts.
 
 ---
 
@@ -496,14 +495,14 @@ Implement-phase note: workspace HEAD at implement was still `5fa3a23a77e63e39b4a
 | Tests (23) | `catalog/canonical/v1/tests/identity.toml` |
 | Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` |
 | Fixtures (8) | `fixtures/assurance/canonical/v1/identity/<name>/evidence.json` |
-| Loader / digest | Prompt 01 crate; no IAM-specific load path |
-| Target suite | `tests/sdd/iam_catalog.target.rs` (`sdd_iam_catalog_target`) GREEN IAM-001…016 |
-| Baseline suite | `tests/sdd/iam_catalog.baseline.rs` superseded (`#[ignore]`) |
+| Loader / digest | catalog infrastructure crate; no IAM-specific load path |
+| Target suite | `tests/contracts/iam_catalog.target.rs` (`sdd_iam_catalog_target`) GREEN IAM-001…016 |
+| Baseline suite | `tests/contracts/iam_catalog.baseline.rs` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) |
-| ISO pack | Prompt 12 remapped A.8.5 / A.8.2 / A.8.3 / A.5.15 / A.5.18 / A.5.16 / A.6.5 onto `control.identity.*`; slivers retired ([remap §13](iso-27001-canonical-remap.md#13-implement-log)) |
+| ISO pack | ISO remap remapped A.8.5 / A.8.2 / A.8.3 / A.5.15 / A.5.18 / A.5.16 / A.6.5 onto `control.identity.*`; slivers retired ([remap §13](iso-27001-canonical-remap.md#13-implement-log)) |
 | Collectors | No Entra/Okta/Workspace/GitHub-identity collector |
 
-`assurance catalog stats` after this family (including the Prompt 01 protected-branch fixture):
+`assurance catalog stats` after this family (including the catalog infrastructure protected-branch fixture):
 
 ```text
 schema: weeping-angel/canonical-catalog/v1
@@ -515,7 +514,7 @@ tests: 24
 digest: wa:canonical-catalog:weeping-angel/canonical-catalog/v1:232dfad3868fb66db5775fd9e174d2198824e8254bd1f7a66a448d611c29d2dc
 ```
 
-Digest is Prompt 01 `CatalogDigest` over parsed documents. It changes if catalog TOML changes; it is not mixed with the `wa:canonical-catalog:…` prefix in the hash input.
+Digest is catalog infrastructure `CatalogDigest` over parsed documents. It changes if catalog TOML changes; it is not mixed with the `wa:canonical-catalog:…` prefix in the hash input.
 
 Protocol:
 
@@ -527,5 +526,5 @@ Spec (this file) → Baseline GREEN on planning characterization
   → Target GREEN → Baseline skip-superseded → Target still GREEN
 ```
 
-Fail-closed gates that were met: baseline characterized absence; target went red for missing `control.identity.*` / fixtures / population semantics; target greened on the Prompt 01 loader and Prompt 03 evaluator without an IAM fork.
+Fail-closed gates that were met: baseline characterized absence; target went red for missing `control.identity.*` / fixtures / population semantics; target greened on the catalog infrastructure loader and population runtime evaluator without an IAM fork.
 

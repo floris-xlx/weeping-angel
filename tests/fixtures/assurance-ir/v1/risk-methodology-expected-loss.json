@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "rm:acme-expected-loss:1",
+  "logicalId": "rm:acme-expected-loss",
+  "revision": 1,
+  "title": "ACME expected-loss bands",
+  "scoringMode": "quantitative",
+  "likelihoodScale": {
+    "id": "likelihood.unused",
+    "levels": [{ "id": "n-a", "label": "n/a", "ordinal": 1 }]
+  },
+  "impactScale": {
+    "id": "impact.unused",
+    "levels": [{ "id": "n-a", "label": "n/a", "ordinal": 1 }]
+  },
+  "ratingScale": {
+    "levels": [
+      { "id": "low", "label": "Low", "ordinal": 1 },
+      { "id": "medium", "label": "Medium", "ordinal": 2 },
+      { "id": "high", "label": "High", "ordinal": 3 }
+    ]
+  },
+  "combination": "expectedLoss",
+  "domain": { "min": "0", "max": "1000000" },
+  "bands": [
+    { "ratingId": "low", "minInclusive": "0", "maxExclusive": "1000" },
+    { "ratingId": "medium", "minInclusive": "1000", "maxExclusive": "10000" },
+    { "ratingId": "high", "minInclusive": "10000" }
+  ],
+  "currency": "EUR",
+  "appetite": { "maxRatingId": "medium" },
+  "tolerance": { "maxRatingId": "high" },
+  "acceptanceThreshold": { "maxRatingId": "medium" },
+  "locked": false
+}

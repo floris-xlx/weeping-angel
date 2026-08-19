@@ -1,7 +1,7 @@
 //! SUPERSEDED by `sdd_assurance_runtime_target` after Phases 0–8 landed.
 //!
 //! Historical characterization of the pre-assurance scanner-only tree
-//! (`docs/sdd/assurance-runtime-spine.md` §2 / §15.1). Kept for rollback
+//! (`docs/specs/assurance-runtime-spine.md` §2 / §15.1). Kept for rollback
 //! narrative. Do not delete. Tests are ignored because the workspace now
 //! contains the assurance spine.
 

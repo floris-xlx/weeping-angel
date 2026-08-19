@@ -1,11 +1,23 @@
 //! Public assurance facade. Callers select a profile + capabilities, not an adapter.
 
 pub mod applicability;
+pub mod audit;
 pub mod bridge;
+pub mod continuity;
+pub mod drift;
+pub mod events;
+pub mod incident_query;
 pub mod lineage;
+pub mod objectives;
 pub mod readiness;
+pub mod remediation;
+pub mod residual;
+pub mod risk_identification;
+pub mod scheduler;
+pub mod scope;
 pub mod snapshot;
 pub mod soa;
+pub mod temporal;
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -26,15 +38,36 @@ use weeping_angel_framework::{
     load_framework_pack,
 };
 
+pub use continuity::evaluate_continuity_resilience;
+pub use incident_query::{
+    closed_incidents_with_open_corrective_actions, exercise_incidents, incident_postmortem_missing,
+    incidents_in_period, real_incidents,
+};
 pub use lineage::{
     ApplicabilitySnapshot, AssessmentDefinitionSnapshot, AssessmentSummary,
     CanonicalCatalogSnapshot, ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch,
-    EvidenceSnapshot, FrameworkPackSnapshot, LineageBundle, StatementOfApplicabilitySnapshot,
-    assessment_result_digest, explain_control, load_lineage, reconstruct, replay_assessment,
+    EvidenceSnapshot, FrameworkPackSnapshot, LineageBundle, ObligationExplain,
+    ObligationExplainEdge, StatementOfApplicabilitySnapshot, assessment_result_digest,
+    explain_control, explain_why_control_exists, explain_why_document_exists, load_lineage,
+    reconstruct, replay_assessment,
 };
 pub use readiness::FrameworkReadinessSnapshot;
-pub use snapshot::{AssessmentRun, SnapshotDiff, compare, compare_lineage, compare_runs};
-pub use soa::{StatementOfApplicability, project_soa};
+pub use remediation::{
+    attach_external_ticket, close, create_from_control_regression, create_from_source,
+    evaluate_verification, link_treatment_action, reopen_expired_waiver, sla_overdue,
+};
+pub use snapshot::{
+    AssessmentRun, SnapshotDiff, SoaDiffCause, compare, compare_lineage, compare_runs,
+};
+pub use soa::{
+    Applicability, OperationalSoaError, OperationalSoaInput, RiskRegisterRef, RiskTreatmentRef,
+    SoaEntry, StatementOfApplicability, diff_soa_snapshots, pin_soa_snapshot,
+    project_operational_soa, project_soa, project_soa_from_snapshot,
+};
+pub use temporal::{
+    EvidenceTimeline, TemporalDiff, TimelineInterval, compare_temporal, diff_period,
+    project_timeline,
+};
 
 use crate::lineage::{
     assessment_summary, catalog_snapshot, coverage_metrics, definition_snapshot, pack_snapshot,
@@ -88,7 +121,7 @@ impl AssessmentScope {
         }
     }
 
-    fn to_collector_scope(&self) -> CollectorScope {
+    pub(crate) fn to_collector_scope(&self) -> CollectorScope {
         let mut scope = CollectorScope::new();
         for asset in &self.allowed {
             scope = scope.allow_asset(asset.clone());
@@ -226,6 +259,7 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
             now: Utc::now(),
             max_age: Duration::from_secs(24 * 3600),
         };
+        let _freshness = ctx.freshness_policy();
         let results = evaluate_compiled(&compiled, &set, &ctx);
         let status = if collection_run.status == "failed" {
             "failed"
@@ -260,7 +294,7 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
             framework: target.profile.as_selector().into(),
             framework_pack_digest: pack_digest.clone(),
             assessment_definition_digest: definition_digest,
-            started_at,
+            started_at: started_at.clone(),
             completed_at: Utc::now().to_rfc3339(),
             scope: scope.describe(),
             collector_runs,
@@ -269,6 +303,7 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
             status: status.into(),
             canonical_catalog_pin: catalog_digest.clone(),
             applicability_snapshot_id: applicability.digest.clone(),
+            as_of: started_at.clone(),
         };
         let mut report = AssessmentReport {
             assessment_id: assessment.id.clone(),
@@ -300,7 +335,7 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
     }
 }
 
-fn evaluate_compiled(
+pub(crate) fn evaluate_compiled(
     compiled: &CompiledFramework,
     set: &EvidenceSet,
     ctx: &AssessmentContext,
@@ -337,7 +372,9 @@ fn evaluate_compiled(
         .collect()
 }
 
-fn assessment_for_target(target: &FrameworkTarget) -> Result<Assessment, AssuranceError> {
+pub(crate) fn assessment_for_target(
+    target: &FrameworkTarget,
+) -> Result<Assessment, AssuranceError> {
     let pack = load_framework_pack(target.profile.as_selector(), target.version.as_str()).map_err(
         |err| match err {
             PackError::UnknownPack(message) => AssuranceError::UnknownPack(message),

@@ -10,6 +10,7 @@ use crate::readiness::FrameworkReadinessSnapshot;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssessmentRun {
+    // `as_of` / asOf is serialized from started_at (pinned evaluation clock).
     pub id: AssessmentId,
     pub framework: String,
     pub framework_pack_digest: String,
@@ -26,6 +27,9 @@ pub struct AssessmentRun {
     pub canonical_catalog_pin: String,
     #[serde(default, rename = "applicabilitySnapshotId")]
     pub applicability_snapshot_id: String,
+    /// Pinned evaluation clock. JSON `asOf`.
+    #[serde(default)]
+    pub as_of: String,
 }
 
 impl Serialize for AssessmentRun {
@@ -35,7 +39,7 @@ impl Serialize for AssessmentRun {
         } else {
             self.canonical_catalog_pin.clone()
         };
-        let mut state = serializer.serialize_struct("AssessmentRun", 14)?;
+        let mut state = serializer.serialize_struct("AssessmentRun", 15)?;
         state.serialize_field("id", &self.id)?;
         state.serialize_field("framework", &self.framework)?;
         state.serialize_field("frameworkPackDigest", &self.framework_pack_digest)?;
@@ -53,6 +57,8 @@ impl Serialize for AssessmentRun {
         state.serialize_field("canonicalCatalogDigest", &catalog)?;
         state.serialize_field("catalogDigest", &catalog)?;
         state.serialize_field("applicabilitySnapshotId", &self.applicability_snapshot_id)?;
+        // Pinned evaluation clock (`as_of`) for historical replay.
+        state.serialize_field("asOf", &self.started_at)?;
         state.end()
     }
 }
@@ -73,8 +79,21 @@ impl Default for AssessmentRun {
             status: String::new(),
             canonical_catalog_pin: String::new(),
             applicability_snapshot_id: String::new(),
+            as_of: String::new(),
         }
     }
+}
+
+/// Causes of a material Statement-of-Applicability snapshot change.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SoaDiffCause {
+    ApplicabilityChange,
+    ImplementationChange,
+    EffectivenessRegression,
+    ExceptionExpiry,
+    MappingChange,
+    TreatmentChange,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -100,6 +119,8 @@ pub struct SnapshotDiff {
     pub framework_pack_digest_changed: bool,
     #[serde(default)]
     pub canonical_catalog_digest_changed: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub soa_causes: Vec<SoaDiffCause>,
 }
 
 pub fn compare(

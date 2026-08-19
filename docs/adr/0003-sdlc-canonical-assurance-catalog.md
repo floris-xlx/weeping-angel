@@ -7,9 +7,8 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md). Does **not** replace [ADR 0002](0002-iso-27001-assurance-vertical.md), [catalog infrastructure](0003-canonical-assurance-catalog-v1.md), or [IAM](0003-iam-canonical-assurance-catalog.md). |
 | Extends | Catalog infrastructure, typed evidence, subject-population coverage, IAM family placement pattern |
-| Spec | [`docs/sdd/sdlc-canonical-assurance-catalog.md`](../sdd/sdlc-canonical-assurance-catalog.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/05-sdlc-catalog.md`](../prompts/canonical-assurance-v1/05-sdlc-catalog.md) |
+| Spec | [`docs/specs/sdlc-canonical-assurance-catalog.md`](../specs/sdlc-canonical-assurance-catalog.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Planning baseline | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests | `sdd_sdlc_catalog_target` GREEN (SDLC-001…016). Absence-characterization baseline `sdd_sdlc_catalog_baseline` superseded / `#[ignore = "superseded by sdd_sdlc_catalog_target"]`. |
 
@@ -17,9 +16,9 @@
 
 ## Context
 
-ADR 0001 delivered the inwardly extensible assurance spine. ADR 0002 shipped the first ISO 27001 vertical, including a **thin source-control sliver inside the ISO pack** (`source.branch-protection`, `source.required-review`, `source.code-ownership`, `source.security-scanning`, `source.commit-signing`) tested as presence checks on GitHub-shaped evidence (`source.branch.protection`, …). Prompt 12 later remapped A.8.25 / A.8.26 onto catalog `control.source.*` and retired those slivers.
+ADR 0001 delivered the inwardly extensible assurance spine. ADR 0002 shipped the first ISO 27001 vertical, including a **thin source-control sliver inside the ISO pack** (`source.branch-protection`, `source.required-review`, `source.code-ownership`, `source.security-scanning`, `source.commit-signing`) tested as presence checks on GitHub-shaped evidence (`source.branch.protection`, …). ISO remap later remapped A.8.25 / A.8.26 onto catalog `control.source.*` and retired those slivers.
 
-Catalog infrastructure (Prompt 01) ships a pinned exists-only fixture `control.source.protected-branch`. Typed evidence (Prompt 02), population coverage (Prompt 03), and the IAM family (Prompt 04) landed as sibling ADRs. They do not own SDLC-domain content.
+Catalog infrastructure (catalog infrastructure) ships a pinned exists-only fixture `control.source.protected-branch`. Typed evidence (typed evidence), population coverage (population runtime), and the IAM family (IAM catalog) landed as sibling ADRs. They do not own SDLC-domain content.
 
 Without a provider-neutral SDLC family, a GitLab / Bitbucket / GitHub collector has nowhere canonical to emit repository, CI/CD, release, and supply-chain facts, and “all non-archived in-scope repositories have a protected default branch” cannot be declared as a catalog test.
 
@@ -37,7 +36,7 @@ This is what shipped.
 
 ### 1. SDLC is canonical catalog content, not a pack and not a collector
 
-Independently assessable SDLC controls live in the Prompt 01 tree:
+Independently assessable SDLC controls live in the catalog infrastructure tree:
 
 ```text
 catalog/canonical/v1/controls/sdlc.toml
@@ -45,7 +44,7 @@ catalog/canonical/v1/evidence/sdlc.toml
 catalog/canonical/v1/tests/sdlc.toml
 ```
 
-Listed in `catalog/canonical/v1/manifest.toml` `[files]`. There is no `evidence/repository.toml` (Prompt 09 `ghc_b028` pin). Loaded by `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — **no second loader**.
+Listed in `catalog/canonical/v1/manifest.toml` `[files]`. There is no `evidence/repository.toml` (GitHub collector `ghc_b028` pin). Loaded by `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,digest}` — **no second loader**.
 
 Public IDs:
 
@@ -92,7 +91,7 @@ The population control for default-branch protection is `control.source.default-
 
 Each control has stable id, domain(s) from existing `ControlDomain`, evidence requirements, and a test ref. Validator rejects provider/framework segments in catalog IDs. Canonical SDLC TOML contains no GitHub/GitLab/Bitbucket/Azure DevOps tokens and no ISO/SOC2/NIS2/DORA/GDPR tokens.
 
-Scanning-*enabled* belongs here. Finding-as-evidence belongs to Prompt 06.
+Scanning-*enabled* belongs here. Finding-as-evidence belongs to vulnerability catalog.
 
 ### 3. Evidence types are facts, not conclusions
 
@@ -121,7 +120,7 @@ evidence.supply-chain.lockfile-state
 evidence.supply-chain.component-support
 ```
 
-Fixtures emit these types plus generic Prompt 03 `inventory.subject` / `inventory.complete`. No `source.branch.protection` in SDLC fixtures. Catalog tests do not read `GITHUB_EVIDENCE_TYPES` or scanner engines.
+Fixtures emit these types plus generic population runtime `inventory.subject` / `inventory.complete`. No `source.branch.protection` in SDLC fixtures. Catalog tests do not read `GITHUB_EVIDENCE_TYPES` or scanner engines.
 
 Population predicates bind the following facts (fixtures may also carry inverse/supporting keys):
 
@@ -139,7 +138,7 @@ Seal still rejects credential-shaped keys and compliance narratives (`certified`
 
 ### 4. Tests are population predicates
 
-`test.source.default-branches-protected` means **all in-scope non-archived repositories have a protected default branch**, using Prompt 03 arms (`all-subjects` / `coverage-at-least` 100%). It does not mean “some protection envelope exists.”
+`test.source.default-branches-protected` means **all in-scope non-archived repositories have a protected default branch**, using population runtime arms (`all-subjects` / `coverage-at-least` 100%). It does not mean “some protection envelope exists.”
 
 Each of the 26 controls has one test. Hybrid/manual tests use `op = "manual-review"` for:
 
@@ -162,11 +161,11 @@ This slice **declares** those tests. It does not reimplement `AllSubjects` / `Co
 
 Release authorization, authority separation, security review, and secure-development policy must not auto-pass from a single technical flag. Admin-bypass policy acceptance and unsupported-component handling stay hybrid. Absence of attestation → `ManualReviewRequired` or `InsufficientEvidence`, never `Effective`.
 
-### 6. ISO sliver coexistence (Prompt 12 remapped)
+### 6. ISO sliver coexistence (ISO remap remapped)
 
-This slice **did not** retarget ISO mappings or grow the ISO pack. Two libraries coexisted until Prompt 12.
+This slice **did not** retarget ISO mappings or grow the ISO pack. Two libraries coexisted until ISO remap.
 
-**Later:** [ADR 0003 remap](0003-iso27001-canonical-remap.md) projected A.8.25 / A.8.26 onto `control.source.default-branch-protection` / `required-review` / `secure-development-policy` / `secret-scanning` / `security-review` and retired pack `source.*` slivers. See [`docs/sdd/iso-27001-canonical-remap.md`](../sdd/iso-27001-canonical-remap.md) §13.
+**Later:** [ADR 0003 remap](0003-iso27001-canonical-remap.md) projected A.8.25 / A.8.26 onto `control.source.default-branch-protection` / `required-review` / `secure-development-policy` / `secret-scanning` / `security-review` and retired pack `source.*` slivers. See [`docs/specs/iso-27001-canonical-remap.md`](../specs/iso-27001-canonical-remap.md) §13.
 
 ### 7. Deterministic fixtures
 
@@ -182,18 +181,18 @@ Seven frozen evidence sets under `fixtures/assurance/canonical/v1/sdlc/`:
 | `stale-dependency-scan` | Scan envelopes exist but `scanned_at` outside freshness → **StaleEvidence** |
 | `approved-exception` | Approved unexpired subject-scoped IR exception → **ExceptionApproved** for that subject |
 
-Clock in fixtures: `2026-08-19T11:00:00Z`. Booleans stored as string-compat `"true"` / `"false"` (Prompt 02 `with_fact`).
+Clock in fixtures: `2026-08-19T11:00:00Z`. Booleans stored as string-compat `"true"` / `"false"` (typed evidence `with_fact`).
 
-### 8. Consume Prompts 01–03; do not fork infrastructure
+### 8. Consume catalog infrastructure, typed evidence, and population runtime; do not fork infrastructure
 
-No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt 01’s SSOT (`docs/sdd/canonical-assurance-catalog-v1.md`) is pointer-only for this family. This slice does not expand the GitHub collector. Scanner findings remain evidence, not control results (Prompt 06).
+No second catalog loader, typed `EvidenceValue`, or population evaluator. catalog infrastructure’s SSOT (`docs/specs/canonical-assurance-catalog-v1.md`) is pointer-only for this family. This slice does not expand the GitHub collector. Scanner findings remain evidence, not control results (vulnerability catalog).
 
 ## Alternatives considered
 
 1. **Grow the ISO pack `source.*` list** — couples the reusable library to one regime; rejected (ADR 0003 catalog infrastructure).
-2. **GitHub-native catalog IDs** (`control.github.*`, CODEOWNERS/rulesets as type ids) — a GitLab collector could not populate them; rejected by Prompt 05.
+2. **GitHub-native catalog IDs** (`control.github.*`, CODEOWNERS/rulesets as type ids) — a GitLab collector could not populate them; rejected by SDLC catalog.
 3. **Replace the exists-only fixture with the population control** — breaks CAT-015 pins; rejected.
-4. **Add `resolve_repository_inventory` in control-test** — changes generic population semantics owned by Prompt 03; rejected.
+4. **Add `resolve_repository_inventory` in control-test** — changes generic population semantics owned by population runtime; rejected.
 5. **Emit GitHub `source.*` types from SDLC fixtures** — couples tests to one collector; rejected.
 6. **Split `evidence/repository.toml`** — breaks sibling `ghc_b028`; rejected in favor of `*/sdlc.toml`.
 
@@ -202,14 +201,14 @@ No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt
 **Positive**
 
 - Future GitHub / GitLab / Bitbucket collectors have a stable emit contract (`evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*`).
-- Prompt 12 can map ISO A.8.25 / A.8.26 onto `control.source.*` without rewriting collectors.
-- Population tests are explainable (failing/missing/stale/excepted subjects) using the Prompt 03 evaluation object.
+- ISO remap can map ISO A.8.25 / A.8.26 onto `control.source.*` without rewriting collectors.
+- Population tests are explainable (failing/missing/stale/excepted subjects) using the population runtime evaluation object.
 
 **Negative / cost**
 
 - Historical ISO sliver IDs may still appear on pre-remap snapshots; live ISO mappings target `control.source.*` ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Hybrid/manual SDLC tests will not auto-pass from technical facts alone; assessments need attestations for those controls.
-- Live SCM/CI collectors that emit these contracts are sibling work (Prompt 09); catalog evaluation of live populations is fixture-proven here.
+- Live SCM/CI collectors that emit these contracts are sibling work (GitHub collector); catalog evaluation of live populations is fixture-proven here.
 
 **Rejected**
 
@@ -221,7 +220,7 @@ No second catalog loader, typed `EvidenceValue`, or population evaluator. Prompt
 
 ## Non-goals (reaffirmed)
 
-GitHub / GitLab / Bitbucket / Azure DevOps collector expansion; ISO / SOC 2 / NIS 2 / DORA mappings (Prompt 12); generic population-runtime redesign; Prompt 06 finding/SLA family; Prompt 07 / 08 families; scanner engine / depcheck / SARIF changes; new `SubjectKind` variants; certification language.
+GitHub / GitLab / Bitbucket / Azure DevOps collector expansion; ISO / SOC 2 / NIS 2 / DORA mappings (ISO remap); generic population-runtime redesign; vulnerability catalog finding/SLA family; infrastructure catalog / 08 families; scanner engine / depcheck / SARIF changes; new `SubjectKind` variants; certification language.
 
 ## Access and security
 
@@ -231,8 +230,8 @@ GitHub / GitLab / Bitbucket / Azure DevOps collector expansion; ISO / SOC 2 / NI
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/sdlc-canonical-assurance-catalog.md`](../sdd/sdlc-canonical-assurance-catalog.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spec SSOT: [`docs/specs/sdlc-canonical-assurance-catalog.md`](../specs/sdlc-canonical-assurance-catalog.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - Catalog infrastructure: [`0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)
 - Typed evidence: [`0003-typed-evidence-canonical-serialization.md`](0003-typed-evidence-canonical-serialization.md)
 - Population runtime: [`0003-subject-population-runtime-and-coverage-semantics.md`](0003-subject-population-runtime-and-coverage-semantics.md)

@@ -1,6 +1,6 @@
-//! Target suite for the GitHub collector (Prompt 09).
+//! Target suite for the GitHub collector.
 //!
-//! Encodes DESIRED behavior in `docs/sdd/github-collector.md` §4 / §5
+//! Encodes DESIRED behavior in `docs/specs/github-collector.md` §4 / §5
 //! (`ghc_000`–`ghc_024`). Must stay RED on the current ISO-sliver
 //! collector: `source.*` string facts, advertised-vs-collected gap,
 //! abort-on-403, empty `CollectionRun`, no org inventory, no goldens.
@@ -53,7 +53,7 @@ const HISTORICAL_SOURCE_TYPES: &[&str] = &[
     "source.commit.signing",
 ];
 
-/// Prompt 04/05 + Prompt 03 contracts the descriptor must advertise once
+/// IAM/SDLC catalogs + population runtime contracts the descriptor must advertise once
 /// the corresponding modules actually collect them.
 const CANONICAL_EVIDENCE_TYPES: &[&str] = &[
     "evidence.repository.inventory",
@@ -93,7 +93,7 @@ const GOLDEN_IDS: &[&str] = &[
 ];
 
 /// Independently assessable controls enabled by type/fact coverage
-/// (`docs/sdd/github-collector.md` §4.10). Prompt 05 TOML is not landed;
+/// (`docs/specs/github-collector.md` §4.10). SDLC catalog TOML is not landed;
 /// the suite enumerates pairs instead of loading catalog tests.
 const EXERCISABLE_CONTROLS: &[(&str, &str, &str)] = &[
     (
@@ -586,12 +586,12 @@ fn ghc_000_dual_suite_remains_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("name = \"sdd_github_collector_baseline\"")
-            && toml.contains("path = \"tests/sdd/github_collector.baseline.rs\""),
+            && toml.contains("path = \"tests/contracts/github_collector.baseline.rs\""),
         "baseline suite must stay registered"
     );
     assert!(
         toml.contains("name = \"sdd_github_collector_target\"")
-            && toml.contains("path = \"tests/sdd/github_collector.target.rs\""),
+            && toml.contains("path = \"tests/contracts/github_collector.target.rs\""),
         "target suite must stay registered"
     );
 }
@@ -773,7 +773,7 @@ fn ghc_004_pagination_flag_matches_a_real_walker_incremental_is_honest() {
 // ── Canonical mapping ──────────────────────────────────────────────────────
 
 #[test]
-fn ghc_005_new_envelopes_use_prompt_04_05_type_ids() {
+fn ghc_005_new_envelopes_use_iam_sdlc_type_ids() {
     let batch = batch_ok(&develop_repo_fixtures(), repo_scope("acme", "app"));
     assert!(
         !batch.envelopes.is_empty(),
@@ -1310,7 +1310,8 @@ fn ghc_022_healthy_org_covers_at_least_25_canonical_controls() {
 fn ghc_023_goldens_and_target_assertions_do_not_require_provider_native_types() {
     let needle = format!("{}.{}", "evidence", "github");
     let target =
-        fs::read_to_string(manifest_dir().join("tests/sdd/github_collector.target.rs")).unwrap();
+        fs::read_to_string(manifest_dir().join("tests/contracts/github_collector.target.rs"))
+            .unwrap();
     // This file may mention the forbidden prefix only as a constructed needle.
     assert!(
         !target.contains(&format!("\"{needle}")),

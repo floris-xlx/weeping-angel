@@ -1,6 +1,6 @@
 //! Target suite for the ISO 27001 automated-assurance MVP.
 //!
-//! Encodes the *desired* vertical in `docs/sdd/iso-27001-automated-assurance-mvp.md`
+//! Encodes the *desired* vertical in `docs/specs/iso-27001-automated-assurance-mvp.md`
 //! (ISO-001…010, EVD-001…010, CTL-001…012, GH-001…012, Phase 54 acceptance).
 //! These assertions describe the landed product, not the stub spine. They MUST
 //! stay RED until pack / ledger / DSL / GitHub / local / manual / readiness /
@@ -320,10 +320,10 @@ fn dual_suite_is_registered_in_root_cargo_toml() {
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         cargo.contains("sdd_iso27001_assurance_baseline")
-            && cargo.contains("tests/sdd/iso27001_assurance.baseline.rs")
+            && cargo.contains("tests/contracts/iso27001_assurance.baseline.rs")
             && cargo.contains("sdd_iso27001_assurance_target")
-            && cargo.contains("tests/sdd/iso27001_assurance.target.rs"),
-        "root Cargo.toml must register the dual-suite (tests/sdd is not auto-discovered)"
+            && cargo.contains("tests/contracts/iso27001_assurance.target.rs"),
+        "root Cargo.toml must register the dual-suite (tests/contracts is not auto-discovered)"
     );
 }
 

@@ -1,7 +1,7 @@
 //! SUPERSEDED by `sdd_assessment_lineage_target`.
 //!
 //! Historical shortcut characterization on SHA
-//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/sdd/assessment-lineage.md`
+//! `e430980c0d27a8138a153d49b62ddf3c57827891` (`docs/specs/assessment-lineage.md`
 //! §3 / §4.11). Persist, explain, pure serialize, generic facade, and compare
 //! are now the SSOT in the target suite. Tests are
 //! `#[ignore = "superseded by sdd_assessment_lineage_target"]` so dropped-run /
@@ -158,6 +158,7 @@ fn sample_result(effectiveness: Effectiveness) -> ControlTestResult {
         status: None,
         reason: None,
         population: None,
+        period: None,
     }
 }
 
@@ -213,9 +214,9 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_assessment_lineage_baseline")
             && toml.contains("sdd_assessment_lineage_target")
-            && toml.contains("tests/sdd/assessment_lineage.baseline.rs")
-            && toml.contains("tests/sdd/assessment_lineage.target.rs"),
-        "dual-suite must be listed in root Cargo.toml (tests/sdd is not auto-discovered)"
+            && toml.contains("tests/contracts/assessment_lineage.baseline.rs")
+            && toml.contains("tests/contracts/assessment_lineage.target.rs"),
+        "dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
     );
 }
 
@@ -622,7 +623,7 @@ fn product_crates_lack_explanation_and_snapshot_types() {
 
 #[test]
 #[ignore = "superseded by sdd_assessment_lineage_target"]
-fn applicability_rule_is_static_only_prompt_10_absent() {
+fn applicability_rule_is_static_only_engine_absent() {
     let ir = crate_sources_joined("weeping-angel-assurance-ir");
     assert!(
         ir.contains("pub enum ApplicabilityRule") && ir.contains("fn statically_applicable"),
@@ -637,7 +638,7 @@ fn applicability_rule_is_static_only_prompt_10_absent() {
     ] {
         assert!(
             !crates.contains(needle),
-            "Prompt 10 org-context evaluator must be absent; found `{needle}`"
+            "applicability engine org-context evaluator must be absent; found `{needle}`"
         );
     }
 

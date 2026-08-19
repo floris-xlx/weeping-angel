@@ -1,13 +1,13 @@
-//! Target suite for the IAM Canonical Assurance Catalog (Prompt 04).
+//! Target suite for the IAM Canonical Assurance Catalog (IAM catalog).
 //!
-//! Encodes DESIRED behavior in `docs/sdd/iam-canonical-assurance-catalog.md`
+//! Encodes DESIRED behavior in `docs/specs/iam-canonical-assurance-catalog.md`
 //! §4 / §5 (IAM-001…016). Must stay RED on the current tree: no
 //! `control.identity.*` family, no `evidence.identity.*` contracts, no
 //! population fixtures, and `CoverageAtLeast` still a stub. Do not
 //! `#[ignore]` these tests and do not implement catalog content here.
 //!
-//! Consumes the Prompt 01 catalog tree, Prompt 02 evidence envelopes, and
-//! Prompt 03 population evaluator. Does not fork a second loader,
+//! Consumes the catalog infrastructure catalog tree, typed evidence evidence envelopes, and
+//! population runtime population evaluator. Does not fork a second loader,
 //! `EvidenceValue`, or `AllSubjects` implementation.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -219,7 +219,7 @@ fn catalog_v1_dir() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
     assert!(
         dir.is_dir(),
-        "IAM-001: Prompt 01 catalog tree catalog/canonical/v1 must exist so the IAM family can load"
+        "IAM-001: catalog infrastructure catalog tree catalog/canonical/v1 must exist so the IAM family can load"
     );
     dir
 }
@@ -541,7 +541,7 @@ fn assert_population_not_placeholder(
 ) {
     assert_ne!(
         result.rationale, PLACEHOLDER_RATIONALE,
-        "{label}: CoverageAtLeast must not stay a Prompt-03 stub"
+        "{label}: CoverageAtLeast must not stay a population-runtime stub"
     );
     if result.effectiveness == Effectiveness::PartiallyEffective {
         panic!("{label}: stub PartiallyEffective is not a population result");
@@ -588,9 +588,9 @@ fn iam_000_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_iam_catalog_baseline")
-            && toml.contains("tests/sdd/iam_catalog.baseline.rs")
+            && toml.contains("tests/contracts/iam_catalog.baseline.rs")
             && toml.contains("sdd_iam_catalog_target")
-            && toml.contains("tests/sdd/iam_catalog.target.rs"),
+            && toml.contains("tests/contracts/iam_catalog.target.rs"),
         "dual-suite sdd_iam_catalog_baseline + sdd_iam_catalog_target must be listed in root Cargo.toml"
     );
 }
@@ -605,7 +605,7 @@ fn iam_001_catalog_loader_loads_iam_family_offline() {
     let crate_dir = manifest_dir().join("crates/weeping-angel-canonical-catalog");
     assert!(
         crate_dir.is_dir(),
-        "IAM-001: consume Prompt 01 crate weeping-angel-canonical-catalog; do not invent a second loader"
+        "IAM-001: consume catalog infrastructure crate weeping-angel-canonical-catalog; do not invent a second loader"
     );
     let rust = product_rs_joined();
     for needle in [
@@ -638,12 +638,12 @@ fn iam_002_iam_slice_digest_is_deterministic() {
         manifest_dir()
             .join("crates/weeping-angel-canonical-catalog")
             .is_dir(),
-        "IAM-002: Prompt 01 catalog crate must exist so digest is not a second implementation"
+        "IAM-002: catalog infrastructure catalog crate must exist so digest is not a second implementation"
     );
     let rust = crate_sources_joined("weeping-angel-canonical-catalog");
     assert!(
         rust.contains("fn digest") || rust.contains("CatalogDigest"),
-        "IAM-002: Prompt 01 digest API must exist for the IAM slice"
+        "IAM-002: catalog infrastructure digest API must exist for the IAM slice"
     );
     let text = identity_catalog_text();
     assert!(
@@ -782,7 +782,7 @@ fn iam_006_validator_rejects_provider_tokens_in_iam_ids() {
     let crate_dir = manifest_dir().join("crates/weeping-angel-canonical-catalog");
     assert!(
         crate_dir.is_dir(),
-        "IAM-006: Prompt 01 validator crate is required"
+        "IAM-006: catalog infrastructure validator crate is required"
     );
     let rust = crate_sources_joined("weeping-angel-canonical-catalog");
     for token in FORBIDDEN_PROVIDER_TOKENS {
@@ -816,7 +816,7 @@ fn iam_007_canonical_iam_content_has_no_framework_tokens() {
     let crate_dir = manifest_dir().join("crates/weeping-angel-canonical-catalog");
     assert!(
         crate_dir.is_dir(),
-        "IAM-007: Prompt 01 validator crate is required"
+        "IAM-007: catalog infrastructure validator crate is required"
     );
     let rust = crate_sources_joined("weeping-angel-canonical-catalog");
     for token in FORBIDDEN_FRAMEWORK_TOKENS {
@@ -983,7 +983,7 @@ fn iam_010_eight_fixtures_distinguish_missing_stale_fail_manual_exception() {
     }
 
     // In-memory populations encode the same eight intents using CoverageAtLeast
-    // (Prompt 03). Do not treat the stub PartiallyEffective as a result.
+    // (population runtime). Do not treat the stub PartiallyEffective as a result.
     // Negative predicates (inactive/terminated) are declared by the catalog
     // tests on disk; here we only evaluate boolean pass-fields.
     let healthy = healthy_population();
@@ -1287,20 +1287,20 @@ fn iam_016_iso_iam_sliver_ids_remain_the_gate_for_iso_suite() {
 }
 
 #[test]
-fn iam_sdd_slice_doc_is_not_prompt01_ssot() {
+fn iam_sdd_slice_doc_is_not_catalog_ssot() {
     let iam =
-        fs::read_to_string(manifest_dir().join("docs/sdd/iam-canonical-assurance-catalog.md"))
+        fs::read_to_string(manifest_dir().join("docs/specs/iam-canonical-assurance-catalog.md"))
             .unwrap();
     assert!(
         iam.contains("control.identity.mfa"),
         "IAM slice SDD must remain the SSOT for this family"
     );
-    let prompt01 = manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md");
-    if prompt01.is_file() {
-        let text = fs::read_to_string(&prompt01).unwrap();
+    let catalog_ssot = manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md");
+    if catalog_ssot.is_file() {
+        let text = fs::read_to_string(&catalog_ssot).unwrap();
         assert!(
             !text.contains("sdd_iam_catalog_target"),
-            "do not overwrite Prompt 01 SSOT with this slice's suite ids"
+            "do not overwrite catalog infrastructure SSOT with this slice's suite ids"
         );
     }
 }

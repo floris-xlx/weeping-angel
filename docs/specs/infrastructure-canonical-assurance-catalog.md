@@ -4,20 +4,19 @@
 | --- | --- |
 | Status | **Implemented — target GREEN; baseline superseded** |
 | Program | Canonical Assurance Catalog v1 |
-| Slice | Prompt 07 — network / cryptography / secrets / data / database / logging / backup / resilience |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/07-infrastructure-catalog.md`](../prompts/canonical-assurance-v1/07-infrastructure-catalog.md) |
+| Slice | infrastructure catalog — network / cryptography / secrets / data / database / logging / backup / resilience |
 | Planning baseline SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
 | Dual-suite | `sdd_infrastructure_catalog_target` GREEN (INFRA-001…016); `sdd_infrastructure_catalog_baseline` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
-| Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Prompt-04 pattern (do not overwrite) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
-| Concurrent siblings (do not collide) | Prompt 05 [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); Prompt 06 [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md); Prompt 08 [`governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (continuity **governance** only) |
-| Spine / ISO law | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
+| Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
+| IAM pattern (do not overwrite) | [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
+| Concurrent siblings (do not collide) | SDLC catalog [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); vulnerability catalog [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md); governance catalog [`governance-canonical-assurance-catalog.md`](governance-canonical-assurance-catalog.md) (continuity **governance** only); Prompt 20 capability [`continuity-resilience.md`](continuity-resilience.md) (does **not** retarget `test.resilience.recovery-procedure-present` / `test.backup.restore-test-fresh`) |
+| Spine / ISO law | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for the **infrastructure catalog slice**. It does not replace the Prompt 01 catalog-infrastructure SSOT, the Prompt 02 typed-evidence contract, the Prompt 03 population-runtime contract, or the Prompt 04 IAM family. Prompts 01–04 have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
+This document is the durable SSOT for the **infrastructure catalog slice**. It does not replace the catalog infrastructure catalog-infrastructure SSOT, the typed evidence typed-evidence contract, the population runtime population-runtime contract, or the IAM catalog IAM family. catalog infrastructure through IAM have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
 
 §3 is planning-SHA characterization (`e430980c…`). §13 records the family that shipped.
 
@@ -52,33 +51,33 @@ The canonical catalog at `catalog/canonical/v1/` lists only `fixture.example.tom
 
 **User-visible goal:** a coherent infrastructure catalog (35–50 independently assessable controls) that future cloud, database, and network collectors can populate **without framework knowledge**, produce deterministic explainable results (missing ≠ stale ≠ failure ≠ manual review ≠ approved exception), and pass catalog validation plus full workspace verification.
 
-This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is Prompt 12 — pack infra slivers retired and A.8.13 / A.8.15 / A.8.24 left unmapped; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13. This slice does **not** implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service.
+This slice does **not** claim ISO/SOC 2/NIS2 coverage. Framework remapping is ISO remap — pack infra slivers retired and A.8.13 / A.8.15 / A.8.24 left unmapped; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13. This slice does **not** implement AWS/Azure/GCP/Cloudflare collectors or a remote inventory service.
 
 ---
 
 ## 2. Dependencies and fail-closed blockers
 
-| Prompt | Owns | On `e430980c…` | This slice may |
+| Slice | Owns | On `e430980c…` | This slice may |
 | --- | --- | --- | --- |
 | 01 catalog contract | `catalog/canonical/v1/`, `CanonicalCatalog::{load,validate,digest}`, stable-ID rules | **Landed.** Identity + fixture.example listed in `manifest.toml`. | Add infrastructure family TOML + manifest lines. Do not invent a second loader/validator/digest. Do not delete fixture.example IDs. |
 | 02 typed evidence | Typed `EvidenceValue`, seal rules | **Landed.** | Declare required fact *names* and semantic types. No second value enum. No secret material in facts. |
 | 03 population runtime | Subject populations, `AllSubjects` / `CoverageAtLeast` / `NoneSubjects`, missing/stale/fail split | **Landed.** Identity inventory special-case + generic `inventory.subject` / `inventory.complete`. | Declare population-based tests. **Do not locally reimplement coverage math. Do not add `resolve_database_inventory` / `resolve_network_inventory`.** |
 | 04 IAM | `control.identity.*` | **Landed.** | Leave `identity.toml`, identity fixtures, and `sdd_iam_catalog_target` green. |
 | 05 SDLC | `control.source.*` / CI / release | **Landed.** Durable SSOT [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md); accepted [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md). | Do not rewrite `sdlc.toml` or SDLC fixtures. |
-| 06 vulnerability | `control.vulnerability.*`, `evidence.secret.exposure` | **Landed.** Durable SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). | Do **not** rewrite `vulnerability.toml` or `evidence.secret.exposure`. Secret **storage** (`evidence.secret.storage-configuration`) is this slice; secret **exposure** is Prompt 06. |
+| 06 vulnerability | `control.vulnerability.*`, `evidence.secret.exposure` | **Landed.** Durable SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md). | Do **not** rewrite `vulnerability.toml` or `evidence.secret.exposure`. Secret **storage** (`evidence.secret.storage-configuration`) is this slice; secret **exposure** is vulnerability catalog. |
 
 Rebase rule: adapt infrastructure content to the landed contracts. Prefer existing `CanonicalCatalog`, `EvidenceValue`, and `evaluate_coverage` over extending this slice’s scope.
 
-Harness rule (Prompt 06 I3): root `Cargo.toml` does **not** auto-discover `tests/sdd/*.rs`. Implement **must** add:
+Harness rule (vulnerability catalog I3): root `Cargo.toml` does **not** auto-discover `tests/contracts/*.rs`. Implement **must** add:
 
 ```toml
 [[test]]
 name = "sdd_infrastructure_catalog_baseline"
-path = "tests/sdd/infrastructure_catalog.baseline.rs"
+path = "tests/contracts/infrastructure_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_infrastructure_catalog_target"
-path = "tests/sdd/infrastructure_catalog.target.rs"
+path = "tests/contracts/infrastructure_catalog.target.rs"
 ```
 
 Target command after register:
@@ -91,7 +90,7 @@ cargo test --workspace --features demo --test sdd_infrastructure_catalog_target 
 
 ## 3. Current behavior (characterization on `e430980c…`)
 
-Inspected: `catalog/canonical/v1/`, `crates/weeping-angel-canonical-catalog`, `weeping-angel-control-test` (`population.rs`, `expr.rs`), `weeping-angel-collector/src/github/descriptor.rs`, `frameworks/iso-27001/2022/{metadata,mappings}.toml`, `tests/sdd/{iam,canonical,iso27001,population}_*`, root `Cargo.toml` `[[test]]` table, Prompt 07, IAM SSOT, Prompt 06 SSOT, IR `SubjectKind` / `ControlDomain`.
+Inspected: `catalog/canonical/v1/`, `crates/weeping-angel-canonical-catalog`, `weeping-angel-control-test` (`population.rs`, `expr.rs`), `weeping-angel-collector/src/github/descriptor.rs`, `frameworks/iso-27001/2022/{metadata,mappings}.toml`, `tests/contracts/{iam,canonical,iso27001,population}_*`, root `Cargo.toml` `[[test]]` table, infrastructure catalog, IAM SSOT, vulnerability catalog SSOT, IR `SubjectKind` / `ControlDomain`.
 
 ### 3.1 Canonical catalog tree
 
@@ -109,7 +108,7 @@ Loader: `weeping-angel-canonical-catalog::CanonicalCatalog::{load,validate,diges
 
 ### 3.2 ISO pack sliver (existence / hybrid, not population)
 
-`frameworks/iso-27001/2022/metadata.toml` still owns the infrastructure-adjacent pack library. IDs are **not** in the Prompt 01 `control.*` namespace.
+`frameworks/iso-27001/2022/metadata.toml` still owns the infrastructure-adjacent pack library. IDs are **not** in the catalog infrastructure `control.*` namespace.
 
 `test.logging.security-events` / `test.logging.audit-trail` / `test.backup.recovery-testing` / `test.encryption.data-at-rest` require a single envelope of the named pack evidence type. `test.encryption.data-in-transit` is automated existence. `test.security.tls` requires `security.tls.misconfiguration` and **breaks on** that type (scanner-shaped finding, not TLS-policy population).
 
@@ -126,7 +125,7 @@ ISO mappings (must not be retargeted here):
 ### 3.3 Evidence and evaluation
 
 - Facts are `BTreeMap<String, EvidenceValue>` (`weeping-angel-evidence`). Fixtures must use typed names; `with_fact` is string-compat only.
-- `TestExpr` includes real `AllSubjects` / `NoneSubjects` / `CoverageAtLeast` / `FreshWithin` / `ManualReview`. Prompt 03 `evaluate_coverage` splits passing / failing / missing / stale / excepted subjects.
+- `TestExpr` includes real `AllSubjects` / `NoneSubjects` / `CoverageAtLeast` / `FreshWithin` / `ManualReview`. population runtime `evaluate_coverage` splits passing / failing / missing / stale / excepted subjects.
 - `resolve_population` uses (1) explicit `EvidenceSet` population, (2) identity special-case on `evidence.identity.inventory`, (3) generic `inventory.subject` + `inventory.complete`, else (4) inferred unknown population from observation type. **Unknown / partial populations must not yield `Effective` on all-subjects tests.**
 - `Effectiveness::ExceptionApproved` is emitted for approved, unexpired, subject-scoped IR `Exception` rows.
 - `AssessmentContext.max_age` is the assessment-policy freshness default.
@@ -147,17 +146,17 @@ IR `ControlDomain` already includes `NetworkSecurity`, `Cryptography`, `DataProt
 
 ### 3.6 Tests and CLI
 
-Root `Cargo.toml` does **not** auto-discover `tests/sdd/*.rs`. Registered dual suites include IAM (`sdd_iam_catalog_{baseline,target}`), catalog infrastructure (`sdd_canonical_assurance_catalog_*`), population, typed evidence, ISO, and (in a dirty working tree) sibling lineage/collector/remap rows. **No** `sdd_infrastructure_catalog_baseline` / `sdd_infrastructure_catalog_target`. No `tests/sdd/infrastructure_catalog.*.rs`.
+Root `Cargo.toml` does **not** auto-discover `tests/contracts/*.rs`. Registered dual suites include IAM (`sdd_iam_catalog_{baseline,target}`), catalog infrastructure (`sdd_canonical_assurance_catalog_*`), population, typed evidence, ISO, and (in a dirty working tree) sibling lineage/collector/remap rows. **No** `sdd_infrastructure_catalog_baseline` / `sdd_infrastructure_catalog_target`. No `tests/contracts/infrastructure_catalog.*.rs`.
 
-`CanonicalCatalog::{load,validate,digest}` is the only catalog API. `EvidenceObservation::with_value` is the typed fact writer. Prompt 03 `evaluate_coverage` is the only coverage evaluator. `resolve_population` special-cases `evidence.identity.inventory` only; generic non-identity populations use `inventory.subject` + `inventory.complete`. There is **no** `resolve_database_inventory` / `resolve_network_inventory`.
+`CanonicalCatalog::{load,validate,digest}` is the only catalog API. `EvidenceObservation::with_value` is the typed fact writer. population runtime `evaluate_coverage` is the only coverage evaluator. `resolve_population` special-cases `evidence.identity.inventory` only; generic non-identity populations use `inventory.subject` + `inventory.complete`. There is **no** `resolve_database_inventory` / `resolve_network_inventory`.
 
-`TestExpr` extra keys already live on `[test.expression]` as `BTreeMap<String, toml::Value>`. Allowed `op` values include `all-subjects`, `none-subjects`, `coverage-at-least`, `fresh-within`, `manual-review`. Prompt 03 `classify_value` treats only truthy/falsey bools/`0`/`1`/known strings as pass/fail; **integers such as `retention_days=90` are `Technical`**, not a threshold comparison. Threshold tests must therefore bind a **boolean** fact (`meets_threshold`, `meets_policy`, `approved_storage`, `encrypted`) or a temporal `*_at` field — not a raw day count.
+`TestExpr` extra keys already live on `[test.expression]` as `BTreeMap<String, toml::Value>`. Allowed `op` values include `all-subjects`, `none-subjects`, `coverage-at-least`, `fresh-within`, `manual-review`. population runtime `classify_value` treats only truthy/falsey bools/`0`/`1`/known strings as pass/fail; **integers such as `retention_days=90` are `Technical`**, not a threshold comparison. Threshold tests must therefore bind a **boolean** fact (`meets_threshold`, `meets_policy`, `approved_storage`, `encrypted`) or a temporal `*_at` field — not a raw day count.
 
 Validator `FRAMEWORK_SEGMENTS` includes `iso27001` / `soc2` / `nis2` / `dora` / `gdpr` and hyphenated variants. It does **not** include `pci` / `pci-dss`. Target INFRA-007 must still reject those tokens in infrastructure catalog **file text**.
 
 ### 3.7 Public contract (planning SHA)
 
-On `e430980c…` [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) documented the IAM family (`control.identity.*`) and fixture `control.source.protected-branch` and did **not** name `control.network.*` / `evidence.database.*`. After implement the contract names the family (see the Canonical catalog section).
+On `e430980c…` [`docs/specs/assurance-runtime.md`](assurance-runtime.md) documented the IAM family (`control.identity.*`) and fixture `control.source.protected-branch` and did **not** name `control.network.*` / `evidence.database.*`. After implement the contract names the family (see the Canonical catalog section).
 
 ### 3.8 What “infrastructure assessment” means today
 
@@ -178,7 +177,7 @@ The baseline suite therefore characterizes **absence of a canonical infrastructu
 
 ### 4.1 Placement (owned files only)
 
-Infrastructure domain content lands in the Prompt 01 catalog tree as **per-family files** (not one `infrastructure.toml`, not `secret.toml`):
+Infrastructure domain content lands in the catalog infrastructure catalog tree as **per-family files** (not one `infrastructure.toml`, not `secret.toml`):
 
 ```text
 catalog/canonical/v1/
@@ -209,9 +208,9 @@ catalog/canonical/v1/
     resilience.toml
 ```
 
-Rationale for not creating `*/secret.toml`: Prompt 06 may land `evidence/secret.toml` for `evidence.secret.exposure`. Storage configuration is declared here; exposure is not.
+Rationale for not creating `*/secret.toml`: vulnerability catalog may land `evidence/secret.toml` for `evidence.secret.exposure`. Storage configuration is declared here; exposure is not.
 
-Do **not** add infrastructure controls to `frameworks/iso-27001/2022/metadata.toml`. Do **not** edit `controls/identity.toml`, `fixture.example.toml`, or Prompt 05/06 product paths.
+Do **not** add infrastructure controls to `frameworks/iso-27001/2022/metadata.toml`. Do **not** edit `controls/identity.toml`, `fixture.example.toml`, or SDLC and vulnerability catalogs product paths.
 
 Deterministic fixtures:
 
@@ -240,7 +239,7 @@ test.{network,crypto,secret,data,database,logging,backup,resilience}.<slug>
 
 Reject in canonical infrastructure content (validator + target suite):
 
-- provider tokens in IDs or as the subject of a control (`aws`, `azure`, `gcp`, `google`, `cloudflare`, `vercel`, plus the existing Prompt 01 denylist);
+- provider tokens in IDs or as the subject of a control (`aws`, `azure`, `gcp`, `google`, `cloudflare`, `vercel`, plus the existing catalog infrastructure denylist);
 - provider-specific **canonical contracts** such as `evidence.aws.cloudtrail`, `evidence.cloudflare.tls`, `evidence.azure.nsg`, `control.gcp.kms`;
 - provider-specific resource names as catalog IDs (`s3-bucket`, `rds-instance`, `cloudsql`, `security-group-id` as type ids);
 - framework tokens in IDs or narrative (`iso27001`, `iso-27001`, `soc2`, `soc-2`, `nis2`, `dora`, `gdpr`, `pci`, `pci-dss`);
@@ -310,9 +309,9 @@ Supporting evidence types may be added **only** if referenced by a control and a
 
 ### 4.4 Canonical evidence (facts, not conclusions)
 
-Reuse Prompt 01/02 evidence declarations. This slice **defines** the infrastructure family.
+Reuse catalog infrastructure and typed evidence evidence declarations. This slice **defines** the infrastructure family.
 
-Required contracts (Prompt 07 list — all must exist):
+Required contracts (infrastructure catalog list — all must exist):
 
 | Evidence type | Observed facts (canonical names; store via `EvidenceValue`) | Not allowed |
 | --- | --- | --- |
@@ -322,7 +321,7 @@ Required contracts (Prompt 07 list — all must exist):
 | `evidence.data.encryption-at-rest` | `subject_id`, `encrypted` (bool), `key_managed`? (bool) | “control passed” |
 | `evidence.data.encryption-in-transit` | `subject_id`, `encrypted` (bool), `min_protocol`? | — |
 | `evidence.crypto.key-state` | `subject_id`, `key_id` (non-secret handle), `managed` (bool), `rotated_at`? (timestamp), `cert_not_after`? (timestamp), `valid`? (bool) | private keys, ARNs-as-type-id |
-| `evidence.secret.storage-configuration` | `subject_id`, `storage_class` (`approved` \| `unapproved` \| `unknown`), `approved_storage` (bool), `backend_kind`? (generic: `vault` \| `kms` \| `file` \| `other` — **not** `aws-secrets-manager` as type id) | secret values; `evidence.secret.exposure` (Prompt 06) |
+| `evidence.secret.storage-configuration` | `subject_id`, `storage_class` (`approved` \| `unapproved` \| `unknown`), `approved_storage` (bool), `backend_kind`? (generic: `vault` \| `kms` \| `file` \| `other` — **not** `aws-secrets-manager` as type id) | secret values; `evidence.secret.exposure` (vulnerability catalog) |
 | `evidence.database.inventory` | `subject_id`, `kind` (`database`), `critical` (bool), `environment` (`production` \| `non-production` \| `unknown`), `classified`? | provider instance ids as type id |
 | `evidence.database.access-configuration` | `subject_id`, `publicly_accessible` (bool), `restricted` (bool), `audit_enabled`? (bool) | “least privilege effective” |
 | `evidence.logging.configuration` | `subject_id`, `audit_enabled` (bool), `admin_events` (bool), `auth_events` (bool), `privileged_actions` (bool), `integrity_protected`? (bool), `time_synchronized`? (bool) | “logging control passed” |
@@ -335,7 +334,7 @@ Required contracts (Prompt 07 list — all must exist):
 
 Seal rules still apply: no credential-shaped keys (`token`, `password`, `secret`, `private_key`); no compliance narratives (`compliant`, `certified`).
 
-Authoritative populations use Prompt 03 generic paths **only**:
+Authoritative populations use population runtime generic paths **only**:
 
 ```text
 inventory.subject   + inventory.complete (authoritative=true)
@@ -343,13 +342,13 @@ inventory.subject   + inventory.complete (authoritative=true)
 
 and/or an explicit `EvidenceSet` population. Do **not** add `resolve_database_inventory` / `resolve_network_inventory`. Do **not** extend thin `SubjectSelector` (`{ kind, id }`) with tag filters in this slice.
 
-**In-scope subset encoding (critical / public / required):** Prompt 03 does not filter `critical=true` on inventory. Construct the intended subset as the `database` / `endpoint` / `dataStore` / `asset` kind population in fixtures (non-critical stores may be `dataStore` or omitted). Facts `critical`, `public`, `required` remain documentary for future collectors. Target evaluations use that kind inventory, not a new resolver.
+**In-scope subset encoding (critical / public / required):** population runtime does not filter `critical=true` on inventory. Construct the intended subset as the `database` / `endpoint` / `dataStore` / `asset` kind population in fixtures (non-critical stores may be `dataStore` or omitted). Facts `critical`, `public`, `required` remain documentary for future collectors. Target evaluations use that kind inventory, not a new resolver.
 
 Do **not** introduce `evidence.data.inventory` unless a control and a test both reference it. Default: production-store inventory = generic `inventory.subject` + `evidence.database.inventory`.
 
 ### 4.5 Tests (population-based; thresholds from catalog / policy)
 
-Required reusable population tests (Prompt 07 list):
+Required reusable population tests (infrastructure catalog list):
 
 ```text
 test.database.critical-encrypt-at-rest
@@ -362,9 +361,9 @@ test.network.no-prohibited-public-databases
 test.secret.approved-storage
 ```
 
-Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03):
+Semantics (authoritative intent; exact `TestExpr` spelling follows population runtime):
 
-Prompt 03 `classify_value` is the evaluator. Tests must bind **truthy/falsey fields** or temporal `*_at` fields. Raw integers (`retention_days`) and protocol strings (`min_protocol`) are documentary / collector inputs; they are **not** compared by `AllSubjects`.
+population runtime `classify_value` is the evaluator. Tests must bind **truthy/falsey fields** or temporal `*_at` fields. Raw integers (`retention_days`) and protocol strings (`min_protocol`) are documentary / collector inputs; they are **not** compared by `AllSubjects`.
 
 Recommended `TestExpr` encodings (IAM pattern; extra `[test.expression]` keys are documentary policy, not a new AST):
 
@@ -401,7 +400,7 @@ Recommended `TestExpr` encodings (IAM pattern; extra `[test.expression]` keys ar
 
 Each of the 43 controls has a test. Hybrid/manual tests use `op = "manual-review"` where honesty requires it. Unknown / non-authoritative population **must not** produce `Effective` for an all-subjects test.
 
-Result metadata (Prompt 03 `PopulationEvaluation`) must explain: population size, evaluated, passing, failing, missing, coverage, failing subject ids, missing subject ids, stale subject ids.
+Result metadata (population runtime `PopulationEvaluation`) must explain: population size, evaluated, passing, failing, missing, coverage, failing subject ids, missing subject ids, stale subject ids.
 
 ### 4.6 Manual / hybrid honesty
 
@@ -461,13 +460,13 @@ Healthy fixtures may share a multi-resource inventory (several DBs, endpoints, s
 
 ### 4.8 Integration rules (consume, do not redesign)
 
-- Loader / validate / digest: Prompt 01 `CanonicalCatalog`. Infrastructure files must pass `validate` (no orphans, no provider/framework tokens, deterministic digest).
-- Typed facts: Prompt 02. Store via `weeping-angel-evidence::EvidenceValue` (`with_value`).
-- Population evaluation: Prompt 03 (`evaluate_coverage`, generic inventory). Infrastructure tests are **declarations**. No `InfraPopulation` fork.
+- Loader / validate / digest: catalog infrastructure `CanonicalCatalog`. Infrastructure files must pass `validate` (no orphans, no provider/framework tokens, deterministic digest).
+- Typed facts: typed evidence. Store via `weeping-angel-evidence::EvidenceValue` (`with_value`).
+- Population evaluation: population runtime (`evaluate_coverage`, generic inventory). Infrastructure tests are **declarations**. No `InfraPopulation` fork.
 - Exception: reuse IR `Exception` + `Effectiveness::ExceptionApproved`.
 - Subject kinds: consume existing IR kinds (`Database`, `DataStore`, `Endpoint`, `Network`, `Asset`, `Service`, `Organization`). Do not add a third `SubjectSelector` type.
 - ISO pack, GitHub collector, scanner bridge, framework compiler, generic `TestExpr` semantics: **untouched** unless a documented compile blocker requires a one-line compatibility fix, called out in the implement-phase SDD log.
-- Prompt 01 SSOT, IAM SSOT, Prompt 06 SSOT, `identity.toml`, `fixture.example.toml`: off-limits.
+- catalog infrastructure SSOT, IAM SSOT, vulnerability catalog SSOT, `identity.toml`, `fixture.example.toml`: off-limits.
 
 ### 4.9 Dual-suite protocol
 
@@ -475,14 +474,14 @@ Follow the existing root `[[test]]` pattern (IAM).
 
 | Suite | Path | Role |
 | --- | --- | --- |
-| Baseline | `tests/sdd/infrastructure_catalog.baseline.rs` · `sdd_infrastructure_catalog_baseline` | GREEN on planning tree: **absence** of infrastructure family + **presence** of ISO sliver. After target GREEN, `#[ignore]` so absence-of-catalog is not CI green (`supersede_kind=skip`, matching IAM/ISO). |
-| Target | `tests/sdd/infrastructure_catalog.target.rs` · `sdd_infrastructure_catalog_target` | RED on planning tree for missing family / fixtures / population semantics. GREEN after implement — CI gate (INFRA-001…016). |
+| Baseline | `tests/contracts/infrastructure_catalog.baseline.rs` · `sdd_infrastructure_catalog_baseline` | GREEN on planning tree: **absence** of infrastructure family + **presence** of ISO sliver. After target GREEN, `#[ignore]` so absence-of-catalog is not CI green (`supersede_kind=skip`, matching IAM/ISO). |
+| Target | `tests/contracts/infrastructure_catalog.target.rs` · `sdd_infrastructure_catalog_target` | RED on planning tree for missing family / fixtures / population semantics. GREEN after implement — CI gate (INFRA-001…016). |
 
 Suggested target assertion clusters (titles include the id):
 
 | ID | Asserts |
 | --- | --- |
-| INFRA-001 | Catalog tree / Prompt 01 loader loads infrastructure content offline |
+| INFRA-001 | Catalog tree / catalog infrastructure loader loads infrastructure content offline |
 | INFRA-002 | Digest of catalog including infrastructure slice is deterministic |
 | INFRA-003 | All 43 `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` ids present, stable, correctly prefixed |
 | INFRA-004 | Required `evidence.network.{exposure,firewall-policy,tls-configuration}`, `evidence.data.{encryption-at-rest,encryption-in-transit}`, `evidence.crypto.key-state`, `evidence.secret.storage-configuration`, `evidence.database.{inventory,access-configuration}`, `evidence.logging.{configuration,retention,alerting}`, `evidence.backup.{configuration,run,restore-test}`, `evidence.resilience.recovery-plan` declared; no orphans |
@@ -501,7 +500,7 @@ Suggested target assertion clusters (titles include the id):
 
 ### 4.10 Documentation after implement
 
-Landed: this file’s §13 record, accepted ADR (no `-draft`), and IAM-style paragraph on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md). Prompt 01 / 04 / 06 SSOTs are not overwritten. No cloud collection or ISO remap is claimed.
+Landed: this file’s §13 record, accepted ADR (no `-draft`), and IAM-style paragraph on [`docs/specs/assurance-runtime.md`](assurance-runtime.md). catalog infrastructure / 04 / 06 SSOTs are not overwritten. No cloud collection or ISO remap is claimed.
 
 The public contract names:
 
@@ -578,7 +577,7 @@ Never write a target (or baseline) test that **reads its own source file** and a
 
 Allowed: scan **product** trees (`catalog/canonical/v1/**`, `crates/**`, `frameworks/iso-27001/2022/**`, fixture JSON) for forbidden tokens / missing ids.
 
-Follow `tests/sdd/iam_catalog.{baseline,target}.rs`:
+Follow `tests/contracts/iam_catalog.{baseline,target}.rs`:
 
 - Baseline GREEN on **current** code: absence of infrastructure family + presence of ISO sliver.
 - Target RED on current code because `control.network.*` / required evidence / population fixtures are missing — not because the test crate fails to compile.
@@ -588,7 +587,7 @@ Both `[[test]]` rows are registered in root `Cargo.toml`. After GREEN, baseline 
 
 ### 4.13 Complete test id list (43 — one per control)
 
-Eight Prompt-07 required tests plus one test per remaining control. Do not invent extra micro-tests to inflate count.
+Eight infrastructure catalog required tests plus one test per remaining control. Do not invent extra micro-tests to inflate count.
 
 ```text
 test.network.admin-interfaces-restricted
@@ -682,35 +681,35 @@ Testable. Met by the landed family and `sdd_infrastructure_catalog_target` (INFR
 3. After implement: target GREEN; baseline ignored so absence-of-catalog is not a CI requirement; `cargo test --workspace --features demo`, `fmt --check`, and `clippy -D warnings` stay green.
 4. Forty-three independently assessable controls exist in the 35–50 band with stable ids, domains, evidence requirements, test refs, and honest automation class; no artificial micro-controls.
 5. The sixteen required evidence types in §4.4 are declared as facts, not conclusions; no `evidence.aws.*` / `evidence.cloudflare.*` / `evidence.secret.exposure`.
-6. Tests include at least the eight Prompt-07 population ids and evaluate **populations**, not existence of one envelope.
+6. Tests include at least the eight infrastructure catalog population ids and evaluate **populations**, not existence of one envelope.
 7. Evaluator outcomes distinguish missing data, stale data, actual failure, manual review, and approved exception on the named fixtures.
 8. DR exercise, recovery objectives, and network segmentation rationale are Hybrid or Manual; they cannot auto-pass without attestation.
-9. Catalog validator (Prompt 01) accepts the infrastructure slice: no duplicate/orphan/dangling ids, no provider names, no ISO/SOC2/NIS2/PCI references in canonical infrastructure content.
+9. Catalog validator (catalog infrastructure) accepts the infrastructure slice: no duplicate/orphan/dangling ids, no provider names, no ISO/SOC2/NIS2/PCI references in canonical infrastructure content.
 10. ISO pack control ids and mappings are unchanged; `sdd_iso27001_assurance_target` remains green.
 11. No AWS / Azure / GCP / Cloudflare / remote-inventory collector is added; GitHub continues to emit `source.*` only.
-12. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no local `InfraPopulation` fork. Prompt 03 coverage is consumed as-is (generic `inventory.subject` / `inventory.complete`).
+12. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no local `InfraPopulation` fork. population runtime coverage is consumed as-is (generic `inventory.subject` / `inventory.complete`).
 13. Thresholds for retention, TLS policy, restore freshness, and approved storage come from catalog/test configuration or assessment policy.
 14. Credential keys and compliance narratives remain rejected on infrastructure evidence.
-15. Prompt 01 / 04 / 06 SSOTs, `identity.toml`, `fixture.example.toml`, and Prompt 05/06 product paths are not overwritten.
+15. catalog infrastructure / 04 / 06 SSOTs, `identity.toml`, `fixture.example.toml`, and SDLC and vulnerability catalogs product paths are not overwritten.
 16. Owned files stay under the infrastructure family paths in §4.1.
 17. Target/baseline suites never read their own source and assert it lacks a substring that appears in the assertion (xylex-sdd AC-2 / I4a).
-18. Population tests bind Prompt-03-classifiable fields (`encrypted`, `meets_policy`, `meets_threshold`, `restricted`, `approved_storage`, temporal `*_at`); they do not expect `AllSubjects` to compare raw `retention_days` integers.
+18. Population tests bind population-runtime-classifiable fields (`encrypted`, `meets_policy`, `meets_threshold`, `restricted`, `approved_storage`, temporal `*_at`); they do not expect `AllSubjects` to compare raw `retention_days` integers.
 
 ---
 
 ## 6. Out of scope
 
 - AWS, Azure, GCP, Cloudflare, on-prem firewall, or database-engine collectors.
-- Remapping ISO 27001 (or SOC 2 / NIS 2 / PCI) onto `control.network.*` / `control.crypto.*` / … (Prompt 12 — slivers retired, infra Annex A still unmapped; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
-- Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
-- Redesign of typed evidence / digest canonicalization (Prompt 02).
-- Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes, or adding `resolve_database_inventory` (Prompt 03 owns them).
-- Rewriting ISO `metadata.toml` / `mappings.toml` (`logging.security-events`, `backup.recovery-testing`, `encryption.data-*`, `security.tls` stay until Prompt 12).
-- Prompt 05 SDLC family, Prompt 06 vulnerability family, `evidence.secret.exposure`, `vulnerability.toml`.
+- Remapping ISO 27001 (or SOC 2 / NIS 2 / PCI) onto `control.network.*` / `control.crypto.*` / … (ISO remap — slivers retired, infra Annex A still unmapped; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
+- Redesign of `CanonicalCatalog` loader/validator/digest (catalog infrastructure).
+- Redesign of typed evidence / digest canonicalization (typed evidence).
+- Reimplementing `CoverageAtLeast` / `AllSubjects` / population indexes, or adding `resolve_database_inventory` (population runtime owns them).
+- Rewriting ISO `metadata.toml` / `mappings.toml` (`logging.security-events`, `backup.recovery-testing`, `encryption.data-*`, `security.tls` stay until ISO remap).
+- SDLC catalog SDLC family, vulnerability catalog vulnerability family, `evidence.secret.exposure`, `vulnerability.toml`.
 - Editing `catalog/canonical/v1/{controls,evidence,tests}/identity.toml` or `fixture.example.toml`.
 - Remote inventory service; live cloud API calls from catalog evaluation.
 - Certification, “compliant”, or audit-passed language.
-- Governance catalog (Prompt 08).
+- Governance catalog (governance catalog).
 
 ---
 
@@ -718,15 +717,15 @@ Testable. Met by the landed family and `sdd_infrastructure_catalog_target` (INFR
 
 | Risk | Mitigation |
 | --- | --- |
-| Concurrent Prompt 06 lands `evidence/secret.toml` / `evidence.secret.exposure` | This slice never creates `secret.toml` or `evidence.secret.exposure`; storage lives in `crypto.toml`. |
-| Concurrent Prompt 05 lands `control.source.*` | Do not touch SDLC paths; infrastructure ids are network/crypto/data/database/logging/backup/resilience. |
+| Concurrent vulnerability catalog lands `evidence/secret.toml` / `evidence.secret.exposure` | This slice never creates `secret.toml` or `evidence.secret.exposure`; storage lives in `crypto.toml`. |
+| Concurrent SDLC catalog lands `control.source.*` | Do not touch SDLC paths; infrastructure ids are network/crypto/data/database/logging/backup/resilience. |
 | Existence checks sneak in as infrastructure tests | INFRA-009: unencrypted-critical-db must fail; a lone encryption envelope must not pass. |
 | Thresholds hardcoded as ISO/PCI constants | INFRA-014; values live in catalog expression/config or `AssessmentContext`. |
 | ISO pack rewritten or broken | AC 10; do not touch `frameworks/iso-27001/2022` infrastructure rows. |
 | Provider names leak into IDs or fixture types | Validator + INFRA-006/007. |
 | Hybrid controls auto-pass from one technical fact | Honest automation class; DR/objectives/segmentation cannot Effective without attestation. |
 | Population resolver special-cased per family | Use generic `inventory.subject` / `inventory.complete`; no `resolve_database_inventory`. |
-| Prompt 01 / 04 / 06 SSOTs overwritten | This file is the infrastructure slice SSOT. |
+| catalog infrastructure / 04 / 06 SSOTs overwritten | This file is the infrastructure slice SSOT. |
 | Baseline remains a CI green that asserts catalog absence | After target GREEN, ignore/delete/move baseline. |
 | Secrets in fixtures (keys, connection strings) | Seal + AC 14; fixtures use booleans/timestamps/ids only. |
 | File-layout collision via one `infrastructure.toml` vs siblings | Per-family files in §4.1 only. |
@@ -765,8 +764,8 @@ Accepted: [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr
 ```text
 planning_sha = e430980c0d27a8138a153d49b62ddf3c57827891
 branch       = main
-note         = prompts 01–04 landed (catalog + typed evidence + population + IAM);
-               Prompt 05/06 specified, product families unlanded;
+note         = catalog infrastructure through IAM landed (catalog + typed evidence + population + IAM);
+               SDLC and vulnerability catalogs specified, product families unlanded;
                CoverageAtLeast / AllSubjects real; ISO logging/crypto/backup/TLS sliver only
 ```
 
@@ -777,13 +776,13 @@ note         = prompts 01–04 landed (catalog + typed evidence + population + I
 | Field | Value |
 | --- | --- |
 | Planning SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` |
-| Suite | `sdd_infrastructure_catalog_baseline` · [`tests/sdd/infrastructure_catalog.baseline.rs`](../../tests/sdd/infrastructure_catalog.baseline.rs) |
+| Suite | `sdd_infrastructure_catalog_baseline` · [`tests/contracts/infrastructure_catalog.baseline.rs`](../../tests/contracts/infrastructure_catalog.baseline.rs) |
 | Expected now | **ignored** (`#[ignore = "superseded by sdd_infrastructure_catalog_target"]`) so absence-of-catalog is not CI green |
 | Command | `cargo test --workspace --features demo --test sdd_infrastructure_catalog_baseline` |
 
 Baseline asserts (found case):
 
-- catalog tree exists (Prompt 01) but has no infrastructure family files or `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` ids
+- catalog tree exists (catalog infrastructure) but has no infrastructure family files or `control.{network,crypto,secret,data,database,logging,backup,resilience}.*` ids
 - no required `evidence.network.*` / `evidence.data.encryption-*` / `evidence.crypto.key-state` / `evidence.secret.storage-configuration` / `evidence.database.*` / `evidence.logging.{configuration,retention,alerting}` / `evidence.backup.*` / `evidence.resilience.recovery-plan`
 - no `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/`
 - ISO pack still ships `logging.security-events`, `logging.audit-trail`, `backup.recovery-testing`, `encryption.data-at-rest`, `encryption.data-in-transit`, `security.tls` as existence/hybrid (TLS is finding-shaped `break_on`)
@@ -796,13 +795,13 @@ Baseline asserts (found case):
 
 | Field | Value |
 | --- | --- |
-| Suite | `sdd_infrastructure_catalog_target` · [`tests/sdd/infrastructure_catalog.target.rs`](../../tests/sdd/infrastructure_catalog.target.rs) |
+| Suite | `sdd_infrastructure_catalog_target` · [`tests/contracts/infrastructure_catalog.target.rs`](../../tests/contracts/infrastructure_catalog.target.rs) |
 | Expected | **GREEN** (CI gate INFRA-001…016; 22 tests) |
 | Command | `cargo test --workspace --features demo --test sdd_infrastructure_catalog_target -- --nocapture` |
 | Landed catalog | files in §4.1 listed in `manifest.toml` |
 | Landed fixtures | §4.7 plus `logging/partial-inventory` |
-| Loader | Prompt 01 `CanonicalCatalog::{load,validate,digest}` — no second loader |
-| Population | Prompt 03 `evaluate_coverage` / generic inventory — no `InfraPopulation` fork |
+| Loader | catalog infrastructure `CanonicalCatalog::{load,validate,digest}` — no second loader |
+| Population | population runtime `evaluate_coverage` / generic inventory — no `InfraPopulation` fork |
 
 ---
 
@@ -814,16 +813,16 @@ Implemented 2026-08-19 (planning SHA `e430980c0d27a8138a153d49b62ddf3c57827891`)
 | --- | --- |
 | Controls (43) | `catalog/canonical/v1/controls/{network,crypto,data,database,logging,backup,resilience}.toml` (`control.secret.*` in `crypto.toml`) |
 | Evidence (16) | matching `evidence/*.toml` (`evidence.secret.storage-configuration` in `crypto.toml`; no `evidence.data.inventory`) |
-| Tests (43) | matching `tests/*.toml` (8 Prompt-07 population ids + one per remaining control) |
+| Tests (43) | matching `tests/*.toml` (8 infrastructure catalog population ids + one per remaining control) |
 | Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` |
 | Fixtures (29) | `fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/` (see §4.7; plus `logging/partial-inventory`) |
-| Loader / digest | Prompt 01 crate; no infrastructure-specific load path or `resolve_database_inventory` |
-| Target suite | `tests/sdd/infrastructure_catalog.target.rs` (`sdd_infrastructure_catalog_target`) GREEN INFRA-001…016 (22 tests) |
-| Baseline suite | `tests/sdd/infrastructure_catalog.baseline.rs` superseded (`#[ignore]`; 18 ignored) |
+| Loader / digest | catalog infrastructure crate; no infrastructure-specific load path or `resolve_database_inventory` |
+| Target suite | `tests/contracts/infrastructure_catalog.target.rs` (`sdd_infrastructure_catalog_target`) GREEN INFRA-001…016 (22 tests) |
+| Baseline suite | `tests/contracts/infrastructure_catalog.baseline.rs` superseded (`#[ignore]`; 18 ignored) |
 | ADR | Accepted [`docs/adr/0003-infrastructure-canonical-assurance-catalog.md`](../adr/0003-infrastructure-canonical-assurance-catalog.md) |
-| ISO pack | Unchanged by this slice; Prompt 12 retired pack infra slivers and left A.8.13 / A.8.15 / A.8.24 unmapped |
+| ISO pack | Unchanged by this slice; ISO remap retired pack infra slivers and left A.8.13 / A.8.15 / A.8.24 unmapped |
 | Collectors | No AWS / Azure / GCP / Cloudflare / remote-inventory collector |
-| Secret boundary | Storage (`evidence.secret.storage-configuration`) here; exposure (`evidence.secret.exposure`) Prompt 06 |
+| Secret boundary | Storage (`evidence.secret.storage-configuration`) here; exposure (`evidence.secret.exposure`) vulnerability catalog |
 
 Catalog expression thresholds (not Rust framework constants): `min_days = 90` on logging/backup/data retention tests; `acceptable_min_protocol = "1.2"` on TLS tests; `approved_backends = ["vault", "kms"]` on secret-storage tests; `window = "24h"` on backup run / restore / recovery-evidence freshness.
 
@@ -851,7 +850,7 @@ Spec (this file) → Baseline GREEN on planning characterization
   → Target GREEN → Baseline skip-superseded → Target still GREEN
 ```
 
-Fail-closed gates that were met: baseline characterized absence of `control.network.*` plus presence of the ISO logging/crypto/backup/TLS sliver; target went red for missing family / evidence / fixtures (not compile noise); target greened on the Prompt 01 loader and Prompt 03 evaluator.
+Fail-closed gates that were met: baseline characterized absence of `control.network.*` plus presence of the ISO logging/crypto/backup/TLS sliver; target went red for missing family / evidence / fixtures (not compile noise); target greened on the catalog infrastructure loader and population runtime evaluator.
 
 ## 14. Implement-phase owned files (allowlist)
 
@@ -863,18 +862,18 @@ catalog/canonical/v1/controls/{network,crypto,data,database,logging,backup,resil
 catalog/canonical/v1/evidence/{network,crypto,data,database,logging,backup,resilience}.toml
 catalog/canonical/v1/tests/{network,crypto,data,database,logging,backup,resilience}.toml
 fixtures/assurance/canonical/v1/{network,crypto,data,database,logging,backup,resilience}/**/{evidence,exceptions}.json
-tests/sdd/infrastructure_catalog.baseline.rs
-tests/sdd/infrastructure_catalog.target.rs
+tests/contracts/infrastructure_catalog.baseline.rs
+tests/contracts/infrastructure_catalog.target.rs
 Cargo.toml                                          # two [[test]] rows
-docs/sdd/infrastructure-canonical-assurance-catalog.md
+docs/specs/infrastructure-canonical-assurance-catalog.md
 docs/adr/0003-infrastructure-canonical-assurance-catalog.md
-docs/contracts/assurance-runtime.md
+docs/specs/assurance-runtime.md
 README.md                                           # family pointer
 ```
 
 Compile-graph files touched only to break the facade↔root cycle (scanner-view traits): `crates/weeping-angel-evidence/src/lib.rs`, `crates/weeping-angel-assurance/{Cargo.toml,src/bridge.rs}`, `src/engines/mod.rs`, `src/contract/types.rs`.
 
-Do **not** create `secret.toml`, `vulnerability.toml`, `infrastructure.toml`, `tests/sdd/vulnerability_catalog.*`, or `fixtures/.../vulnerability/`. Do not edit `identity.toml`, `fixture.example.toml`, `frameworks/iso-27001/2022/**`, Prompt 01/04/06 SSOTs, or Prompt 03 population Rust.
+Do **not** create `secret.toml`, `vulnerability.toml`, `infrastructure.toml`, `tests/contracts/vulnerability_catalog.*`, or `fixtures/.../vulnerability/`. Do not edit `identity.toml`, `fixture.example.toml`, `frameworks/iso-27001/2022/**`, catalog infrastructure and IAM/06 SSOTs, or population runtime population Rust.
 
 ## 15. Target RED reasons (historical; planning SHA)
 

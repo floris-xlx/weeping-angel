@@ -89,6 +89,13 @@ async fn main() {
                     }
                 }
             }
+            AssuranceCommand::Soa(soa) => match weeping_angel::assurance_soa::run(soa) {
+                Ok(code) => code,
+                Err(e) => {
+                    style::eprint_line(&format!("{} {e:#}", style::err("error:")));
+                    2
+                }
+            },
             _ => {
                 println!("This is a readiness assessment and is not certification.");
                 0

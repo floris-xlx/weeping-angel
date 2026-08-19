@@ -5,11 +5,10 @@
 | Status | **Accepted** |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | The “`resolve_applicability` is a static `Never` filter and SoA is pack-boolean” *operational* reading of [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) compile stage 2 **for org-context evaluation**. Does **not** supercede IR declarativeness, pack schema, collector blindness, or Prompt 11 persist/explain ownership. |
+| Supercedes | The “`resolve_applicability` is a static `Never` filter and SoA is pack-boolean” *operational* reading of [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) compile stage 2 **for org-context evaluation**. Does **not** supercede IR declarativeness, pack schema, collector blindness, or assessment lineage persist/explain ownership. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [population](0003-subject-population-runtime-and-coverage-semantics.md), [catalog](0003-canonical-assurance-catalog-v1.md) |
-| Spec | [`docs/sdd/applicability-engine.md`](../sdd/applicability-engine.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/10-applicability-engine.md`](../prompts/canonical-assurance-v1/10-applicability-engine.md) |
+| Spec | [`docs/specs/applicability-engine.md`](../specs/applicability-engine.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests | `sdd_applicability_engine_target` GREEN (P10-T01–T16, 17 passed). `sdd_applicability_engine_baseline` GREEN after skip-superseding absence tests B06/B07/B09 (14 passed, 4 ignored). |
 
@@ -17,7 +16,7 @@
 
 ## Context
 
-ADR 0001 put `resolve_applicability` in the compile pipeline. The IR grew `ApplicabilityRule` / `ApplicabilityPredicate` on every `Requirement` and `Control`. Prompt 03 shipped subject populations. Prompt 11 reserved `ApplicabilitySnapshot` persist shape and characterized Prompt 10 as absent.
+ADR 0001 put `resolve_applicability` in the compile pipeline. The IR grew `ApplicabilityRule` / `ApplicabilityPredicate` on every `Requirement` and `Control`. population runtime shipped subject populations. assessment lineage reserved `ApplicabilitySnapshot` persist shape and characterized applicability engine as absent.
 
 On SHA `e430980c…`:
 
@@ -27,7 +26,7 @@ On SHA `e430980c…`:
 4. Inventories and `AssessmentScope` exist; nothing builds org context from them.
 5. Unknown facts are never named. Zero subjects are not distinguished from non-applicability.
 
-Canonical Catalog v1 Prompt 10 requires a **generic** evaluator that decides Applicable / NotApplicable / ManualDeterminationRequired for both canonical controls and framework requirements, without provider or framework special cases.
+Canonical Catalog v1 applicability engine requires a **generic** evaluator that decides Applicable / NotApplicable / ManualDeterminationRequired for both canonical controls and framework requirements, without provider or framework special cases.
 
 Questions this decision answers:
 
@@ -69,7 +68,7 @@ ApplicabilityDecision  = Applicable | NotApplicable | ManualDeterminationRequire
 
 `ProcessesPersonalData(true)` with no personal-data fact is `ManualDeterminationRequired`, never `NotApplicable`.
 
-`ApplicabilityDecision::remains_in_compiled_set` is true unless the decision is `NotApplicable`. SoA’s `Applicability::Unresolved` is the projection alias of `ManualDeterminationRequired`; pack `project_soa` is unchanged in this slice.
+`ApplicabilityDecision::remains_in_compiled_set` is true unless the decision is `NotApplicable`. SoA’s `Applicability::Unresolved` is the projection alias of `ManualDeterminationRequired`. This slice did not change `project_soa`; operational SoA later consumes Kleene snapshots ([`0003-operational-soa.md`](0003-operational-soa.md)).
 
 ### 3. Context is a derived view of existing IR inventory
 
@@ -107,7 +106,7 @@ ApplicabilitySnapshot {
 
 Walks requirements and controls in id lexicographic order. Digest is IR `canonical_digest` over the body excluding the digest field. `pack_entries` are artifacts, not Kleene inputs.
 
-This slice **produces** the snapshot. Prompt 11 **persists** it and projects explain. Without a context, compile keeps `statically_applicable != Some(false)`. With a context, callers drop only `NotApplicable`.
+This slice **produces** the snapshot. assessment lineage **persists** it and projects explain. Without a context, compile keeps `statically_applicable != Some(false)`. With a context, callers drop only `NotApplicable`.
 
 ### 6. Rationale is deterministic
 
@@ -116,9 +115,9 @@ Preorder walk of the rule tree, then lexicographic unknown-fact keys and exclude
 ## Consequences
 
 - Reviewers can explain why control X applied, why Y did not, which fact was unknown, and which exclusion removed Z.
-- Prompt 12 / SoA consume a generic three-state instead of inventing an ISO evaluator. Pack boolean `project_soa` remains until those slices switch to the snapshot.
-- Prompt 11 persist/explain consumes this snapshot; lineage absence asserts for `ApplicabilitySnapshot` / `ManualDeterminationRequired` are skip-superseded by the lineage run, not avoided by renaming types.
-- Prompt 09 collector work stays isolated; this engine never calls providers.
+- ISO remap / SoA consume a generic three-state instead of inventing an ISO evaluator. Pack boolean `project_soa` remains until those slices switch to the snapshot.
+- assessment lineage persist/explain consumes this snapshot; lineage absence asserts for `ApplicabilitySnapshot` / `ManualDeterminationRequired` are skip-superseded by the lineage run, not avoided by renaming types.
+- GitHub collector collector work stays isolated; this engine never calls providers.
 
 ## Non-goals (this ADR)
 

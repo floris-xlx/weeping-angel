@@ -1,12 +1,12 @@
-//! Target suite for the SDLC Canonical Assurance Catalog (Prompt 05).
+//! Target suite for the SDLC Canonical Assurance Catalog (SDLC catalog).
 //!
-//! Encodes DESIRED behavior in `docs/sdd/sdlc-canonical-assurance-catalog.md`
+//! Encodes DESIRED behavior in `docs/specs/sdlc-canonical-assurance-catalog.md`
 //! §4 / §5 (SDLC-001…016). Must stay RED on the current tree: no SDLC
 //! family documents, no seven multi-repo fixtures. Do not implement
 //! catalog content here.
 //!
 //! Consumes CanonicalCatalog::{load,validate,digest}, EvidenceValue, and
-//! Prompt 03 AllSubjects / CoverageAtLeast / ExceptionApproved /
+//! population runtime AllSubjects / CoverageAtLeast / ExceptionApproved /
 //! InsufficientEvidence. Does not fork a second loader or a
 //! repository-inventory resolver.
 //!
@@ -253,7 +253,7 @@ fn manifest_dir() -> PathBuf {
 }
 
 fn harness_relpath(kind: &str) -> String {
-    format!("tests/sdd/sdlc_catalog.{kind}.rs")
+    format!("tests/contracts/sdlc_catalog.{kind}.rs")
 }
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
@@ -274,7 +274,7 @@ fn catalog_v1_dir() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
     assert!(
         dir.is_dir(),
-        "SDLC-001: Prompt 01 catalog tree catalog/canonical/v1 must exist"
+        "SDLC-001: catalog infrastructure catalog tree catalog/canonical/v1 must exist"
     );
     dir
 }
@@ -861,7 +861,7 @@ fn sdlc_002_digest_is_deterministic_after_sdlc_files() {
     let catalog = require_sdlc_family();
     assert_eq!(
         CATALOG_SCHEMA, "weeping-angel/canonical-catalog/v1",
-        "SDLC-002: consume the Prompt 01 schema constant"
+        "SDLC-002: consume the catalog infrastructure schema constant"
     );
     let digest = catalog
         .digest()

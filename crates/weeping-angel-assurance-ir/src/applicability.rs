@@ -45,7 +45,7 @@ impl ApplicabilityRule {
             Self::Always => Some(true),
             Self::Never => Some(false),
             Self::All(rules) => {
-                let mut seen_true = true;
+                let mut seen_true: bool = true;
                 for rule in rules {
                     match rule.statically_applicable() {
                         Some(false) => return Some(false),

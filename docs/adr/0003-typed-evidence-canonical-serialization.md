@@ -5,11 +5,10 @@
 | Status | **Accepted** |
 | Date | 2026-08-18 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | The “facts remain `BTreeMap<String, String>` / evaluator `parse_fact`” clauses of [ADR 0002](0002-iso-27001-assurance-vertical.md) §5 and older [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) Evidence text. **Does not** supercede envelope immutability, ledger ownership of observations, or INV-1…5. |
+| Supercedes | The “facts remain `BTreeMap<String, String>` / evaluator `parse_fact`” clauses of [ADR 0002](0002-iso-27001-assurance-vertical.md) §5 and older [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) Evidence text. **Does not** supercede envelope immutability, ledger ownership of observations, or INV-1…5. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md) |
-| Spec | [`docs/sdd/typed-evidence.md`](../sdd/typed-evidence.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/02-typed-evidence.md`](../prompts/canonical-assurance-v1/02-typed-evidence.md) |
+| Spec | [`docs/specs/typed-evidence.md`](../specs/typed-evidence.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Planning baseline | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
 | Tests | `sdd_typed_evidence_target` GREEN (15/15). `sdd_typed_evidence_baseline` superseded (`#[ignore]`, 9 ignored). |
 
@@ -26,7 +25,7 @@ Canonical Assurance Catalog v1 needs typed facts (`branch_protected = true`, `re
 - using IEEE-754 in digest-critical bytes;
 - silently coercing ambiguous strings.
 
-Prompt 01 catalog infrastructure is a sibling decision. This decision is independent of catalog file format.
+catalog infrastructure catalog infrastructure is a sibling decision. This decision is independent of catalog file format.
 
 ## Decision
 
@@ -113,7 +112,7 @@ Incompatible pairs (`Bool` vs `String("true")`, `String("2")` vs `Integer(2)`) �
 
 ## Consequences
 
-- Downstream population / catalog / collector prompts have one typed API and one codec.
+- Downstream population / catalog / collector slices have one typed API and one codec.
 - Decimal identity is lexical (`1.0` ≠ `1.00`). Callers who want numeric uniqueness pick one scale.
 - `StringList` order is part of identity; set-like collectors sort+dedup before insert.
 - ADR 0002 / contract text that said facts are only strings is superseded by this ADR.
@@ -124,8 +123,8 @@ Catalog domain content, provider collector semantics, remote ledger, and inferri
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/typed-evidence.md`](../sdd/typed-evidence.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spec SSOT: [`docs/specs/typed-evidence.md`](../specs/typed-evidence.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - ADR 0001: [`0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002: [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Catalog sibling: [`0003-canonical-assurance-catalog-v1.md`](0003-canonical-assurance-catalog-v1.md)

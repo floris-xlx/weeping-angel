@@ -1,0 +1,36 @@
+{
+  "fixture": "leaver-with-active-access",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:lea",
+      "facts": { "kind": "user", "id": "user:lea", "lifecycle": "leaver" }
+    },
+    {
+      "type": "evidence.identity.lifecycle-event",
+      "subject_id": "user:lea",
+      "facts": {
+        "subject_id": "user:lea",
+        "event": "left",
+        "occurred_at": "2026-08-01T12:00:00Z",
+        "approved": true
+      }
+    },
+    {
+      "type": "evidence.identity.account-status",
+      "subject_id": "user:lea",
+      "facts": {
+        "subject_id": "user:lea",
+        "status": "active",
+        "active": true
+      }
+    }
+  ]
+}

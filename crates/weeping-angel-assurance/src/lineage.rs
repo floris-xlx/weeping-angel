@@ -1,10 +1,14 @@
 //! Immutable assessment lineage: snapshots, result identity, explain, replay.
 
+use chrono::{DateTime, Utc};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
+use weeping_angel_assurance_ir::obligation::{ObligationRegistry, ObligationWhyEdge};
+use weeping_angel_assurance_ir::party::InterestedParty;
 use weeping_angel_assurance_ir::{
-    ApplicabilityRule, AssessmentId, Control, ControlId, ControlImplementation, ControlTestId,
-    Exception, Mapping, typed_canonical_digest,
+    ApplicabilityRule, AssessmentId, CanonicalizationVersion, Control, ControlId,
+    ControlImplementation, ControlTestId, ControlledDocumentId, Exception, Mapping,
+    canonical_digest, typed_canonical_digest,
 };
 use weeping_angel_control_test::{ControlTestResult, Effectiveness, PopulationEvaluation};
 use weeping_angel_framework::{Assessment, CompiledFramework};
@@ -170,6 +174,8 @@ pub struct ControlExplanation {
     pub exceptions: Vec<Exception>,
     pub mappings: Vec<Mapping>,
     pub effectiveness: Effectiveness,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub obligations: Vec<ObligationExplainEdge>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -557,7 +563,122 @@ pub fn explain_control(
         exceptions,
         mappings,
         effectiveness: result.effectiveness,
+        obligations: Vec::new(),
     })
+}
+
+/// Target of an organizational-duty explanation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ObligationExplainTarget {
+    Control(ControlId),
+    Document(ControlledDocumentId),
+}
+
+/// One party → source → obligation → mapping edge in an explanation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObligationExplainEdge {
+    pub party: InterestedParty,
+    pub source: weeping_angel_assurance_ir::obligation::RequirementSource,
+    pub obligation: weeping_angel_assurance_ir::obligation::Obligation,
+    pub mapping: weeping_angel_assurance_ir::obligation::ObligationMapping,
+    pub applicability: weeping_angel_assurance_ir::obligation::ObligationApplicability,
+    pub projects_as_equivalence: bool,
+    pub projects_as_full_satisfaction: bool,
+}
+
+impl From<ObligationWhyEdge> for ObligationExplainEdge {
+    fn from(edge: ObligationWhyEdge) -> Self {
+        Self {
+            party: edge.party,
+            source: edge.source,
+            obligation: edge.obligation,
+            mapping: edge.mapping,
+            applicability: edge.applicability,
+            projects_as_equivalence: edge.projects_as_equivalence,
+            projects_as_full_satisfaction: edge.projects_as_full_satisfaction,
+        }
+    }
+}
+
+/// Deterministic answer to “why does this control/policy exist?”
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObligationExplain {
+    pub target: ObligationExplainTarget,
+    pub at: DateTime<Utc>,
+    pub current: Vec<ObligationExplainEdge>,
+    pub historical: Vec<ObligationExplainEdge>,
+}
+
+impl ObligationExplain {
+    pub fn canonical_digest(
+        &self,
+    ) -> Result<String, weeping_angel_assurance_ir::CanonicalDigestError> {
+        debug_assert_eq!(CanonicalizationVersion::CURRENT.as_str(), "canon/v1");
+        canonical_digest(self)
+    }
+}
+
+/// Explain why a canonical control exists using the obligation registry (canon/v1).
+pub fn explain_why_control_exists(
+    control_id: &ControlId,
+    registry: &ObligationRegistry,
+    t: DateTime<Utc>,
+) -> ObligationExplain {
+    let current = registry.why_control_exists(control_id, t);
+    let current_ids: std::collections::BTreeSet<_> = current
+        .iter()
+        .map(|edge| edge.mapping.id.as_str().to_string())
+        .collect();
+    let historical = registry
+        .why_control_exists_including_historical(control_id, t)
+        .into_iter()
+        .filter(|edge| !current_ids.contains(edge.mapping.id.as_str()))
+        .collect::<Vec<_>>();
+    ObligationExplain {
+        target: ObligationExplainTarget::Control(control_id.clone()),
+        at: t,
+        current: current
+            .into_iter()
+            .map(ObligationExplainEdge::from)
+            .collect(),
+        historical: historical
+            .into_iter()
+            .map(ObligationExplainEdge::from)
+            .collect(),
+    }
+}
+
+/// Explain why a governed document/policy exists using the obligation registry.
+pub fn explain_why_document_exists(
+    document_id: &ControlledDocumentId,
+    registry: &ObligationRegistry,
+    t: DateTime<Utc>,
+) -> ObligationExplain {
+    let current = registry.why_document_exists(document_id, t);
+    let current_ids: std::collections::BTreeSet<_> = current
+        .iter()
+        .map(|edge| edge.mapping.id.as_str().to_string())
+        .collect();
+    let historical = registry
+        .why_document_exists_including_historical(document_id, t)
+        .into_iter()
+        .filter(|edge| !current_ids.contains(edge.mapping.id.as_str()))
+        .collect::<Vec<_>>();
+    ObligationExplain {
+        target: ObligationExplainTarget::Document(document_id.clone()),
+        at: t,
+        current: current
+            .into_iter()
+            .map(ObligationExplainEdge::from)
+            .collect(),
+        historical: historical
+            .into_iter()
+            .map(ObligationExplainEdge::from)
+            .collect(),
+    }
 }
 
 /// Reconstruct a report from pinned snapshots. Does not consult current files.

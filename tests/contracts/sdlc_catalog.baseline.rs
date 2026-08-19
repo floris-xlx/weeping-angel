@@ -433,10 +433,10 @@ fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_sdlc_catalog_baseline")
-            && toml.contains("tests/sdd/sdlc_catalog.baseline.rs")
+            && toml.contains("tests/contracts/sdlc_catalog.baseline.rs")
             && toml.contains("sdd_sdlc_catalog_target")
-            && toml.contains("tests/sdd/sdlc_catalog.target.rs"),
-        "SDLC dual-suite must be listed in root Cargo.toml (tests/sdd/*.rs is not auto-discovered)"
+            && toml.contains("tests/contracts/sdlc_catalog.target.rs"),
+        "SDLC dual-suite must be listed in root Cargo.toml (tests/contracts/*.rs is not auto-discovered)"
     );
 }
 
@@ -454,7 +454,7 @@ fn catalog_has_no_sdlc_population_family() {
     ] {
         assert!(
             !root.join(rel).exists(),
-            "current tree has no Prompt 05 catalog file `{rel}`"
+            "current tree has no SDLC catalog catalog file `{rel}`"
         );
     }
 
@@ -621,7 +621,7 @@ fn identity_family_and_iam_fixtures_remain() {
     assert_eq!(
         CANONICAL_IDENTITY_CONTROLS.len(),
         23,
-        "Prompt 04 shipped 23 independently assessable identity controls"
+        "IAM catalog shipped 23 independently assessable identity controls"
     );
     assert!(catalog.controls().contains_key(PINNED_CONTROL));
     assert!(catalog.evidence().contains_key(PINNED_EVIDENCE));
@@ -645,36 +645,37 @@ fn identity_family_and_iam_fixtures_remain() {
 
 #[ignore = "superseded by sdd_sdlc_catalog_target"]
 #[test]
-fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
-    let cat = fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
-        .unwrap();
+fn catalog_and_iam_ssot_docs_are_not_overwritten() {
+    let cat =
+        fs::read_to_string(manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md"))
+            .unwrap();
     assert!(
         cat.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
-        "Prompt 01 SSOT title must remain"
+        "catalog infrastructure SSOT title must remain"
     );
     assert!(
         cat.contains("This document is the durable SSOT for **catalog infrastructure only**"),
-        "Prompt 01 SSOT mission sentence must remain"
+        "catalog infrastructure SSOT mission sentence must remain"
     );
     assert!(
         cat.contains("does **not** own IAM / SDLC") || cat.contains("does not own IAM / SDLC"),
-        "Prompt 01 SSOT still disclaims SDLC domain ownership"
+        "catalog infrastructure SSOT still disclaims SDLC domain ownership"
     );
 
     let iam =
-        fs::read_to_string(manifest_dir().join("docs/sdd/iam-canonical-assurance-catalog.md"))
+        fs::read_to_string(manifest_dir().join("docs/specs/iam-canonical-assurance-catalog.md"))
             .unwrap();
     assert!(
         iam.starts_with("# SDD: IAM Canonical Assurance Catalog (v1 slice)"),
-        "Prompt 04 SSOT title must remain"
+        "IAM catalog SSOT title must remain"
     );
     assert!(
         iam.contains("This document is the durable SSOT for the **IAM catalog slice**"),
-        "Prompt 04 SSOT mission sentence must remain"
+        "IAM catalog SSOT mission sentence must remain"
     );
     assert!(
         iam.contains("control.identity.mfa"),
-        "Prompt 04 SSOT still describes the identity family"
+        "IAM catalog SSOT still describes the identity family"
     );
 }
 
@@ -695,7 +696,7 @@ fn iso_source_sliver_ids_tests_and_mappings_are_unchanged() {
     );
     assert!(
         !control_ids.contains(POPULATION_DEFAULT_BRANCH),
-        "ISO pack must not host the Prompt 05 population id `{POPULATION_DEFAULT_BRANCH}`"
+        "ISO pack must not host the SDLC catalog population id `{POPULATION_DEFAULT_BRANCH}`"
     );
     assert!(
         !control_ids
@@ -744,7 +745,7 @@ fn iso_source_sliver_ids_tests_and_mappings_are_unchanged() {
             && !mappings.contains("to = \"control.cicd.")
             && !mappings.contains("to = \"control.release.")
             && !mappings.contains("to = \"control.supply-chain."),
-        "ISO mappings stay on pack-local source.* ids until Prompt 12"
+        "ISO mappings stay on pack-local source.* ids until ISO remap"
     );
 }
 
@@ -878,7 +879,7 @@ fn catalog_ids_and_validator_stay_provider_and_framework_neutral() {
     for token in ["github", "gitlab", "bitbucket", "iso27001", "soc2", "nis2"] {
         assert!(
             rust.contains(token),
-            "Prompt 01 validator still reserves `{token}`"
+            "catalog infrastructure validator still reserves `{token}`"
         );
     }
 }
@@ -889,7 +890,7 @@ fn no_repository_inventory_resolver_or_second_value_enum() {
     let product = product_rs_joined();
     assert!(
         !product.contains("resolve_repository_inventory"),
-        "Prompt 03 has no repository-inventory special case; this slice must not add one"
+        "population runtime has no repository-inventory special case; this slice must not add one"
     );
     assert!(
         !product.contains("struct SdlcPopulation"),

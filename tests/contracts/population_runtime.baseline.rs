@@ -1,4 +1,4 @@
-//! Baseline suite for subject population runtime (Prompt 03).
+//! Baseline suite for subject population runtime.
 //!
 //! SUPERSEDED by `sdd_population_runtime_target`. Placeholder CoverageAtLeast,
 //! Count→NotTested, missing population arms, and no-metrics results are retired.
@@ -398,14 +398,14 @@ fn planned_control_test_evaluation_is_id_ref() {
 fn catalog_tree_has_not_landed() {
     assert!(
         !manifest_dir().join("catalog").is_dir(),
-        "Prompt 01 catalog/ tree is not present on this SHA"
+        "catalog infrastructure catalog/ tree is not present on this SHA"
     );
 }
 
 #[test]
 #[ignore = "superseded by sdd_population_runtime_target"]
 fn contains_in_evaluate_as_typed_evidence_not_population() {
-    // Prompt 02 landed Contains/In before this slice. They evaluate (missing
+    // typed evidence landed Contains/In before this slice. They evaluate (missing
     // evidence → InsufficientEvidence) and must not be confused with the still-
     // unimplemented population arms / CoverageAtLeast placeholder.
     let sel = EvidenceSelector::of_type(EvidenceType::new("source.branch.protection"));
@@ -421,7 +421,7 @@ fn contains_in_evaluate_as_typed_evidence_not_population() {
         assert_ne!(
             result.effectiveness,
             Effectiveness::NotTested,
-            "Prompt 02 comparison arms evaluate; got {:?}",
+            "typed evidence comparison arms evaluate; got {:?}",
             result.effectiveness
         );
         assert_eq!(result.effectiveness, Effectiveness::InsufficientEvidence);

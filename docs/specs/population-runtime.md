@@ -3,20 +3,19 @@
 | Field | Value |
 | --- | --- |
 | Status | **Implemented** (target GREEN; baseline superseded) |
-| Program | Canonical Assurance Catalog v1 — Prompt 03 |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/03-population-runtime.md`](../prompts/canonical-assurance-v1/03-population-runtime.md) |
+| Program | Canonical Assurance Catalog v1 — population runtime |
 | Dual-suite | `sdd_population_runtime_baseline` (superseded placeholder; `#[ignore]`) · `sdd_population_runtime_target` (normative coverage semantics) |
 | ADR | Accepted [`docs/adr/0003-subject-population-runtime-and-coverage-semantics.md`](../adr/0003-subject-population-runtime-and-coverage-semantics.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
-| ISO vertical (do not fork) | [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
+| ISO vertical (do not fork) | [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0002 |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Planning baseline | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
 | IR revision consumed | `assurance-ir/v1` as shipped on that SHA |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for Prompt 03. Prompts 01 (catalog infrastructure) and 02 (typed evidence) have landed; this slice consumes those contracts and does not redefine them. Historical §3 is the planning-SHA characterization (`5fa3a23`); §12 records what shipped.
+This document is the durable SSOT for the population runtime. catalog infrastructure and typed evidence have landed; this slice consumes those contracts and does not redefine them. Historical §3 is the planning-SHA characterization (`5fa3a23`); §12 records what shipped. ISMS membership is the [scope engine](scope-engine.md) (`in_scope_population`); this runtime still evaluates coverage over the injected `EvidenceSet` population.
 
 ---
 
@@ -37,7 +36,7 @@ Example the runtime must distinguish — all four numbers, never “94% passing�
 1 repository missing evidence
 ```
 
-**User-visible goal:** domain catalog prompts can declare, without provider-specific logic:
+**User-visible goal:** domain catalog slices can declare, without provider-specific logic:
 
 ```text
 all privileged identities have MFA
@@ -69,9 +68,9 @@ Pinned at planning SHA `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b`.
 | `evaluate_compiled` | assurance facade | Builds `CompiledControlTest` from required/break_on only; **never attaches `expr`** |
 | `EvidenceSet` | control-test | `BTreeMap<digest, EvidenceEnvelope>`; `first_selector` is a linear scan |
 | `EvidenceEnvelope` | evidence | Has `supersedes`; `seal` leaves it `None`; ledger can `supersede` |
-| `EvidenceObservation` | evidence | `BTreeMap<String, EvidenceValue>` facts (`evidence-value/v1`; Prompt 02 landed) |
-| `catalog/` | repo root | **Missing.** Prompt 01 not landed. Do not invent catalog schema. |
-| Typed evidence | Prompt 02 | Landed. Compare stored `EvidenceValue`; do not reintroduce `parse_fact`. |
+| `EvidenceObservation` | evidence | `BTreeMap<String, EvidenceValue>` facts (`evidence-value/v1`; typed evidence landed) |
+| `catalog/` | repo root | **Missing.** catalog infrastructure not landed. Do not invent catalog schema. |
+| Typed evidence | typed evidence | Landed. Compare stored `EvidenceValue`; do not reintroduce `parse_fact`. |
 
 Tiny allowed adjustments: type alias / `From` between the two `SubjectSelector`s; optional fields on `Exception` and `AssessmentContext` with serde defaults; extra `TestExpr` arms in the existing enum; a dedicated evaluation-detail object. Do not redesign catalog schema, IR `AssessmentDefinition`, or collector discovery.
 
@@ -127,7 +126,7 @@ No `population`, `evaluated`, `passing`, `failing`, `missing`, `coverage`, `fail
 
 `Exception` has no `subjects` / `appliesTo`. Approved exceptions cannot carve selected subjects out of a population.
 
-`ControlImplementation.applies_to` exists but is unused by the evaluator.
+`ControlImplementation.applies_to` exists but is unused by the **control-test evaluator**. The control-implementation registry now consumes it for overlap / dangling-subject integrity ([`control-implementation-registry.md`](control-implementation-registry.md)); that does not change population evaluation.
 
 ### 3.6 Compiler / facade do not carry expressions or IR scope
 
@@ -137,7 +136,7 @@ Facade `AssessmentScope` is an asset allow-set for collectors, not IR `Assessmen
 
 ### 3.7 Subject kinds vs required conceptual kinds
 
-| Conceptual kind (prompt) | Today |
+| Conceptual kind | Today |
 | --- | --- |
 | organization | `SubjectKind::Organization`, `AssetKind::Organization` |
 | repository | `SubjectKind::Repository`, `AssetKind::Repository` |
@@ -250,6 +249,7 @@ Default per-subject outcome from `evidence.field`:
 | field truthy (`true`, `pass`, `protected`, `enabled`, `1`) | `passing` |
 | field falsey (`false`, `fail`, `unprotected`, `disabled`, `0`) | `failing` |
 | other field value | fail-closed `failing` (type mismatch is technical failure, not missing) |
+| fields `active` or `excessive` (personnel lifecycle defect flags) | polarity **inverts**: truthy → `failing`, falsey → `passing`. Only those two names. See [`personnel-security.md`](personnel-security.md). |
 
 Technical collector/eval errors (if represented) are **not** missing evidence. They must not be folded into `missingSubjects`.
 
@@ -289,6 +289,8 @@ For each `(evidence_type, subject_id)`:
 3. Duplicate identical digests (`EvidenceSet` already keyed by digest) count once.
 4. Two envelopes with different digests for the same subject: latest/supersede wins; do not double-count passing.
 
+Evaluation (Prompt 14) applies this **after** as-of candidate filtering (`select_latest_as_of`): future, expired, and revoked-at-`T` envelopes are not leaves at `T`. The characterization sort above remains the in-bag latest rule; temporal law is [`evidence-validity-temporal-assurance.md`](evidence-validity-temporal-assurance.md).
+
 ### 4.8 Evaluation output
 
 Do not force the example JSON onto `ControlTestResult` if a nested object is cleaner. Required: results **or** explanation metadata can produce:
@@ -308,7 +310,7 @@ Do not force the example JSON onto `ControlTestResult` if a nested object is cle
 
 Recommended shape: `PopulationEvaluation` (or `CoverageBreakdown`) on `ControlTestResult` as `population: Option<PopulationEvaluation>` (serde `skip_serializing_if = None`). Subject id lists are sorted. `coverage` omitted when unknown.
 
-Facade `evaluate_compiled` must attach `TestExpr` when the planned/compiled test has one (wire `evaluation` id → catalog/test body once Prompt 01 lands; until then, allow `CompiledControlTest.expr` to be set by callers and extend `CompiledTest` with an optional expr or a side table). This slice may add `expr` to `CompiledTest` without redesigning the pack schema.
+Facade `evaluate_compiled` must attach `TestExpr` when the planned/compiled test has one (wire `evaluation` id → catalog/test body once catalog infrastructure lands; until then, allow `CompiledControlTest.expr` to be set by callers and extend `CompiledTest` with an optional expr or a side table). This slice may add `expr` to `CompiledTest` without redesigning the pack schema.
 
 ### 4.9 Performance
 
@@ -392,8 +394,8 @@ Plus: real `CoverageAtLeast` (placeholder rationale gone); index/perf fixtures 1
 - Provider discovery (GitHub/AWS/… inventory collectors)
 - ISO-specific coverage rules or pack redesign
 - Organization graph beyond population resolution
-- Canonical catalog schema (`catalog/canonical/v1`) — Prompt 01
-- Typed evidence fact bags — Prompt 02 (rebase when it lands)
+- Canonical catalog schema (`catalog/canonical/v1`) — catalog infrastructure
+- Typed evidence fact bags — typed evidence (rebase when it lands)
 - Collapsing facade `AssessmentScope` and IR `AssessmentScope` into one type in this slice (adapter only)
 - Script-host `TestExpr`, Rhai/Lua/JS
 - Certification / compliant language
@@ -406,7 +408,7 @@ Plus: real `CoverageAtLeast` (placeholder rationale gone); index/perf fixtures 1
 | Risk | Mitigation |
 | --- | --- |
 | Second `SubjectSelector` becomes permanent | ADR: IR type is SSOT; alias/adapt the thin type |
-| Prompt 01/02 land mid-slice | Rebase; do not redefine catalog or typed facts |
+| catalog infrastructure and typed evidence land mid-slice | Rebase; do not redefine catalog or typed facts |
 | Unknown population treated as observed set | Completeness enum; universal arms fail-closed |
 | Missing subjects hidden behind a pass rate | Mandatory partitions + optimistic/pessimistic bounds |
 | `Exception` without subjects excepts everyone | Empty subjects ≠ all inventory |
@@ -441,7 +443,7 @@ Prefer `#[ignore]` / skip-supersede on the baseline file (keep registration) rat
 
 ## 11. Handoff / done
 
-Domain catalog prompts (04+) declare population tests against this runtime. They do not implement coverage math.
+Domain catalog slices (04+) declare population tests against this runtime. They do not implement coverage math.
 
 **Done:** population-aware evaluation is real; `CoverageAtLeast` is not a placeholder; missing / failing / stale subjects are separate; evaluation is efficient enough for realistic inventories; architecture stays provider- and framework-neutral.
 
@@ -462,4 +464,10 @@ Deviations from §4 that are now law (see ADR):
 | `PopulationEvaluation` required fields | Also emits `staleSubjects`, `exceptedSubjects`, `technicalSubjects` |
 | `evaluate_compiled` attaches expr | `CompiledTest.expr` JSON side-table deserialized onto `CompiledControlTest` |
 
-Identity populations additionally resolve from `evidence.identity.inventory` (+ privileged-membership / service-account). Break-glass failing privileged subjects may conclude `ExceptionApproved` when every failing subject is break-glass. Remaining-all-pass sets that are `Effective` only because approved unexpired bound IR exceptions emptied the remainder (`excepted` non-empty; no fail/missing/stale/technical) conclude `ExceptionApproved` (Prompt 08 honesty; not a second exception engine).
+Identity populations additionally resolve from `evidence.identity.inventory` (+ privileged-membership / service-account). Break-glass failing privileged subjects may conclude `ExceptionApproved` when every failing subject is break-glass. Remaining-all-pass sets that are `Effective` only because approved unexpired bound IR exceptions emptied the remainder (`excepted` non-empty; no fail/missing/stale/technical) conclude `ExceptionApproved` (governance catalog honesty; not a second exception engine).
+
+Evaluate uses `build_index_as_of` (`select_latest_as_of`) so a future or expired leaf cannot satisfy a past clock. Collection-time `select_latest` (supersede walk then `collected_at` + digest, no as-of) remains for callers that pass no clock. Envelope validity is Prompt 14; this slice does not own `evidence-validity/v1`.
+
+`build_index_as_of` / `select_latest_as_of` restrict the group to envelopes valid at `AssessmentContext.now` before the latest/supersede walk. That is additive temporal filtering, not a change to coverage arithmetic.
+
+Personnel lifecycle (Prompt 17) inverts predicate polarity for field names `active` and `excessive` (`classify_predicate` in `population.rs`) so `none-subjects` can name still-live leavers and over-privileged movers. Other fields keep the §4.5 table. This is not a second population resolver.

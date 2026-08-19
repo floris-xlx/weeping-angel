@@ -89,6 +89,10 @@ impl EvidenceRequirement {
         &self.evidence_type
     }
 
+    pub fn criticality(&self) -> EvidenceCriticality {
+        self.criticality
+    }
+
     pub fn with_cardinality(mut self, cardinality: EvidenceCardinality) -> Self {
         self.cardinality = cardinality;
         self
@@ -101,6 +105,15 @@ impl EvidenceRequirement {
 
     pub fn with_criticality(mut self, criticality: EvidenceCriticality) -> Self {
         self.criticality = criticality;
+        self
+    }
+
+    pub fn freshness(&self) -> Option<&FreshnessRequirement> {
+        self.freshness.as_ref()
+    }
+
+    pub fn with_freshness(mut self, freshness: FreshnessRequirement) -> Self {
+        self.freshness = Some(freshness);
         self
     }
 }

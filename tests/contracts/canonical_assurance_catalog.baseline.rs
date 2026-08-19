@@ -1,12 +1,12 @@
 //! SUPERSEDED by `sdd_canonical_assurance_catalog_target` after catalog
-//! infrastructure landed (Prompt 01).
+//! infrastructure landed (catalog infrastructure).
 //!
 //! Historical characterization of the pre-catalog tree on planning SHA
-//! `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`docs/sdd/canonical-assurance-catalog-v1.md`
+//! `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` (`docs/specs/canonical-assurance-catalog-v1.md`
 //! §3 / §4.10). Absence assertions are ignored so CI does not keep
 //! “there is no catalog” as required green. Compatibility checks (IR
 //! permissiveness, crate graph) stay active. The ISO thin-stub pack-ID
-//! characterization is ignored after Prompt 12
+//! characterization is ignored after ISO remap
 //! (`sdd_iso27001_remap_target`).
 
 use std::collections::BTreeSet;
@@ -74,9 +74,9 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_canonical_assurance_catalog_baseline")
             && toml.contains("sdd_canonical_assurance_catalog_target")
-            && toml.contains("tests/sdd/canonical_assurance_catalog.baseline.rs")
-            && toml.contains("tests/sdd/canonical_assurance_catalog.target.rs"),
-        "dual-suite must be listed in root Cargo.toml (tests/sdd is not auto-discovered)"
+            && toml.contains("tests/contracts/canonical_assurance_catalog.baseline.rs")
+            && toml.contains("tests/contracts/canonical_assurance_catalog.target.rs"),
+        "dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
     );
 }
 

@@ -2,22 +2,21 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Target GREEN** — collector emits Prompt 03/04/05 contracts; baseline superseded (`#[ignore]`); ten goldens under `fixtures/assurance/canonical/v1/github/` |
+| Status | **Target GREEN** — collector emits population runtime/04/05 contracts; baseline superseded (`#[ignore]`); ten goldens under `fixtures/assurance/canonical/v1/github/` |
 | Program | Canonical Assurance Catalog v1 |
-| Slice | Prompt 09 — first reference-grade provider collector |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/09-github-collector.md`](../prompts/canonical-assurance-v1/09-github-collector.md) |
+| Slice | GitHub collector — first reference-grade provider collector |
 | Planning / characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19) |
 | Dual-suite | **Registered** in root `Cargo.toml`: `sdd_github_collector_baseline` superseded (`#[ignore]`); `sdd_github_collector_target` `ghc_000`–`ghc_024` GREEN. |
 | ADR | [`docs/adr/0003-github-collector-canonical-evidence-mapping.md`](../adr/0003-github-collector-canonical-evidence-mapping.md) (accepted; draft filename dropped) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Consumes | Prompts 01–08 contracts, especially typed evidence, population completeness, IAM `evidence.identity.*`, landed SDLC [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*` |
-| Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
-| Prompt-02 / 03 / 04 (consumed) | [`typed-evidence.md`](typed-evidence.md), [`population-runtime.md`](population-runtime.md), [`iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
-| Prompt-05 contracts (landed catalog TOML) | Spec [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), accepted ADR [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md), `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Consumes | catalog infrastructure and domain families contracts, especially typed evidence, population completeness, IAM `evidence.identity.*`, landed SDLC [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md) `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*` |
+| Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) |
+| typed evidence / population runtime / 04 (consumed) | [`typed-evidence.md`](typed-evidence.md), [`population-runtime.md`](population-runtime.md), [`iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) |
+| SDLC catalog contracts (landed catalog TOML) | Spec [`sdlc-canonical-assurance-catalog.md`](sdlc-canonical-assurance-catalog.md), accepted ADR [`0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md), `catalog/canonical/v1/{controls,evidence,tests}/sdlc.toml` |
 | Spine / ISO law | [`assurance-runtime-spine.md`](assurance-runtime-spine.md), [`iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify (after implement) | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 
-This document is the durable SSOT for the **GitHub collector slice**. It does not replace catalog-infrastructure, typed-evidence, population, IAM, or SDLC SSOTs. Prompt 05 SDLC catalog TOML is **landed**; this slice **emits** those evidence contracts. It must **not** invent catalog IDs, write Prompt 06/07/08 TOML, or calculate control effectiveness.
+This document is the durable SSOT for the **GitHub collector slice**. It does not replace catalog-infrastructure, typed-evidence, population, IAM, or SDLC SSOTs. SDLC catalog SDLC catalog TOML is **landed**; this slice **emits** those evidence contracts. It must **not** invent catalog IDs, write vulnerability, infrastructure, and governance catalogs TOML, or calculate control effectiveness.
 
 This file supersedes the interrupted Scope-only planning attempt. Characterization was re-read against workspace HEAD `e430980c…` and the uncommitted baseline suite (`ghc_b001`–`ghc_b030`).
 
@@ -43,19 +42,19 @@ On SHA `e430980c…` the existing `GitHubCollector` is an ISO-sliver prototype: 
 
 ## 2. Dependencies and fail-closed blockers
 
-| Prompt / contract | Owns | This slice may | Must not |
+| Slice / contract | Owns | This slice may | Must not |
 | --- | --- | --- | --- |
-| 01 catalog | `catalog/canonical/v1/`, loader, IDs | Consume existing `fixture.example` + `identity.toml` | Invent catalog IDs; write Prompt 05/06/07/08 TOML; redesign the loader |
+| 01 catalog | `catalog/canonical/v1/`, loader, IDs | Consume existing `fixture.example` + `identity.toml` | Invent catalog IDs; write SDLC, vulnerability, and infrastructure catalogs/08 TOML; redesign the loader |
 | 02 typed evidence | `EvidenceValue`, seal, redact | Emit typed facts via `with_value`; reuse `redact` / credential-key reject | Fork a second value enum; persist tokens; change digest law / `EvidenceProvenance` |
 | 03 population | `inventory.subject` + `inventory.complete`, `AllSubjects` | Emit those generic envelopes when inventory pagination is complete | Add `resolve_repository_inventory`; claim `authoritative` on partial pages |
 | 04 IAM | `evidence.identity.*` | Emit `privileged-membership` and `external-access` (and inventory/role/service-account facts **only** when GitHub can observe them) | Become an IdP; emit MFA/last-active/termination unless the API actually yields them |
 | 05 SDLC (**landed**) | `evidence.repository.*` / `evidence.cicd.*` / `evidence.deployment.*` / `evidence.release.*` / `evidence.supply-chain.*` in `{controls,evidence,tests}/sdlc.toml` | Emit those **catalog evidence ids and fact names** | Invent `evidence.github.*`; rewrite `sdlc.toml` |
 | 06 / 07 / 08 | vuln / infra / governance catalogs | Ignore | Touch their files or SDD suites |
-| ADR 0002 ISO sliver | `source.*` types, GH-007 / GH-009 / GH-012 | Keep ISO **needles** in collector sources; do not retarget pack mappings | Rewrite ISO pack, `sdd_iso27001_assurance_*`, or Prompt 12 remap |
-| IAM-015 | `GITHUB_EVIDENCE_TYPES` has no `evidence.identity.*` | Advertise identity types on the **descriptor** without putting them on that const | Edit `tests/sdd/iam_catalog.*` |
+| ADR 0002 ISO sliver | `source.*` types, GH-007 / GH-009 / GH-012 | Keep ISO **needles** in collector sources; do not retarget pack mappings | Rewrite ISO pack, `sdd_iso27001_assurance_*`, or ISO remap remap |
+| IAM-015 | `GITHUB_EVIDENCE_TYPES` has no `evidence.identity.*` | Advertise identity types on the **descriptor** without putting them on that const | Edit `tests/contracts/iam_catalog.*` |
 | Shared collector types | `CollectorDescriptor` has **no** `failure_behavior` field | Document / advertise failure behavior in GitHub-owned sources (const, comments, descriptor docs) | Redesign `CollectorDescriptor` / `CollectorCapabilities` unless a later implement proves it is strictly required |
 
-Rebase rule: Prompt 05 landed `{controls,evidence,tests}/sdlc.toml` (not `evidence/repository.toml`). Emit those catalog evidence ids and fact names. Do not invent a parallel mapping.
+Rebase rule: SDLC catalog landed `{controls,evidence,tests}/sdlc.toml` (not `evidence/repository.toml`). Emit those catalog evidence ids and fact names. Do not invent a parallel mapping.
 
 ---
 
@@ -123,7 +122,7 @@ Capabilities: `pagination: true`, `point_in_time: true`, `worker_safe: true`. **
 
 `CollectorDescriptor` (shared `lib.rs`) has **no** `failure_behavior` field. Serialized descriptor has neither `failureBehavior` nor `failure_behavior` (`ghc_b013`). Do **not** add that field to the shared type unless implement later proves it is strictly required — advertise failure behavior in GitHub-owned sources instead.
 
-ISO GH-012 ([`tests/sdd/iso27001_assurance.target.rs`](../../tests/sdd/iso27001_assurance.target.rs)) keeps a **local** copy of that `source.*` list and asserts each string appears in collector crate sources. IAM-015 imports crate `GITHUB_EVIDENCE_TYPES` and asserts **none** start with `evidence.identity.`.
+ISO GH-012 ([`tests/contracts/iso27001_assurance.target.rs`](../../tests/contracts/iso27001_assurance.target.rs)) keeps a **local** copy of that `source.*` list and asserts each string appears in collector crate sources. IAM-015 imports crate `GITHUB_EVIDENCE_TYPES` and asserts **none** start with `evidence.identity.`.
 
 ### 3.5 Client / transport
 
@@ -150,7 +149,7 @@ Envelope `collection_run_id` is a **deterministic digest of provenance**, not th
 
 ### 3.8 Catalog / fixtures today
 
-`catalog/canonical/v1` has `fixture.example` + IAM `identity.toml` only. No `evidence.repository.*` catalog rows. No `fixtures/assurance/canonical/v1/github/` and no `fixtures/collectors/github/` (`ghc_b028`). Identity goldens live under `fixtures/assurance/canonical/v1/identity/` and are **owned by Prompt 04** — do not rewrite them.
+`catalog/canonical/v1` has `fixture.example` + IAM `identity.toml` only. No `evidence.repository.*` catalog rows. No `fixtures/assurance/canonical/v1/github/` and no `fixtures/collectors/github/` (`ghc_b028`). Identity goldens live under `fixtures/assurance/canonical/v1/identity/` and are **owned by IAM catalog** — do not rewrite them.
 
 ### 3.9 What “GitHub assessment” means today
 
@@ -160,7 +159,7 @@ A caller can collect one or more explicitly named repos and get ISO-sliver `sour
 - protect the **default** branch when it is not `main`;
 - observe scanning, workflows, environments, admins, outside collaborators, deploy keys, or CODEOWNERS;
 - continue after a permission hole;
-- feed Prompt 03/04/05 population tests with `evidence.repository.*` / `evidence.identity.privileged-membership`;
+- feed population runtime/04/05 population tests with `evidence.repository.*` / `evidence.identity.privileged-membership`;
 - distinguish “protection 403” from “protection absent”.
 
 The baseline suite therefore characterizes **source.\* emit, stubs, advertised-vs-collected gap, abort-on-403, empty CollectionRun, and existing redact/ghp_ guards** — not a working canonical provider collector.
@@ -177,10 +176,10 @@ Own **only**:
 crates/weeping-angel-collector/src/github/**
 fixtures/assurance/canonical/v1/github/**     # preferred
   # or fixtures/collectors/github/** if a later convention lands first
-tests/sdd/github_collector.baseline.rs
-tests/sdd/github_collector.target.rs
-docs/sdd/github-collector.md
-docs/sdd/sdd-github-collector.md
+tests/contracts/github_collector.baseline.rs
+tests/contracts/github_collector.target.rs
+docs/specs/github-collector.md
+.sdd/runs/sdd-github-collector.md
 docs/adr/0003-github-collector-canonical-evidence-mapping-draft.md
 ```
 
@@ -190,7 +189,7 @@ Do **not** write `catalog/canonical/v1/{controls,evidence,tests}/{source,cicd,re
 
 ### 4.2 Emit canonical evidence only
 
-Envelope `evidence_type` for **new** observations is the Prompt 04/05 catalog evidence id (IAM fixture convention), **not** `source.*` and **not** `evidence.github.*`.
+Envelope `evidence_type` for **new** observations is the IAM/SDLC catalogs catalog evidence id (IAM fixture convention), **not** `source.*` and **not** `evidence.github.*`.
 
 Canonical tests and golden adapter fixtures must not require `evidence.github.*`. Provider-native ids belong in an optional `extensions` object (see ADR), never as the type id.
 
@@ -200,7 +199,7 @@ Do **not** dual-emit `source.*` and canonical types as first-class observations.
 
 ### 4.3 Mapping: GitHub API → canonical contracts
 
-Fact names and types follow Prompt 05 I1 freeze §4.4 and Prompt 04 §4.4. Use `EvidenceValue` (`Bool`, `Integer`, `String`, `StringList`, `Timestamp`) via `with_value`. Do not stringify booleans/integers for new envelopes. Threshold / policy comparison is the **catalog test’s** job: emit observed counts and booleans; do not invent `Effective`.
+Fact names and types follow SDLC catalog I1 freeze §4.4 and IAM catalog §4.4. Use `EvidenceValue` (`Bool`, `Integer`, `String`, `StringList`, `Timestamp`) via `with_value`. Do not stringify booleans/integers for new envelopes. Threshold / policy comparison is the **catalog test’s** job: emit observed counts and booleans; do not invent `Effective`.
 
 | GitHub observation | Canonical type | Required facts (min) | Notes |
 | --- | --- | --- | --- |
@@ -223,7 +222,7 @@ Fact names and types follow Prompt 05 I1 freeze §4.4 and Prompt 04 §4.4. Use `
 | Rulesets / commit signing | fold into branch-protection / `evidence.repository.commit-signing` `{signing_required}` when observable | GitHub-native ruleset ids stay in `extensions` |
 | Lockfile / provenance / artifact integrity / change-trace / security-review | emit **only** if a GitHub API (or checked-in file) actually yields the I1 facts | Do not fabricate `lockfile_present` / `provenance_present` / `traceable` |
 
-**Generic population envelopes** (Prompt 03, not catalog IDs):
+**Generic population envelopes** (population runtime, not catalog IDs):
 
 - One `inventory.subject` per in-scope repository (`kind=repository`, `id=repo:owner/name`) and per privileged/external identity when those populations are collected.
 - `inventory.complete` with `authoritative=true` **only** when pagination finished for that kind and no page/permission hole remains.
@@ -232,7 +231,7 @@ Fact names and types follow Prompt 05 I1 freeze §4.4 and Prompt 04 §4.4. Use `
 **Scope / selector (GitHub-owned, do not invent `GithubRepositorySelector` on the IR):**
 
 - Accept `org:{login}` and `repo:owner/name` (and comma-lists) on `CollectorScope` labels.
-- Archived exclusion is a GitHub collection-config / request flag (e.g. `exclude_archived=true`), **not** a new Prompt 03 `SubjectSelector`.
+- Archived exclusion is a GitHub collection-config / request flag (e.g. `exclude_archived=true`), **not** a new population runtime `SubjectSelector`.
 - Archived repos: collect inventory+archived facts when they appear in the provider list; **selector “exclude archived”** must drop them from the in-scope protection/scanning populations and from `inventory.subject` used for those tests. Golden: archived repo excluded by selector.
 
 Do not change shared `CollectorScope` / IR subject types unless a label/config approach cannot express org + exclude-archived.
@@ -322,7 +321,7 @@ Deterministic HTTP fixtures + expected envelopes under `fixtures/assurance/canon
 
 Count **independently assessable canonical controls enabled by emitted types**, not GitHub-native object names. The collector still must not emit `Effective`. Hybrid/manual controls count only as “supporting facts present.”
 
-**Must-emit types that unlock ≥18 Prompt-05 automated/hybrid source+CI+release controls** (I1 freeze ids):
+**Must-emit types that unlock ≥18 SDLC catalog automated/hybrid source+CI+release controls** (I1 freeze ids):
 
 | Control | Enabling evidence |
 | --- | --- |
@@ -345,7 +344,7 @@ Count **independently assessable canonical controls enabled by emitted types**, 
 | `control.release.protected-environment` | `evidence.deployment.environment-protection` |
 | `control.release.authorization` | environment reviewers as supporting facts only (hybrid) |
 
-**Plus Prompt-04 IAM controls GitHub can actually observe** (do not emit MFA/last-active/termination unless the API yields them):
+**Plus IAM catalog IAM controls GitHub can actually observe** (do not emit MFA/last-active/termination unless the API yields them):
 
 | Control | Enabling evidence |
 | --- | --- |
@@ -353,11 +352,11 @@ Count **independently assessable canonical controls enabled by emitted types**, 
 | `control.identity.external-access` | outside collaborators |
 | `control.identity.service-account` (supporting) | deploy keys mapped without key material |
 
-Healthy-org evidence must be sufficient for a later catalog (or a target-suite harness that binds Prompt 05/04 test ids when present) to exercise **at least 25** of the above. Target suite enumerates the enabled control ids / type-fact pairs when Prompt 05 TOML is still absent. Do **not** claim lockfile / provenance / artifact-integrity / change-trace / security-review / secure-development-policy as GitHub-exercised unless the collector truly observes those I1 facts.
+Healthy-org evidence must be sufficient for a later catalog (or a target-suite harness that binds SDLC catalog/04 test ids when present) to exercise **at least 25** of the above. Target suite enumerates the enabled control ids / type-fact pairs when SDLC catalog TOML is still absent. Do **not** claim lockfile / provenance / artifact-integrity / change-trace / security-review / secure-development-policy as GitHub-exercised unless the collector truly observes those I1 facts.
 
 ### 4.11 Target suite RED catalog (author before product code)
 
-`tests/sdd/github_collector.target.rs` is currently assertion-empty so the registered binary stays GREEN on HEAD. The **next** slice must add these tests **first** (RED on current code, failures = missing behavior, not compile noise), then implement owned GitHub paths until GREEN.
+`tests/contracts/github_collector.target.rs` is currently assertion-empty so the registered binary stays GREEN on HEAD. The **next** slice must add these tests **first** (RED on current code, failures = missing behavior, not compile noise), then implement owned GitHub paths until GREEN.
 
 Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 
@@ -368,7 +367,7 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 | `ghc_002` | `GITHUB_EVIDENCE_TYPES` still has no `evidence.identity.*`; identity types advertised via a second const |
 | `ghc_003` | Failure behavior documented in GitHub-owned sources without requiring a new `CollectorDescriptor` field |
 | `ghc_004` | `capabilities.pagination` matches a real page walker; `incremental` is honest |
-| `ghc_005` | New envelopes use Prompt 04/05 type ids (`evidence.repository.branch-protection`, …) not `source.*` |
+| `ghc_005` | New envelopes use IAM/SDLC catalogs type ids (`evidence.repository.branch-protection`, …) not `source.*` |
 | `ghc_006` | Facts use typed `EvidenceValue` (bool/int) via `with_value` |
 | `ghc_007` | Protection/ruleset path uses `default_branch`, never hardcoded `main` |
 | `ghc_008` | Mapping table keeps historical `source.*` strings in crate sources (GH-012) |
@@ -406,7 +405,7 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 2. On SHA `e430980c…` / current pre-implement tree: baseline GREEN characterizing §3; after the target-suite slice, target RED on canonical mapping, goldens, pagination, 403-as-diagnostic, filled `CollectionRun`, and credential guards — not unrelated compile noise.
 3. After implement: target GREEN; baseline ignored/superseded; workspace verify stays green.
 4. Descriptor advertises only collected canonical types, true pagination/incremental flags, real permissions, subject types, provider family `source-control`, and failure behavior (GitHub-owned documentation/const; no shared-type redesign unless strictly required).
-5. Emitted envelope types are Prompt 04/05 contracts (`evidence.repository.*`, `evidence.cicd.*`, `evidence.deployment.*`, `evidence.identity.privileged-membership` / `external-access`, plus Prompt 03 `inventory.subject` / `inventory.complete`). No `evidence.github.*` required by canonical tests. No ISO/SOC2/NIS2/DORA ids in collector logic.
+5. Emitted envelope types are IAM/SDLC catalogs contracts (`evidence.repository.*`, `evidence.cicd.*`, `evidence.deployment.*`, `evidence.identity.privileged-membership` / `external-access`, plus population runtime `inventory.subject` / `inventory.complete`). No `evidence.github.*` required by canonical tests. No ISO/SOC2/NIS2/DORA ids in collector logic.
 6. Permission 403/401 produce explicit insufficient-evidence / `PermissionDenied` diagnostics; they never become negative boolean observations; the batch does not abort other subjects.
 7. Pagination for authoritative populations is complete; partial pages never claim `inventory.complete` authoritative.
 8. `collect_batch` records collector version, scope, configuration digest (no secrets), start/completion, evidence count, errors, and `complete`/`partial`/`failed`.
@@ -419,9 +418,9 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 
 ## 6. Out of scope
 
-- ISO 27001 / SOC 2 / NIS2 / DORA remapping (Prompt 12) and any rewrite of `frameworks/iso-27001/2022`
+- ISO 27001 / SOC 2 / NIS2 / DORA remapping (ISO remap) and any rewrite of `frameworks/iso-27001/2022`
 - Calculating `Effective` / `Ineffective` / readiness / SoA
-- Redesigning catalog IDs or landing Prompt 05/06/07/08 catalog TOML
+- Redesigning catalog IDs or landing SDLC, vulnerability, and infrastructure catalogs/08 catalog TOML
 - SaaS credential store, OAuth app, or secret manager
 - Entra / Okta / GitLab / Bitbucket collectors
 - Live mandatory HTTP in unit tests (fixtures remain the golden path)
@@ -429,7 +428,7 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 - Rewriting IAM / population / typed-evidence / ISO SDD suites
 - Adding `failure_behavior` to shared `CollectorDescriptor` unless a later implement cannot advertise otherwise
 - Scanner engines and the one-way bridge
-- Concurrent Prompt 06/07/08 file trees
+- Concurrent vulnerability, infrastructure, and governance catalogs file trees
 
 ---
 
@@ -439,7 +438,7 @@ Suggested names (stable; may add siblings, do not reuse baseline `ghc_b*` ids):
 | --- | --- |
 | Dual-emit `source.*` + canonical types couples tests to GitHub | Emit canonical only; keep `source.*` as mapping-table strings for ISO GH-012 |
 | Changing `GITHUB_EVIDENCE_TYPES` to `evidence.identity.*` breaks IAM-015 | Identity types on descriptor via a second const; do not edit IAM suite |
-| Prompt 05 AC10 snapshots assert “collector untouched” | This slice owns Prompt 09; Prompt 05 must not land a permanent “never emit canonical” pin. Do not edit Prompt 05/06/07/08 trees here |
+| SDLC catalog AC10 snapshots assert “collector untouched” | This slice owns GitHub collector; SDLC catalog must not land a permanent “never emit canonical” pin. Do not edit SDLC, vulnerability, and infrastructure catalogs/08 trees here |
 | Advertised-vs-collected gap returns | Descriptor is generated from implemented modules; target asserts set equality |
 | 403 abort loses the rest of the org | Per-subject diagnostics + `partial` status |
 | Partial pagination marked authoritative | `inventory.complete` only after last page and no list 403 |

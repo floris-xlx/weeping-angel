@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "assurance-ir/v1",
+  "id": "rm:acme-semi-5x5:1",
+  "logicalId": "rm:acme-semi-5x5",
+  "revision": 1,
+  "title": "ACME semi-quantitative 5x5",
+  "scoringMode": "semiQuantitative",
+  "likelihoodScale": {
+    "id": "likelihood.1-5",
+    "levels": [
+      { "id": "1", "label": "Rare", "ordinal": 1 },
+      { "id": "2", "label": "Unlikely", "ordinal": 2 },
+      { "id": "3", "label": "Possible", "ordinal": 3 },
+      { "id": "4", "label": "Likely", "ordinal": 4 },
+      { "id": "5", "label": "Almost certain", "ordinal": 5 }
+    ]
+  },
+  "impactScale": {
+    "id": "impact.1-5",
+    "levels": [
+      { "id": "1", "label": "Insignificant", "ordinal": 1 },
+      { "id": "2", "label": "Minor", "ordinal": 2 },
+      { "id": "3", "label": "Moderate", "ordinal": 3 },
+      { "id": "4", "label": "Major", "ordinal": 4 },
+      { "id": "5", "label": "Catastrophic", "ordinal": 5 }
+    ]
+  },
+  "ratingScale": {
+    "levels": [
+      { "id": "low", "label": "Low", "ordinal": 1 },
+      { "id": "medium", "label": "Medium", "ordinal": 2 },
+      { "id": "high", "label": "High", "ordinal": 3 },
+      { "id": "critical", "label": "Critical", "ordinal": 4 }
+    ]
+  },
+  "combination": "matrix",
+  "matrix": {
+    "cells": [
+      { "likelihoodOrdinal": 1, "impactOrdinal": 1, "ratingId": "low" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 2, "ratingId": "low" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 3, "ratingId": "low" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 4, "ratingId": "medium" },
+      { "likelihoodOrdinal": 1, "impactOrdinal": 5, "ratingId": "medium" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 1, "ratingId": "low" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 2, "ratingId": "medium" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 3, "ratingId": "medium" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 4, "ratingId": "high" },
+      { "likelihoodOrdinal": 2, "impactOrdinal": 5, "ratingId": "high" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 1, "ratingId": "low" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 2, "ratingId": "medium" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 3, "ratingId": "high" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 4, "ratingId": "high" },
+      { "likelihoodOrdinal": 3, "impactOrdinal": 5, "ratingId": "critical" },
+      { "likelihoodOrdinal": 4, "impactOrdinal": 1, "ratingId": "medium" },
+      { "likelihoodOrdinal": 4, "impactOrdinal": 2, "ratingId": "high" },
+      { "likelihoodOrdinal": 4, "impactOrdinal": 3, "ratingId": "high" },
+      { "likelihoodOrdinal": 4, "impactOrdinal": 4, "ratingId": "critical" },
+      { "likelihoodOrdinal": 4, "impactOrdinal": 5, "ratingId": "critical" },
+      { "likelihoodOrdinal": 5, "impactOrdinal": 1, "ratingId": "medium" },
+      { "likelihoodOrdinal": 5, "impactOrdinal": 2, "ratingId": "high" },
+      { "likelihoodOrdinal": 5, "impactOrdinal": 3, "ratingId": "critical" },
+      { "likelihoodOrdinal": 5, "impactOrdinal": 4, "ratingId": "critical" },
+      { "likelihoodOrdinal": 5, "impactOrdinal": 5, "ratingId": "critical" }
+    ]
+  },
+  "appetite": { "maxRatingId": "medium" },
+  "tolerance": { "maxRatingId": "critical" },
+  "acceptanceThreshold": { "maxRatingId": "medium" },
+  "locked": false
+}

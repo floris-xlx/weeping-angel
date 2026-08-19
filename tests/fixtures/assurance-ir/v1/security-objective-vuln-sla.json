@@ -1,0 +1,32 @@
+{
+  "id": "objective.vuln.critical-sla",
+  "schemaVersion": "assurance-ir/v1",
+  "title": "Critical vulnerabilities remediated within seven days",
+  "description": "Percentage of in-scope critical vulnerabilities remediated within 7 days.",
+  "owner": { "team": "security-governance" },
+  "scope": {
+    "organizations": ["org:acme"],
+    "subjects": [
+      {
+        "kind": "repository",
+        "ids": ["repo:payments-api"],
+        "tags": {},
+        "scope": "anyOf"
+      }
+    ],
+    "exclusions": []
+  },
+  "metricId": "metric.vuln.critical-sla",
+  "targetId": "target.vuln.critical-sla.gte-98",
+  "measurementSource": {
+    "evidenceType": "evidence.vulnerability.remediation",
+    "collection": "automated",
+    "evidenceRequirementId": "evidence.vulnerability.remediation"
+  },
+  "cadenceSeconds": 2592000,
+  "startAt": "2026-01-01T00:00:00Z",
+  "deadlineAt": "2026-06-30T00:00:00Z",
+  "lifecycle": "active",
+  "logicalId": "objective.vuln.critical-sla",
+  "revision": 1
+}

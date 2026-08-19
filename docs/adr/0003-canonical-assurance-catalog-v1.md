@@ -6,8 +6,8 @@
 | Date | 2026-08-18 |
 | Deciders | Weeping Angel maintainers |
 | Supercedes | Nothing. **Extends** [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) and [ADR 0002](0002-iso-27001-assurance-vertical.md). Does **not** replace pack IDs, ISO mappings, or IR `ControlId` validation. |
-| Spec | [`docs/sdd/canonical-assurance-catalog-v1.md`](../sdd/canonical-assurance-catalog-v1.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
+| Spec | [`docs/specs/canonical-assurance-catalog-v1.md`](../specs/canonical-assurance-catalog-v1.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Planning baseline | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
 | Tests | `sdd_canonical_assurance_catalog_target` GREEN (CAT-001…016). Baseline absence asserts superseded / ignored. |
 
@@ -107,7 +107,7 @@ CanonicalCatalog::controls() / evidence() / tests() / root()
 
 `load` always runs `validate` before returning. Downstream domain files are listed in the manifest; the crate does not hard-code fixture names.
 
-### 3. Two ID layers until ISO remap (prompt 12)
+### 3. Two ID layers until ISO remap
 
 | Layer | Examples | Enforcement |
 | --- | --- | --- |
@@ -135,7 +135,7 @@ iso-27001 iso-27701 iso-27007 soc-2 nis-2
 
 Hex is `weeping-angel-assurance-ir::canonical_digest` over parsed documents (schema, catalog id/version, controls/evidence/tests as `BTreeMap` values — sorted by id). Payload is `serde_json::to_vec`, **not** raw file bytes (CRLF / TOML key order must not change the hash).
 
-The prefix is a **display / identity** prefix concatenated onto the hex. It is **not** mixed into the SHA-256 input (unlike IR `typed_canonical_digest`). Prompt 11 snapshots must persist the full display string.
+The prefix is a **display / identity** prefix concatenated onto the hex. It is **not** mixed into the SHA-256 input (unlike IR `typed_canonical_digest`). assessment lineage snapshots must persist the full display string.
 
 Nondeterminism is prevented by construction (`BTreeMap` / sorted file checks). There is no `NondeterministicDigest` error variant.
 
@@ -175,9 +175,9 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 
 **Positive**
 
-- Downstream prompts add TOML + a manifest entry; loader source stays unchanged.
-- Prompt 11 can persist `CanonicalCatalogSnapshot` using the catalog digest display string.
-- Prompt 12 remaps ISO `to =` onto `control.*` IDs ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
+- Downstream slices add TOML + a manifest entry; loader source stays unchanged.
+- assessment lineage can persist `CanonicalCatalogSnapshot` using the catalog digest display string.
+- ISO remap remaps ISO `to =` onto `control.*` IDs ([ADR 0003 remap](0003-iso27001-canonical-remap.md)).
 - Architecture tests (CAT-012…014) keep framework SDK-free and collector framework-blind.
 
 **Negative / cost**
@@ -200,8 +200,8 @@ It does **not** authorize SOC 2 / NIS2 / DORA / ISO normative text in `catalog/`
 
 ## Related
 
-- Spec SSOT: [`docs/sdd/canonical-assurance-catalog-v1.md`](../sdd/canonical-assurance-catalog-v1.md)
-- Public contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spec SSOT: [`docs/specs/canonical-assurance-catalog-v1.md`](../specs/canonical-assurance-catalog-v1.md)
+- Public contract: [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md)
 - ADR 0001: [`0001-inwardly-extensible-assurance-runtime.md`](0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002: [`0002-iso-27001-assurance-vertical.md`](0002-iso-27001-assurance-vertical.md)
 - Packs (unchanged ownership): [`frameworks/README.md`](../../frameworks/README.md)

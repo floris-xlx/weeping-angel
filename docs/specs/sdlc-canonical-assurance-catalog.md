@@ -4,23 +4,22 @@
 | --- | --- |
 | Status | **Implemented — target GREEN; baseline superseded** |
 | Program | Canonical Assurance Catalog v1 |
-| Slice | Prompt 05 — source-control, change-management, CI/CD, secure-development, release-integrity, software-supply-chain |
-| Source prompt | [`docs/prompts/canonical-assurance-v1/05-sdlc-catalog.md`](../prompts/canonical-assurance-v1/05-sdlc-catalog.md) |
+| Slice | SDLC catalog — source-control, change-management, CI/CD, secure-development, release-integrity, software-supply-chain |
 | Characterization SHA | `e430980c0d27a8138a153d49b62ddf3c57827891` (`main`, 2026-08-19; HEAD still has no SDLC population family) |
-| Prior I1 freeze (reuse IDs, not as SSOT) | [`docs/sdd/sdd-sdd-625d28d3-3dbb1ba8da/spec.md`](sdd-sdd-625d28d3-3dbb1ba8da/spec.md) — 26 controls, 20 evidence types, 26 tests, 7 fixtures |
-| Prior abort notes | [`docs/sdd/xylex-sdd-v3-v5-sdlc-catalog-failure.md`](xylex-sdd-v3-v5-sdlc-catalog-failure.md) |
+| Prior I1 freeze (reuse IDs, not as SSOT) | [`.sdd/runs/sdd-sdd-625d28d3-3dbb1ba8da/spec.md`](../../.sdd/runs/sdd-sdd-625d28d3-3dbb1ba8da/spec.md) — 26 controls, 20 evidence types, 26 tests, 7 fixtures |
+| Prior abort notes | [`.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md`](../../.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md) |
 | Dual-suite | `sdd_sdlc_catalog_target` GREEN (SDLC-001…016); `sdd_sdlc_catalog_baseline` superseded (`#[ignore]`) |
 | Transition | **replacement** (IAM pattern): baseline `#[ignore = "superseded by sdd_sdlc_catalog_target"]` |
 | ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt-01 SSOT (do not overwrite) | [`docs/sdd/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — pointer-only |
-| Prompt-02 / 03 (consumed) | [`docs/sdd/typed-evidence.md`](typed-evidence.md), [`docs/sdd/population-runtime.md`](population-runtime.md) |
-| Prompt-04 pattern (do not overwrite) | [`docs/sdd/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) + [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) + `tests/sdd/iam_catalog.{baseline,target}.rs` |
-| Spine / ISO law | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/sdd/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) |
+| Catalog-infrastructure SSOT (do not overwrite) | [`docs/specs/canonical-assurance-catalog-v1.md`](canonical-assurance-catalog-v1.md) — pointer-only |
+| Typed evidence / population runtime (consumed) | [`docs/specs/typed-evidence.md`](typed-evidence.md), [`docs/specs/population-runtime.md`](population-runtime.md) |
+| IAM pattern (do not overwrite) | [`docs/specs/iam-canonical-assurance-catalog.md`](iam-canonical-assurance-catalog.md) + [`docs/adr/0003-iam-canonical-assurance-catalog.md`](../adr/0003-iam-canonical-assurance-catalog.md) + `tests/contracts/iam_catalog.{baseline,target}.rs` |
+| Spine / ISO law | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/iso-27001-automated-assurance-mvp.md`](iso-27001-automated-assurance-mvp.md), ADR 0001 / 0002 |
 | Workspace verify | `cargo test --workspace --features demo`; `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
 | Product manager | Cargo (`pnpm` is `apps/docs` only) |
 
-This document is the durable SSOT for the **SDLC catalog slice**. It does not replace Prompt 01 catalog infrastructure, Prompt 02 typed evidence, Prompt 03 population runtime, or the Prompt 04 IAM family. Prompts 01–04 have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
+This document is the durable SSOT for the **SDLC catalog slice**. It does not replace catalog infrastructure catalog infrastructure, typed evidence typed evidence, population runtime population runtime, or the IAM catalog IAM family. catalog infrastructure through IAM have landed; this slice consumes their loader, `EvidenceValue`, and population evaluator and **must not** invent a second copy.
 
 This spec is the durable SSOT. Product TOML, fixtures, contract pointer, and ADR accept have landed.
 
@@ -49,19 +48,19 @@ There is no `control.source.default-branch-protection` population family, no `ev
 
 **User-visible goal:** a coherent SDLC catalog (20–30 independently assessable controls; this slice specifies **26**) that evaluates realistic **repository / branch / deployment** populations from any future SCM/CI collector’s canonical evidence, produces deterministic explainable results (missing ≠ stale ≠ failure ≠ manual review ≠ approved exception), and passes catalog validation plus full workspace verification.
 
-This slice does **not** claim ISO/SOC 2 coverage. Framework remapping is Prompt 12 — landed for A.8.25 / A.8.26 onto `control.source.*`; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13. This slice does **not** expand the GitHub collector (Prompt 09). This slice does **not** implement Prompt 06/07/08 families.
+This slice does **not** claim ISO/SOC 2 coverage. Framework remapping is ISO remap — landed for A.8.25 / A.8.26 onto `control.source.*`; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13. This slice does **not** expand the GitHub collector. This slice does **not** implement vulnerability, infrastructure, and governance catalogs families.
 
 ---
 
 ## 2. Dependencies and fail-closed blockers
 
-| Prompt | Owns | On characterization SHA `e430980c…` | This slice may |
+| Slice | Owns | On characterization SHA `e430980c…` | This slice may |
 | --- | --- | --- | --- |
 | 01 catalog contract | `catalog/canonical/v1/`, `CanonicalCatalog::{load,validate,digest}`, stable-ID rules | **Landed.** Identity + fixture.example listed in `manifest.toml`. | Add SDLC TOML + manifest lines. Do not invent a second loader/validator/digest. Do not delete fixture.example IDs. |
 | 02 typed evidence | Typed `EvidenceValue`, seal rules | **Landed.** | Declare required fact *names* and semantic types. No second value enum. |
 | 03 population runtime | Subject populations, `AllSubjects` / `CoverageAtLeast` / `NoneSubjects` / `ExceptionApproved` / `InsufficientEvidence` | **Landed.** Identity inventory special-case + generic `inventory.subject` / `inventory.complete`. | Declare population-based tests. **Do not locally reimplement coverage math. Do not add `resolve_repository_inventory`. Do not change generic population semantics.** |
 | 04 IAM family | `control.identity.*` | **Landed.** | Leave identity files and `sdd_iam_catalog_target` green. |
-| 06 vulnerability | `control.vulnerability.*` | **Landed** (`vulnerability.toml`; SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md)). | Do not implement finding/SLA/coverage family. Scanning-*enabled* belongs here; finding-as-evidence belongs in Prompt 06. |
+| 06 vulnerability | `control.vulnerability.*` | **Landed** (`vulnerability.toml`; SSOT [`vulnerability-canonical-assurance-catalog.md`](vulnerability-canonical-assurance-catalog.md)). | Do not implement finding/SLA/coverage family. Scanning-*enabled* belongs here; finding-as-evidence belongs in vulnerability catalog. |
 | 07 / 08 | infrastructure / governance | Spec / draft only. | Do not implement those families. |
 | 09 GitHub collector | emit canonical facts from GitHub | Sibling spec exists; collector still emits `source.*` only. | Do not expand the collector. |
 | 12 ISO remap | retarget pack mappings onto `control.*` | Spec / suite sibling; pack still maps to `source.branch-protection`. | Do not retarget ISO mappings. |
@@ -72,7 +71,7 @@ Rebase rule: adapt SDLC content to the landed contracts. Prefer existing `Canoni
 
 ## 3. Current behavior (characterization on `e430980c0d27a8138a153d49b62ddf3c57827891`)
 
-Inspected: `catalog/canonical/v1/`, `crates/weeping-angel-canonical-catalog`, `weeping-angel-control-test` (`population.rs`), `weeping-angel-collector/src/github/descriptor.rs`, `frameworks/iso-27001/2022/{metadata,mappings}.toml`, `tests/sdd/{iam,canonical,iso27001}_*`, root `Cargo.toml` `[[test]]` table, Prompt 05, IAM SSOT, ADR draft, `docs/sdd/xylex-sdd-v3-v5-sdlc-catalog-failure.md`.
+Inspected: `catalog/canonical/v1/`, `crates/weeping-angel-canonical-catalog`, `weeping-angel-control-test` (`population.rs`), `weeping-angel-collector/src/github/descriptor.rs`, `frameworks/iso-27001/2022/{metadata,mappings}.toml`, `tests/contracts/{iam,canonical,iso27001}_*`, root `Cargo.toml` `[[test]]` table, SDLC catalog, IAM SSOT, ADR draft, `.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md`.
 
 ### 3.1 Canonical catalog tree
 
@@ -112,7 +111,7 @@ Catalog validator already rejects reserved provider/framework **ID segments** (`
 
 Mappings (unchanged): `iso27001:a.8.25` → `source.branch-protection` / `source.required-review` / `source.code-ownership`; `iso27001:a.8.26` → `source.security-scanning`. Completeness remains `partial`.
 
-`sdd_iso27001_assurance_target` froze prefixes `source.` and those pack ids. This slice **must not** retarget mappings or rename pack ids. Prompt 12 remapped A.8.25 / A.8.26 onto `control.source.default-branch-protection` / `required-review` / `secure-development-policy` / `secret-scanning` / `security-review` and retired the slivers ([remap §13](iso-27001-canonical-remap.md#13-implement-log)).
+`sdd_iso27001_assurance_target` froze prefixes `source.` and those pack ids. This slice **must not** retarget mappings or rename pack ids. ISO remap remapped A.8.25 / A.8.26 onto `control.source.default-branch-protection` / `required-review` / `secure-development-policy` / `secret-scanning` / `security-review` and retired the slivers ([remap §13](iso-27001-canonical-remap.md#13-implement-log)).
 
 Those tests are presence/hybrid checks, not “all non-archived in-scope repositories have a protected default branch.”
 
@@ -122,7 +121,7 @@ Those tests are presence/hybrid checks, not “all non-archived in-scope reposit
 
 Catalog tests must **not** import or assert against `GITHUB_EVIDENCE_TYPES` as the SDLC contract. Scanner engines (`src/engines/*`, `src/depcheck/*`) are not evidence contracts.
 
-Sibling pin: `tests/sdd/github_collector.baseline.rs` `ghc_b028` asserts `catalog/canonical/v1/evidence/repository.toml` **does not exist**. Prefer a single `sdlc.toml` per section so that pin stays green.
+Sibling pin: `tests/contracts/github_collector.baseline.rs` `ghc_b028` asserts `catalog/canonical/v1/evidence/repository.toml` **does not exist**. Prefer a single `sdlc.toml` per section so that pin stays green.
 
 ### 3.4 Population runtime (consume, do not change)
 
@@ -140,20 +139,20 @@ There is **no** `resolve_repository_inventory`. This slice must not add one. Rep
 
 ### 3.5 Test harness topology (Rust)
 
-Language: Rust. Package manager: Cargo. Test framework: `cargo test` (libtest). Root `Cargo.toml` registers SDD suites with explicit `[[test]]` entries. `tests/sdd/*.rs` is **not** auto-discovered.
+Language: Rust. Package manager: Cargo. Test framework: `cargo test` (libtest). Root `Cargo.toml` registers SDD suites with explicit `[[test]]` entries. `tests/contracts/*.rs` is **not** auto-discovered.
 
-On this SHA, registered SDD targets include `sdd_{assurance_runtime,iso27001_assurance,iso27001_remap,population_runtime,typed_evidence,iam_catalog,canonical_assurance_catalog,github_collector,assessment_lineage}_{baseline,target}` and `sdd_compliance_ir_target`. There is **no** `sdd_sdlc_catalog_*` target and **no** `tests/sdd/sdlc_catalog.{baseline,target}.rs` on the primary tree (scratch copies live only under `docs/sdd/sdd-sdd-*`).
+On this SHA, registered SDD targets include `sdd_{assurance_runtime,iso27001_assurance,iso27001_remap,population_runtime,typed_evidence,iam_catalog,canonical_assurance_catalog,github_collector,assessment_lineage}_{baseline,target}` and `sdd_compliance_ir_target`. There is **no** `sdd_sdlc_catalog_*` target and **no** `tests/contracts/sdlc_catalog.{baseline,target}.rs` on the primary tree (scratch copies live only under `.sdd/runs/sdd-sdd-*`).
 
 **Harness law:** implement must register:
 
 ```toml
 [[test]]
 name = "sdd_sdlc_catalog_baseline"
-path = "tests/sdd/sdlc_catalog.baseline.rs"
+path = "tests/contracts/sdlc_catalog.baseline.rs"
 
 [[test]]
 name = "sdd_sdlc_catalog_target"
-path = "tests/sdd/sdlc_catalog.target.rs"
+path = "tests/contracts/sdlc_catalog.target.rs"
 ```
 
 Without those rows, `cargo test --test sdd_sdlc_catalog_*` cannot run.
@@ -171,7 +170,7 @@ The baseline suite therefore characterizes **absence of the SDLC population fami
 
 ### 3.7 TargetAuthor hygiene (prior v3/v5 abort)
 
-Prior Prompt 05 target suites aborted protocol gates (`docs/sdd/xylex-sdd-v3-v5-sdlc-catalog-failure.md`):
+Prior SDLC catalog target suites aborted protocol gates (`.sdd/runs/xylex-sdd-v3-v5-sdlc-catalog-failure.md`):
 
 - Do **not** read the target file’s own source and assert it does not contain `#[ignore` (self-referential; unsatisfiable — the assertion quotes the needle).
 - Do **not** pair a self-read of the test file with a negated `.contains("literal")` (I4a false-positive). Hyphen-id rules belong on **loaded catalog IDs** (`CanonicalCatalog` product state), not on the test source text.
@@ -322,13 +321,13 @@ Seal rules still apply: no credential-shaped keys; no compliance narratives (`ce
 
 Additional supporting types may be added only if referenced by a control and a test (no orphans). Prefer extending facts on the types above.
 
-**Generic population envelopes (not new catalog ids):** fixtures / the target harness MUST also establish Prompt 03 authoritative completeness using existing types `inventory.subject` (`kind=repository` or `deployment`) and `inventory.complete` (`authoritative=true`), and/or `EvidenceSet::set_population`. Do not treat inferred Unknown populations as `Effective`.
+**Generic population envelopes (not new catalog ids):** fixtures / the target harness MUST also establish population runtime authoritative completeness using existing types `inventory.subject` (`kind=repository` or `deployment`) and `inventory.complete` (`authoritative=true`), and/or `EvidenceSet::set_population`. Do not treat inferred Unknown populations as `Effective`.
 
 IAM fixtures store bools as strings (`"true"`). SDLC fixtures may do the same (`with_fact` string-compat) or use typed `EvidenceValue`; either is valid as long as evaluator comparisons succeed.
 
 ### 4.5 Tests (population-based, not existence checks)
 
-Required reusable tests (Prompt 05 examples + extras so no control is untested) — **26** tests, one per control:
+Required reusable tests (SDLC catalog examples + extras so no control is untested) — **26** tests, one per control:
 
 ```text
 test.source.repository-inventory-complete
@@ -359,7 +358,7 @@ test.source.secure-development-policy-attested
 test.supply-chain.unsupported-components-handled
 ```
 
-Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 / IAM `all-subjects` / `coverage-at-least`):
+Semantics (authoritative intent; exact `TestExpr` spelling follows population runtime / IAM `all-subjects` / `coverage-at-least`):
 
 | Test | Population | Pass | Fail | Missing | Stale |
 | --- | --- | --- | --- | --- | --- |
@@ -375,7 +374,7 @@ Semantics (authoritative intent; exact `TestExpr` spelling follows Prompt 03 / I
 
 **Forbidden encoding:** `Exists(evidence.repository.branch-protection)` as the body of `test.source.default-branches-protected`. Existence of some protection fact is not protection on the population. The infrastructure fixture may keep `exists` **only** on `test.source.protected-branch`.
 
-**Shipped `TestExpr` bindings** (Prompt 03 `all-subjects` / `coverage-at-least` 100%; hybrid/manual use `manual-review`):
+**Shipped `TestExpr` bindings** (population runtime `all-subjects` / `coverage-at-least` 100%; hybrid/manual use `manual-review`):
 
 | Test | `op` | Field |
 | --- | --- | --- |
@@ -446,9 +445,9 @@ Follow IAM fixture JSON shape (`fixture`, `collectedAt`, `evidence[]` with `type
 
 ### 4.8 Integration rules (consume, do not redesign)
 
-- Loader / validate / digest: Prompt 01 `CanonicalCatalog`. SDLC files must pass `validate`.
-- Typed facts: Prompt 02 `EvidenceValue`. Prefer `with_value`; `with_fact` remains string-compat (IAM fixtures still store `"true"` strings).
-- Population evaluation: Prompt 03 `evaluate` / `evaluate_coverage`. SDLC tests are **declarations**. Do not implement `AllSubjects` here. Do not add `resolve_repository_inventory` or an `SdlcPopulation` fork.
+- Loader / validate / digest: catalog infrastructure `CanonicalCatalog`. SDLC files must pass `validate`.
+- Typed facts: typed evidence `EvidenceValue`. Prefer `with_value`; `with_fact` remains string-compat (IAM fixtures still store `"true"` strings).
+- Population evaluation: population runtime `evaluate` / `evaluate_coverage`. SDLC tests are **declarations**. Do not implement `AllSubjects` here. Do not add `resolve_repository_inventory` or an `SdlcPopulation` fork.
 - Exception: reuse IR `Exception` + `Effectiveness::ExceptionApproved`.
 - Subject kinds: existing IR only.
 - ISO pack, GitHub collector, scanner engines, framework compiler, generic `TestExpr` semantics: **untouched**.
@@ -456,12 +455,12 @@ Follow IAM fixture JSON shape (`fixture`, `collectedAt`, `evidence[]` with `type
 
 ### 4.9 Dual-suite protocol
 
-Follow `tests/sdd/iam_catalog.{baseline,target}.rs`. Root `Cargo.toml` does **not** auto-discover `tests/sdd/*.rs`.
+Follow `tests/contracts/iam_catalog.{baseline,target}.rs`. Root `Cargo.toml` does **not** auto-discover `tests/contracts/*.rs`.
 
 | Suite | Path | Role |
 | --- | --- | --- |
-| Baseline | `tests/sdd/sdlc_catalog.baseline.rs` · `sdd_sdlc_catalog_baseline` | GREEN on **current** tree: no SDLC population family (`control.source.default-branch-protection` absent); ISO sliver present; fixture `control.source.protected-branch` exists-only; IAM sibling present; collector still `source.*`; no `resolve_repository_inventory`. **Do not** assert absence of every `control.source.*` (fixture collision). After target GREEN: `#[ignore = "superseded by sdd_sdlc_catalog_target"]`. |
-| Target | `tests/sdd/sdlc_catalog.target.rs` · `sdd_sdlc_catalog_target` | RED on current tree for **missing SDLC family / population tests / fixtures** — not compile noise. Then **GREEN** — CI gate (SDLC-001…016). Assert **loaded catalog IDs** and fixture evaluation, never self-read suite text to assert absence of a substring that appears in the assertion. |
+| Baseline | `tests/contracts/sdlc_catalog.baseline.rs` · `sdd_sdlc_catalog_baseline` | GREEN on **current** tree: no SDLC population family (`control.source.default-branch-protection` absent); ISO sliver present; fixture `control.source.protected-branch` exists-only; IAM sibling present; collector still `source.*`; no `resolve_repository_inventory`. **Do not** assert absence of every `control.source.*` (fixture collision). After target GREEN: `#[ignore = "superseded by sdd_sdlc_catalog_target"]`. |
+| Target | `tests/contracts/sdlc_catalog.target.rs` · `sdd_sdlc_catalog_target` | RED on current tree for **missing SDLC family / population tests / fixtures** — not compile noise. Then **GREEN** — CI gate (SDLC-001…016). Assert **loaded catalog IDs** and fixture evaluation, never self-read suite text to assert absence of a substring that appears in the assertion. |
 
 Suggested target assertion clusters (titles include the id):
 
@@ -481,15 +480,15 @@ Suggested target assertion clusters (titles include the id):
 | SDLC-012 | Approved unexpired exception → `ExceptionApproved` / excepted for that subject |
 | SDLC-013 | Authorization / authority-separation / security-review / secure-development-policy marked Hybrid or Manual |
 | SDLC-014 | Catalog tests do not reference `GITHUB_EVIDENCE_TYPES`, scanner engines, or GitHub-native type ids |
-| SDLC-015 | Identity family, CAT fixture IDs, and Prompt 03 `population.rs` identity/generic resolution remain; no `resolve_repository_inventory` |
+| SDLC-015 | Identity family, CAT fixture IDs, and population runtime `population.rs` identity/generic resolution remain; no `resolve_repository_inventory` |
 | SDLC-016 | `sdd_iso27001_assurance_target`, `sdd_iam_catalog_target`, `sdd_canonical_assurance_catalog_target` stay green; `ghc_b028` stays green (no `evidence/repository.toml`) |
 
 ### 4.10 Documentation after implement
 
 - This file’s landed-record section (§12).
 - Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired).
-- Pointer on [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) (family exists after TOML lands).
-- Pointer-only mention on Prompt 01 SSOT. Do not overwrite Prompt 01 / 04 SSOTs.
+- Pointer on [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (family exists after TOML lands).
+- Pointer-only mention on catalog infrastructure SSOT. Do not overwrite catalog infrastructure / 04 SSOTs.
 
 No GitHub collector expansion or ISO remap is claimed by this slice.
 
@@ -499,43 +498,43 @@ No GitHub collector expansion or ISO remap is claimed by this slice.
 
 Testable. Implementation is out of this spec phase.
 
-1. Dual-suite `sdd_sdlc_catalog_baseline` + `sdd_sdlc_catalog_target` is registered in root `Cargo.toml` at paths `tests/sdd/sdlc_catalog.baseline.rs` and `tests/sdd/sdlc_catalog.target.rs`.
+1. Dual-suite `sdd_sdlc_catalog_baseline` + `sdd_sdlc_catalog_target` is registered in root `Cargo.toml` at paths `tests/contracts/sdlc_catalog.baseline.rs` and `tests/contracts/sdlc_catalog.target.rs`.
 2. On current tree: baseline GREEN characterizing **no SDLC population family**, ISO sliver + `control.source.protected-branch` exists-only fixture, IAM sibling present, collector still `source.*`, no `resolve_repository_inventory` — and **not** “no `control.source.*` at all.”
 3. On current tree: target RED for missing SDLC family / population tests / fixtures, not compile noise; suite never self-reads its source to assert `!contains("#[ignore")` or other literals that appear in the assertion.
 4. After implement: target GREEN; baseline proven FAIL or additive-documented then `#[ignore = "superseded by sdd_sdlc_catalog_target"]`; target still GREEN; `cargo test --workspace --features demo`, `fmt --check`, and `clippy -D warnings` stay green.
 5. Twenty-six `control.source.*` / `control.cicd.*` / `control.release.*` / `control.supply-chain.*` controls exist with stable ids, domains, evidence requirements, test refs, and honest automation class; independently assessable count stays in 20–30; `control.source.protected-branch` fixture remains; population default-branch id is `control.source.default-branch-protection`.
 6. The twenty evidence types in §4.4 are declared as facts, not conclusions; IDs are provider-neutral (`evidence.repository.*` etc., not `evidence.github.*`).
-7. Tests include at least the nine Prompt-05 example ids and evaluate **populations** (all non-archived in-scope default branches protected), not existence of one envelope.
+7. Tests include at least the nine SDLC catalog example ids and evaluate **populations** (all non-archived in-scope default branches protected), not existence of one envelope.
 8. Evaluator outcomes distinguish missing data, stale data, actual failure, manual review, and approved exception on the seven named fixtures; missing scan evidence is `InsufficientEvidence`, not technical failure; partial/unknown population cannot be `Effective` on all-subjects tests.
 9. Release authorization, authority-separation, security-review, and secure-development-policy are Hybrid or Manual; they cannot auto-pass from a single technical flag.
 10. Catalog validator accepts the SDLC slice: no duplicate/orphan/dangling ids, no provider names, no ISO/SOC2/NIS2 references in canonical SDLC content; files listed in `manifest.toml`; preferred paths are `{controls,evidence,tests}/sdlc.toml` (no `evidence/repository.toml`).
 11. ISO pack control ids and mappings are unchanged; `sdd_iso27001_assurance_target` remains green.
 12. GitHub collector is not expanded; SDLC catalog tests do not couple to `GITHUB_EVIDENCE_TYPES` or scanner internals.
-13. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no `resolve_repository_inventory` / `SdlcPopulation` fork. Prompt 03 coverage is consumed as-is.
+13. No second `CanonicalCatalog` loader, no second `EvidenceValue` enum, no `resolve_repository_inventory` / `SdlcPopulation` fork. population runtime coverage is consumed as-is.
 14. Approved-exception fixture uses existing Exception IR; expired/revoked exceptions do not pass.
 15. IAM family and catalog-infrastructure fixture IDs remain; `sdd_iam_catalog_target` and `sdd_canonical_assurance_catalog_target` stay green.
-16. Prompt 01 SSOT `docs/sdd/canonical-assurance-catalog-v1.md` is pointer-only (not overwritten as domain SSOT); this file is the SDLC slice SSOT.
+16. catalog infrastructure SSOT `docs/specs/canonical-assurance-catalog-v1.md` is pointer-only (not overwritten as domain SSOT); this file is the SDLC slice SSOT.
 17. A GitHub, GitLab, or Bitbucket collector could independently populate the same evidence contracts and receive the same control results (no GitHub-native object names in canonical IDs).
-18. After implement, public contract `docs/contracts/assurance-runtime.md` names the landed SDLC family; ADR is accepted at [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (no `-draft`).
+18. After implement, public contract `docs/specs/assurance-runtime.md` names the landed SDLC family; ADR is accepted at [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (no `-draft`).
 
 ---
 
 ## 6. Out of scope
 
-- Expanding or remapping the GitHub collector (Prompt 09).
+- Expanding or remapping the GitHub collector.
 - Implementing GitLab, Bitbucket, Azure DevOps, or Gitea collectors.
-- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.source.*` (Prompt 12 — A.8.25 / A.8.26 remapped; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13).
-- Redesign of `CanonicalCatalog` loader/validator/digest (Prompt 01).
-- Redesign of typed evidence (Prompt 02).
-- Changing generic population semantics or adding `resolve_repository_inventory` (Prompt 03).
-- Rewriting ISO `metadata.toml` / `mappings.toml` (`source.branch-protection` stayed until Prompt 12 remapped A.8.25 / A.8.26; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
+- Remapping ISO 27001 (or SOC 2 / NIS2) onto `control.source.*` (ISO remap — A.8.25 / A.8.26 remapped; see [`iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13).
+- Redesign of `CanonicalCatalog` loader/validator/digest (catalog infrastructure).
+- Redesign of typed evidence.
+- Changing generic population semantics or adding `resolve_repository_inventory` (population runtime).
+- Rewriting ISO `metadata.toml` / `mappings.toml` (`source.branch-protection` stayed until ISO remap remapped A.8.25 / A.8.26; [remap §13](iso-27001-canonical-remap.md#13-implement-log)).
 - Removing or changing `control.source.protected-branch` fixture IDs.
 - Changing IAM catalog content.
-- Implementing Prompt 06 / 07 / 08 families.
+- Implementing vulnerability catalog / 07 / 08 families.
 - Scanner engine / depcheck / SARIF adapter changes.
 - New `SubjectKind` variants.
 - Certification, “compliant”, or audit-passed language.
-- Inventing a parallel ADR or overwriting Prompt 01 SSOT as the domain SSOT.
+- Inventing a parallel ADR or overwriting catalog infrastructure SSOT as the domain SSOT.
 
 ---
 
@@ -544,7 +543,7 @@ Testable. Implementation is out of this spec phase.
 | Risk | Mitigation |
 | --- | --- |
 | Fixture `control.source.protected-branch` collides with the new family | Distinct population id `control.source.default-branch-protection`; CAT-015 fixture stays exists-only. Baseline must not assert “no `control.source.*`”. |
-| `tests/sdd/*.rs` unregistered → `cargo test --test sdd_sdlc_catalog_*` fails | AC-1: implement adds `[[test]]` rows. |
+| `tests/contracts/*.rs` unregistered → `cargo test --test sdd_sdlc_catalog_*` fails | AC-1: implement adds `[[test]]` rows. |
 | Implementer adds `resolve_repository_inventory` | AC-13 + SDLC-015; use `inventory.subject` / `inventory.complete` / explicit population. |
 | Existence checks sneak in as SDLC tests | SDLC-009: unprotected-default-branch must fail; a lone protection envelope must not pass. |
 | Missing scan evidence coded as Ineffective | SDLC-010 + AC-8: missing → InsufficientEvidence. |
@@ -554,7 +553,7 @@ Testable. Implementation is out of this spec phase.
 | Target suite self-reads `#[ignore` / `contains('_')` and trips I4a / v3 AC-2 | Assert loaded catalog IDs; no self-read negated contains. |
 | `evidence/repository.toml` breaks `ghc_b028` | Prefer `{controls,evidence,tests}/sdlc.toml`. |
 | Baseline remains a CI green that asserts catalog absence | After target GREEN, `#[ignore]` like IAM. |
-| Unknown completeness makes healthy-org Inconclusive | Fixtures must mark authoritative completeness via existing Prompt 03 paths. |
+| Unknown completeness makes healthy-org Inconclusive | Fixtures must mark authoritative completeness via existing population runtime paths. |
 
 ---
 
@@ -602,10 +601,10 @@ Accepted: [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc
 ```text
 planning_sha = e430980c0d27a8138a153d49b62ddf3c57827891
 branch       = main
-note         = prompts 01–04 landed (catalog fixture + IAM family + typed evidence +
-               population runtime); Prompt 05 markdown present; no SDLC catalog files;
+note         = catalog infrastructure through IAM landed (catalog fixture + IAM family + typed evidence +
+               population runtime); SDLC catalog markdown present; no SDLC catalog files;
                ISO source sliver + exists-only fixture only; Cargo.toml has no
-               sdd_sdlc_catalog_* [[test]] rows; prior Prompt 05 SDD runs did not
+               sdd_sdlc_catalog_* [[test]] rows; prior SDLC catalog SDD runs did not
                land product content on this tree
 ```
 
@@ -626,18 +625,17 @@ note         = prompts 01–04 landed (catalog fixture + IAM family + typed evid
 - `crates/weeping-angel-assurance-ir/src/{subject,control,exception}.rs`
 - `frameworks/iso-27001/2022/metadata.toml`
 - `frameworks/iso-27001/2022/mappings.toml`
-- `tests/sdd/iam_catalog.{baseline,target}.rs`
-- `tests/sdd/canonical_assurance_catalog.target.rs`
-- `tests/sdd/iso27001_assurance.target.rs`
-- `tests/sdd/github_collector.baseline.rs` (`ghc_b028`)
+- `tests/contracts/iam_catalog.{baseline,target}.rs`
+- `tests/contracts/canonical_assurance_catalog.target.rs`
+- `tests/contracts/iso27001_assurance.target.rs`
+- `tests/contracts/github_collector.baseline.rs` (`ghc_b028`)
 - `Cargo.toml`
-- `docs/prompts/canonical-assurance-v1/05-sdlc-catalog.md`
 
 **Symbols:** `CanonicalCatalog::{load,validate,digest,stats}`, `CATALOG_SCHEMA`, `TestExpr::{AllSubjects,CoverageAtLeast,NoneSubjects,ManualReview,Exists}`, `evaluate` / `evaluate_coverage`, `Population` / `PopulationCompleteness` / `PopulationEvaluation`, `Effectiveness::{Effective,Ineffective,InsufficientEvidence,StaleEvidence,ManualReviewRequired,ExceptionApproved}`, `SubjectKind::{Repository,Branch,Deployment,Organization}`, `Exception` / `ExceptionStatus`, `EvidenceValue`, `GITHUB_EVIDENCE_TYPES`.
 
-**Live seams:** catalog TOML + manifest listing; Prompt 03 population completeness; ISO pack compile; GitHub collector advertisement (read-only); IAM and CAT dual-suites; root `[[test]]` harness.
+**Live seams:** catalog TOML + manifest listing; population runtime population completeness; ISO pack compile; GitHub collector advertisement (read-only); IAM and CAT dual-suites; root `[[test]]` harness.
 
-**Tooling:** language Rust; package manager Cargo (pnpm only for `apps/docs`); test framework `cargo test`. Integration tests under `tests/sdd/` require explicit `[[test]]`.
+**Tooling:** language Rust; package manager Cargo (pnpm only for `apps/docs`); test framework `cargo test`. Integration tests under `tests/contracts/` require explicit `[[test]]`.
 
 ---
 
@@ -650,13 +648,13 @@ note         = prompts 01–04 landed (catalog fixture + IAM family + typed evid
 | Tests (26) | `catalog/canonical/v1/tests/sdlc.toml` |
 | Manifest listing | `catalog/canonical/v1/manifest.toml` `[files]` |
 | Fixtures (7) | `fixtures/assurance/canonical/v1/sdlc/{healthy-org,degraded-org,partial-coverage,unprotected-default-branch,missing-scan-evidence,stale-dependency-scan,approved-exception}/` |
-| Loader / digest | Prompt 01 crate; no SDLC-specific load path |
-| Target suite | `tests/sdd/sdlc_catalog.target.rs` (`sdd_sdlc_catalog_target`) GREEN SDLC-001…016 |
-| Baseline suite | `tests/sdd/sdlc_catalog.baseline.rs` superseded (`#[ignore]`) |
+| Loader / digest | catalog infrastructure crate; no SDLC-specific load path |
+| Target suite | `tests/contracts/sdlc_catalog.target.rs` (`sdd_sdlc_catalog_target`) GREEN SDLC-001…016 |
+| Baseline suite | `tests/contracts/sdlc_catalog.baseline.rs` superseded (`#[ignore]`) |
 | ADR | Accepted [`docs/adr/0003-sdlc-canonical-assurance-catalog.md`](../adr/0003-sdlc-canonical-assurance-catalog.md) (draft filename retired) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) names the family and evidence types |
-| ISO pack | This slice did not rewrite pack-local `source.*` rows. Prompt 12 remapped A.8.25 / A.8.26 onto catalog `control.source.*` ([remap §13](iso-27001-canonical-remap.md#13-implement-log)). |
-| Collectors | This slice did not expand GitHub/GitLab/Bitbucket. Prompt 09 later emits these contracts ([`github-collector.md`](github-collector.md)). |
+| Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) names the family and evidence types |
+| ISO pack | This slice did not rewrite pack-local `source.*` rows. ISO remap remapped A.8.25 / A.8.26 onto catalog `control.source.*` ([remap §13](iso-27001-canonical-remap.md#13-implement-log)). |
+| Collectors | This slice did not expand GitHub/GitLab/Bitbucket. GitHub collector later emits these contracts ([`github-collector.md`](github-collector.md)). |
 | Test-bound facts | Force-push / deletion predicates bind `force_push_restricted` / `deletion_restricted` (fixtures also store inverse `*_allowed`). Hybrid/manual tests use `op = "manual-review"`. |
 
 Workspace `assurance catalog stats` after this family (sibling families may also be listed in the same manifest):
@@ -667,7 +665,7 @@ catalog: canonical
 version: 1
 ```
 
-This slice contributes 26 controls, 20 evidence types, and 26 tests. Digest is Prompt 01 `CatalogDigest` over parsed documents and changes if any catalog TOML changes.
+This slice contributes 26 controls, 20 evidence types, and 26 tests. Digest is catalog infrastructure `CatalogDigest` over parsed documents and changes if any catalog TOML changes.
 
 ---
 

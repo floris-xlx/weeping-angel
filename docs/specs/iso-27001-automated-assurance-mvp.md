@@ -7,7 +7,7 @@
 | Dual-suite | Target GREEN (`sdd_iso27001_assurance_target`); baseline superseded (`sdd_iso27001_assurance_baseline`) |
 | ADR | Accepted [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md) |
 | Later fact model | [ADR 0003 typed evidence](../adr/0003-typed-evidence-canonical-serialization.md) supersedes string-only observation facts; ISO envelope/ledger invariants stay |
-| Spine (still law) | [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md), ADR 0001 |
+| Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), [`docs/specs/assurance-runtime.md`](assurance-runtime.md), ADR 0001 |
 | Concurrent IR | Separate program. This vertical **does not own** canonical Compliance IR. |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
@@ -17,7 +17,7 @@
 
 This document is the durable SSOT for the ISO 27001 **MVP** program. The vertical has landed: versioned structural pack, immutable ledger, `TestExpr` DSL, GitHub/local/manual collectors, readiness/SoA projections, and clap `assurance` family. Later work must not invent a competing IR, a GitHub→ISO shortcut, or certification claims.
 
-**Prompt 12 remapping** (canonical catalog projection; pack-local slivers retired) is specified separately and **implemented**: [`docs/sdd/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13, [ADR](../adr/0003-iso27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
+**ISO remap remapping** (canonical catalog projection; pack-local slivers retired) is specified separately and **implemented**: [`docs/specs/iso-27001-canonical-remap.md`](iso-27001-canonical-remap.md) §13, [ADR](../adr/0003-iso27001-canonical-remap.md). Do **not** reuse `sdd_iso27001_assurance_{baseline,target}` for that slice.
 
 ---
 
@@ -442,13 +442,15 @@ artifactRef, contentDigest, producer, scope, supersedes, sensitivity
 
 Existing `{ observation, provenance, digest }` remains the sealed core. Additional fields are additive and must not break ACT-009.
 
+Landed: optional `observedAt` / `validFrom` / `validUntil` / `sourceRevision` outside `DigestBody`; usability changes are `evidence-validity/v1` events on the SQLite ledger (`valid_during` / `latest_as_of`). See [`temporal-assurance.md`](temporal-assurance.md).
+
 ### Phase 8 — Evidence ledger
 
 Persistent ledger. Initial backend: SQLite. Interface abstract enough for later PostgreSQL / remote / object-storage artifacts.
 
-Recommended tables: `evidence_envelopes`, `evidence_artifacts`, `collection_runs`, `assessment_runs`, `control_test_runs`, `framework_snapshots`.
+Recommended tables: `evidence_envelopes`, `evidence_artifacts`, `collection_runs`, `assessment_runs`, `control_test_runs`, `framework_snapshots`, `evidence_validity_events`.
 
-Operations: `append`, `get`, `query`, `latest`, `for_subject`, `for_type`, `for_collection_run`, `within_window`, `supersede`.
+Operations: `append`, `get`, `query`, `latest`, `for_subject`, `for_type`, `for_collection_run`, `within_window`, `supersede`, `record_validity_event`, `valid_during`, `latest_as_of`.
 
 **Forbidden** on the ledger: `set_compliant()`, `set_control_status()`. The ledger owns evidence, not conclusions.
 
@@ -625,9 +627,11 @@ Practical SoA-oriented result per relevant control/reference: reference, applica
 
 Outputs: JSON, Markdown, CSV. Not a certification-ready formal document yet.
 
+Operational ISMS Prompt 11 upgrades this from pack-TOML `assessed` rows into a graph projection (`project_operational_soa`, NA approval, immutable snapshots/diffs). SSOT: [`docs/specs/operational-soa.md`](operational-soa.md). The MVP ISO-010 contract (rationale preserved; readiness not certification) remains.
+
 ### Phase 35–36 — Assessment runs and comparison
 
-`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`. Prompt 11 adds `canonicalCatalogDigest` and `applicabilitySnapshotId` and makes the run a returned persistable record ([ADR 0003 lineage](../adr/0003-assessment-lineage.md)).
+`AssessmentRun`: `id`, `framework`, `frameworkPackDigest`, `assessmentDefinitionDigest`, `startedAt`, `completedAt`, `scope`, `collectorRuns`, `evidenceSnapshotDigest`, `resultDigest`, `status`. assessment lineage adds `canonicalCatalogDigest` and `applicabilitySnapshotId` and makes the run a returned persistable record ([ADR 0003 lineage](../adr/0003-assessment-lineage.md)).
 
 Results are immutable snapshots.
 
@@ -670,7 +674,7 @@ Reuse existing scanner report formatting utilities where safe. Do not duplicate 
 
 ### Phase 40 — Remediation linkage
 
-Reuse existing Weeping Angel remediation/workbench semantics. A failed assurance control may create/link a `RemediationItem`. `ControlTestResult` remains immutable. Remediation state changes independently.
+Canonical type is IR `Remediation` on `AssessmentDefinition.remediations` ([`remediation-engine.md`](remediation-engine.md), [ADR 0003](../adr/0003-remediation-engine.md)). A failed assurance control **may** create/link a remediation via `create_from_control_regression` (Prompt 15 `ControlRegressed` source). `ControlTestResult` remains immutable. Remediation state changes independently. Scanner workbench `RemediationRequest` is not this type. External tickets are adapter refs only.
 
 ### Phase 41–43 — Pack validation, integrity, compatibility
 
@@ -746,7 +750,7 @@ Definition of done is the 25-item list in §6.
 
 ## 6. Acceptance criteria (testable)
 
-1. Dual-suite is registered in root `Cargo.toml` as `sdd_iso27001_assurance_baseline` and `sdd_iso27001_assurance_target` (`tests/sdd` is not auto-discovered). Baseline is superseded / ignored after the vertical landed. Target is GREEN (ISO-001…010, EVD-001…010, CTL-001…012, GH-001…012 + MVP assess).
+1. Dual-suite is registered in root `Cargo.toml` as `sdd_iso27001_assurance_baseline` and `sdd_iso27001_assurance_target` (`tests/contracts` is not auto-discovered). Baseline is superseded / ignored after the vertical landed. Target is GREEN (ISO-001…010, EVD-001…010, CTL-001…012, GH-001…012 + MVP assess).
 2. ACT-001…015 and COL-001…006 remain GREEN throughout. Existing scanning functionality remains green under `cargo test --workspace --features demo`.
 3. ISO 27001:2022 has a versioned framework pack that compiles deterministically and records a stable `FrameworkPackDigest`.
 4. The public pack contains structural identifiers and mappings **without** illegally redistributing protected ISO normative text (ISO-002).
@@ -769,16 +773,16 @@ Definition of done is the 25-item list in §6.
 
 ## 7. Dual-suite TDD protocol
 
-`tests/sdd` is **not** auto-discovered. Implementation MUST register:
+`tests/contracts` is **not** auto-discovered. Implementation MUST register:
 
 ```toml
 [[test]]
 name = "sdd_iso27001_assurance_baseline"
-path = "tests/sdd/iso27001_assurance.baseline.rs"
+path = "tests/contracts/iso27001_assurance.baseline.rs"
 
 [[test]]
 name = "sdd_iso27001_assurance_target"
-path = "tests/sdd/iso27001_assurance.target.rs"
+path = "tests/contracts/iso27001_assurance.target.rs"
 ```
 
 Target is GREEN on the landed vertical. Baseline is superseded / ignored. Do not weaken target assertions. Do not add `iso_27001` / `gdpr` / `soc2` onto findings.
@@ -981,9 +985,9 @@ flowchart TD
 
 ## 13. Related
 
-- Spine SDD: [`docs/sdd/assurance-runtime-spine.md`](assurance-runtime-spine.md)
-- Public spine contract: [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md)
+- Spine SDD: [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md)
+- Public spine contract: [`docs/specs/assurance-runtime.md`](assurance-runtime.md)
 - ADR 0001 (accepted): [`docs/adr/0001-inwardly-extensible-assurance-runtime.md`](../adr/0001-inwardly-extensible-assurance-runtime.md)
 - ADR 0002 (accepted): [`docs/adr/0002-iso-27001-assurance-vertical.md`](../adr/0002-iso-27001-assurance-vertical.md)
-- Concurrent IR program (does not own this vertical): [`docs/sdd/xylex/weeping-angel-assurance-ir/`](xylex/weeping-angel-assurance-ir/)
+- Concurrent IR program (does not own this vertical): [`.sdd/artifacts/xylex/weeping-angel-assurance-ir/`](../../.sdd/artifacts/xylex/weeping-angel-assurance-ir/)
 - Scan contract (security-only): [`codex-security/references/scan-contract.md`](../../codex-security/references/scan-contract.md)

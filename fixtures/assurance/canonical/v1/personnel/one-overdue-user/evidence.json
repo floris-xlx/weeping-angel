@@ -1,0 +1,48 @@
+{
+  "fixture": "one-overdue-user",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:ada",
+      "facts": { "kind": "user", "id": "user:ada" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:bea",
+      "facts": { "kind": "user", "id": "user:bea" }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": false
+      }
+    }
+  ]
+}

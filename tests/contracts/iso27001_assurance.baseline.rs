@@ -1,7 +1,7 @@
 //! SUPERSEDED by `sdd_iso27001_assurance_target` after the ISO 27001 MVP landed.
 //!
 //! Historical characterization of the stub spine in
-//! `docs/sdd/iso-27001-automated-assurance-mvp.md` §3 / §7.1 (planning SHA `8c0f36ed…`).
+//! `docs/specs/iso-27001-automated-assurance-mvp.md` §3 / §7.1 (planning SHA `8c0f36ed…`).
 //! Kept for rollback narrative. Do not delete. Tests are ignored because the workspace
 //! now contains the pack / ledger / DSL / collectors / readiness / SoA / CLI vertical.
 

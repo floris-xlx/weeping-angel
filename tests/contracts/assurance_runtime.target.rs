@@ -1,6 +1,6 @@
 //! Target suite: Phases 0–8 assurance runtime (ACT-001..015, COL-001..006).
 //!
-//! Encodes the *desired* Athena-shaped spine in `docs/sdd/assurance-runtime-spine.md`.
+//! Encodes the *desired* Athena-shaped spine in `docs/specs/assurance-runtime-spine.md`.
 //! On the current scanner-only tree these crates/APIs do not exist — the suite
 //! MUST be RED. After the spine lands it MUST go GREEN. Do not weaken assertions
 //! to match today's product. Do not add `iso_27001` / `gdpr` / `soc2` onto findings.

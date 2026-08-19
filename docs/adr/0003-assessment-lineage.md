@@ -7,9 +7,8 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “`AssessmentRun` is an immutable snapshot record” *intent* of [ADR 0002](0002-iso-27001-assurance-vertical.md) Phases 35–36 **as implemented**: dropped `_run`, serialize-time ISO pack load, production stub assessment, compare-only-effectiveness. Does **not** supercede pack schema, envelope immutability, collector blindness, or catalog ownership. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md), [catalog](0003-canonical-assurance-catalog-v1.md), [typed evidence](0003-typed-evidence-canonical-serialization.md), [population](0003-subject-population-runtime-and-coverage-semantics.md), [applicability engine](0003-applicability-engine.md) |
-| Spec | [`docs/sdd/assessment-lineage.md`](../sdd/assessment-lineage.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/11-assessment-lineage.md`](../prompts/canonical-assurance-v1/11-assessment-lineage.md) |
+| Spec | [`docs/specs/assessment-lineage.md`](../specs/assessment-lineage.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Characterization | `e430980c0d27a8138a153d49b62ddf3c57827891` |
 | Tests | `sdd_assessment_lineage_target` GREEN (LIN-001–015). `sdd_assessment_lineage_baseline` skip-superseded (14 ignored). Neighbor ACT / ISO / catalog targets remain registered. |
 
@@ -29,14 +28,14 @@ On SHA `e430980c…` those seams were MVP shortcuts:
 6. CLI had no `explain`; non-catalog assurance commands banner-and-exit-0.
 7. Ledger had lineage tables and **no** persist/load APIs for them.
 
-Canonical Catalog v1 Prompt 11 requires assessments to be reproducible immutable execution artifacts, explainable to evidence digest / test version / exception / mapping, with pure serialization and one framework loader path.
+Canonical Catalog v1 assessment lineage requires assessments to be reproducible immutable execution artifacts, explainable to evidence digest / test version / exception / mapping, with pure serialization and one framework loader path.
 
 Questions this decision answers:
 
 1. What is the persisted lineage chain and which crate owns storage?
 2. May serialization resolve current framework/catalog files?
 3. How are non-ISO frameworks assessed without a production stub?
-4. How does lineage relate to the Prompt 10 `ApplicabilitySnapshot`?
+4. How does lineage relate to the applicability engine `ApplicabilitySnapshot`?
 5. What is the public explain contract?
 6. How are coverage metrics exposed without a fake compliance score?
 
@@ -125,11 +124,11 @@ The production stub assessment (`canonical:stub-1` / `assess-runtime-1`) is remo
 
 ### 5. Two applicability documents; lineage persist is the pin
 
-Prompt 10 evaluation stays in `weeping-angel-assurance::applicability` (`weeping-angel/applicability-snapshot/v1`). That engine **produces** the Kleene snapshot; this slice does **not** reimplement it.
+applicability engine evaluation stays in `weeping-angel-assurance::applicability` (`weeping-angel/applicability-snapshot/v1`). That engine **produces** the Kleene snapshot; this slice does **not** reimplement it.
 
 Crate-root `ApplicabilitySnapshot` is the **lineage persist document** (`::lineage`, schema `weeping-angel/assessment-lineage/v1`): static IR fold (`Always`/`Never`/combinators → applicable / not applicable / unresolved) plus optional `pack_entries` artifacts copied from pack `applicability.toml`. `assess` sets `applicabilitySnapshotId` to that document’s digest.
 
-Unknown predicates stay unresolved (not false). Pack TOML rows are artifacts, not Kleene truth. The Prompt 10 snapshot remains addressable as `applicability::ApplicabilitySnapshot` and may be stored as opaque JSON; `assess` does not call `evaluate_assessment_applicability`.
+Unknown predicates stay unresolved (not false). Pack TOML rows are artifacts, not Kleene truth. The applicability engine snapshot remains addressable as `applicability::ApplicabilitySnapshot` and may be stored as opaque JSON; `assess` does not call `evaluate_assessment_applicability`.
 
 Historical SoA: `project_soa_from_snapshot`. Live `project_soa(framework, version)` remains a convenience that may read today’s pack; it must not be used to rewrite a pinned `StatementOfApplicabilitySnapshot`.
 
@@ -186,12 +185,12 @@ Result and snapshot digests use IR `typed_canonical_digest` / `canonical_digest`
 - Facade assess no longer succeeds on arbitrary profiles via a hidden stub; missing pack fails closed.
 - CLI `AssuranceCommand` includes `Explain`.
 - Contract documents lineage types, ledger APIs, explain CLI, and pure serialization.
-- Neighbor suites stay green; ISO pack IDs are not remapped (Prompt 12).
+- Neighbor suites stay green; ISO pack IDs are not remapped (ISO remap).
 - Dual-suite `sdd_assessment_lineage_target` is the CI gate.
 
 ## Non-goals
 
-Multi-tenant SaaS, UI, new frameworks, domain catalog redesign, Prompt 10 evaluator, Prompt 12 ISO remap, IR schema fork, certification claims, automatic ledger write inside `assess`.
+Multi-tenant SaaS, UI, new frameworks, domain catalog redesign, applicability engine evaluator, ISO remap ISO remap, IR schema fork, certification claims, automatic ledger write inside `assess`.
 
 ## Status
 

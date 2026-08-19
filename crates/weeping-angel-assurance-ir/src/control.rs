@@ -43,6 +43,7 @@ pub struct ControlExpectation {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Control {
+    #[serde(default = "default_schema_version")]
     schema_version: String,
     id: ControlId,
     title: String,
@@ -65,6 +66,10 @@ pub struct Control {
     tags: BTreeSet<String>,
     #[serde(default, skip_serializing_if = "ExtensionMap::is_empty")]
     extensions: ExtensionMap,
+}
+
+fn default_schema_version() -> String {
+    ASSURANCE_IR_SCHEMA.into()
 }
 
 fn is_always(rule: &ApplicabilityRule) -> bool {
@@ -124,6 +129,10 @@ impl Control {
 
     pub fn subjects(&self) -> &[SubjectSelector] {
         &self.subjects
+    }
+
+    pub fn evidence_requirements(&self) -> &[EvidenceRequirementId] {
+        &self.evidence_requirements
     }
 
     pub fn extensions(&self) -> &ExtensionMap {

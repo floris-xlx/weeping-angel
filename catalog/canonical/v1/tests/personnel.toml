@@ -1,0 +1,91 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+[[test]]
+id = "test.personnel.screening-recorded"
+control = "control.personnel.screening"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.screening", "evidence.personnel.population-membership"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.screening"
+field = "recorded"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.joiner-grace-honored"
+control = "control.personnel.joiner-grace"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.joiner-grace", "evidence.identity.lifecycle-event"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.joiner-grace"
+field = "within_grace"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.joiner-access-provisioned"
+control = "control.personnel.access-provisioning"
+kind = "hybrid"
+required_evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.identity.lifecycle-event"
+field = "occurred_at"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.mover-privileges-reduced"
+control = "control.personnel.role-change"
+kind = "automated"
+required_evidence = ["evidence.identity.lifecycle-event", "evidence.identity.role-membership"]
+break_on = []
+
+[test.expression]
+op = "none-subjects"
+evidence = "evidence.identity.role-membership"
+field = "excessive"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.no-leaver-active-access"
+control = "control.personnel.leaver-access"
+kind = "automated"
+required_evidence = ["evidence.identity.lifecycle-event", "evidence.identity.account-status"]
+break_on = []
+
+[test.expression]
+op = "none-subjects"
+evidence = "evidence.identity.account-status"
+field = "active"
+
+[[test.subjects]]
+kind = "user"
+
+[[test]]
+id = "test.personnel.asset-return-recorded"
+control = "control.personnel.asset-return"
+kind = "hybrid"
+required_evidence = ["evidence.personnel.asset-return"]
+break_on = []
+
+[test.expression]
+op = "all-subjects"
+evidence = "evidence.personnel.asset-return"
+field = "recorded"
+
+[[test.subjects]]
+kind = "user"

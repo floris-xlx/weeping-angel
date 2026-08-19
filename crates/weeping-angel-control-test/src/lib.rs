@@ -7,6 +7,7 @@
 
 pub mod expr;
 pub mod population;
+pub mod temporal;
 
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -14,14 +15,18 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use weeping_angel_assurance_ir::{ControlId, ControlTestId, Exception, canonical_digest};
-use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType};
+use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType, EvidenceValidityEvent};
 
 pub use expr::{
     CountPredicate, EvidenceSelector, EvidenceValue, SubjectSelector, TestExpr, ValueExpr,
 };
 pub use population::{
     CoverageMode, EvidenceIndex, Population, PopulationCompleteness, PopulationEvaluation,
-    build_index, index_envelopes,
+    build_index, build_index_as_of, index_envelopes,
+};
+pub use temporal::{
+    FreshnessPolicy, PeriodEffectiveness, TemporalQuery, TemporalSemantics, TimeRange,
+    project_period_effectiveness, select_evidence, select_latest_as_of,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -59,7 +64,25 @@ fn default_test_version() -> String {
 #[derive(Debug, Clone)]
 pub struct AssessmentContext {
     pub now: DateTime<Utc>,
-    pub max_age: Duration,
+    pub max_age: Duration, // as_of defaults to `now`; period via FreshnessPolicy / TimeRange
+}
+
+impl AssessmentContext {
+    pub fn as_of(&self) -> DateTime<Utc> {
+        self.now
+    }
+
+    pub fn period(&self) -> Option<TimeRange> {
+        None
+    }
+
+    pub fn freshness_policy(&self) -> FreshnessPolicy {
+        FreshnessPolicy {
+            max_age: self.max_age,
+            as_of: self.as_of(),
+            period: self.period(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -70,6 +93,8 @@ pub struct EvidenceSet {
     exceptions: Vec<Exception>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     explicit_population: Option<Population>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    validity_events: Vec<EvidenceValidityEvent>,
 }
 
 impl EvidenceSet {
@@ -80,6 +105,21 @@ impl EvidenceSet {
     pub fn insert(&mut self, envelope: EvidenceEnvelope) {
         self.envelopes
             .insert(envelope.digest().to_string(), envelope);
+    }
+
+    pub fn record_validity_event(&mut self, event: EvidenceValidityEvent) {
+        if self
+            .validity_events
+            .iter()
+            .any(|existing| existing.event_id == event.event_id)
+        {
+            return;
+        }
+        self.validity_events.push(event);
+    }
+
+    pub fn validity_events(&self) -> &[EvidenceValidityEvent] {
+        &self.validity_events
     }
 
     pub fn insert_exception(&mut self, exception: Exception) {
@@ -219,7 +259,7 @@ fn eval_node(
             Effectiveness::ManualReviewRequired,
             "expression requires manual review",
         ),
-        TestExpr::Exists(sel) => match first_selector(envelopes, sel) {
+        TestExpr::Exists(sel) => match first_selector(evidence, sel, context) {
             None => {
                 missing.push(sel.evidence_type.to_string());
                 node(
@@ -242,7 +282,7 @@ fn eval_node(
                 )
             }
         },
-        TestExpr::Missing(sel) => match first_selector(envelopes, sel) {
+        TestExpr::Missing(sel) => match first_selector(evidence, sel, context) {
             None => node(
                 Effectiveness::Effective,
                 format!("missing as required: {}", sel.evidence_type),
@@ -256,60 +296,62 @@ fn eval_node(
             }
         },
         TestExpr::Gte(ValueExpr::Field(sel), expected) => {
-            compare_numeric(envelopes, context, sel, expected, Cmp::Gte, refs, missing)
+            compare_numeric(evidence, context, sel, expected, Cmp::Gte, refs, missing)
         }
         TestExpr::Gt(ValueExpr::Field(sel), expected) => {
-            compare_numeric(envelopes, context, sel, expected, Cmp::Gt, refs, missing)
+            compare_numeric(evidence, context, sel, expected, Cmp::Gt, refs, missing)
         }
         TestExpr::Lte(ValueExpr::Field(sel), expected) => {
-            compare_numeric(envelopes, context, sel, expected, Cmp::Lte, refs, missing)
+            compare_numeric(evidence, context, sel, expected, Cmp::Lte, refs, missing)
         }
         TestExpr::Lt(ValueExpr::Field(sel), expected) => {
-            compare_numeric(envelopes, context, sel, expected, Cmp::Lt, refs, missing)
+            compare_numeric(evidence, context, sel, expected, Cmp::Lt, refs, missing)
         }
         TestExpr::Eq(ValueExpr::Field(sel), expected) => {
-            compare_eq(envelopes, context, sel, expected, true, refs, missing)
+            compare_eq(evidence, context, sel, expected, true, refs, missing)
         }
         TestExpr::Neq(ValueExpr::Field(sel), expected) => {
-            compare_eq(envelopes, context, sel, expected, false, refs, missing)
+            compare_eq(evidence, context, sel, expected, false, refs, missing)
         }
         TestExpr::Contains(ValueExpr::Field(sel), expected) => {
-            compare_contains(envelopes, context, sel, expected, true, refs, missing)
+            compare_contains(evidence, context, sel, expected, true, refs, missing)
         }
         TestExpr::NotContains(ValueExpr::Field(sel), expected) => {
-            compare_contains(envelopes, context, sel, expected, false, refs, missing)
+            compare_contains(evidence, context, sel, expected, false, refs, missing)
         }
         TestExpr::In(ValueExpr::Field(sel), expected) => {
-            compare_in(envelopes, context, sel, expected, refs, missing)
+            compare_in(evidence, context, sel, expected, refs, missing)
         }
-        TestExpr::FreshWithin { selector, duration } => match first_selector(envelopes, selector) {
-            None => {
-                missing.push(selector.evidence_type.to_string());
-                node(
-                    Effectiveness::InsufficientEvidence,
-                    format!("missing {}", selector.evidence_type),
-                )
-            }
-            Some(env) => {
-                refs.push(env.digest().to_string());
-                let age = context
-                    .now
-                    .signed_duration_since(env.provenance().collected_at)
-                    .to_std()
-                    .unwrap_or(Duration::MAX);
-                if age > *duration {
+        TestExpr::FreshWithin { selector, duration } => {
+            match first_selector(evidence, selector, context) {
+                None => {
+                    missing.push(selector.evidence_type.to_string());
                     node(
-                        Effectiveness::StaleEvidence,
-                        format!("{} older than freshness window", selector.evidence_type),
-                    )
-                } else {
-                    node(
-                        Effectiveness::Effective,
-                        format!("{} is fresh", selector.evidence_type),
+                        Effectiveness::InsufficientEvidence,
+                        format!("missing {}", selector.evidence_type),
                     )
                 }
+                Some(env) => {
+                    refs.push(env.digest().to_string());
+                    let age = context
+                        .now
+                        .signed_duration_since(env.provenance().collected_at)
+                        .to_std()
+                        .unwrap_or(Duration::MAX);
+                    if age > *duration {
+                        node(
+                            Effectiveness::StaleEvidence,
+                            format!("{} older than freshness window", selector.evidence_type),
+                        )
+                    } else {
+                        node(
+                            Effectiveness::Effective,
+                            format!("{} is fresh", selector.evidence_type),
+                        )
+                    }
+                }
             }
-        },
+        }
         TestExpr::Count {
             selector,
             predicate,
@@ -489,7 +531,7 @@ enum Cmp {
 }
 
 fn compare_numeric(
-    envelopes: &[&EvidenceEnvelope],
+    evidence: &EvidenceSet,
     context: &AssessmentContext,
     sel: &EvidenceSelector,
     expected: &EvidenceValue,
@@ -497,7 +539,7 @@ fn compare_numeric(
     refs: &mut Vec<String>,
     missing: &mut Vec<String>,
 ) -> NodeOut {
-    let Some(env) = first_selector(envelopes, sel) else {
+    let Some(env) = first_selector(evidence, sel, context) else {
         missing.push(sel.evidence_type.to_string());
         return node(
             Effectiveness::InsufficientEvidence,
@@ -539,7 +581,7 @@ fn compare_numeric(
 }
 
 fn compare_eq(
-    envelopes: &[&EvidenceEnvelope],
+    evidence: &EvidenceSet,
     context: &AssessmentContext,
     sel: &EvidenceSelector,
     expected: &EvidenceValue,
@@ -547,7 +589,7 @@ fn compare_eq(
     refs: &mut Vec<String>,
     missing: &mut Vec<String>,
 ) -> NodeOut {
-    let Some(env) = first_selector(envelopes, sel) else {
+    let Some(env) = first_selector(evidence, sel, context) else {
         missing.push(sel.evidence_type.to_string());
         return node(
             Effectiveness::InsufficientEvidence,
@@ -584,7 +626,7 @@ fn compare_eq(
 }
 
 fn compare_contains(
-    envelopes: &[&EvidenceEnvelope],
+    evidence: &EvidenceSet,
     context: &AssessmentContext,
     sel: &EvidenceSelector,
     expected: &EvidenceValue,
@@ -592,7 +634,7 @@ fn compare_contains(
     refs: &mut Vec<String>,
     missing: &mut Vec<String>,
 ) -> NodeOut {
-    let Some(env) = first_selector(envelopes, sel) else {
+    let Some(env) = first_selector(evidence, sel, context) else {
         missing.push(sel.evidence_type.to_string());
         return node(
             Effectiveness::InsufficientEvidence,
@@ -629,14 +671,14 @@ fn compare_contains(
 }
 
 fn compare_in(
-    envelopes: &[&EvidenceEnvelope],
+    evidence: &EvidenceSet,
     context: &AssessmentContext,
     sel: &EvidenceSelector,
     expected: &[EvidenceValue],
     refs: &mut Vec<String>,
     missing: &mut Vec<String>,
 ) -> NodeOut {
-    let Some(env) = first_selector(envelopes, sel) else {
+    let Some(env) = first_selector(evidence, sel, context) else {
         missing.push(sel.evidence_type.to_string());
         return node(
             Effectiveness::InsufficientEvidence,
@@ -697,7 +739,9 @@ fn rank(e: Effectiveness) -> u8 {
 
 fn finalize(
     mut result: ControlTestResult,
+    test: &CompiledControlTest,
     evidence: &EvidenceSet,
+    context: &AssessmentContext,
     refs: &[String],
     missing: &[String],
 ) -> ControlTestResult {
@@ -705,15 +749,26 @@ fn finalize(
     result.missing_evidence = missing.to_vec();
     result.status = Some(result.effectiveness);
     result.reason = Some(result.rationale.clone());
+    let as_of = context.as_of();
+    let mut candidate_digests: Vec<String> = evidence
+        .iter()
+        .filter(|e| {
+            weeping_angel_evidence::project_validity(e, evidence.validity_events(), as_of).is_some()
+        })
+        .map(|e| e.digest().to_string())
+        .collect();
+    candidate_digests.sort();
     let body = (
         result.test_id.as_str(),
         result.control_id.as_str(),
-        evidence
-            .iter()
-            .map(|e| e.digest().to_string())
-            .collect::<Vec<_>>(),
+        candidate_digests,
     );
     result.input_digest = canonical_digest(&body).unwrap_or_default();
+    if result.period.is_none() {
+        result.period = Some(crate::temporal::project_period_effectiveness(
+            test, evidence, context,
+        ));
+    }
     result
 }
 
@@ -728,25 +783,26 @@ fn first_matching<'a>(
 }
 
 fn first_selector<'a>(
-    envelopes: &[&'a EvidenceEnvelope],
+    evidence: &'a EvidenceSet,
     sel: &EvidenceSelector,
+    context: &AssessmentContext,
 ) -> Option<&'a EvidenceEnvelope> {
-    envelopes.iter().copied().find(|env| {
-        env.observation().evidence_type() == &sel.evidence_type
-            && sel
-                .subject_selector
-                .id
-                .as_ref()
-                .is_none_or(|id| env.provenance().asset().as_str() == id)
-    })
+    crate::temporal::selector_as_of(evidence, sel, context.as_of())
 }
 
 fn is_stale(env: &EvidenceEnvelope, context: &AssessmentContext) -> bool {
-    let collected = env.provenance().collected_at;
-    context
+    is_stale_candidate(env, context)
+}
+
+/// Age vs `max_age` for a still-valid candidate. Expired (outside validity) is not stale.
+pub(crate) fn is_stale_candidate(env: &EvidenceEnvelope, context: &AssessmentContext) -> bool {
+    let age = context
         .now
-        .signed_duration_since(collected)
-        .to_std()
-        .map(|age| age > context.max_age)
-        .unwrap_or(true)
+        .signed_duration_since(env.provenance().collected_at);
+    age.to_std().map(|d| d > context.max_age).unwrap_or(false)
+}
+
+/// Expired: outside the half-open validity window. Distinct from stale freshness.
+pub fn expired_outside_validity(env: &EvidenceEnvelope, at: DateTime<Utc>) -> bool {
+    env.valid_until().is_some_and(|until| at >= until)
 }

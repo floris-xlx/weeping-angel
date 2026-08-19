@@ -1,0 +1,32 @@
+schema = "weeping-angel/canonical-catalog/v1"
+
+# Additive personnel facts. Existing training/acknowledgement types stay in governance.toml.
+# Store via with_value. Do not encode conclusion phrases.
+
+[[evidence]]
+id = "evidence.personnel.screening"
+title = "Personnel screening record"
+evidence_type = "personnel.screening"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.personnel.joiner-grace"
+title = "New-joiner grace window fact"
+evidence_type = "personnel.joiner-grace"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.personnel.population-membership"
+title = "Personnel population membership fact"
+evidence_type = "personnel.population-membership"
+collection = "hybrid"
+criticality = "required"
+
+[[evidence]]
+id = "evidence.personnel.asset-return"
+title = "Personnel asset-return reference"
+evidence_type = "personnel.asset-return"
+collection = "hybrid"
+criticality = "required"

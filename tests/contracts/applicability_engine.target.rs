@@ -1,7 +1,7 @@
-//! Target suite for the organization-context / applicability engine (Prompt 10).
+//! Target suite for the organization-context / applicability engine.
 //!
 //! Encodes DESIRED Kleene / snapshot behavior in
-//! `docs/sdd/applicability-engine.md` §4 / §6.2 (`P10-T01`–`P10-T16`).
+//! `docs/specs/applicability-engine.md` §4 / §6.2 (`P10-T01`–`P10-T16`).
 //! Must stay RED on the current static-only / no-evaluator HEAD. Do not
 //! `#[ignore]` these tests and do not implement the engine in this suite.
 
@@ -174,8 +174,8 @@ fn dual_suite_is_registered() {
     assert!(
         toml.contains("sdd_applicability_engine_baseline")
             && toml.contains("sdd_applicability_engine_target")
-            && toml.contains("tests/sdd/applicability_engine.baseline.rs")
-            && toml.contains("tests/sdd/applicability_engine.target.rs"),
+            && toml.contains("tests/contracts/applicability_engine.baseline.rs")
+            && toml.contains("tests/contracts/applicability_engine.target.rs"),
         "dual-suite must be listed in root Cargo.toml"
     );
 }
@@ -485,6 +485,7 @@ fn p10_t09_explicit_scope_exclusions() {
     def.scope.exclusions.push(ScopeExclusion {
         subjects: vec![id_selector(SubjectKind::Repository, "asset:repo-z")],
         rationale: Some("contractor laptop out of scope".into()),
+        ..Default::default()
     });
     def.controls.push(control_with(
         "control.keep-repos",

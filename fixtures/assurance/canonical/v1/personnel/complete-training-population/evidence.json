@@ -1,0 +1,84 @@
+{
+  "fixture": "complete-training-population",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": true,
+  "evidence": [
+    {
+      "type": "inventory.complete",
+      "subject_id": "org:acme",
+      "facts": { "kind": "user", "authoritative": true }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:ada",
+      "facts": { "kind": "user", "id": "user:ada", "population": "employees" }
+    },
+    {
+      "type": "inventory.subject",
+      "subject_id": "user:bea",
+      "facts": { "kind": "user", "id": "user:bea", "population": "contractors" }
+    },
+    {
+      "type": "evidence.personnel.population-membership",
+      "subject_id": "user:ada",
+      "facts": { "subject_id": "user:ada", "population_id": "employees", "member": true }
+    },
+    {
+      "type": "evidence.personnel.population-membership",
+      "subject_id": "user:bea",
+      "facts": { "subject_id": "user:bea", "population_id": "contractors", "member": true }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "awareness",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "attested_by": "lms",
+        "attested_at": "2026-08-11T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-11T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "awareness",
+        "current": true
+      }
+    },
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:bea",
+      "facts": {
+        "subject_id": "user:bea",
+        "attested_by": "lms",
+        "attested_at": "2026-08-11T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-11T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    }
+  ]
+}

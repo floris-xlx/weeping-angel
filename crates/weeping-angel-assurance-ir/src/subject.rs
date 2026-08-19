@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SubjectKind {
     #[default]
@@ -29,6 +29,10 @@ pub enum SubjectKind {
     DataStore,
     Network,
     Deployment,
+    BusinessUnit,
+    Location,
+    DataDomain,
+    PersonnelPopulation,
 }
 
 impl SubjectKind {
@@ -60,6 +64,10 @@ impl SubjectKind {
             "datastore" => Self::DataStore,
             "network" => Self::Network,
             "deployment" => Self::Deployment,
+            "businessunit" => Self::BusinessUnit,
+            "location" => Self::Location,
+            "datadomain" => Self::DataDomain,
+            "personnelpopulation" | "population" => Self::PersonnelPopulation,
             _ => return None,
         })
     }

@@ -1,0 +1,20 @@
+{
+  "fixture": "missing-personnel-source",
+  "collectedAt": "2026-08-18T12:00:00Z",
+  "authoritative": false,
+  "evidence": [
+    {
+      "type": "evidence.personnel.training",
+      "subject_id": "user:ada",
+      "facts": {
+        "subject_id": "user:ada",
+        "attested_by": "lms",
+        "attested_at": "2026-08-10T12:00:00Z",
+        "kind": "training-record",
+        "trained_at": "2026-08-10T12:00:00Z",
+        "training_kind": "role-specific",
+        "current": true
+      }
+    }
+  ]
+}

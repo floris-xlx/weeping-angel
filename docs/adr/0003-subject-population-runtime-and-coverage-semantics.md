@@ -7,9 +7,8 @@
 | Deciders | Weeping Angel maintainers |
 | Supercedes | The “`CoverageAtLeast` is unfinished / placeholder `PartiallyEffective`” reading of [ADR 0002](0002-iso-27001-assurance-vertical.md) control-test semantics. Does **not** supercede envelope immutability, collector blindness, or catalog schema ownership. |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md), [ADR 0002](0002-iso-27001-assurance-vertical.md) |
-| Spec | [`docs/sdd/population-runtime.md`](../sdd/population-runtime.md) |
-| Public contract | [`docs/contracts/assurance-runtime.md`](../contracts/assurance-runtime.md) |
-| Prompt | [`docs/prompts/canonical-assurance-v1/03-population-runtime.md`](../prompts/canonical-assurance-v1/03-population-runtime.md) |
+| Spec | [`docs/specs/population-runtime.md`](../specs/population-runtime.md) |
+| Public contract | [`docs/specs/assurance-runtime.md`](../specs/assurance-runtime.md) |
 | Planning baseline | `5fa3a23a77e63e39b4a6ff142e64ff8001e0b91b` |
 | IR revision consumed | `assurance-ir/v1`. Catalog schema and typed `EvidenceValue` are consumed, not forked. |
 | Tests | `sdd_population_runtime_target` GREEN (36). `sdd_population_runtime_baseline` characterization `#[ignore]` after proven FAIL (11). |
@@ -22,7 +21,7 @@ ADR 0001 delivered a provider-blind assurance spine. ADR 0002 delivered the firs
 
 On SHA `5fa3a23…`, `CoverageAtLeast` discarded selector, evidence, and percentage and always returned `PartiallyEffective`. `Count` existed but evaluated to `NotTested`. Control-test owned a second, thinner `SubjectSelector { kind, id }` beside the IR SSOT `{ kind, ids, tags, scope }`. `Exception` could not bind subjects. Facade `AssessmentScope` is an `AssetId` allow-set, not IR scope. `evaluate_compiled` never attached a `TestExpr`.
 
-Canonical Catalog v1 Prompt 03 requires first-class subject populations and real coverage so tests can evaluate an entire in-scope set. Absence of evidence must not become a pass unless the runtime knows the authoritative population.
+Canonical Catalog v1 population runtime requires first-class subject populations and real coverage so tests can evaluate an entire in-scope set. Absence of evidence must not become a pass unless the runtime knows the authoritative population.
 
 Questions this decision answers:
 
@@ -109,7 +108,7 @@ Per-subject outcomes are disjoint: passing, failing, missing, stale, excepted, t
 
 Unclassified field values and type mismatches are **technical**, not missing. A privileged-identity fail whose subject is marked break-glass (`evidence.identity.inventory.account_kind = break-glass`) may surface as `ExceptionApproved` when every failing subject is break-glass.
 
-When `conclude` would otherwise return `Effective` solely because approved unexpired bound IR exceptions removed subjects from the denominator (`excepted` non-empty; `failing` / `missing` / `stale` / `technical` empty), overall effectiveness is `ExceptionApproved`, not silent `Effective`. Same IR `Exception` type; no second engine. Shipped for Prompt 08 honesty and applies to every population family.
+When `conclude` would otherwise return `Effective` solely because approved unexpired bound IR exceptions removed subjects from the denominator (`excepted` non-empty; `failing` / `missing` / `stale` / `technical` empty), overall effectiveness is `ExceptionApproved`, not silent `Effective`. Same IR `Exception` type; no second engine. Shipped for governance catalog honesty and applies to every population family.
 
 ### 6. Existing `TestExpr`, dedicated evaluation detail
 

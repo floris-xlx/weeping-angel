@@ -1,4 +1,4 @@
-//! Baseline characterization of the infrastructure catalog surface (Prompt 07).
+//! Baseline characterization of the infrastructure catalog surface (infrastructure catalog).
 //!
 //! SUPERSEDED by `sdd_infrastructure_catalog_target` after the infrastructure
 //! catalog slice landed. Historical characterization of catalog absence.
@@ -383,9 +383,9 @@ fn dual_suite_baseline_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         toml.contains("sdd_infrastructure_catalog_baseline")
-            && toml.contains("tests/sdd/infrastructure_catalog.baseline.rs")
+            && toml.contains("tests/contracts/infrastructure_catalog.baseline.rs")
             && toml.contains("sdd_infrastructure_catalog_target")
-            && toml.contains("tests/sdd/infrastructure_catalog.target.rs"),
+            && toml.contains("tests/contracts/infrastructure_catalog.target.rs"),
         "infrastructure dual-suite must be listed in root Cargo.toml"
     );
 }
@@ -455,7 +455,7 @@ fn fixture_example_and_identity_are_the_only_catalog_families() {
     assert_eq!(
         CANONICAL_IDENTITY_CONTROLS.len(),
         23,
-        "Prompt 04 shipped 23 independently assessable identity controls"
+        "IAM catalog shipped 23 independently assessable identity controls"
     );
 
     let listed_controls: BTreeSet<String> = catalog.controls().keys().cloned().collect();
@@ -516,7 +516,7 @@ fn required_infrastructure_evidence_and_population_tests_are_undeclared() {
     }
     assert!(
         !catalog.evidence().contains_key("evidence.secret.exposure"),
-        "this slice must not create Prompt 06 evidence.secret.exposure"
+        "this slice must not create vulnerability catalog evidence.secret.exposure"
     );
 }
 
@@ -606,7 +606,7 @@ fn iso_pack_holds_the_logging_crypto_backup_tls_sliver() {
             && !mappings.contains("to = \"control.logging.")
             && !mappings.contains("to = \"control.backup.")
             && !mappings.contains("to = \"control.resilience."),
-        "ISO mappings stay on pack-local ids until Prompt 12"
+        "ISO mappings stay on pack-local ids until ISO remap"
     );
 }
 
@@ -769,11 +769,11 @@ fn no_cloud_collectors_or_database_inventory_resolver() {
     let product = product_rs_joined();
     assert!(
         !product.contains("resolve_database_inventory"),
-        "Prompt 03 has no database-inventory special case"
+        "population runtime has no database-inventory special case"
     );
     assert!(
         !product.contains("resolve_network_inventory"),
-        "Prompt 03 has no network-inventory special case"
+        "population runtime has no network-inventory special case"
     );
     assert!(
         !product.contains("struct InfraPopulation"),
@@ -950,7 +950,7 @@ fn classify_value_treats_retention_day_integers_as_technical() {
 #[test]
 fn public_contract_documents_iam_not_infrastructure() {
     let contract =
-        fs::read_to_string(manifest_dir().join("docs/contracts/assurance-runtime.md")).unwrap();
+        fs::read_to_string(manifest_dir().join("docs/specs/assurance-runtime.md")).unwrap();
     assert!(
         contract.contains("control.identity.")
             && contract.contains("fixtures/assurance/canonical/v1/identity/"),
@@ -975,28 +975,29 @@ fn public_contract_documents_iam_not_infrastructure() {
 
 #[ignore = "superseded by sdd_infrastructure_catalog_target"]
 #[test]
-fn prompt_01_and_04_ssot_docs_are_not_overwritten() {
-    let cat = fs::read_to_string(manifest_dir().join("docs/sdd/canonical-assurance-catalog-v1.md"))
-        .unwrap();
+fn catalog_and_iam_ssot_docs_are_not_overwritten() {
+    let cat =
+        fs::read_to_string(manifest_dir().join("docs/specs/canonical-assurance-catalog-v1.md"))
+            .unwrap();
     assert!(
         cat.starts_with("# SDD: Canonical Assurance Catalog v1 infrastructure"),
-        "Prompt 01 SSOT title must remain"
+        "catalog infrastructure SSOT title must remain"
     );
     assert!(
         cat.contains("This document is the durable SSOT for **catalog infrastructure only**"),
-        "Prompt 01 SSOT mission sentence must remain"
+        "catalog infrastructure SSOT mission sentence must remain"
     );
 
     let iam =
-        fs::read_to_string(manifest_dir().join("docs/sdd/iam-canonical-assurance-catalog.md"))
+        fs::read_to_string(manifest_dir().join("docs/specs/iam-canonical-assurance-catalog.md"))
             .unwrap();
     assert!(
         iam.starts_with("# SDD: IAM Canonical Assurance Catalog (v1 slice)"),
-        "Prompt 04 SSOT title must remain"
+        "IAM catalog SSOT title must remain"
     );
     assert!(
         iam.contains("This document is the durable SSOT for the **IAM catalog slice**"),
-        "Prompt 04 SSOT mission sentence must remain"
+        "IAM catalog SSOT mission sentence must remain"
     );
 }
 

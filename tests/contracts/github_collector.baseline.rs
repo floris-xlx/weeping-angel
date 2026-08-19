@@ -1,8 +1,8 @@
-//! Baseline suite for the GitHub collector (Prompt 09).
+//! Baseline suite for the GitHub collector.
 //!
 //! Encodes CURRENT ISO-sliver behavior on characterization SHA
 //! `e430980c0d27a8138a153d49b62ddf3c57827891` as specified in
-//! `docs/sdd/github-collector.md` §3. Must stay GREEN until the target
+//! `docs/specs/github-collector.md` §3. Must stay GREEN until the target
 //! suite is GREEN and this file is superseded. Does not implement the
 //! reference-grade collector.
 
@@ -997,7 +997,7 @@ fn ghc_b028_no_canonical_github_goldens_or_sdlc_catalog_rows() {
         !root
             .join("catalog/canonical/v1/evidence/repository.toml")
             .is_file(),
-        "Prompt 05 repository evidence catalog is not landed"
+        "SDLC catalog repository evidence catalog is not landed"
     );
 }
 
