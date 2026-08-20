@@ -12,6 +12,7 @@
 pub mod architecture;
 pub mod checks;
 pub mod debt;
+pub mod duplication;
 pub mod inventory;
 pub mod model;
 pub mod report;
@@ -21,8 +22,8 @@ use std::time::Instant;
 
 pub use architecture::{
     ADR_IDENTITY_SCHEMA, ARCH_SCHEMA, ArchitectureInvariant, ArchitectureManifest,
-    ArchitecturePolicy, FORBIDDEN_SCHEMA, ForbiddenPattern, INVARIANTS_SCHEMA, InvariantResult,
-    OwnershipRow, REQUIRED_OWNERSHIP, SPEC_LIFECYCLE_SCHEMA,
+    ArchitecturePolicy, ConsolidationProgram, FORBIDDEN_SCHEMA, ForbiddenPattern,
+    INVARIANTS_SCHEMA, InvariantResult, OwnershipRow, REQUIRED_OWNERSHIP, SPEC_LIFECYCLE_SCHEMA,
 };
 pub use checks::{
     ArchitectureCheck, active_spec_drift_in_text, check_01_architecture_manifest,
@@ -30,7 +31,13 @@ pub use checks::{
     check_active_spec_drift, explain_invariant,
 };
 pub use debt::{DEBT_SCHEMA, validate_debt_register_file, validate_debt_register_str};
-pub use inventory::{INVENTORY_SCHEMA, InventoryReport, main_inventory};
+pub use duplication::{
+    DUPLICATION_SCHEMA_V2, STRUCTURAL_DUPLICATION_PATH, StructuralDuplicationMap,
+    load_structural_duplication,
+};
+pub use inventory::{
+    CONSOLIDATION_BASELINE_SCHEMA, INVENTORY_SCHEMA, InventoryReport, main_inventory,
+};
 pub use model::RepositoryModel;
 pub use report::{
     CheckResult, CheckStatus, GUARD_REPORT_SCHEMA, GuardCounts, GuardReport, GuardSkip,
@@ -120,7 +127,7 @@ where
         Some("inventory") => main_inventory(&args),
         _ => {
             eprintln!(
-                "usage: cargo xtask <guard|inventory> …\n  guard [--json] [--check NN] [--explain INV-…]\n  inventory [--json | --markdown | --check]"
+                "usage: cargo xtask <guard|inventory> …\n  guard [--json] [--check NN] [--explain INV-…]\n  inventory [--json | --markdown | --check | --consolidation-baseline]"
             );
             2
         }

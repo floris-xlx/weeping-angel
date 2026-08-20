@@ -1,30 +1,39 @@
-# Phase 2 map only — no deletions in this file's commit.
-# Schema: weeping-angel/structural-duplication/v1
-# Statuses: candidate | confirmed | migrating | resolved | false-positive
-# Five questions per row: concept, canonical_owner, duplicates(+consumers),
-# migration, guard. Measured 2026-08-20 against HEAD after Phase 0+1.
+# Program backlog — Architectural Consolidation Program Phase 0.
+# Schema: weeping-angel/structural-duplication/v2
+# Statuses: candidate | confirmed | canonicalized | consumers-migrating
+#           | compatibility-only | removed | verified
+# Close law: verified/removed only when canonical owner exists, consumers
+# migrated, old path gone (or compatibility-only), and a regression guard exists.
+# v1 migrating → consumers-migrating; resolved/false-positive never auto-map
+# to verified or removed.
 
-schema = "weeping-angel/structural-duplication/v1"
-program = "structural-reconciliation"
-phase = 2
+schema = "weeping-angel/structural-duplication/v2"
+program = "architectural-consolidation"
+phase = 0
 measured = "2026-08-20"
 notes = """
 Inventory of structural duplication. Do not delete from this phase.
-Phase 3 starts with DUP-001 (Codex Security schema trees).
-Debt register DEBT-P0-* summaries that still say 'guard stub' are honesty debt
-(see DUP-010); ProductLawCheck 05–12 already pass on the live tree.
+Phase 1+ starts with consumer migrations. v1 resolved rows stay
+canonicalized/consumers-migrating until close law holds.
 """
 
 [[duplication]]
 id = "DUP-001"
 concept = "codex-security-json-schema-files"
+severity = "p0"
 canonical_owner = "schemas/codex-security"
+canonical_symbol = "schemas/codex-security"
 duplicates = [
   "codex-security/schemas/coverage.schema.json",
   "codex-security/schemas/findings.schema.json",
   "codex-security/schemas/scan-manifest.schema.json",
 ]
-status = "resolved"
+migration_state = "canonical owner exists; tracked duplicate tree deleted from source control; remaining consumers must keep using schemas/codex-security/"
+removal_blockers = ["packaging / Codex Security distribution still documents the old tree"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "delete-duplicate"
 debt_id = "DEBT-SCHEMA-DUP"
 consumers = [
@@ -49,13 +58,15 @@ evidence = """
 SHA-256 pairs match (coverage/findings/scan-manifest). stamp file
 codex-security/schemas/GENERATED_FROM_SSOT documents SSOT=schemas/codex-security/.
 $id URLs are https://openai.com/codex-security/schemas/*.schema.json (identifier, not FS home).
-register.toml DEBT-SCHEMA-DUP status=open.
+register.toml DEBT-SCHEMA-DUP status=resolved after the duplicate tree was deleted.
 """
 
 [[duplication]]
 id = "DUP-002"
 concept = "contract-test-require-needles-helper"
+severity = "p1"
 canonical_owner = "tests/support (proposed; does not exist yet) or a single shared test module"
+canonical_symbol = "require_needles"
 duplicates = [
   "tests/contracts/assessment_lineage.target.rs",
   "tests/contracts/control_implementation_registry.target.rs",
@@ -75,6 +86,11 @@ duplicates = [
   "tests/contracts/temporal_assurance.target.rs",
   "tests/contracts/typed_evidence.target.rs",
 ]
+migration_state = "confirmed duplicate helper; consumers still use per-file copies"
+removal_blockers = ["tests/support module does not exist yet"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
 status = "confirmed"
 action = "consolidate-into-canonical"
 debt_id = ""
@@ -96,10 +112,17 @@ rg -l 'fn require_needles' tests/contracts lists 17+ target files with near-copi
 [[duplication]]
 id = "DUP-003"
 concept = "contract-test-filesystem-discovery-helpers"
+severity = "p1"
 canonical_owner = "tests/support (proposed)"
+canonical_symbol = "tests/support::filesystem_helpers"
 duplicates = [
   "tests/contracts/**/*.target.rs :: manifest_dir / read_repo_file / crate_sources_joined / text_has",
 ]
+migration_state = "confirmed; per-file helpers remain"
+removal_blockers = ["shared test-support module not extracted"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
 status = "confirmed"
 action = "consolidate-into-canonical"
 debt_id = ""
@@ -117,13 +140,20 @@ definitions across target suites (~299 matching lines sampled).
 [[duplication]]
 id = "DUP-004"
 concept = "applicability-snapshot-type-pair"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/applicability/snapshot.rs::ApplicabilitySnapshot"
+canonical_symbol = "ApplicabilitySnapshot"
 duplicates = [
   "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilitySnapshot (renamed; still a second shape)",
   "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilityDecision",
   "crates/weeping-angel-assurance/src/lineage.rs::LineagePackApplicabilityEntry",
 ]
-status = "migrating"
+migration_state = "consumers still use the lineage snapshot shape alongside applicability::snapshot"
+removal_blockers = ["LineageBundle still stores the parallel type"]
+public_api_impact = "breaking"
+serialization_impact = "format-change"
+tests = ["sdd_structural_reconciliation_target"]
+status = "consumers-migrating"
 action = "consolidate-into-canonical"
 debt_id = ""
 consumers = [
@@ -151,12 +181,19 @@ Decision). soa.rs uses applicability::*; lib.rs re-exports lineage::*.
 [[duplication]]
 id = "DUP-005"
 concept = "lineage-reconstruct-public-aliases"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/lineage.rs::replay_assessment"
+canonical_symbol = "replay_assessment"
 duplicates = [
   "crates/weeping-angel-assurance/src/lineage.rs::reconstruct (private helper — keep)",
   "crates/weeping-angel-assurance/src/lineage.rs::load_lineage (deprecated; no longer crate-root re-export)",
 ]
-status = "migrating"
+migration_state = "public alias load_lineage still present as reconstruct without verify"
+removal_blockers = ["callers of load_lineage / reconstruct"]
+public_api_impact = "breaking"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "consumers-migrating"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-LINEAGE-REBUILD"
 consumers = [
@@ -178,10 +215,17 @@ Guard check 10 required needle: pub fn replay_assessment(; forbidden: Ok(reconst
 [[duplication]]
 id = "DUP-006"
 concept = "soa-projection-paths"
+severity = "p2"
 canonical_owner = "crates/weeping-angel-assurance/src/soa.rs::project_soa_from_snapshot (+ project_operational_soa)"
+canonical_symbol = "unknown"
 duplicates = [
   "crates/weeping-angel-assurance/src/soa.rs::project_soa",
 ]
+migration_state = "candidate; live project_soa still a convenience path"
+removal_blockers = ["scheduler/CLI historical paths not fully audited"]
+public_api_impact = "unknown"
+serialization_impact = "none"
+tests = []
 status = "candidate"
 action = "document-intentional"
 debt_id = "DEBT-P0-SOA"
@@ -205,10 +249,17 @@ builds empty operational graph. Three public entrypoints share StatementOfApplic
 [[duplication]]
 id = "DUP-007"
 concept = "temporal-valid-leaf-selection-algorithm"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-control-test/src/temporal.rs::select_latest_as_of (evaluation primitive; ADR 0047 freeze)"
+canonical_symbol = "select_latest_as_of"
 duplicates = [
   "crates/weeping-angel-evidence/src/ledger.rs::select_leaf_as_of (private; powers as_of/current)",
 ]
+migration_state = "confirmed algorithm duplication; public APIs remain distinct clocks"
+removal_blockers = ["ACP-T07 / TLE-015 forbid moving select_latest_as_of"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_architectural_cleanup_target"]
 status = "confirmed"
 action = "document-intentional"
 debt_id = "DEBT-P0-EVIDENCE-LATEST"
@@ -230,12 +281,19 @@ Public latest/current/as_of APIs remain distinct clocks (not accidental aliases)
 [[duplication]]
 id = "DUP-008"
 concept = "catalog-root-search-and-pin-walks"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-canonical-catalog::canonical_catalog_search_roots"
+canonical_symbol = "canonical_catalog_search_roots"
 duplicates = [
   "crates/weeping-angel-assurance/src/lib.rs::load_catalog_pin (now calls canonical roots)",
   "crates/weeping-angel-assurance/src/snapshot.rs::catalog_digest (now calls canonical roots)",
 ]
-status = "resolved"
+migration_state = "canonical roots exist; remaining call sites documented as consumers of the owner"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-CATALOG-SSOT"
 consumers = [
@@ -257,13 +315,20 @@ discover_catalog_index absent from framework (Guard 05 forbids reintroduction).
 [[duplication]]
 id = "DUP-009"
 concept = "canonical-digest-shared-primitive"
+severity = "info"
 canonical_owner = "crates/weeping-angel-assurance-ir::canonical_digest"
+canonical_symbol = "canonical_digest"
 duplicates = [
   "framework FrameworkPackDigest wrapping canonical_digest",
   "catalog CatalogDigest wrapping canonical_digest",
   "evidence envelope/validity digests via canonical_digest",
 ]
-status = "false-positive"
+migration_state = "intentional projection: domain digests wrap one IR primitive"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "document-intentional"
 debt_id = "DEBT-P0-FRAMEWORK-DIGEST"
 consumers = ["pack load, catalog digest, evidence seal, SoA snapshot digest"]
@@ -274,11 +339,18 @@ evidence = "All sampled digest paths import weeping_angel_assurance_ir::canonica
 [[duplication]]
 id = "DUP-010"
 concept = "debt-register-stale-p0-stub-language"
+severity = "p2"
 canonical_owner = "docs/debt/register.toml (resolved DEBT-GUARD-05..12 + live ProductLawCheck)"
+canonical_symbol = "docs/debt/register.toml"
 duplicates = [
   "docs/debt/register.toml DEBT-P0-* summaries (rewritten to separate surface-green vs deep backlog)",
 ]
-status = "resolved"
+migration_state = "register prose rewritten; remaining_backlog still exists as documented debt"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "document-intentional"
 debt_id = ""
 consumers = ["humans reading open/confirmed P0 rows; agents triaging remaining_backlog"]
@@ -289,19 +361,26 @@ confirmed. Do not reopen resolved guard findings.
 """
 guard = "Phase 1 active-spec drift + inventory honesty; optional debt-register prose check."
 evidence = """
-register.toml lines ~45–98 still say 'guard check NN stub' while DEBT-GUARD-05..12
-are resolved and cargo xtask guard prints pass for 05–12.
+register.toml P0 rows distinguish surface-green ProductLawCheck vs remaining
+deep backlog. Do not reopen resolved DEBT-GUARD-05..12.
 """
 
 [[duplication]]
 id = "DUP-011"
 concept = "readiness-snapshot-construction"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/readiness.rs::project_readiness"
+canonical_symbol = "project_readiness"
 duplicates = [
   "crates/weeping-angel-assurance/src/drift.rs::readiness_view",
   "crates/weeping-angel-assurance/src/lineage.rs (inline FrameworkReadinessSnapshot in report serialize)",
   "crates/weeping-angel-assurance/src/scheduler.rs::empty_readiness",
 ]
+migration_state = "confirmed; drift/lineage/scheduler still construct snapshots off the projection path"
+removal_blockers = ["inline FrameworkReadinessSnapshot constructors"]
+public_api_impact = "additive"
+serialization_impact = "unknown"
+tests = ["sdd_structural_reconciliation_target"]
 status = "confirmed"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-READINESS-SSOT"
@@ -324,12 +403,19 @@ construct FrameworkReadinessSnapshot without always going through it.
 [[duplication]]
 id = "DUP-012"
 concept = "document-current-vs-evidence-current-naming"
+severity = "info"
 canonical_owner = "domain-specific current() APIs (do not merge)"
+canonical_symbol = "EvidenceLedger::current"
 duplicates = [
   "weeping-angel-evidence EvidenceLedger::current",
   "weeping-angel-assurance-ir document registry current()",
 ]
-status = "false-positive"
+migration_state = "intentional: same method name on unrelated aggregates"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "document-intentional"
 debt_id = ""
 consumers = ["evidence temporal selection; controlled documents"]
@@ -340,12 +426,19 @@ evidence = "Same method name on unrelated types (EvidenceLedger vs DocumentVersi
 [[duplication]]
 id = "DUP-013"
 concept = "framework-pack-applicability-toml-parse"
+severity = "p1"
 canonical_owner = "crates/weeping-angel-framework::LoadedPack.applicability (PackApplicabilityRow)"
+canonical_symbol = "LoadedPack.applicability"
 duplicates = [
   "crates/weeping-angel-assurance/src/lib.rs (maps LoadedPack.applicability → lineage pin)",
   "crates/weeping-angel-assurance/src/soa.rs::load_pack_soa_rows (maps via load_framework_pack)",
 ]
-status = "resolved"
+migration_state = "canonical pack parse exists; assurance still maps rows"
+removal_blockers = ["soa silent Vec::new vs PackError fail-closed fork"]
+public_api_impact = "additive"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
+status = "canonicalized"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-PACK-PARSE"
 consumers = [
@@ -367,8 +460,15 @@ manual Value picks in lib.rs; silent continue/ok in soa.rs.
 [[duplication]]
 id = "DUP-014"
 concept = "xtask-filesystem-walk"
+severity = "p1"
 canonical_owner = "xtask/src/model.rs (RepositoryModel walk / SKIP_DIR_NAMES)"
+canonical_symbol = "RepositoryModel::load"
 duplicates = ["xtask/src/inventory.rs::walk_included / should_skip_dir"]
+migration_state = "confirmed parallel walkers; Phase 0 reuses inventory and does not add a third walker"
+removal_blockers = ["exclusion sets are overlapping but not identical"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_structural_reconciliation_target"]
 status = "confirmed"
 action = "consolidate-into-canonical"
 debt_id = ""
@@ -383,8 +483,15 @@ evidence = "Parallel directory walkers with overlapping but non-identical skip s
 [[duplication]]
 id = "DUP-015"
 concept = "collector-public-api-dual-surface"
+severity = "p2"
 canonical_owner = "crates/weeping-angel-collector hexagonal CollectionEngine / CollectorAdapter"
+canonical_symbol = "unknown"
 duplicates = ["EvidenceCollector trait + GitHubCollector/LocalCollector façade used by scheduler"]
+migration_state = "candidate; deferred to collector hexagonal program"
+removal_blockers = ["do not rewrite scheduler in this program"]
+public_api_impact = "unknown"
+serialization_impact = "none"
+tests = []
 status = "candidate"
 action = "document-intentional"
 debt_id = ""
@@ -396,11 +503,18 @@ evidence = "Scheduler uses EvidenceCollector; LocalCollector::collect delegates 
 [[duplication]]
 id = "DUP-016"
 concept = "scan-workbench-sqlite-surfaces"
+severity = "p2"
 canonical_owner = "investigate — likely two products"
+canonical_symbol = "unknown"
 duplicates = [
   "codex-security/scripts/workbench_*.py",
   "src/workbench/{mod,compare,remediation}.rs",
 ]
+migration_state = "candidate; investigate whether schemas/DB diverge intentionally"
+removal_blockers = ["two language trees, two products"]
+public_api_impact = "unknown"
+serialization_impact = "unknown"
+tests = []
 status = "candidate"
 action = "investigate"
 debt_id = ""
@@ -412,10 +526,17 @@ evidence = "Both open SQLite workbench DBs and register/list scans across langua
 [[duplication]]
 id = "DUP-017"
 concept = "temporal-ownership-path-metadata-drift"
+severity = "p2"
 canonical_owner = "architecture.toml ownership.temporal_evidence_selection (metadata must match seats)"
+canonical_symbol = "unknown"
 duplicates = [
   "architecture.toml paths pointing at assurance/src/temporal.rs while leaf primitive is control-test::select_latest_as_of",
 ]
+migration_state = "candidate; metadata drift only, do not move functions"
+removal_blockers = ["ACP-T07 / TLE-015 forbid moving select_latest_as_of"]
+public_api_impact = "none"
+serialization_impact = "none"
+tests = []
 status = "candidate"
 action = "document-intentional"
 debt_id = ""

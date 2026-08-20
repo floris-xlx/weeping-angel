@@ -5,8 +5,13 @@ use std::fs;
 use std::path::Path;
 
 use crate::architecture::{
-    ARCH_SCHEMA, ArchitectureInvariant, ForbiddenPattern, InvariantResult, REQUIRED_OWNERSHIP,
+    ARCH_SCHEMA, ArchitectureInvariant, CONSOLIDATION_ALLOWED_CLASSES,
+    CONSOLIDATION_FORBIDDEN_CLASSES, ForbiddenPattern, InvariantResult, REQUIRED_OWNERSHIP,
     SPEC_STATES,
+};
+use crate::duplication::load_structural_duplication;
+use crate::inventory::{
+    CONSOLIDATION_BASELINE_SCHEMA, INVENTORY_SCHEMA, InventoryReport, json_u64,
 };
 
 use crate::model::RepositoryModel;
@@ -291,6 +296,10 @@ fn evaluate_invariant(
         "INV-DEBT-RESOLVED-HAS-PROOF" => eval_debt_resolved_has_proof(repo),
         "INV-ADR-NAMESPACE-UNIQUE" => eval_adr_namespace_unique(repo),
         "INV-NO-SUPERSEDED-BASELINES" => eval_no_superseded_baselines(repo),
+        "INV-CONSOLIDATION-MODE-ACTIVE" => eval_consolidation_mode_active(repo),
+        "INV-CONSOLIDATION-BASELINE-PRESENT" => eval_consolidation_baseline_present(repo),
+        "INV-CONSOLIDATION-EXPANSION-RESTRICTED" => eval_consolidation_expansion_restricted(repo),
+        "INV-STRUCTURAL-DUPLICATION-BACKLOG" => eval_structural_duplication_backlog(repo),
         "INV-INVARIANTS-EVALUATED" => {
             let backlog = inv
                 .summary
@@ -442,6 +451,231 @@ fn eval_adr_namespace_unique(repo: &RepositoryModel) -> (bool, String) {
             false,
             format!("duplicate ADR prefixes: {}", dups.join("; ")),
         )
+    }
+}
+
+fn eval_consolidation_mode_active(repo: &RepositoryModel) -> (bool, String) {
+    let Some(arch) = &repo.architecture else {
+        return (
+            false,
+            repo.architecture_error
+                .clone()
+                .unwrap_or_else(|| "architecture manifest missing".into()),
+        );
+    };
+    let c = &arch.consolidation;
+    let mut problems = Vec::new();
+    if c.status != "active" {
+        problems.push(format!("status must be active, got {}", c.status));
+    }
+    if c.feature_expansion != "restricted" {
+        problems.push(format!(
+            "feature_expansion must be restricted, got {}",
+            c.feature_expansion
+        ));
+    }
+    for class in CONSOLIDATION_ALLOWED_CLASSES {
+        if !c.allowed_change_classes.iter().any(|x| x == class) {
+            problems.push(format!("allowed_change_classes missing {class}"));
+        }
+    }
+    for class in CONSOLIDATION_FORBIDDEN_CLASSES {
+        if !c.forbidden_change_classes.iter().any(|x| x == class) {
+            problems.push(format!("forbidden_change_classes missing {class}"));
+        }
+    }
+    if problems.is_empty() {
+        (
+            true,
+            "consolidation mode is active with restricted feature expansion".into(),
+        )
+    } else {
+        (false, problems.join("; "))
+    }
+}
+
+fn eval_consolidation_baseline_present(repo: &RepositoryModel) -> (bool, String) {
+    let json_path = repo.root.join("docs/debt/consolidation-baseline.json");
+    let md_path = repo.root.join("docs/debt/consolidation-baseline.md");
+    if !json_path.is_file() {
+        return (
+            false,
+            "docs/debt/consolidation-baseline.json is not a file".into(),
+        );
+    }
+    if !md_path.is_file() {
+        return (
+            false,
+            "docs/debt/consolidation-baseline.md is not a file".into(),
+        );
+    }
+    let json_text = match fs::read_to_string(&json_path) {
+        Ok(t) => t,
+        Err(e) => return (false, format!("read consolidation-baseline.json: {e}")),
+    };
+    let json: serde_json::Value = match serde_json::from_str(&json_text) {
+        Ok(v) => v,
+        Err(e) => return (false, format!("consolidation-baseline.json: {e}")),
+    };
+    if json.get("schema").and_then(|v| v.as_str()) != Some(CONSOLIDATION_BASELINE_SCHEMA) {
+        return (
+            false,
+            format!("consolidation-baseline.json schema must be {CONSOLIDATION_BASELINE_SCHEMA}"),
+        );
+    }
+    if json.get("program").and_then(|v| v.as_str()) != Some("architectural-consolidation") {
+        return (
+            false,
+            "consolidation-baseline.json program must be architectural-consolidation".into(),
+        );
+    }
+    if json.get("phase").and_then(|v| v.as_i64()) != Some(0) {
+        return (false, "consolidation-baseline.json phase must be 0".into());
+    }
+    if json.get("source").and_then(|v| v.as_str()) != Some(INVENTORY_SCHEMA) {
+        return (
+            false,
+            format!("consolidation-baseline.json source must be {INVENTORY_SCHEMA}"),
+        );
+    }
+    for key in [
+        "exclusions",
+        "inventory_counts",
+        "extended",
+        "architecture_ownership",
+        "schema_locations",
+        "adr_count",
+        "spec_count",
+        "debt_rows",
+    ] {
+        if json.get(key).is_none() {
+            return (false, format!("consolidation-baseline.json missing {key}"));
+        }
+    }
+    let md = match fs::read_to_string(&md_path) {
+        Ok(t) => t,
+        Err(e) => return (false, format!("read consolidation-baseline.md: {e}")),
+    };
+    if !md.contains("weeping-angel-consolidation-baseline-stable") {
+        return (
+            false,
+            "consolidation-baseline.md missing frozen stable marker".into(),
+        );
+    }
+    (
+        true,
+        "frozen consolidation-baseline.json and .md are present".into(),
+    )
+}
+
+fn eval_consolidation_expansion_restricted(repo: &RepositoryModel) -> (bool, String) {
+    let json_path = repo.root.join("docs/debt/consolidation-baseline.json");
+    let json_text = match fs::read_to_string(&json_path) {
+        Ok(t) => t,
+        Err(_) => {
+            return (
+                false,
+                "INV-CONSOLIDATION-EXPANSION-RESTRICTED: frozen consolidation-baseline.json missing"
+                    .into(),
+            );
+        }
+    };
+    let frozen: serde_json::Value = match serde_json::from_str(&json_text) {
+        Ok(v) => v,
+        Err(e) => {
+            return (
+                false,
+                format!("INV-CONSOLIDATION-EXPANSION-RESTRICTED: frozen json: {e}"),
+            );
+        }
+    };
+    let live = InventoryReport::collect(&repo.root);
+    let mut increases = Vec::new();
+    let frozen_counts = frozen.get("inventory_counts");
+    let frozen_ext = frozen.get("extended");
+    for (name, live_n, frozen_n) in [
+        (
+            "root_test_binaries",
+            live.counts.root_test_binaries,
+            json_u64(frozen_counts, "root_test_binaries"),
+        ),
+        (
+            "schema_json_files",
+            live.counts.schema_json_files,
+            json_u64(frozen_counts, "schema_json_files"),
+        ),
+        (
+            "require_needles_fns",
+            live.counts.require_needles_fns,
+            json_u64(frozen_counts, "require_needles_fns"),
+        ),
+        (
+            "workspace_crates",
+            live.extended.workspace_crates,
+            json_u64(frozen_ext, "workspace_crates"),
+        ),
+        (
+            "public_structs",
+            live.extended.public_structs,
+            json_u64(frozen_ext, "public_structs"),
+        ),
+        (
+            "public_enums",
+            live.extended.public_enums,
+            json_u64(frozen_ext, "public_enums"),
+        ),
+        (
+            "pub_use_count",
+            live.extended.pub_use_count,
+            json_u64(frozen_ext, "pub_use_count"),
+        ),
+        (
+            "duplicate_helper_definitions",
+            live.extended.duplicate_helper_definitions,
+            json_u64(frozen_ext, "duplicate_helper_definitions"),
+        ),
+    ] {
+        if live_n > frozen_n {
+            increases.push(format!("{name} {live_n} > frozen {frozen_n}"));
+        }
+    }
+    let live_schema_n = live.schema_locations.len() as u64;
+    let frozen_schema_n = frozen
+        .get("schema_locations")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len() as u64)
+        .unwrap_or(0);
+    if live_schema_n > frozen_schema_n {
+        increases.push(format!(
+            "schema_json_files/schema_locations {live_schema_n} > frozen {frozen_schema_n}"
+        ));
+    }
+    if increases.is_empty() {
+        (
+            true,
+            "live expansion metrics are not above the frozen consolidation baseline".into(),
+        )
+    } else {
+        (
+            false,
+            format!(
+                "INV-CONSOLIDATION-EXPANSION-RESTRICTED: expansion increased: {}",
+                increases.join("; ")
+            ),
+        )
+    }
+}
+
+fn eval_structural_duplication_backlog(repo: &RepositoryModel) -> (bool, String) {
+    match load_structural_duplication(&repo.root) {
+        Ok(map) => (
+            true,
+            format!(
+                "structural-duplication.toml v2 parsed ({} rows, close law enforced)",
+                map.rows.len()
+            ),
+        ),
+        Err(err) => (false, err),
     }
 }
 

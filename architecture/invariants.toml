@@ -31,3 +31,23 @@ guard_check = "14"
 id = "INV-NO-SUPERSEDED-BASELINES"
 summary = "Superseded *.baseline.rs suites are deleted, not ignored"
 guard_check = "13"
+
+[[invariant]]
+id = "INV-CONSOLIDATION-MODE-ACTIVE"
+summary = "architecture.toml [program.architectural_consolidation] is active with restricted feature expansion"
+guard_check = "04"
+
+[[invariant]]
+id = "INV-CONSOLIDATION-BASELINE-PRESENT"
+summary = "Frozen docs/debt/consolidation-baseline.json and .md exist with weeping-angel/consolidation-baseline/v1"
+guard_check = "04"
+
+[[invariant]]
+id = "INV-CONSOLIDATION-EXPANSION-RESTRICTED"
+summary = "Live expansion metrics must not increase versus the frozen consolidation baseline"
+guard_check = "04"
+
+[[invariant]]
+id = "INV-STRUCTURAL-DUPLICATION-BACKLOG"
+summary = "docs/debt/structural-duplication.toml is the v2 program backlog with close law"
+guard_check = "04"

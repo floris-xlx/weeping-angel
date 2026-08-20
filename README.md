@@ -214,7 +214,7 @@ Human map: [`docs/README.md`](docs/README.md).
 | [`docs/specs/`](docs/specs/) | specifications |
 | [`docs/adr/`](docs/adr/) | decisions |
 | [`architecture/`](architecture/) | ownership, invariants, forbidden patterns |
-| [`docs/debt/`](docs/debt/) | technical-debt register; mechanical [`current.md`](docs/debt/current.md) via `cargo xtask inventory` |
+| [`docs/debt/`](docs/debt/) | technical-debt register; live [`current.md`](docs/debt/current.md); frozen [`consolidation-baseline.md`](docs/debt/consolidation-baseline.md); v2 [`structural-duplication.toml`](docs/debt/structural-duplication.toml) |
 | [`tests/contracts/`](tests/contracts/) | executable dual-suite invariants |
 | [`schemas/codex-security/`](schemas/codex-security/) | Codex Security JSON Schema SSOT |
 | [`frameworks/`](frameworks/) | versioned regime packs |
@@ -233,6 +233,7 @@ Start here if you are reading architecture, not running scans:
 - [Repository health gate](docs/adr/0009-repository-health-gate.md)
 - [Repository hygiene](docs/specs/repository-hygiene.md)
 - [Structural reconciliation](docs/specs/structural-reconciliation.md) ([ADR 0048](docs/adr/0048-structural-reconciliation.md))
+- [Architectural consolidation](docs/specs/architectural-consolidation-program.md) ([ADR 0049](docs/adr/0049-architectural-consolidation-phase-0.md))
 
 ```bash
 pnpm --dir apps/docs install
@@ -252,11 +253,12 @@ cargo xtask guard --explain INV-INVARIANTS-EVALUATED
 cargo xtask inventory --json
 cargo xtask inventory --markdown
 cargo xtask inventory --check
+cargo xtask inventory --consolidation-baseline
 ```
 
-`cargo xtask guard` is the architecture gate: manifests, ownership, forbidden patterns, evaluated invariants, debt register, and active-spec drift (Guard 15). Silent skips are not allowed; a skip must cite a live finding in [`docs/debt/register.toml`](docs/debt/register.toml).
+`cargo xtask guard` is the architecture gate: manifests, ownership, forbidden patterns, evaluated invariants (including consolidation freeze), debt register, and active-spec drift (Guard 15). Silent skips are not allowed; a skip must cite a live finding in [`docs/debt/register.toml`](docs/debt/register.toml). While `[program.architectural_consolidation]` is `status=active` / `feature_expansion=restricted`, expansion metrics must not rise versus the frozen snapshot ([ADR 0049](docs/adr/0049-architectural-consolidation-phase-0.md)).
 
-`cargo xtask inventory` is the mechanical count / debt-snapshot tool ([ADR 0048](docs/adr/0048-structural-reconciliation.md)): regenerate [`docs/debt/current.md`](docs/debt/current.md) with `--markdown`, verify with `--check`. [`docs/debt/baseline-2026-08.md`](docs/debt/baseline-2026-08.md) is Historical only.
+`cargo xtask inventory` is the mechanical count / debt-snapshot tool ([ADR 0048](docs/adr/0048-structural-reconciliation.md)): regenerate [`docs/debt/current.md`](docs/debt/current.md) with `--markdown`, verify with `--check`. Print the frozen Phase 0 projection with `--consolidation-baseline` (does not rewrite committed files). [`docs/debt/baseline-2026-08.md`](docs/debt/baseline-2026-08.md) is Historical only.
 
 ---
 

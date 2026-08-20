@@ -56,3 +56,26 @@ paths = ["src/main.rs", "src/cli.rs"]
 crate = "xtask"
 kind = "exclusive"
 paths = ["xtask"]
+
+# Architectural Consolidation Program Phase 0: freeze feature expansion.
+# Extra tables are not ignored; load_architecture_manifest fail-closes if this
+# table is missing or malformed. Enforcement: Guard 01 + Guard 04 invariants.
+[program.architectural_consolidation]
+status = "active"
+feature_expansion = "restricted"
+allowed_change_classes = [
+  "bug-fix",
+  "security-fix",
+  "consolidation",
+  "non-semantic-collector",
+  "consolidation-docs",
+]
+forbidden_change_classes = [
+  "new-public-domain-type",
+  "new-persistence-representation",
+  "new-projection-path",
+  "new-root-test-binary",
+  "new-duplicated-helper",
+  "new-compatibility-alias",
+  "second-ssot",
+]

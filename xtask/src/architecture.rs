@@ -77,12 +77,40 @@ pub struct ArchitecturePolicy {
     pub required_concepts: Vec<String>,
 }
 
+pub const CONSOLIDATION_ALLOWED_CLASSES: [&str; 5] = [
+    "bug-fix",
+    "security-fix",
+    "consolidation",
+    "non-semantic-collector",
+    "consolidation-docs",
+];
+
+pub const CONSOLIDATION_FORBIDDEN_CLASSES: [&str; 7] = [
+    "new-public-domain-type",
+    "new-persistence-representation",
+    "new-projection-path",
+    "new-root-test-binary",
+    "new-duplicated-helper",
+    "new-compatibility-alias",
+    "second-ssot",
+];
+
+/// `[program.architectural_consolidation]` freeze policy.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConsolidationProgram {
+    pub status: String,
+    pub feature_expansion: String,
+    pub allowed_change_classes: Vec<String>,
+    pub forbidden_change_classes: Vec<String>,
+}
+
 /// Parsed `architecture/architecture.toml` including ownership kinds.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArchitectureManifest {
     pub schema: String,
     pub policy: ArchitecturePolicy,
     pub ownership: BTreeMap<String, OwnershipRow>,
+    pub consolidation: ConsolidationProgram,
 }
 
 /// One `[[invariant]]` row from `architecture/invariants.toml`.
@@ -182,11 +210,87 @@ pub fn load_architecture_manifest(root: &Path) -> Result<ArchitectureManifest, S
             },
         );
     }
+    let consolidation = parse_consolidation_program(&value)?;
     Ok(ArchitectureManifest {
         schema: ARCH_SCHEMA.to_string(),
         policy,
         ownership,
+        consolidation,
     })
+}
+
+fn parse_consolidation_program(value: &toml::Value) -> Result<ConsolidationProgram, String> {
+    let program = value.get("program").ok_or_else(|| {
+        "architecture.toml missing [program] table (required [program.architectural_consolidation])"
+            .to_string()
+    })?;
+    let table = program.get("architectural_consolidation").ok_or_else(|| {
+        "architecture.toml missing [program.architectural_consolidation]".to_string()
+    })?;
+    let status = table
+        .get("status")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if status != "active" && status != "inactive" {
+        return Err(format!(
+            "architecture.toml [program.architectural_consolidation].status must be active|inactive, got {status:?}"
+        ));
+    }
+    let feature_expansion = table
+        .get("feature_expansion")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if feature_expansion != "restricted" {
+        return Err(format!(
+            "architecture.toml [program.architectural_consolidation].feature_expansion must be restricted while the program is in force, got {feature_expansion:?}"
+        ));
+    }
+    let allowed_change_classes = program_string_array(table, "allowed_change_classes")?;
+    let forbidden_change_classes = program_string_array(table, "forbidden_change_classes")?;
+    if allowed_change_classes.is_empty() {
+        return Err(
+            "architecture.toml [program.architectural_consolidation].allowed_change_classes must be non-empty"
+                .into(),
+        );
+    }
+    if forbidden_change_classes.is_empty() {
+        return Err(
+            "architecture.toml [program.architectural_consolidation].forbidden_change_classes must be non-empty"
+                .into(),
+        );
+    }
+    for class in CONSOLIDATION_ALLOWED_CLASSES {
+        if !allowed_change_classes.iter().any(|c| c == class) {
+            return Err(format!(
+                "architecture.toml allowed_change_classes must include {class}"
+            ));
+        }
+    }
+    for class in CONSOLIDATION_FORBIDDEN_CLASSES {
+        if !forbidden_change_classes.iter().any(|c| c == class) {
+            return Err(format!(
+                "architecture.toml forbidden_change_classes must include {class}"
+            ));
+        }
+    }
+    Ok(ConsolidationProgram {
+        status,
+        feature_expansion,
+        allowed_change_classes,
+        forbidden_change_classes,
+    })
+}
+
+fn program_string_array(value: &toml::Value, key: &str) -> Result<Vec<String>, String> {
+    let arr = value.get(key).and_then(|v| v.as_array()).ok_or_else(|| {
+        format!("architecture.toml [program.architectural_consolidation].{key} must be an array")
+    })?;
+    Ok(arr
+        .iter()
+        .filter_map(|v| v.as_str().map(str::to_string))
+        .collect())
 }
 
 fn parse_policy(value: &toml::Value) -> Result<ArchitecturePolicy, String> {

@@ -57,6 +57,7 @@ const CANONICAL_SPECS: &[&str] = &[
     "docs/specs/evidence-validity-temporal-assurance.md",
     "docs/specs/repository-integrity.md",
     "docs/specs/architectural-cleanup-program.md",
+    "docs/specs/architectural-consolidation-program.md",
     "docs/specs/repository-hygiene.md",
     "docs/specs/structural-reconciliation.md",
     "docs/specs/collector-hexagonal.md",

@@ -232,6 +232,26 @@ required_concepts = ["catalog"]
 crate = "weeping-angel-canonical-catalog"
 kind = "exclusive"
 paths = ["crates/weeping-angel-canonical-catalog"]
+
+[program.architectural_consolidation]
+status = "active"
+feature_expansion = "restricted"
+allowed_change_classes = [
+  "bug-fix",
+  "security-fix",
+  "consolidation",
+  "non-semantic-collector",
+  "consolidation-docs",
+]
+forbidden_change_classes = [
+  "new-public-domain-type",
+  "new-persistence-representation",
+  "new-projection-path",
+  "new-root-test-binary",
+  "new-duplicated-helper",
+  "new-compatibility-alias",
+  "second-ssot",
+]
 "#,
     )
     .unwrap();

@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | **Phase 0–3 advanced.** Schema SSOT closed (`DEBT-SCHEMA-DUP` / DUP-001). Catalog root walk + applicability.toml parse consolidated (DUP-008 / DUP-013). Lineage applicability types renamed (DUP-004 migrating). Remaining: full snapshot-shape merge, readiness constructors, require_needles helpers. |
 | Program | Structural Reconciliation Program (subtractive honesty: docs + debt evidence match the live tree). |
-| Slice | **Phase 0+1** complete. **Phase 2** = duplication inventory only (no opportunistic dedupe). **Not** yet Phases 3+ (schema delete, baseline leftovers, panic budget, semantic P0 closures). No new frameworks / collectors / ISMS / report formats / product scanners. |
+| Slice | **Phase 0+1** complete. **Phase 2** duplication map is now the Architectural Consolidation Program backlog ([`architectural-consolidation-program.md`](architectural-consolidation-program.md) / [ADR 0049](../adr/0049-architectural-consolidation-phase-0.md); schema `weeping-angel/structural-duplication/v2`). **Not** yet SR Phases 3+ (schema delete, baseline leftovers, panic budget, semantic P0 closures). No new frameworks / collectors / ISMS / report formats / product scanners. |
 | Dual-suite | `xtask/tests/sdd_structural_reconciliation_{baseline,target}.rs` (Cargo auto-discovers `cargo test -p xtask`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Integrity dual-suite remains `tests/contracts/repository_integrity.{baseline,target}.rs` (root `[[test]]`); amend assertions only where this slice requires live-plane honesty. |
 | ADR | **Accepted** [`docs/adr/0048-structural-reconciliation.md`](../adr/0048-structural-reconciliation.md). Do **not** mint another `0003-*` / colliding `0011-*`. |
 | Predecessor law | [`docs/specs/repository-integrity.md`](repository-integrity.md), [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md), [`docs/specs/repository-hygiene.md`](repository-hygiene.md), ADRs 0009–0012. |
@@ -237,7 +237,7 @@ cargo xtask inventory [--json | --markdown | --check]
 
 Mutually exclusive flags: if more than one of `--json` / `--markdown` / `--check` is passed, exit 2 with usage. Combining with `guard` flags is invalid.
 
-Implementation home: `xtask/src/inventory.rs`, registered from `lib.rs` / `main_with_args`. Reuse walk helpers from `RepositoryModel` where practical; **do not** create a second filesystem framework crate.
+Implementation home: `xtask/src/inventory.rs`, registered from `lib.rs` / `main_with_args`. Reuse walk helpers from `RepositoryModel` where practical; **do not** create a second filesystem framework crate. Architectural Consolidation Phase 0 adds print-only `--consolidation-baseline` / `--consolidation-baseline-markdown` on this same CLI (frozen files stay Guard 04; see [`architectural-consolidation-program.md`](architectural-consolidation-program.md)).
 
 ### 4.3 Inventory JSON contract
 
@@ -421,7 +421,8 @@ Protocol:
 
 ## 9. Related
 
-- Draft decision: [`docs/adr/0048-structural-reconciliation.md`](../adr/0048-structural-reconciliation.md)
+- Accepted decision: [`docs/adr/0048-structural-reconciliation.md`](../adr/0048-structural-reconciliation.md)
+- Neighbor: [`docs/specs/architectural-consolidation-program.md`](architectural-consolidation-program.md), [ADR 0049](../adr/0049-architectural-consolidation-phase-0.md) (v2 duplication backlog + freeze)
 - [`docs/specs/repository-integrity.md`](repository-integrity.md)
 - [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md)
 - [`docs/specs/repository-hygiene.md`](repository-hygiene.md)

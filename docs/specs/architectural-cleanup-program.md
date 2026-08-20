@@ -12,7 +12,7 @@
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | Documentation architecture | [ADR 0004](../adr/0004-documentation-architecture.md) — human SSOT is **this file** under `docs/specs/`. [`docs/sdd/architectural-cleanup-program.md`](../sdd/architectural-cleanup-program.md) is the SDD run report, not a second SSOT. Generated traces go to `.sdd/`. |
 | Neighbors (must stay GREEN after implement) | `sdd_documentation_layout` (`CANONICAL_SPECS` includes this path), `sdd_repository_integrity_target` (RI-T13 updated as specified), `sdd_assurance_runtime_target` |
-| Collision fence | Do not implement catalog SSOT (Phase 2), framework parser/digest (Phase 3), evidence ledger `current()`/`as_of(t)` law (Phase 4), temporal move (Phase 5), AssessmentRun rebuild (Phase 6), readiness/SoA/explain (Phases 7–9), remaining guards 05–12 / 14–15 as real, ADR mass-renumber, or ignore-baseline deletion. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. |
+| Collision fence | Do not implement catalog SSOT (Phase 2), framework parser/digest (Phase 3), evidence ledger `current()`/`as_of(t)` law (Phase 4), temporal move (Phase 5), AssessmentRun rebuild (Phase 6), readiness/SoA/explain (Phases 7–9), remaining guards 05–12 / 14–15 as real, ADR mass-renumber, or ignore-baseline deletion. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. Do **not** treat this spec-law-only Phase 0 freeze as Architectural Consolidation Program Phase 0 ([`architectural-consolidation-program.md`](architectural-consolidation-program.md) / [ADR 0049](../adr/0049-architectural-consolidation-phase-0.md)). |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) |
@@ -604,6 +604,7 @@ Do **not** this increment:
 ## 9. Related
 
 - Decision (Accepted): [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md)
+- Neighbor (different freeze): [`docs/specs/architectural-consolidation-program.md`](architectural-consolidation-program.md), [ADR 0049](../adr/0049-architectural-consolidation-phase-0.md)
 - Predecessor gate: [`docs/specs/repository-integrity.md`](repository-integrity.md), [ADR 0009](../adr/0009-repository-health-gate.md)
 - Docs layout: [ADR 0004](../adr/0004-documentation-architecture.md)
 - Crate graph / five invariants: [ADR 0001](../adr/0001-inwardly-extensible-assurance-runtime.md)

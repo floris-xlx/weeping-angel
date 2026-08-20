@@ -1,0 +1,111 @@
+{
+  "adr_count": 49,
+  "architecture_ownership": [
+    {
+      "concept": "assessment_lineage",
+      "crate": "weeping-angel-assurance",
+      "kind": "exclusive",
+      "paths": [
+        "crates/weeping-angel-assurance/src/lineage.rs"
+      ]
+    },
+    {
+      "concept": "assurance_cli",
+      "crate": "weeping-angel",
+      "kind": "facade",
+      "paths": [
+        "src/main.rs",
+        "src/cli.rs"
+      ]
+    },
+    {
+      "concept": "catalog",
+      "crate": "weeping-angel-canonical-catalog",
+      "kind": "exclusive",
+      "paths": [
+        "crates/weeping-angel-canonical-catalog"
+      ]
+    },
+    {
+      "concept": "evidence_persistence",
+      "crate": "weeping-angel-evidence",
+      "kind": "exclusive",
+      "paths": [
+        "crates/weeping-angel-evidence"
+      ]
+    },
+    {
+      "concept": "framework_compilation",
+      "crate": "weeping-angel-framework",
+      "kind": "exclusive",
+      "paths": [
+        "crates/weeping-angel-framework"
+      ]
+    },
+    {
+      "concept": "readiness_projection",
+      "crate": "weeping-angel-assurance",
+      "kind": "projection",
+      "paths": [
+        "crates/weeping-angel-assurance/src/readiness.rs"
+      ]
+    },
+    {
+      "concept": "repository_guard",
+      "crate": "xtask",
+      "kind": "exclusive",
+      "paths": [
+        "xtask"
+      ]
+    },
+    {
+      "concept": "temporal_evidence_selection",
+      "crate": "weeping-angel-assurance",
+      "kind": "exclusive",
+      "paths": [
+        "crates/weeping-angel-assurance/src/temporal.rs"
+      ]
+    }
+  ],
+  "debt_rows": 24,
+  "exclusions": [
+    "target/",
+    "target-*",
+    "node_modules/"
+  ],
+  "extended": {
+    "duplicate_helper_definitions": 18,
+    "duplicate_type_names": 23,
+    "pub_use_count": 110,
+    "public_enums": 221,
+    "public_structs": 523,
+    "public_symbols": 2022,
+    "rust_modules": 290,
+    "workspace_crates": 9
+  },
+  "inventory_counts": {
+    "adr_markdown_files": 49,
+    "catalog_test_toml": 13,
+    "expect_calls": 635,
+    "framework_packs": 2,
+    "ignored_test_attrs": 5,
+    "require_needles_calls": 222,
+    "require_needles_fns": 18,
+    "root_test_binaries": 45,
+    "schema_json_files": 3,
+    "tests_contracts_rs": 43,
+    "tests_rs_autodiscovered": 16,
+    "unwrap_calls": 1239,
+    "unwrap_plus_expect": 1874
+  },
+  "phase": 0,
+  "program": "architectural-consolidation",
+  "schema": "weeping-angel/consolidation-baseline/v1",
+  "schema_locations": [
+    "schemas/codex-security/coverage.schema.json",
+    "schemas/codex-security/findings.schema.json",
+    "schemas/codex-security/scan-manifest.schema.json"
+  ],
+  "source": "weeping-angel/inventory/v1",
+  "spec_count": 46
+}

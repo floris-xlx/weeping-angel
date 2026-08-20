@@ -1,0 +1,780 @@
+{
+  "agents_fail": 0,
+  "agents_ok": 7,
+  "agents_total": 7,
+  "budget": {
+    "remaining": 41,
+    "spent": 7,
+    "total": 48
+  },
+  "dry_run": false,
+  "duration_ms_sum": 3159462,
+  "event_count": 28,
+  "events": [
+    {
+      "agents_fail": 0,
+      "agents_ok": 0,
+      "agents_total": 0,
+      "budget": { "remaining": 48, "spent": 0, "total": 48 },
+      "detail": {
+        "await_user": false,
+        "dry_run": false,
+        "max_iters": 3,
+        "objective_fp": "1ea77782b7274964",
+        "root": "."
+      },
+      "duration_ms_sum": 0,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "run_start",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 1,
+      "tokens_used_sum": 0,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d75-7451-7170-a182-0f163e3e3d1c",
+        "duration_ms": 170952,
+        "label": "sdd-scope",
+        "success": true,
+        "tokens_used": 332487
+      },
+      "duration_ms_sum": 170952,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 2,
+      "tokens_used_sum": 332487,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "baseline_path": "xtask/tests/sdd_architectural_consolidation_baseline.rs",
+        "report_dir": "docs/sdd",
+        "root": ".",
+        "target_path": "xtask/tests/sdd_architectural_consolidation_target.rs",
+        "test_command": "cargo test -p xtask -- --nocapture"
+      },
+      "duration_ms_sum": 170952,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 3,
+      "tokens_used_sum": 332487,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 170952,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 4,
+      "tokens_used_sum": 332487,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d78-1dd9-7ae1-9b4f-10f14f6d7407",
+        "duration_ms": 571833,
+        "label": "sdd-spec",
+        "success": true,
+        "tokens_used": 747554
+      },
+      "duration_ms_sum": 742785,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 5,
+      "tokens_used_sum": 1080041,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "adr_needed": true,
+        "spec_path": "docs/specs/architectural-consolidation-program.md",
+        "title": "Architectural Consolidation Program Phase 0 — freeze, baseline snapshot, backlog schema"
+      },
+      "duration_ms_sum": 742785,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 6,
+      "tokens_used_sum": 1080041,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 742785,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 7,
+      "tokens_used_sum": 1080041,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d80-f812-7501-9e27-19c005b36a58",
+        "duration_ms": 394692,
+        "label": "sdd-baseline-green",
+        "success": true,
+        "tokens_used": 1181830
+      },
+      "duration_ms_sum": 1137477,
+      "gates": {
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 8,
+      "tokens_used_sum": 2261871,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1137477,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "gate",
+      "phase": "baseline_green",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 9,
+      "tokens_used_sum": 2261871,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "command": "cargo test -p xtask -- --nocapture",
+        "ok": true,
+        "test_files": ["xtask/tests/sdd_architectural_consolidation_baseline.rs"]
+      },
+      "duration_ms_sum": 1137477,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 10,
+      "tokens_used_sum": 2261871,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1137477,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 11,
+      "tokens_used_sum": 2261871,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d87-0b8a-7671-9f7d-3c13d3ebacbb",
+        "duration_ms": 565684,
+        "label": "sdd-target-red",
+        "success": true,
+        "tokens_used": 1769570
+      },
+      "duration_ms_sum": 1703161,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 12,
+      "tokens_used_sum": 4031441,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1703161,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_red",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 13,
+      "tokens_used_sum": 4031441,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "command": "cargo test -p xtask -- --nocapture",
+        "ok": true,
+        "test_files": ["xtask/tests/sdd_architectural_consolidation_target.rs"]
+      },
+      "duration_ms_sum": 1703161,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 14,
+      "tokens_used_sum": 4031441,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1703161,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 15,
+      "tokens_used_sum": 4031441,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d8f-bc83-7981-bdf5-e6f242d53f8c",
+        "duration_ms": 934560,
+        "label": "sdd-implement",
+        "success": true,
+        "tokens_used": 4811210
+      },
+      "duration_ms_sum": 2637721,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 16,
+      "tokens_used_sum": 8842651,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "files_changed": [
+          "architecture/architecture.toml",
+          "architecture/invariants.toml",
+          "docs/adr/0049-architectural-consolidation-phase-0.md",
+          "docs/debt/README.md",
+          "docs/debt/consolidation-baseline.json",
+          "docs/debt/consolidation-baseline.md",
+          "docs/debt/structural-duplication.toml",
+          "docs/sdd/architectural-consolidation-program.md",
+          "docs/specs/architectural-consolidation-program.md",
+          "xtask/src/architecture.rs",
+          "xtask/src/checks.rs",
+          "xtask/src/duplication.rs",
+          "xtask/src/inventory.rs",
+          "xtask/src/lib.rs",
+          "xtask/tests/debt_register.rs",
+          "xtask/tests/sdd_architectural_cleanup_target.rs",
+          "xtask/tests/sdd_architectural_consolidation_baseline.rs",
+          "xtask/tests/sdd_architectural_consolidation_target.rs",
+          "xtask/tests/sdd_structural_reconciliation_target.rs"
+        ],
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 2637721,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 17,
+      "tokens_used_sum": 8842651,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": { "adr_needed": true },
+      "duration_ms_sum": 2637721,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 18,
+      "tokens_used_sum": 8842651,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "agent_id": "01a01d9e-0dd9-7cc1-b705-f47c31bf9e66",
+        "duration_ms": 397081,
+        "label": "sdd-docs-adr",
+        "success": true,
+        "tokens_used": 1269908
+      },
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 19,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "adr_paths": [
+          "docs/adr/0049-architectural-consolidation-phase-0.md",
+          "docs/adr/0048-structural-reconciliation.md"
+        ],
+        "docs_updated": [
+          "docs/specs/architectural-consolidation-program.md",
+          "docs/sdd/architectural-consolidation-program.md",
+          "docs/adr/0049-architectural-consolidation-phase-0.md",
+          "docs/adr/0048-structural-reconciliation.md",
+          "docs/README.md",
+          "README.md",
+          "docs/contracts/README.md",
+          "docs/debt/README.md",
+          "docs/specs/structural-reconciliation.md",
+          "docs/specs/architectural-cleanup-program.md"
+        ]
+      },
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 20,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": { "max_iters": 3 },
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Iterate",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 21,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask --test sdd_architectural_consolidation_target -- --nocapture\nrunning 10 tests\ntest con_t01_program_table_parsed_active_restricted ... ok\n...\ntest con_t10_neighbors_and_live_guard_stay_green ... ok\ntest result: ok. 10 passed; 0 failed;\n\ncargo test -p xtask --test sdd_architectural_consolidation_baseline -- --nocapture\nerror[E0027]: pattern does not mention field `consolidation`\n  --> xtask\\tests\\sdd_architectural_consolidation_baseline.rs:163:9\nerror: could not compile `xtask` (test \"sdd_architectural_consolidation_baseline\") due to 1 previous error\n(exit 1); suite then deleted (INV-NO-SUPERSEDED-BASELINES)\n\ncargo test -p xtask -- --nocapture\ntest result: ok. 10 passed (consolidation target); ACP 17 passed; SR 15 passed; debt_register 5 passed\n\ncargo xtask guard\n01–15 pass\ncargo xtask inventory --check (exit 0)",
+        "passed": true
+      },
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_green",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 22,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "iters_used": 0,
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Iterate",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 23,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 3034802,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 24,
+      "tokens_used_sum": 10112559,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "agent_id": "01a01da4-2aae-7340-837c-bb3e5f3df7d6",
+        "duration_ms": 124660,
+        "label": "sdd-supersede",
+        "success": true,
+        "tokens_used": 255455
+      },
+      "duration_ms_sum": 3159462,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 25,
+      "tokens_used_sum": 10368014,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "evidence": "delete: Deleted the Phase 0 characterization suite xtask/tests/sdd_architectural_consolidation_baseline.rs (already absent from source; CON-T07 now asserts it must stay deleted).",
+        "passed": true
+      },
+      "duration_ms_sum": 3159462,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "baseline_superseded",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 26,
+      "tokens_used_sum": 10368014,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "action": "Deleted the Phase 0 characterization suite xtask/tests/sdd_architectural_consolidation_baseline.rs (already absent from source; CON-T07 now asserts it must stay deleted).",
+        "additive_baseline": false,
+        "baseline_not_green": true,
+        "baseline_retired": true,
+        "super_ok": true,
+        "supersede_kind": "delete",
+        "target_still_green": true
+      },
+      "duration_ms_sum": 3159462,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 27,
+      "tokens_used_sum": 10368014,
+      "workflow": "spec-driven-development"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 3159462,
+      "gates": {
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Finalize",
+      "run_id": "wa-consolidation-phase-0",
+      "seq": 28,
+      "tokens_used_sum": 10368014,
+      "workflow": "spec-driven-development"
+    }
+  ],
+  "gates": {
+    "baseline_green": true,
+    "baseline_superseded": true,
+    "dry_run": false,
+    "no_delta": false,
+    "target_green": true,
+    "target_red": true
+  },
+  "max_iters": 3,
+  "no_delta": false,
+  "objective_fp": "1ea77782b7274964",
+  "reason": "pre_finalize",
+  "report_path": "docs/sdd/sdd-architectural-consolidation-phase-0.md",
+  "run_id": "wa-consolidation-phase-0",
+  "supersede_kind": "delete",
+  "tokens_used_sum": 10368014,
+  "verify_ok": true,
+  "workflow": "spec-driven-development"
+}

@@ -17,7 +17,7 @@ Inclusion rule: all matching paths under the repo root **excluding** `target/`, 
 | unwrap + expect | 1874 |
 | Files defining `fn require_needles` | 18 |
 | `require_needles(` occurrences | 222 |
-| ADR markdown files | 48 |
+| ADR markdown files | 49 |
 | Catalog test TOML | 13 |
 | Framework packs | 2 |
 | `*.schema.json` files | 3 |

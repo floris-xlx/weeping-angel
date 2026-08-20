@@ -18,7 +18,7 @@ superseded_by = []
 depends_on = ["0004-documentation-architecture", "0009-repository-health-gate", "0011-repository-guard-governance"]
 -->
 
-> Filename **`0048-structural-reconciliation.md`**. Cite **this file by path**. Do **not** add a `0003-structural-reconciliation.md` sibling. Next unused unique prefix is **0049**.
+> Filename **`0048-structural-reconciliation.md`**. Cite **this file by path**. Do **not** add a `0003-structural-reconciliation.md` sibling. Next unused unique prefix is **0050**.
 
 ## Context
 
