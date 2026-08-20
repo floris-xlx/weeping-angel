@@ -2,6 +2,7 @@
 //!
 //! Applicability, implementation, and effectiveness are independent dimensions.
 //! Missing implementation and insufficient evidence MUST NOT become not applicable.
+//! SoA projection preserves applicability rationale from the pack.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -96,6 +97,7 @@ pub struct SoaEntry {
     pub reference: String,
     pub applicability: Applicability,
     pub applicable: bool,
+    /// Applicability rationale copied from the framework pack (ISO-010).
     pub applicability_rationale: String,
     pub implementation_state: String,
     pub automated_effectiveness: Option<Effectiveness>,
