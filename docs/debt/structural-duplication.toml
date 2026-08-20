@@ -230,34 +230,34 @@ replay_assessment verifies then reconstructs.
 id = "DUP-006"
 concept = "soa-projection-paths"
 severity = "p2"
-canonical_owner = "crates/weeping-angel-assurance/src/soa.rs::project_soa_from_snapshot (+ project_operational_soa)"
-canonical_symbol = "unknown"
-duplicates = [
-  "crates/weeping-angel-assurance/src/soa.rs::project_soa",
-]
-migration_state = "candidate; live project_soa still a convenience path"
-removal_blockers = ["scheduler/CLI historical paths not fully audited"]
-public_api_impact = "unknown"
+canonical_owner = "crates/weeping-angel-assurance/src/soa.rs::project_soa_from_snapshot"
+canonical_symbol = "project_soa_from_snapshot"
+duplicates = []
+migration_state = "historical path is project_soa_from_snapshot; live convenience renamed project_soa_live"
+removal_blockers = []
+public_api_impact = "breaking"
 serialization_impact = "none"
-tests = []
-status = "candidate"
+tests = ["sdd_consolidation_c08_dup006"]
+status = "verified"
 action = "document-intentional"
-debt_id = "DEBT-P0-SOA"
+debt_id = "DUP-006"
 consumers = [
-  "scheduler run_project calls project_soa(framework, version) then project_readiness",
+  "scheduler run_project calls project_soa_live then project_readiness",
   "src/assurance_soa.rs historical path uses project_soa_from_snapshot",
   "Guard 12 requires project_soa_from_snapshot",
 ]
 migration = """
-Document live project_soa as non-historical convenience only (already commented).
-Prefer callers that need auditability to pin_soa_snapshot + project_soa_from_snapshot.
-Optionally rename project_soa to project_soa_live to make the seam obvious.
-Do not delete until scheduler/CLI historical paths are audited.
+project_soa renamed to project_soa_live (live pack convenience, not history).
+Historical reconstruction remains pin_soa_snapshot + project_soa_from_snapshot.
+CLI historical SoA does not call project_soa_live. No compatibility alias.
 """
-guard = "Guard 12 ProductLawCheck; assurance-runtime / SoA specs must keep one historical path."
+guard = """
+sdd_consolidation_c08_dup006; Guard 12 ProductLawCheck.
+KNOWN_CHECK_IDS stays 15.
+"""
 evidence = """
-soa.rs comments: pinned snapshot is historical reconstruction; live project_soa
-builds empty operational graph. Three public entrypoints share StatementOfApplicability.
+rg finds pub fn project_soa_live and pub fn project_soa_from_snapshot, not pub fn project_soa(.
+scheduler uses project_soa_live. src/assurance_soa.rs uses project_soa_from_snapshot.
 """
 
 [[duplication]]

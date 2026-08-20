@@ -15,7 +15,7 @@ use std::time::Duration;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
 use weeping_angel_assurance::readiness::project_readiness;
-use weeping_angel_assurance::{AssessmentReport, AssessmentRun, project_soa};
+use weeping_angel_assurance::{AssessmentReport, AssessmentRun, project_soa_live};
 use weeping_angel_assurance_ir::crosswalk::ComplianceGraph;
 use weeping_angel_assurance_ir::{
     AssessmentId, ControlId, ControlTestId, Mapping, MappingCompleteness, MappingRelation,
@@ -892,7 +892,7 @@ fn iso_r_009_soa_uses_generic_three_state_applicability() {
         "ISO-R-009: SoA must not copy applicability.toml booleans as the public type"
     );
 
-    let soa = project_soa("iso-27001", "2022");
+    let soa = project_soa_live("iso-27001", "2022");
     let json = serde_json::to_value(&soa).expect("serialize SoA");
     let entries = json
         .get("entries")
@@ -1403,7 +1403,7 @@ fn iso_r_011_g06_approved_exception_is_bound_and_expired_does_not_pass() {
 
 #[test]
 fn iso_r_011_g07_applicability_driven_not_applicable_is_context_justified() {
-    let soa = project_soa("iso-27001", "2022");
+    let soa = project_soa_live("iso-27001", "2022");
     let json = serde_json::to_value(&soa).unwrap();
     let entries = json
         .get("entries")
@@ -1444,7 +1444,7 @@ fn iso_r_011_g08_incomplete_org_context_stays_unresolved() {
         soa_src.contains("Unresolved") || soa_src.contains("ManualDeterminationRequired"),
         "golden-8: incomplete org context must map to Unresolved / ManualDeterminationRequired"
     );
-    let soa = project_soa("iso-27001", "2022");
+    let soa = project_soa_live("iso-27001", "2022");
     let json = serde_json::to_value(&soa).unwrap();
     let blob = json.to_string().to_ascii_lowercase();
     assert!(
@@ -1583,7 +1583,7 @@ fn iso_r_013_no_forbidden_certification_language() {
             "ISO-R-013: serialized report must not emit `{phrase}`"
         );
     }
-    let soa = serde_json::to_value(project_soa("iso-27001", "2022"))
+    let soa = serde_json::to_value(project_soa_live("iso-27001", "2022"))
         .unwrap()
         .to_string()
         .to_ascii_lowercase();

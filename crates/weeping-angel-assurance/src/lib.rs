@@ -61,7 +61,7 @@ pub use snapshot::{
 pub use soa::{
     Applicability, OperationalSoaError, OperationalSoaInput, RiskRegisterRef, RiskTreatmentRef,
     SoaEntry, StatementOfApplicability, diff_soa_snapshots, pin_soa_snapshot,
-    project_operational_soa, project_soa, project_soa_from_snapshot,
+    project_operational_soa, project_soa_from_snapshot, project_soa_live,
 };
 pub use temporal::{
     EvidenceTimeline, TemporalDiff, TimelineInterval, compare_temporal, diff_period,

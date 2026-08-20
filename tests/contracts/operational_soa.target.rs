@@ -11,7 +11,7 @@
 
 use serde_json::Value;
 use weeping_angel_assurance::soa::Applicability;
-use weeping_angel_assurance::{StatementOfApplicability, project_soa};
+use weeping_angel_assurance::{StatementOfApplicability, project_soa_live};
 use weeping_angel_assurance_ir::{Control, ControlImplementation};
 use weeping_angel_control_test::Effectiveness;
 
@@ -32,7 +32,7 @@ fn lineage_src() -> String {
 }
 
 fn live_iso_soa() -> StatementOfApplicability {
-    project_soa("iso-27001", "2022")
+    project_soa_live("iso-27001", "2022")
 }
 
 fn live_json() -> Value {
@@ -412,7 +412,7 @@ fn soa_t10_pinned_snapshot_not_live_project_soa() {
             .find("pub fn project_soa_from_snapshot")
             .expect("from_snapshot");
         let rest = &src[start..];
-        rest.split("pub fn project_soa(").next().unwrap_or(rest)
+        rest.split("pub fn project_soa_live(").next().unwrap_or(rest)
     };
     assert!(
         !from_snap.contains("resolve_pack_dir") && !from_snap.contains("applicability.toml"),
@@ -435,10 +435,10 @@ fn soa_t11_live_project_soa_is_not_sole_historical_path() {
     let src = soa_src();
     assert!(
         src.contains("project_soa_from_snapshot"),
-        "SOA-T11: live project_soa must not be the sole reconstruction path"
+        "SOA-T11: live project_soa_live must not be the sole reconstruction path"
     );
     let live_fn = {
-        let start = src.find("pub fn project_soa(").expect("project_soa");
+        let start = src.find("pub fn project_soa_live(").expect("project_soa_live");
         &src[start..]
     };
     assert!(

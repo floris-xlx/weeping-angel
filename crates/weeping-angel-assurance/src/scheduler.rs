@@ -25,7 +25,7 @@ use crate::lineage::{
 use crate::readiness::{FrameworkReadinessSnapshot, project_readiness};
 use crate::snapshot::{AssessmentRun, compare};
 use crate::{
-    AssessmentScope, AssuranceError, assessment_for_target, evaluate_compiled, project_soa,
+    AssessmentScope, AssuranceError, assessment_for_target, evaluate_compiled, project_soa_live,
 };
 
 const ATTEMPT_POLICY_VERSION: &str = "v1";
@@ -763,7 +763,7 @@ impl AssuranceScheduler {
     ) -> Result<(), SchedulerError> {
         let framework = self.target.profile.as_selector();
         let version = self.target.version.as_str();
-        let _soa = project_soa(framework, version);
+        let _soa = project_soa_live(framework, version);
         let pack_digest = self.compiled.framework_pack_digest.clone();
         let snap = project_readiness(
             &self.compiled,

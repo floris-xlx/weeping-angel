@@ -639,6 +639,7 @@ fn tle_007_replay_digest_mismatch_is_typed_err_and_does_not_load_current_files()
             "load_framework_pack",
             "CanonicalCatalog::",
             "project_soa(",
+            "project_soa_live(",
             "std::fs::read",
         ],
     );
@@ -836,7 +837,10 @@ fn tle_012_historical_soa_does_not_call_live_project_soa() {
     forbid_needles(
         "TLE-012",
         latest_arm,
-        &["project_soa(\"iso-27001\", \"2022\")"],
+        &[
+            "project_soa(\"iso-27001\", \"2022\")",
+            "project_soa_live(\"iso-27001\", \"2022\")",
+        ],
     );
     require_needles(
         "TLE-012",
@@ -847,11 +851,11 @@ fn tle_012_historical_soa_does_not_call_live_project_soa() {
     let soa_src = read_repo_file("crates/weeping-angel-assurance/src/soa.rs");
     assert!(
         soa_src.contains("soa-live:{framework}:{version}"),
-        "TLE-012: live project_soa may remain as a current-pack convenience"
+        "TLE-012: live project_soa_live may remain as a current-pack convenience"
     );
     forbid_needles("TLE-012", latest_arm, &["as_of: Utc::now()"]);
 
-    let live = weeping_angel_assurance::project_soa("iso-27001", "2022");
+    let live = weeping_angel_assurance::project_soa_live("iso-27001", "2022");
     assert!(
         live.disclaimer
             .to_ascii_lowercase()

@@ -19,7 +19,7 @@ use weeping_angel_assurance::scheduler::{
     AssuranceScheduler, Clock, FailureState, FakeClock, FreshnessPolicy, InMemorySchedulerStore,
     JobKind, JobSpec, PipelineStage, RetryPolicy, TickReport,
 };
-use weeping_angel_assurance::{AssessmentScope, compare, project_soa};
+use weeping_angel_assurance::{AssessmentScope, compare, project_soa_live};
 use weeping_angel_assurance_ir::{AssetId, FrameworkVersion};
 use weeping_angel_collector::{
     CollectorCapabilities, CollectorDescriptor, CollectorError, CollectorScope, EvidenceCollector,
@@ -865,7 +865,7 @@ fn cas_013_successful_slot_records_pipeline_order() {
         "DAG kinds collection/test/projection/snapshot must all run in the slot; ran {:?}",
         report.ran_jobs
     );
-    let _existing_spine = (project_soa, compare);
+    let _existing_spine = (project_soa_live, compare);
     let _kinds = [
         JobKind::Collection,
         JobKind::Test,

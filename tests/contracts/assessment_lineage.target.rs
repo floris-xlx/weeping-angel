@@ -164,8 +164,8 @@ fn fn_stub_catalog(src: &str) -> &str {
 
 fn fn_project_soa(src: &str) -> &str {
     let start = src
-        .find("pub fn project_soa(")
-        .expect("soa.rs must expose project_soa");
+        .find("pub fn project_soa_live(")
+        .expect("soa.rs must expose project_soa_live");
     &src[start..]
 }
 
@@ -862,7 +862,7 @@ fn lin_011_one_registry_loader_path_for_every_framework() {
     let soa = fn_project_soa(&soa_src);
     assert!(
         soa.contains("snapshot") || soa.contains("digest") || soa.contains("pinned"),
-        "LIN-011: project_soa must project from a pinned pack/applicability snapshot, not live disk only"
+        "LIN-011: project_soa_live comments must distinguish pinned snapshot reconstruction from live disk"
     );
 }
 

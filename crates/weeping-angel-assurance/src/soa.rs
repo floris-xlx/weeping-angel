@@ -251,9 +251,9 @@ fn snapshot_digest(soa: &StatementOfApplicability, framework_pack_digest: &str) 
     .unwrap_or_default()
 }
 
-pub fn project_soa(framework: &str, version: &str) -> StatementOfApplicability {
+pub fn project_soa_live(framework: &str, version: &str) -> StatementOfApplicability {
     // Pinned StatementOfApplicabilitySnapshot + project_soa_from_snapshot is
-    // the historical reconstruction path. Live project_soa is a convenience
+    // the historical reconstruction path. Live project_soa_live is a convenience
     // over pack default/structural flags + an empty operational graph (notImplemented).
     // Digest identity lives on the snapshot, not live disk.
     let input = OperationalSoaInput {
