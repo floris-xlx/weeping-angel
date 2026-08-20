@@ -1050,23 +1050,5 @@ fn apply_retry_or_keep(spec: &JobSpec, state: &mut JobState, now: DateTime<Utc>)
 }
 
 fn empty_readiness(id: &AssessmentId, framework: &str) -> FrameworkReadinessSnapshot {
-    FrameworkReadinessSnapshot {
-        assessment_id: id.clone(),
-        framework: framework.into(),
-        framework_version: String::new(),
-        framework_pack_digest: String::new(),
-        catalog_digest: String::new(),
-        assessment_digest: String::new(),
-        evaluated_at: String::new(),
-        requirements: Vec::new(),
-        controls: Vec::new(),
-        effective: 0,
-        ineffective: 0,
-        partial: 0,
-        manual_review: 0,
-        insufficient_evidence: 0,
-        not_applicable: 0,
-        automation_coverage: String::new(),
-        evidence_coverage: String::new(),
-    }
+    FrameworkReadinessSnapshot::empty(id.clone(), framework)
 }

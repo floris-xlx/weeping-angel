@@ -168,24 +168,78 @@ fn relation_may_fully_satisfy(
     }
 }
 
-pub fn project_readiness(
-    compiled: &CompiledFramework,
-    results: &[ControlTestResult],
-    framework: &str,
-    framework_version: &str,
-    framework_pack_digest: &str,
-    assessment_id: AssessmentId,
-) -> FrameworkReadinessSnapshot {
-    let _ = GRAPH_VERBS;
+impl FrameworkReadinessSnapshot {
+    /// Neutral empty input. Not a semantic projection.
+    pub(crate) fn empty(assessment_id: AssessmentId, framework: impl Into<String>) -> Self {
+        Self {
+            assessment_id,
+            framework: framework.into(),
+            framework_version: String::new(),
+            framework_pack_digest: String::new(),
+            catalog_digest: String::new(),
+            assessment_digest: String::new(),
+            evaluated_at: String::new(),
+            requirements: Vec::new(),
+            controls: Vec::new(),
+            effective: 0,
+            ineffective: 0,
+            partial: 0,
+            manual_review: 0,
+            insufficient_evidence: 0,
+            not_applicable: 0,
+            automation_coverage: String::new(),
+            evidence_coverage: String::new(),
+        }
+    }
+
+    /// Assemble a snapshot from already-projected control rows (DUP-011).
+    /// Requirement status strings are only produced by [`project_readiness`].
+    pub(crate) fn from_projected_controls(
+        assessment_id: AssessmentId,
+        framework: impl Into<String>,
+        framework_version: impl Into<String>,
+        framework_pack_digest: impl Into<String>,
+        catalog_digest: impl Into<String>,
+        assessment_digest: impl Into<String>,
+        evaluated_at: impl Into<String>,
+        controls: Vec<ControlReadiness>,
+        requirements: Vec<RequirementReadiness>,
+        automation_coverage: impl Into<String>,
+        evidence_coverage: impl Into<String>,
+    ) -> Self {
+        let (effective, ineffective, partial, manual_review, insufficient_evidence, not_applicable) =
+            tally_controls(&controls);
+        Self {
+            assessment_id,
+            framework: framework.into(),
+            framework_version: framework_version.into(),
+            framework_pack_digest: framework_pack_digest.into(),
+            catalog_digest: catalog_digest.into(),
+            assessment_digest: assessment_digest.into(),
+            evaluated_at: evaluated_at.into(),
+            requirements,
+            controls,
+            effective,
+            ineffective,
+            partial,
+            manual_review,
+            insufficient_evidence,
+            not_applicable,
+            automation_coverage: automation_coverage.into(),
+            evidence_coverage: evidence_coverage.into(),
+        }
+    }
+}
+
+fn tally_controls(controls: &[ControlReadiness]) -> (u32, u32, u32, u32, u32, u32) {
     let mut effective = 0;
     let mut ineffective = 0;
     let mut partial = 0;
     let mut manual_review = 0;
     let mut insufficient_evidence = 0;
     let mut not_applicable = 0;
-    let mut controls = Vec::new();
-    for result in results {
-        match result.effectiveness {
+    for c in controls {
+        match c.effectiveness {
             Effectiveness::Effective => effective += 1,
             Effectiveness::Ineffective => ineffective += 1,
             Effectiveness::PartiallyEffective => partial += 1,
@@ -196,6 +250,28 @@ pub fn project_readiness(
             Effectiveness::NotApplicable => not_applicable += 1,
             _ => {}
         }
+    }
+    (
+        effective,
+        ineffective,
+        partial,
+        manual_review,
+        insufficient_evidence,
+        not_applicable,
+    )
+}
+
+pub fn project_readiness(
+    compiled: &CompiledFramework,
+    results: &[ControlTestResult],
+    framework: &str,
+    framework_version: &str,
+    framework_pack_digest: &str,
+    assessment_id: AssessmentId,
+) -> FrameworkReadinessSnapshot {
+    let _ = GRAPH_VERBS;
+    let mut controls = Vec::new();
+    for result in results {
         controls.push(ControlReadiness {
             id: result.control_id.clone(),
             effectiveness: result.effectiveness,
@@ -261,23 +337,17 @@ pub fn project_readiness(
         });
     }
 
-    FrameworkReadinessSnapshot {
+    FrameworkReadinessSnapshot::from_projected_controls(
         assessment_id,
-        framework: framework.into(),
-        framework_version: framework_version.into(),
-        framework_pack_digest: framework_pack_digest.into(),
-        catalog_digest: compiled.catalog_digest.clone(),
-        assessment_digest: compiled.digest.clone(),
-        evaluated_at: chrono::Utc::now().to_rfc3339(),
-        requirements,
+        framework,
+        framework_version,
+        framework_pack_digest,
+        compiled.catalog_digest.clone(),
+        compiled.digest.clone(),
+        chrono::Utc::now().to_rfc3339(),
         controls,
-        effective,
-        ineffective,
-        partial,
-        manual_review,
-        insufficient_evidence,
-        not_applicable,
-        automation_coverage: String::new(),
-        evidence_coverage: String::new(),
-    }
+        requirements,
+        String::new(),
+        String::new(),
+    )
 }

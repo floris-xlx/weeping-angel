@@ -860,20 +860,19 @@ pub fn serialize_assessment_report<S: Serializer>(
         .iter()
         .flat_map(|r| r.evidence_refs.iter().cloned())
         .collect();
-    let readiness = FrameworkReadinessSnapshot {
-        assessment_id: report.assessment_id.clone(),
-        framework: report.profile.clone(),
-        framework_version: String::new(),
-        framework_pack_digest: pack_pin.clone(),
-        catalog_digest: String::new(),
-        assessment_digest: report.digest.clone(),
-        evaluated_at: report
+    let readiness = FrameworkReadinessSnapshot::from_projected_controls(
+        report.assessment_id.clone(),
+        report.profile.clone(),
+        String::new(),
+        pack_pin.clone(),
+        String::new(),
+        report.digest.clone(),
+        report
             .run
             .as_ref()
             .map(|r| r.completed_at.clone())
             .unwrap_or_default(),
-        requirements: Vec::new(),
-        controls: report
+        report
             .results
             .iter()
             .map(|r| crate::readiness::ControlReadiness {
@@ -881,15 +880,10 @@ pub fn serialize_assessment_report<S: Serializer>(
                 effectiveness: r.effectiveness,
             })
             .collect(),
-        effective: summary.effective,
-        ineffective: summary.ineffective,
-        partial: summary.partial,
-        manual_review: summary.manual_review,
-        insufficient_evidence: summary.insufficient_evidence,
-        not_applicable: summary.not_applicable,
-        automation_coverage: metrics.automation.covered.to_string(),
-        evidence_coverage: metrics.evidence.covered.to_string(),
-    };
+        Vec::new(),
+        metrics.automation.covered.to_string(),
+        metrics.evidence.covered.to_string(),
+    );
 
     let mut state = serializer.serialize_struct("AssessmentReport", 30)?;
     state.serialize_field("assessmentId", &report.assessment_id)?;

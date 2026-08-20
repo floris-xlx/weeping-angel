@@ -152,38 +152,33 @@ pub fn detect_isms_drift(previous: &IsmsSnapshot, next: &IsmsSnapshot) -> IsmsDr
 }
 
 fn readiness_view(snapshot: &IsmsSnapshot) -> FrameworkReadinessSnapshot {
-    FrameworkReadinessSnapshot {
-        assessment_id: AssessmentId::new(
+    let controls = snapshot
+        .controls
+        .iter()
+        .map(|c| ControlReadiness {
+            id: c.id.clone(),
+            effectiveness: c.effectiveness,
+        })
+        .collect();
+    FrameworkReadinessSnapshot::from_projected_controls(
+        AssessmentId::new(
             snapshot
                 .run_id
                 .as_deref()
                 .filter(|id| !id.is_empty())
                 .unwrap_or("assess-isms-drift"),
         ),
-        framework: "iso-27001".into(),
-        framework_version: "2022".into(),
-        framework_pack_digest: "pack-isms-drift".into(),
-        catalog_digest: String::new(),
-        assessment_digest: snapshot.snapshot_id.clone(),
-        evaluated_at: rfc3339_z(snapshot.evaluated_at),
-        requirements: Vec::new(),
-        controls: snapshot
-            .controls
-            .iter()
-            .map(|c| ControlReadiness {
-                id: c.id.clone(),
-                effectiveness: c.effectiveness,
-            })
-            .collect(),
-        effective: 0,
-        ineffective: 0,
-        partial: 0,
-        manual_review: 0,
-        insufficient_evidence: 0,
-        not_applicable: 0,
-        automation_coverage: "0".into(),
-        evidence_coverage: "0".into(),
-    }
+        "iso-27001",
+        "2022",
+        "pack-isms-drift",
+        String::new(),
+        snapshot.snapshot_id.clone(),
+        rfc3339_z(snapshot.evaluated_at),
+        controls,
+        Vec::new(),
+        "0",
+        "0",
+    )
 }
 
 fn detect_semantic_events(previous: &IsmsSnapshot, next: &IsmsSnapshot) -> Vec<IsmsEvent> {

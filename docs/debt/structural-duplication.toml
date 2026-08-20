@@ -386,33 +386,36 @@ concept = "readiness-snapshot-construction"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/readiness.rs::project_readiness"
 canonical_symbol = "project_readiness"
-duplicates = [
-  "crates/weeping-angel-assurance/src/drift.rs::readiness_view",
-  "crates/weeping-angel-assurance/src/lineage.rs (inline FrameworkReadinessSnapshot in report serialize)",
-  "crates/weeping-angel-assurance/src/scheduler.rs::empty_readiness",
-]
-migration_state = "confirmed; drift/lineage/scheduler still construct snapshots off the projection path"
-removal_blockers = ["inline FrameworkReadinessSnapshot constructors"]
-public_api_impact = "additive"
-serialization_impact = "unknown"
-tests = ["sdd_structural_reconciliation_target"]
-status = "confirmed"
+duplicates = []
+migration_state = "project_readiness owns requirement status strings; from_projected_controls assembles already-projected rows; empty is the neutral empty input"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_consolidation_c04_dup011"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = "DEBT-P0-READINESS-SSOT"
+debt_id = "DUP-011"
 consumers = [
-  "detect_isms_drift compare path",
-  "AssessmentReport JSON readiness embedding",
-  "scheduler first-run / missing previous readiness",
+  "detect_isms_drift compare path (readiness_view → from_projected_controls)",
+  "AssessmentReport JSON readiness embedding (serialize → from_projected_controls)",
+  "scheduler first-run / missing previous readiness (empty_readiness → FrameworkReadinessSnapshot::empty)",
 ]
 migration = """
-empty_readiness may remain an empty constructor. readiness_view / report serialize
-must not invent requirement status strings — call project_readiness or copy
-already-projected rows. overlay_privileged_mfa_presence already absent (Guard 08).
+drift::readiness_view and lineage report serialize copy already-projected control
+rows via FrameworkReadinessSnapshot::from_projected_controls. They do not invent
+requirement status strings. scheduler::empty_readiness calls
+FrameworkReadinessSnapshot::empty (neutral empty input). project_readiness remains
+the only producer of requirement status strings. overlay_privileged_mfa_presence
+already absent (Guard 08).
 """
-guard = "Guard 08; ADR 0046 §6; RDY-T01/T02."
+guard = """
+sdd_consolidation_c04_dup011; Guard 08; ADR 0046 §6; RDY-T01/T02.
+KNOWN_CHECK_IDS stays 15.
+"""
 evidence = """
-project_readiness is the mapping-honesty status owner; drift/lineage/scheduler
-construct FrameworkReadinessSnapshot without always going through it.
+rg finds no FrameworkReadinessSnapshot { in drift.rs / lineage.rs / scheduler.rs.
+project_readiness and from_projected_controls live in readiness.rs.
+scheduler empty_readiness calls FrameworkReadinessSnapshot::empty.
 """
 
 [[duplication]]

@@ -696,6 +696,13 @@ fn con_t06_close_law_blocks_verified_removed() {
         "DUP-004 close law after Lane B snapshot SSOT, got {}",
         dup004.0
     );
+    let dup011 = by_id.get("DUP-011").unwrap_or_else(|| panic!("missing DUP-011"));
+    assert_eq!(
+        dup011.0.as_str(),
+        "verified",
+        "DUP-011 close law after Lane B readiness SSOT, got {}",
+        dup011.0
+    );
     let dup005 = by_id.get("DUP-005").unwrap_or_else(|| panic!("missing DUP-005"));
     assert_eq!(
         dup005.0.as_str(),
