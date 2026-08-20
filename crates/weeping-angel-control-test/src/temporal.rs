@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
+use weeping_angel_evidence::validity::select_valid_leaf_as_of;
 use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType, project_validity};
 
 use crate::expr::{EvidenceSelector, TestExpr, ValueExpr};
@@ -90,33 +91,7 @@ pub fn select_latest_as_of<'a>(
     as_of: DateTime<Utc>,
     set: &EvidenceSet,
 ) -> Option<&'a EvidenceEnvelope> {
-    let events = set.validity_events();
-    let usable: Vec<&'a EvidenceEnvelope> = group
-        .iter()
-        .copied()
-        .filter(|env| project_validity(env, events, as_of).is_some())
-        .collect();
-    let superseded: BTreeSet<&str> = usable
-        .iter()
-        .filter_map(|e| e.supersedes())
-        .filter(|prev| usable.iter().any(|e| e.digest() == *prev))
-        .collect();
-    let mut leaves: Vec<&'a EvidenceEnvelope> = usable
-        .into_iter()
-        .filter(|e| !superseded.contains(e.digest()))
-        .collect();
-    if leaves.is_empty() {
-        return None;
-    }
-    leaves.sort_by(|a, b| {
-        let va = project_validity(a, events, as_of).expect("candidate");
-        let vb = project_validity(b, events, as_of).expect("candidate");
-        va.observed_at
-            .cmp(&vb.observed_at)
-            .then_with(|| va.collected_at.cmp(&vb.collected_at))
-            .then_with(|| a.digest().cmp(b.digest()))
-    });
-    leaves.pop()
+    select_valid_leaf_as_of(group.iter().copied(), as_of, set.validity_events())
 }
 
 pub fn select_evidence<'a>(

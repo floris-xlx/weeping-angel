@@ -13,8 +13,8 @@ Inclusion rule: all matching paths under the repo root **excluding** `target/`, 
 | `tests/contracts/*.rs` | 43 |
 | ignored tests (`#[ignore`) | 5 |
 | `.unwrap()` in `*.rs` | 1161 |
-| `.expect(` in `*.rs` | 634 |
-| unwrap + expect | 1795 |
+| `.expect(` in `*.rs` | 632 |
+| unwrap + expect | 1793 |
 | Files defining `fn require_needles` | 1 |
 | `require_needles(` occurrences | 206 |
 | ADR markdown files | 50 |

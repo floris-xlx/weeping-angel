@@ -1,5 +1,7 @@
 //! Append-only evidence-validity/v1 events. Never rewrite a sealed envelope.
 
+use std::collections::BTreeSet;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use weeping_angel_assurance_ir::canonical_digest;
@@ -257,4 +259,41 @@ pub fn is_candidate_at(
     t: DateTime<Utc>,
 ) -> bool {
     project_validity(envelope, events, t).is_some()
+}
+
+/// Shared validity-leaf algorithm (DUP-007).
+///
+/// Public clocks stay distinct: control-test `select_latest_as_of` and ledger
+/// `as_of`/`current`/`latest` call this helper. Do not name this
+/// `select_latest_as_of` (ACP-T07 / TLE-015).
+pub fn select_valid_leaf_as_of<'a>(
+    candidates: impl IntoIterator<Item = &'a EvidenceEnvelope>,
+    as_of: DateTime<Utc>,
+    events: &[EvidenceValidityEvent],
+) -> Option<&'a EvidenceEnvelope> {
+    let usable: Vec<&'a EvidenceEnvelope> = candidates
+        .into_iter()
+        .filter(|env| project_validity(env, events, as_of).is_some())
+        .collect();
+    let superseded: BTreeSet<&str> = usable
+        .iter()
+        .filter_map(|e| e.supersedes())
+        .filter(|prev| usable.iter().any(|e| e.digest() == *prev))
+        .collect();
+    let mut leaves: Vec<&'a EvidenceEnvelope> = usable
+        .into_iter()
+        .filter(|e| !superseded.contains(e.digest()))
+        .collect();
+    if leaves.is_empty() {
+        return None;
+    }
+    leaves.sort_by(|a, b| {
+        let va = project_validity(a, events, as_of).expect("candidate");
+        let vb = project_validity(b, events, as_of).expect("candidate");
+        va.observed_at
+            .cmp(&vb.observed_at)
+            .then_with(|| va.collected_at.cmp(&vb.collected_at))
+            .then_with(|| a.digest().cmp(b.digest()))
+    });
+    leaves.pop()
 }

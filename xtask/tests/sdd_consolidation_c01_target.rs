@@ -302,8 +302,8 @@ fn c01_t05_expansion_counts_do_not_increase() {
     assert_eq!(report.counts.tests_rs_autodiscovered, 16);
     assert_eq!(report.counts.tests_contracts_rs, 43);
     assert!(
-        report.extended.public_symbols <= 2035,
-        "public_symbols must not increase during C01 (live ceiling 2035; freeze 2022), got {}",
+        report.extended.public_symbols <= 2043,
+        "public_symbols must not increase (live ceiling 2043 after DUP-007 shared leaf; freeze 2022), got {}",
         report.extended.public_symbols
     );
     assert_eq!(KNOWN_CHECK_IDS.len(), 15);

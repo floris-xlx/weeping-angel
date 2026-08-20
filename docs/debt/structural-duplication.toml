@@ -266,30 +266,32 @@ concept = "temporal-valid-leaf-selection-algorithm"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-control-test/src/temporal.rs::select_latest_as_of (evaluation primitive; ADR 0047 freeze)"
 canonical_symbol = "select_latest_as_of"
-duplicates = [
-  "crates/weeping-angel-evidence/src/ledger.rs::select_leaf_as_of (private; powers as_of/current)",
-]
-migration_state = "confirmed algorithm duplication; public APIs remain distinct clocks"
-removal_blockers = ["ACP-T07 / TLE-015 forbid moving select_latest_as_of"]
+duplicates = []
+migration_state = "shared select_valid_leaf_as_of in evidence validity.rs; select_latest_as_of stays in control-test; ledger select_leaf_as_of delegates"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_architectural_cleanup_target"]
-status = "confirmed"
-action = "document-intentional"
-debt_id = "DEBT-P0-EVIDENCE-LATEST"
+tests = ["sdd_consolidation_c09_dup007"]
+status = "verified"
+action = "consolidate-into-canonical"
+debt_id = "DUP-007"
 consumers = [
   "control-test population/temporal evaluation",
   "EvidenceLedger::as_of / current",
 ]
 migration = """
-Do not move select_latest_as_of into evidence (ACP-T07 / TLE-015). Optional later:
-extract a tiny shared validity-leaf helper both call without changing public APIs.
-Keep ledger latest ≠ as_of semantics (ADR 0047 four clocks). Public API surface is intentional; the duplicated algorithm body is the debt.
+Do not move select_latest_as_of into evidence (ACP-T07 / TLE-015).
+Both seats call evidence::validity::select_valid_leaf_as_of.
+Public latest ≠ current ≠ as_of clocks stay distinct (ADR 0047).
 """
-guard = "ACP-T07 / Guard 09–11; architecture ownership comments must list both seats."
+guard = """
+sdd_consolidation_c09_dup007; ACP-T07 / TLE-015 / Guard 09–11.
+KNOWN_CHECK_IDS stays 15.
+"""
 evidence = """
-Near-identical filter/supersede/sort by observed_at/collected_at/digest in both functions.
-Public latest/current/as_of APIs remain distinct clocks (not accidental aliases).
+select_latest_as_of remains pub in control-test/src/temporal.rs.
+evidence has no pub fn select_latest_as_of.
+ledger select_leaf_as_of and control-test select_latest_as_of both call select_valid_leaf_as_of.
 """
 
 [[duplication]]

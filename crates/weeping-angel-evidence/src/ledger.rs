@@ -743,28 +743,7 @@ fn select_leaf_as_of(
     as_of: DateTime<Utc>,
     events: &[EvidenceValidityEvent],
 ) -> Option<EvidenceEnvelope> {
-    let usable: Vec<&EvidenceEnvelope> = candidates
-        .iter()
-        .filter(|env| project_validity(env, events, as_of).is_some())
-        .collect();
-    let superseded: std::collections::BTreeSet<&str> = usable
-        .iter()
-        .filter_map(|e| e.supersedes())
-        .filter(|prev| usable.iter().any(|e| e.digest() == *prev))
-        .collect();
-    let mut leaves: Vec<&EvidenceEnvelope> = usable
-        .into_iter()
-        .filter(|e| !superseded.contains(e.digest()))
-        .collect();
-    leaves.sort_by(|a, b| {
-        let va = project_validity(a, events, as_of).expect("candidate");
-        let vb = project_validity(b, events, as_of).expect("candidate");
-        va.observed_at
-            .cmp(&vb.observed_at)
-            .then_with(|| va.collected_at.cmp(&vb.collected_at))
-            .then_with(|| a.digest().cmp(b.digest()))
-    });
-    leaves.into_iter().next_back().cloned()
+    crate::validity::select_valid_leaf_as_of(candidates.iter(), as_of, events).cloned()
 }
 
 #[cfg(test)]
