@@ -15,9 +15,9 @@ use weeping_angel_assurance_ir::{
 pub use weeping_angel_assurance_ir::{Assessment, AssessmentDefinition, AssessmentRequests};
 
 pub use pack::{
-    FrameworkContentProvider, FrameworkPackDigest, LoadedPack, assessment_from_pack,
-    load_framework_pack, load_framework_pack_from, load_framework_pack_from_with,
-    validate_framework_pack, validate_framework_pack_with,
+    FrameworkContentProvider, FrameworkPackDigest, LoadedPack, PackApplicabilityRow,
+    assessment_from_pack, load_framework_pack, load_framework_pack_from,
+    load_framework_pack_from_with, validate_framework_pack, validate_framework_pack_with,
 };
 pub use weeping_angel_assurance_ir::CatalogProjection;
 

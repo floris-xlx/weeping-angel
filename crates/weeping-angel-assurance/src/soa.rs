@@ -796,53 +796,21 @@ struct PackSoaRow {
 }
 
 fn load_pack_soa_rows(framework: &str, version: &str) -> Vec<PackSoaRow> {
-    let pack_dir = weeping_angel_framework::pack::resolve_pack_dir(framework, version).ok();
-    let Some(dir) = pack_dir else {
+    // Prefer the framework pack loader (fail-closed PackError path) over a
+    // second TOML parse. Missing/unknown packs still yield an empty SoA row set.
+    let Ok(pack) = weeping_angel_framework::load_framework_pack(framework, version) else {
         return Vec::new();
     };
-    let path = dir.join("applicability.toml");
-    let Ok(text) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
-        return Vec::new();
-    };
-    let Some(arr) = parsed.get("entry").and_then(|v| v.as_array()) else {
-        return Vec::new();
-    };
-    let mut rows = Vec::new();
-    for item in arr {
-        let soa_flag = item.get("soa").and_then(|v| v.as_bool()).unwrap_or(true);
-        if !soa_flag {
-            continue;
-        }
-        let raw_state = item
-            .get("applicability")
-            .or_else(|| item.get("state"))
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
-        let fallback = item.get("applicable").and_then(|v| v.as_bool());
-        rows.push(PackSoaRow {
-            reference: item
-                .get("reference")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            requirement: item
-                .get("requirement")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-            applicability: Applicability::from_pack(raw_state, fallback),
-            // applicability rationale is preserved verbatim from the pack.
-            rationale: item
-                .get("applicability_rationale")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string(),
-        });
-    }
-    rows
+    pack.applicability
+        .iter()
+        .filter(|row| row.soa.unwrap_or(true))
+        .map(|row| PackSoaRow {
+            reference: row.reference.clone(),
+            requirement: row.requirement.clone(),
+            applicability: Applicability::from_pack(&row.applicability, row.applicable),
+            rationale: row.applicability_rationale.clone(),
+        })
+        .collect()
 }
 
 /// Classify material SoA snapshot changes with the six-cause taxonomy.

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** — `sdd_repository_hygiene_target` is law. Baseline skip-superseded. |
+| Status | **Implemented** — `sdd_repository_hygiene_target` is law. Baseline skip-superseded. **Schema SSOT closed (Phase 3):** only `schemas/codex-security/`; `DEBT-SCHEMA-DUP` resolved; `codex-security/schemas/` must not be reintroduced. |
 | Program | Repository cleanup (concurrent Prompts 1–4) |
 | Slice | Prompt 4 — ignored-test retirement, dual-suite collapse (non-colliding), panic budget, Codex Security schema SSOT, generated-artifact policy, `.gitignore` / README hygiene |
 | Dual-suite | `sdd_repository_hygiene_baseline` · `sdd_repository_hygiene_target` (`tests/contracts/repository_hygiene.{baseline,target}.rs`) — registered as `[[test]]` in root `Cargo.toml`. **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md)) |
@@ -486,7 +486,7 @@ Record live numbers here at spec-first. After column filled at implement. Snapsh
 | `src/**` `.unwrap()` | 174 | 172 (`lib.rs` scan-diff base + Pipfile `split_once` converted) |
 | `src/**` `.expect(` | 60 | 60 (regex-literal continuation lines marked `panic-ok`) |
 | `src/**` unwrap/expect outside `#[cfg(test)]` | ≈88 / 52 | 86 / 52; **unmarked budgeted-module panics = 0** |
-| Codex Security schema trees | 2 × 3 files, SHA-identical | 1 SSOT `schemas/codex-security/` + generated copy + `codex-security/schemas/GENERATED_FROM_SSOT` |
+| Codex Security schema trees | 2 × 3 files, SHA-identical | **1 SSOT only** — `schemas/codex-security/` (3 files); `codex-security/schemas/` deleted; Guard 03 + hygiene forbid reintroduction (`DEBT-SCHEMA-DUP` resolved) |
 | Tracked `audit.txt` | 1 | 0 (untracked + gitignored) |
 | Tracked `*.pyc` | 21 | 0 (untracked + gitignored) |
 

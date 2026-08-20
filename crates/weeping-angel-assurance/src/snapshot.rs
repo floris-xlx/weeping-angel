@@ -9,18 +9,9 @@ use crate::readiness::FrameworkReadinessSnapshot;
 
 /// Live catalog walk for establishing a pin at assess start. Serialize must not call this.
 pub fn catalog_digest() -> String {
-    use std::path::PathBuf;
-    use weeping_angel_canonical_catalog::CanonicalCatalog;
+    use weeping_angel_canonical_catalog::{CanonicalCatalog, canonical_catalog_search_roots};
 
-    let mut roots = Vec::new();
-    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("../..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-    }
-    roots.push(PathBuf::from("catalog/canonical/v1"));
-    for root in roots {
+    for root in canonical_catalog_search_roots() {
         if let Ok(catalog) = CanonicalCatalog::load(&root)
             && let Ok(digest) = catalog.digest()
         {

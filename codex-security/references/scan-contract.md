@@ -161,9 +161,13 @@ These fields are optional for compatibility with existing v1 canonical artifacts
 
 ## Schemas
 
-- `schemas/scan-manifest.schema.json`
-- `schemas/findings.schema.json`
-- `schemas/coverage.schema.json`
+Repository SSOT (from repo root):
+
+- `schemas/codex-security/scan-manifest.schema.json`
+- `schemas/codex-security/findings.schema.json`
+- `schemas/codex-security/coverage.schema.json`
+
+Do not reintroduce a second tracked tree under `codex-security/schemas/`.
 
 V1 consumers ignore unknown properties for forward compatibility. Producers must still validate documented fields and should not emit undocumented properties casually.
 

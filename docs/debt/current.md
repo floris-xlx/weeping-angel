@@ -12,15 +12,15 @@ Inclusion rule: all matching paths under the repo root **excluding** `target/`, 
 | `tests/*.rs` (auto-discovered) | 16 |
 | `tests/contracts/*.rs` | 43 |
 | ignored tests (`#[ignore`) | 5 |
-| `.unwrap()` in `*.rs` | 1241 |
+| `.unwrap()` in `*.rs` | 1239 |
 | `.expect(` in `*.rs` | 635 |
-| unwrap + expect | 1876 |
+| unwrap + expect | 1874 |
 | Files defining `fn require_needles` | 18 |
 | `require_needles(` occurrences | 222 |
 | ADR markdown files | 48 |
 | Catalog test TOML | 13 |
 | Framework packs | 2 |
-| `*.schema.json` files | 6 |
+| `*.schema.json` files | 3 |
 
 ## Absences
 

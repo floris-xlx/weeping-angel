@@ -20,3 +20,9 @@ id = "FORBID-TESTS-SDD"
 kind = "path"
 value = "tests/sdd/"
 rationale = "ADR 0004: executable contracts live under tests/contracts/"
+
+[[pattern]]
+id = "FORBID-CODEX-SCHEMA-DUP-TREE"
+kind = "path"
+value = "codex-security/schemas/"
+rationale = "Codex Security JSON Schema SSOT is schemas/codex-security/ only (DEBT-SCHEMA-DUP / DUP-001)"

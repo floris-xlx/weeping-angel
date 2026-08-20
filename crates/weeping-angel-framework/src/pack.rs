@@ -209,21 +209,28 @@ struct TestRow {
 #[derive(Debug, Deserialize)]
 struct ApplicabilityFile {
     #[serde(default)]
-    entry: Vec<ApplicabilityRow>,
+    entry: Vec<PackApplicabilityRow>,
 }
 
-#[derive(Debug, Deserialize)]
-struct ApplicabilityRow {
+/// One `[[entry]]` from a framework pack `applicability.toml`.
+///
+/// Owned by the framework pack loader (DUP-013). Assurance/SoA must consume
+/// these rows from [`LoadedPack`] instead of re-parsing the TOML file.
+#[derive(Debug, Clone, Deserialize)]
+pub struct PackApplicabilityRow {
     #[serde(default)]
-    reference: String,
+    pub reference: String,
     #[serde(default)]
-    requirement: String,
+    pub requirement: String,
     #[serde(default)]
-    applicability: String,
+    pub applicability: String,
     #[serde(default)]
-    applicable: Option<bool>,
+    pub applicable: Option<bool>,
     #[serde(default)]
-    applicability_rationale: String,
+    pub applicability_rationale: String,
+    /// When present and `false`, SoA projection skips the row.
+    #[serde(default)]
+    pub soa: Option<bool>,
 }
 
 #[derive(Debug, Clone)]
@@ -238,6 +245,7 @@ pub struct LoadedPack {
     pub mappings: Vec<Mapping>,
     pub tests: Vec<PlannedControlTest>,
     pub evidence_requirements: Vec<EvidenceRequirement>,
+    pub applicability: Vec<PackApplicabilityRow>,
 }
 
 pub fn pack_search_roots() -> Vec<PathBuf> {
@@ -509,6 +517,7 @@ pub fn load_framework_pack_from_with(
         mappings,
         tests,
         evidence_requirements,
+        applicability,
     })
 }
 
@@ -591,7 +600,7 @@ pub fn profile_to_pack_id(profile: FrameworkProfile) -> &'static str {
     profile.as_selector()
 }
 
-fn load_applicability(dir: &Path) -> Result<Vec<ApplicabilityRow>, PackError> {
+fn load_applicability(dir: &Path) -> Result<Vec<PackApplicabilityRow>, PackError> {
     let path = dir.join("applicability.toml");
     if !path.is_file() {
         return Ok(Vec::new());

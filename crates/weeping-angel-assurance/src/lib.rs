@@ -20,7 +20,6 @@ pub mod snapshot;
 pub mod soa;
 pub mod temporal;
 
-use std::path::PathBuf;
 use std::time::Duration;
 
 use chrono::Utc;
@@ -33,7 +32,7 @@ use weeping_angel_control_test::{
     EvidenceSet, evaluate,
 };
 use weeping_angel_evidence::{CollectionRun, prior_valid_envelopes};
-use weeping_angel_framework::pack::{PackError, resolve_pack_dir};
+use weeping_angel_framework::pack::PackError;
 use weeping_angel_framework::{
     Assessment, CompiledFramework, FrameworkCompileError, FrameworkTarget, compile_framework,
     load_framework_pack,
@@ -45,12 +44,12 @@ pub use incident_query::{
     incidents_in_period, real_incidents,
 };
 pub use lineage::{
-    ApplicabilitySnapshot, AssessmentDefinitionSnapshot, AssessmentSummary,
+    AssessmentDefinitionSnapshot, AssessmentSummary, LineageApplicabilitySnapshot,
     CanonicalCatalogSnapshot, ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch,
     EvidenceSnapshot, FrameworkPackSnapshot, LineageBundle, ObligationExplain,
     ObligationExplainEdge, StatementOfApplicabilitySnapshot, assessment_result_digest,
-    explain_control, explain_why_control_exists, explain_why_document_exists, load_lineage,
-    reconstruct, replay_assessment,
+    explain_control, explain_why_control_exists, explain_why_document_exists, reconstruct,
+    replay_assessment,
 };
 pub use readiness::FrameworkReadinessSnapshot;
 pub use remediation::{
@@ -333,10 +332,16 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
         );
         let result_digest = assessment_result_digest(&results);
         let mut applicability = snapshot_applicability(&assessment, &scope.describe());
-        if let Ok(entries) =
-            load_pack_applicability_rows(target.profile.as_selector(), target.version.as_str())
-        {
-            applicability.pack_entries = entries;
+        if let Ok(pack) = &loaded_pack {
+            applicability.pack_entries = pack
+                .applicability
+                .iter()
+                .map(|row| crate::lineage::LineagePackApplicabilityEntry {
+                    reference: row.reference.clone(),
+                    applicable: row.applicable.unwrap_or(true),
+                    applicability_rationale: row.applicability_rationale.clone(),
+                })
+                .collect();
         }
         let collector_runs = vec![collection_run.run_id.clone()];
         let run = AssessmentRun {
@@ -435,7 +440,7 @@ pub(crate) fn assessment_for_target(
 }
 
 fn load_catalog_pin() -> String {
-    for root in catalog_search_roots() {
+    for root in weeping_angel_canonical_catalog::canonical_catalog_search_roots() {
         if let Ok(catalog) = CanonicalCatalog::load(&root)
             && let Ok(digest) = catalog.digest()
         {
@@ -458,50 +463,6 @@ fn envelope_asserts_known_absent(env: &weeping_angel_evidence::EvidenceEnvelope)
     env.observation()
         .fact("absent")
         .is_some_and(|v| v == "true")
-}
-
-fn catalog_search_roots() -> Vec<PathBuf> {
-    let mut roots = vec![];
-    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("../..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-    }
-    roots.push(PathBuf::from("catalog/canonical/v1"));
-    roots
-}
-
-fn load_pack_applicability_rows(
-    framework: &str,
-    version: &str,
-) -> Result<Vec<crate::lineage::PackApplicabilityEntry>, PackError> {
-    let dir = resolve_pack_dir(framework, version)?;
-    let path = dir.join("applicability.toml");
-    let text = std::fs::read_to_string(&path).map_err(|e| PackError::Io(e.to_string()))?;
-    let parsed: toml::Value = toml::from_str(&text).map_err(|e| PackError::Parse(e.to_string()))?;
-    let mut entries = vec![];
-    if let Some(arr) = parsed.get("entry").and_then(|v| v.as_array()) {
-        for item in arr {
-            entries.push(crate::lineage::PackApplicabilityEntry {
-                reference: item
-                    .get("reference")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                applicable: item
-                    .get("applicable")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(true),
-                applicability_rationale: item
-                    .get("applicability_rationale")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-            });
-        }
-    }
-    Ok(entries)
 }
 
 /// Effectiveness is never inferred from an empty result set.

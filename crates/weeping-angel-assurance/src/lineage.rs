@@ -57,7 +57,9 @@ pub struct AssessmentDefinitionSnapshot {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ApplicabilityDecision {
+/// Lineage pin for a static applicability decision (DUP-004: distinct from
+/// `applicability::ApplicabilityDecision` engine outcomes).
+pub struct LineageApplicabilityDecision {
     pub id: String,
     pub rule: ApplicabilityRule,
     pub static_outcome: String,
@@ -66,7 +68,7 @@ pub struct ApplicabilityDecision {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PackApplicabilityEntry {
+pub struct LineagePackApplicabilityEntry {
     pub reference: String,
     pub applicable: bool,
     pub applicability_rationale: String,
@@ -74,13 +76,15 @@ pub struct PackApplicabilityEntry {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ApplicabilitySnapshot {
+/// Pinned applicability material for lineage replay (DUP-004: distinct from
+/// `applicability::ApplicabilitySnapshot`).
+pub struct LineageApplicabilitySnapshot {
     pub schema: String,
     pub assessment_id: AssessmentId,
     pub scope: String,
-    pub requirement_decisions: Vec<ApplicabilityDecision>,
-    pub control_decisions: Vec<ApplicabilityDecision>,
-    pub pack_entries: Vec<PackApplicabilityEntry>,
+    pub requirement_decisions: Vec<LineageApplicabilityDecision>,
+    pub control_decisions: Vec<LineageApplicabilityDecision>,
+    pub pack_entries: Vec<LineagePackApplicabilityEntry>,
     pub digest: String,
 }
 
@@ -162,7 +166,7 @@ pub struct ExplainedTest {
 #[serde(rename_all = "camelCase")]
 pub struct ControlExplanation {
     pub control: Control,
-    pub applicability: ApplicabilityDecision,
+    pub applicability: LineageApplicabilityDecision,
     pub implementation: Option<ControlImplementation>,
     pub population: Option<PopulationEvaluation>,
     pub tests: Vec<ExplainedTest>,
@@ -184,7 +188,7 @@ pub struct LineageBundle {
     pub pack: FrameworkPackSnapshot,
     pub catalog: CanonicalCatalogSnapshot,
     pub definition: AssessmentDefinitionSnapshot,
-    pub applicability: ApplicabilitySnapshot,
+    pub applicability: LineageApplicabilitySnapshot,
     pub evidence: EvidenceSnapshot,
     pub tests: Vec<ControlTestRun>,
     pub run: AssessmentRun,
@@ -201,11 +205,11 @@ pub fn static_outcome_label(rule: &ApplicabilityRule) -> String {
     }
 }
 
-pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> ApplicabilitySnapshot {
+pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> LineageApplicabilitySnapshot {
     let requirement_decisions = assessment
         .requirements
         .iter()
-        .map(|req| ApplicabilityDecision {
+        .map(|req| LineageApplicabilityDecision {
             id: req.id().to_string(),
             rule: req.applicability().clone(),
             static_outcome: static_outcome_label(req.applicability()),
@@ -217,14 +221,14 @@ pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> Applicabi
     let control_decisions = assessment
         .controls
         .iter()
-        .map(|ctl| ApplicabilityDecision {
+        .map(|ctl| LineageApplicabilityDecision {
             id: ctl.id().to_string(),
             rule: ctl.applicability().clone(),
             static_outcome: static_outcome_label(ctl.applicability()),
             rationale: "static applicability from ApplicabilityRule".into(),
         })
         .collect::<Vec<_>>();
-    let mut snapshot = ApplicabilitySnapshot {
+    let mut snapshot = LineageApplicabilitySnapshot {
         schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
         assessment_id: assessment.id.clone(),
         scope: scope.into(),
@@ -466,7 +470,7 @@ pub fn explain_control(
     report: &AssessmentReport,
     control_id: &str,
     assessment: Option<&Assessment>,
-    applicability: Option<&ApplicabilitySnapshot>,
+    applicability: Option<&LineageApplicabilitySnapshot>,
 ) -> Result<ControlExplanation, AssuranceError> {
     let result = report
         .results
@@ -493,7 +497,7 @@ pub fn explain_control(
                 .find(|d| d.id == control_id)
                 .cloned()
         })
-        .unwrap_or_else(|| ApplicabilityDecision {
+        .unwrap_or_else(|| LineageApplicabilityDecision {
             id: control_id.into(),
             rule: ApplicabilityRule::Always,
             static_outcome: "applicable".into(),
@@ -790,6 +794,9 @@ fn verify_replay_bundle(bundle: &LineageBundle) -> Result<(), AssuranceError> {
     Ok(())
 }
 
+/// Deprecated alias of [`reconstruct`] without pin verification.
+/// Prefer [`replay_assessment`] for historical rebuild (DUP-005).
+#[deprecated(note = "use replay_assessment for verified rebuild, or reconstruct only when pins are already verified")]
 pub fn load_lineage(bundle: &LineageBundle) -> AssessmentReport {
     reconstruct(bundle)
 }

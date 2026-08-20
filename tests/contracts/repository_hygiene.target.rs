@@ -66,7 +66,6 @@ const SCHEMA_NAMES: &[&str] = &[
 
 const SCHEMA_SSOT_DIR: &str = "schemas/codex-security";
 const SCHEMA_SECOND_DIR: &str = "codex-security/schemas";
-const SCHEMA_GENERATED_STAMP: &str = "codex-security/schemas/GENERATED_FROM_SSOT";
 
 const BUDGETED_PREFIXES: &[&str] = &[
     "src/parse.rs",
@@ -230,41 +229,77 @@ fn pycache_bytecode_is_not_tracked_and_is_gitignored() {
 }
 
 #[test]
-fn schema_ssot_is_schemas_codex_security_and_second_copy_is_generated() {
+fn schema_ssot_is_schemas_codex_security_only() {
     for name in SCHEMA_NAMES {
         let ssot = rel(&format!("{SCHEMA_SSOT_DIR}/{name}"));
         assert!(ssot.is_file(), "SSOT missing {SCHEMA_SSOT_DIR}/{name}");
     }
 
+    // Phase 3 / DEBT-SCHEMA-DUP: no second tracked schema tree.
     let second_dir = rel(SCHEMA_SECOND_DIR);
-    if !second_dir.is_dir() {
-        return;
+    assert!(
+        !second_dir.is_dir(),
+        "codex-security/schemas/ must not exist; SSOT is {SCHEMA_SSOT_DIR}/ only"
+    );
+    for name in SCHEMA_NAMES {
+        let second = rel(&format!("{SCHEMA_SECOND_DIR}/{name}"));
+        assert!(
+            !second.is_file(),
+            "duplicate schema must not be tracked at {SCHEMA_SECOND_DIR}/{name}"
+        );
     }
 
-    let stamp = rel(SCHEMA_GENERATED_STAMP);
-    assert!(
-        stamp.is_file(),
-        "second schema tree must be generated packaging; missing stamp {SCHEMA_GENERATED_STAMP} \
-         (bytes-identical hand copies are not an SSOT)"
-    );
-    let stamp_text = fs::read_to_string(&stamp).unwrap_or_default();
-    assert!(
-        stamp_text.contains(SCHEMA_SSOT_DIR),
-        "generation stamp must name the SSOT directory {SCHEMA_SSOT_DIR}"
-    );
-
-    for name in SCHEMA_NAMES {
-        let ssot = rel(&format!("{SCHEMA_SSOT_DIR}/{name}"));
-        let second = rel(&format!("{SCHEMA_SECOND_DIR}/{name}"));
-        if second.is_file() {
-            let a = fs::read(&ssot).unwrap();
-            let b = fs::read(&second).unwrap();
-            assert_eq!(
-                a, b,
-                "second schema path must be byte-identical (SHA-256 equivalent) to SSOT for {name}"
-            );
+    // Unique JSON Schema $id across tracked *.schema.json (URL $id ≠ filesystem home).
+    let mut ids = std::collections::BTreeMap::<String, String>::new();
+    fn walk_schemas(dir: &std::path::Path, ids: &mut std::collections::BTreeMap<String, String>) {
+        let Ok(entries) = fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                if name == "target" || name == "node_modules" || name == ".git" {
+                    continue;
+                }
+                walk_schemas(&path, ids);
+                continue;
+            }
+            if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                continue;
+            }
+            if !path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .is_some_and(|n| n.ends_with(".schema.json"))
+            {
+                continue;
+            }
+            let Ok(text) = fs::read_to_string(&path) else {
+                continue;
+            };
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+                continue;
+            };
+            let Some(id) = v.get("$id").and_then(|x| x.as_str()) else {
+                continue;
+            };
+            let rel = path
+                .strip_prefix(env!("CARGO_MANIFEST_DIR"))
+                .unwrap_or(&path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            if let Some(prev) = ids.insert(id.to_string(), rel.clone()) {
+                panic!("duplicate JSON Schema $id `{id}` in {prev} and {rel}");
+            }
         }
     }
+    walk_schemas(rel(".").as_path(), &mut ids);
+    assert!(
+        ids.len() >= SCHEMA_NAMES.len(),
+        "expected at least the Codex Security schema $id set; got {}",
+        ids.len()
+    );
 }
 
 #[test]

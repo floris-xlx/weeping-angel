@@ -24,7 +24,7 @@ duplicates = [
   "codex-security/schemas/findings.schema.json",
   "codex-security/schemas/scan-manifest.schema.json",
 ]
-status = "confirmed"
+status = "resolved"
 action = "delete-duplicate"
 debt_id = "DEBT-SCHEMA-DUP"
 consumers = [
@@ -119,11 +119,11 @@ id = "DUP-004"
 concept = "applicability-snapshot-type-pair"
 canonical_owner = "crates/weeping-angel-assurance/src/applicability/snapshot.rs::ApplicabilitySnapshot"
 duplicates = [
-  "crates/weeping-angel-assurance/src/lineage.rs::ApplicabilitySnapshot",
-  "crates/weeping-angel-assurance/src/lineage.rs::ApplicabilityDecision",
-  "crates/weeping-angel-assurance/src/lineage.rs::PackApplicabilityEntry",
+  "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilitySnapshot (renamed; still a second shape)",
+  "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilityDecision",
+  "crates/weeping-angel-assurance/src/lineage.rs::LineagePackApplicabilityEntry",
 ]
-status = "confirmed"
+status = "migrating"
 action = "consolidate-into-canonical"
 debt_id = ""
 consumers = [
@@ -153,10 +153,10 @@ id = "DUP-005"
 concept = "lineage-reconstruct-public-aliases"
 canonical_owner = "crates/weeping-angel-assurance/src/lineage.rs::replay_assessment"
 duplicates = [
-  "crates/weeping-angel-assurance/src/lineage.rs::reconstruct",
-  "crates/weeping-angel-assurance/src/lineage.rs::load_lineage",
+  "crates/weeping-angel-assurance/src/lineage.rs::reconstruct (private helper — keep)",
+  "crates/weeping-angel-assurance/src/lineage.rs::load_lineage (deprecated; no longer crate-root re-export)",
 ]
-status = "candidate"
+status = "migrating"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-LINEAGE-REBUILD"
 consumers = [
@@ -230,13 +230,12 @@ Public latest/current/as_of APIs remain distinct clocks (not accidental aliases)
 [[duplication]]
 id = "DUP-008"
 concept = "catalog-root-search-and-pin-walks"
-canonical_owner = "crates/weeping-angel-canonical-catalog (CanonicalCatalog::load + WorkspaceCatalogLoader)"
+canonical_owner = "crates/weeping-angel-canonical-catalog::canonical_catalog_search_roots"
 duplicates = [
-  "crates/weeping-angel-assurance/src/lib.rs::catalog_search_roots / load_catalog_pin",
-  "crates/weeping-angel-assurance/src/snapshot.rs::catalog_digest",
-  "crates/weeping-angel-canonical-catalog/src/lib.rs::workspace_catalog_roots / load_workspace_catalog",
+  "crates/weeping-angel-assurance/src/lib.rs::load_catalog_pin (now calls canonical roots)",
+  "crates/weeping-angel-assurance/src/snapshot.rs::catalog_digest (now calls canonical roots)",
 ]
-status = "confirmed"
+status = "resolved"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-CATALOG-SSOT"
 consumers = [
@@ -277,11 +276,9 @@ id = "DUP-010"
 concept = "debt-register-stale-p0-stub-language"
 canonical_owner = "docs/debt/register.toml (resolved DEBT-GUARD-05..12 + live ProductLawCheck)"
 duplicates = [
-  "docs/debt/register.toml DEBT-P0-PACK-PARSE summary still cites 'guard check 06 stub'",
-  "docs/debt/register.toml DEBT-P0-CATALOG-SSOT summary still cites 'guard check 05 stub'",
-  "docs/debt/register.toml DEBT-P0-FRAMEWORK-DIGEST / READINESS / LINEAGE / EVIDENCE / SOA summaries cite stub backlog",
+  "docs/debt/register.toml DEBT-P0-* summaries (rewritten to separate surface-green vs deep backlog)",
 ]
-status = "confirmed"
+status = "resolved"
 action = "document-intentional"
 debt_id = ""
 consumers = ["humans reading open/confirmed P0 rows; agents triaging remaining_backlog"]
@@ -343,12 +340,12 @@ evidence = "Same method name on unrelated types (EvidenceLedger vs DocumentVersi
 [[duplication]]
 id = "DUP-013"
 concept = "framework-pack-applicability-toml-parse"
-canonical_owner = "crates/weeping-angel-framework/src/pack.rs::load_applicability"
+canonical_owner = "crates/weeping-angel-framework::LoadedPack.applicability (PackApplicabilityRow)"
 duplicates = [
-  "crates/weeping-angel-assurance/src/lib.rs::load_pack_applicability_rows",
-  "crates/weeping-angel-assurance/src/soa.rs::load_pack_soa_rows",
+  "crates/weeping-angel-assurance/src/lib.rs (maps LoadedPack.applicability → lineage pin)",
+  "crates/weeping-angel-assurance/src/soa.rs::load_pack_soa_rows (maps via load_framework_pack)",
 ]
-status = "confirmed"
+status = "resolved"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-PACK-PARSE"
 consumers = [

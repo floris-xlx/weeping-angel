@@ -623,7 +623,7 @@ fn population_or_leaf_json(
 }
 
 fn load_workspace_catalog() -> Option<CatalogProjection> {
-    for root in workspace_catalog_roots() {
+    for root in canonical_catalog_search_roots() {
         if root.join("manifest.toml").is_file()
             && let Ok(catalog) = CanonicalCatalog::load(&root)
             && let Ok(projection) = catalog.projection()
@@ -634,7 +634,12 @@ fn load_workspace_catalog() -> Option<CatalogProjection> {
     None
 }
 
-fn workspace_catalog_roots() -> Vec<PathBuf> {
+/// Candidate roots for `catalog/canonical/v1` relative to crate/workspace layouts.
+///
+/// Single search-path owner for assurance pins, CLI inspect, and the
+/// `WorkspaceCatalogLoader` hook (DUP-008). Callers still use
+/// [`CanonicalCatalog::load`] — this only consolidates path discovery.
+pub fn canonical_catalog_search_roots() -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let base = PathBuf::from(dir);

@@ -9,7 +9,7 @@ The source tree communicates architecture. Agent execution evidence does not bel
 | [`architecture/`](../architecture/) | Concept ownership (with `kind`), evaluated invariants, executable forbidden patterns ([ADR 0009](adr/0009-repository-health-gate.md), [ADR 0010](adr/0010-architecture-as-law.md)) |
 | [`docs/debt/`](debt/) | Technical-debt register (`register.toml`); mechanical current counts [`current.md`](debt/current.md) via `cargo xtask inventory`; [`baseline-2026-08.md`](debt/baseline-2026-08.md) is Historical only ([ADR 0048](adr/0048-structural-reconciliation.md)). Hygiene **counts** are not recorded here ([`repository-hygiene.md`](specs/repository-hygiene.md) §12). |
 | [`tests/contracts/`](../tests/contracts/) | Executable invariants (dual-suite target + superseded baseline). Inventory: `rg "^name = \"sdd_" Cargo.toml` — not [`docs/contracts/README.md`](contracts/README.md). xtask architecture suites (incl. structural reconciliation) live under `xtask/tests/` (auto-discovered). |
-| [`schemas/codex-security/`](../schemas/codex-security/) | Codex Security JSON Schema SSOT. `codex-security/schemas/` is a generated packaging copy ([ADR 0012](adr/0012-repository-hygiene.md)). |
+| [`schemas/codex-security/`](../schemas/codex-security/) | Codex Security JSON Schema SSOT (only tracked schema tree; `DEBT-SCHEMA-DUP` resolved). |
 | [`.sdd/runs/`](../.sdd/) | Generated execution history (gitignored) |
 | [`.sdd/artifacts/`](../.sdd/) | Generated snapshots and elite packs (gitignored) |
 | [`docs/sdd/`](sdd/) | Stub only. Not an execution dump. |

@@ -37,71 +37,78 @@ regression_tests = ["sdd_documentation_layout"]
 [[finding]]
 id = "DEBT-SCHEMA-DUP"
 title = "Duplicated Codex Security JSON schemas"
-status = "open"
-summary = "schemas/codex-security/ and codex-security/schemas/ both ship coverage, findings, and scan-manifest JSON Schema files."
-source = "schemas/codex-security, codex-security/schemas"
+status = "resolved"
+summary = "Deleted tracked codex-security/schemas/*.schema.json. SSOT is schemas/codex-security/ only. Guard 03 forbids reintroducing codex-security/schemas/."
+source = "schemas/codex-security"
+owner = "weeping-angel maintainers"
+introduced = "2026-08-19"
+severity = "high"
+remediation = "Single SSOT under schemas/codex-security/; forbidden-patterns FORBID-CODEX-SCHEMA-DUP-TREE; hygiene suite asserts no second tree."
+repository_guard = "03"
+regression_tests = ["sdd_structural_reconciliation_target"]
+review_by = "2027-12-31"
 
 [[finding]]
 id = "DEBT-P0-FRAMEWORK-EXPRESSION"
 title = "P0 framework expression preservation"
 status = "confirmed"
-summary = "Framework pack expression preservation is remaining_backlog; not implemented in increment 1."
+summary = "Deep framework pack expression preservation backlog remains. Guard 06 ProductLawCheck surface (PackError) is already green / DEBT-GUARD-06 resolved."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-PACK-PARSE"
 title = "Fail-closed framework pack parsing"
 status = "confirmed"
-summary = "Pack parse fail-closed is remaining_backlog (guard check 06 stub)."
+summary = "Remaining pack-parse semantic backlog (e.g. competing applicability.toml readers — DUP-013). Guard 06 ProductLawCheck requires PackError and is resolved (DEBT-GUARD-06)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-CATALOG-SSOT"
 title = "Catalog SSOT migration"
 status = "confirmed"
-summary = "Catalog SSOT migration is remaining_backlog (guard check 05 stub)."
+summary = "Remaining catalog root-walk consolidation (DUP-008). Guard 05 ProductLawCheck requires CanonicalCatalog::load and is resolved (DEBT-GUARD-05)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-FRAMEWORK-DIGEST"
 title = "Framework digest redesign"
 status = "confirmed"
-summary = "Framework digest redesign is remaining_backlog (guard check 07 stub)."
+summary = "Remaining deep digest redesign backlog. Guard 07 ProductLawCheck requires FrameworkPackDigest and is resolved (DEBT-GUARD-07)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-READINESS-SSOT"
 title = "Readiness projection SSOT"
 status = "confirmed"
-summary = "Readiness SSOT is remaining_backlog (guard check 08 stub)."
+summary = "Remaining readiness constructor consolidation (DUP-011). Guard 08 ProductLawCheck requires project_readiness and is resolved (DEBT-GUARD-08)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-LINEAGE-REBUILD"
 title = "Assessment lineage rebuild"
 status = "confirmed"
-summary = "Lineage rebuild is remaining_backlog (guard check 10 stub)."
+summary = "Remaining lineage alias/API hygiene (DUP-005). Guard 10 ProductLawCheck requires replay_assessment and is resolved (DEBT-GUARD-10)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-EVIDENCE-LATEST"
 title = "Evidence latest vs current"
 status = "confirmed"
-summary = "Evidence ledger latest-vs-current is remaining_backlog (guard check 11 stub)."
+summary = "Remaining temporal leaf-algorithm duplication (DUP-007). Guard 09/11 ProductLawCheck ledger APIs are resolved (DEBT-GUARD-09/11)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-SOA"
 title = "Statement of Applicability invariants"
 status = "confirmed"
-summary = "SoA invariants are remaining_backlog (guard check 12 stub)."
+summary = "Remaining SoA projection-path documentation/hardening (DUP-006). Guard 12 ProductLawCheck requires project_soa_from_snapshot and is resolved (DEBT-GUARD-12)."
 source = "docs/specs/repository-integrity.md remaining_backlog"
 
 [[finding]]
 id = "DEBT-P0-PERSISTENCE"
 title = "Evidence persistence invariants"
 status = "confirmed"
-summary = "Persistence invariants in weeping-angel-evidence are remaining_backlog."
+summary = "Persistence invariants in weeping-angel-evidence remain confirmed backlog beyond ProductLawCheck surface."
 source = "crates/weeping-angel-evidence"
 
 [[finding]]

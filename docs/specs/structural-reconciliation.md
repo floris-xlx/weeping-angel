@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Phase 0+1 Implemented.** **Phase 2 map written** — [`docs/debt/structural-duplication.toml`](../debt/structural-duplication.toml) (DUP-001…012). No Phase 2 deletes. Next: Phase 3 closes `DEBT-SCHEMA-DUP` / DUP-001. |
+| Status | **Phase 0–3 advanced.** Schema SSOT closed (`DEBT-SCHEMA-DUP` / DUP-001). Catalog root walk + applicability.toml parse consolidated (DUP-008 / DUP-013). Lineage applicability types renamed (DUP-004 migrating). Remaining: full snapshot-shape merge, readiness constructors, require_needles helpers. |
 | Program | Structural Reconciliation Program (subtractive honesty: docs + debt evidence match the live tree). |
 | Slice | **Phase 0+1** complete. **Phase 2** = duplication inventory only (no opportunistic dedupe). **Not** yet Phases 3+ (schema delete, baseline leftovers, panic budget, semantic P0 closures). No new frameworks / collectors / ISMS / report formats / product scanners. |
 | Dual-suite | `xtask/tests/sdd_structural_reconciliation_{baseline,target}.rs` (Cargo auto-discovers `cargo test -p xtask`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Integrity dual-suite remains `tests/contracts/repository_integrity.{baseline,target}.rs` (root `[[test]]`); amend assertions only where this slice requires live-plane honesty. |
