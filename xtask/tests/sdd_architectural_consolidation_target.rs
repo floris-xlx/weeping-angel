@@ -669,7 +669,7 @@ fn con_t06_close_law_blocks_verified_removed() {
         by_id.insert(id, (status, symbol));
     }
 
-    for id in ["DUP-001", "DUP-008", "DUP-010"] {
+    for id in ["DUP-010"] {
         let (status, _) = by_id.get(id).unwrap_or_else(|| panic!("missing {id}"));
         assert_ne!(
             status.as_str(),
@@ -689,6 +689,20 @@ fn con_t06_close_law_blocks_verified_removed() {
             "{id} v1 resolved maps to canonicalized|consumers-migrating|compatibility-only, got {status}"
         );
     }
+    let dup001 = by_id.get("DUP-001").unwrap_or_else(|| panic!("missing DUP-001"));
+    assert_eq!(
+        dup001.0.as_str(),
+        "verified",
+        "DUP-001 close law after duplicate schema tree deleted, got {}",
+        dup001.0
+    );
+    let dup008 = by_id.get("DUP-008").unwrap_or_else(|| panic!("missing DUP-008"));
+    assert_eq!(
+        dup008.0.as_str(),
+        "verified",
+        "DUP-008 close law after catalog root walk SSOT, got {}",
+        dup008.0
+    );
     let dup013 = by_id.get("DUP-013").unwrap_or_else(|| panic!("missing DUP-013"));
     assert_eq!(
         dup013.0.as_str(),

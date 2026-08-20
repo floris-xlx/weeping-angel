@@ -23,17 +23,13 @@ concept = "codex-security-json-schema-files"
 severity = "p0"
 canonical_owner = "schemas/codex-security"
 canonical_symbol = "schemas/codex-security"
-duplicates = [
-  "codex-security/schemas/coverage.schema.json",
-  "codex-security/schemas/findings.schema.json",
-  "codex-security/schemas/scan-manifest.schema.json",
-]
-migration_state = "canonical owner exists; tracked duplicate tree deleted from source control; remaining consumers must keep using schemas/codex-security/"
-removal_blockers = ["packaging / Codex Security distribution still documents the old tree"]
+duplicates = []
+migration_state = "tracked duplicate tree deleted; SSOT is schemas/codex-security/"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "canonicalized"
+tests = ["sdd_consolidation_dup001"]
+status = "verified"
 action = "delete-duplicate"
 debt_id = "DEBT-SCHEMA-DUP"
 consumers = [
@@ -300,16 +296,13 @@ concept = "catalog-root-search-and-pin-walks"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-canonical-catalog::canonical_catalog_search_roots"
 canonical_symbol = "canonical_catalog_search_roots"
-duplicates = [
-  "crates/weeping-angel-assurance/src/lib.rs::load_catalog_pin (now calls canonical roots)",
-  "crates/weeping-angel-assurance/src/snapshot.rs::catalog_digest (now calls canonical roots)",
-]
-migration_state = "canonical roots exist; remaining call sites documented as consumers of the owner"
+duplicates = []
+migration_state = "canonical_catalog_search_roots is the only root walk; load_catalog_pin and catalog_digest consume it"
 removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "canonicalized"
+tests = ["sdd_consolidation_dup008"]
+status = "verified"
 action = "consolidate-into-canonical"
 debt_id = "DEBT-P0-CATALOG-SSOT"
 consumers = [
@@ -508,44 +501,60 @@ evidence = "C02 extract+migrate+delete: model.rs owns SKIP_DIR_NAMES, should_ski
 id = "DUP-015"
 concept = "collector-public-api-dual-surface"
 severity = "p2"
-canonical_owner = "crates/weeping-angel-collector hexagonal CollectionEngine / CollectorAdapter"
-canonical_symbol = "unknown"
-duplicates = ["EvidenceCollector trait + GitHubCollector/LocalCollector façade used by scheduler"]
-migration_state = "candidate; deferred to collector hexagonal program"
-removal_blockers = ["do not rewrite scheduler in this program"]
-public_api_impact = "unknown"
+canonical_owner = "crates/weeping-angel-collector/src/application/engine.rs::CollectionEngine"
+canonical_symbol = "CollectionEngine"
+duplicates = []
+migration_state = "EvidenceCollector façade remains for scheduler; all collect() paths call collect_envelopes → CollectionEngine"
+removal_blockers = []
+public_api_impact = "none"
 serialization_impact = "none"
-tests = []
-status = "candidate"
-action = "document-intentional"
-debt_id = ""
+tests = ["sdd_consolidation_c10_dup015"]
+status = "verified"
+action = "consolidate-into-canonical"
+debt_id = "DUP-015"
 consumers = ["weeping-angel-assurance::scheduler", "CLI collect paths"]
-migration = "Deferred to collector hexagonal program. Do not rewrite scheduler in structural reconciliation."
-guard = "ADR 0013; collector_hexagonal.target; Phase 0 freeze against new collector crates."
-evidence = "Scheduler uses EvidenceCollector; LocalCollector::collect delegates through CollectionEngine."
+migration = """
+Do not rewrite scheduler. EvidenceCollector stays the scheduler-facing façade.
+Local/GitHub/Fixture collect() call application::engine::collect_envelopes.
+CollectorAdapter remains the hexagonal observation port. EnvelopeFactory seals.
+"""
+guard = """
+sdd_consolidation_c10_dup015; ADR 0013; collector_hexagonal.target.
+KNOWN_CHECK_IDS stays 15.
+"""
+evidence = """
+rg finds collect_envelopes in local, github, fixture EvidenceCollector impls.
+No EvidenceEnvelope::seal in those façade collect paths. Scheduler still uses EvidenceCollector.
+"""
 
 [[duplication]]
 id = "DUP-016"
 concept = "scan-workbench-sqlite-surfaces"
 severity = "p2"
-canonical_owner = "investigate — likely two products"
-canonical_symbol = "unknown"
-duplicates = [
-  "codex-security/scripts/workbench_*.py",
-  "src/workbench/{mod,compare,remediation}.rs",
-]
-migration_state = "candidate; investigate whether schemas/DB diverge intentionally"
-removal_blockers = ["two language trees, two products"]
-public_api_impact = "unknown"
-serialization_impact = "unknown"
-tests = []
-status = "candidate"
-action = "investigate"
-debt_id = ""
+canonical_owner = "src/workbench (weeping-angel sealed-scan index) + src/engine (web orchestrator)"
+canonical_symbol = "src/workbench + src/engine"
+duplicates = []
+migration_state = "two products: Codex Security Python workbench vs weeping-angel sealed-scan index; engine orchestrator vs engines detector pack"
+removal_blockers = []
+public_api_impact = "none"
+serialization_impact = "none"
+tests = ["sdd_consolidation_c14_dup016"]
+status = "verified"
+action = "document-intentional"
+debt_id = "DUP-016"
 consumers = ["weeping-angel workbench CLI", "codex-security deep_scan / skills"]
-migration = "If schemas/DB diverge intentionally, document-intentional. If overlapping sealed-scan index, pick one runtime."
-guard = "none today"
-evidence = "Both open SQLite workbench DBs and register/list scans across language trees."
+migration = """
+Schemas/DB diverge intentionally. Do not merge Python Codex Security workbench
+into src/workbench. src/engine is web/HTTP run_scan; src/engines is code-SAST
+EngineHit detectors. Naming stays; roles are pinned.
+"""
+guard = """
+sdd_consolidation_c14_dup016. KNOWN_CHECK_IDS stays 15.
+"""
+evidence = """
+Rust workbench: scans table, ~/.weeping-angel/workbench.sqlite3, no workspaces table.
+Python: workspaces + phased scans schema. engine has run_scan; engines has EngineHit.
+"""
 
 [[duplication]]
 id = "DUP-017"
