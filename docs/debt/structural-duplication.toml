@@ -148,6 +148,14 @@ evidence = """
 Owner tests/support/mod.rs defines crate-private manifest_dir, read_repo_file,
 crate_sources_joined, text_has. tests/contracts/*.target.rs copies deleted
 (not aliases). Live contract_fs_helper_copies = 1 (owner only).
+Integrate postcheck 2026-08-20 (acb8771): cargo xtask guard 01–15 pass;
+cargo xtask inventory --json/--check exit 0; require_needles_fns=1
+require_needles_calls=206 root_test_binaries=45 tests_rs_autodiscovered=16
+tests_contracts_rs=43 unwrap_plus_expect=1819. cargo test -p xtask
+--test sdd_consolidation_c01_dup003 3 passed. Close law: owner unique,
+consumers include!, copies gone (not aliases), regression pin exists.
+DUP-002 uniqueness still holds. No Guard 16. architecture.toml not edited
+to fit.
 """
 
 [[duplication]]
