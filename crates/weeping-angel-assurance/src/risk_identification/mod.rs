@@ -311,10 +311,10 @@ pub fn promote_candidate(
         .collect();
     risk.owner = Some(principal.clone());
     risk.discovered_at = Some(at);
-    if let Some(suggestion) = &methodology_inputs {
-        if let Some(version) = &suggestion.methodology_version {
-            risk.methodology_version = Some(version.clone());
-        }
+    if let Some(suggestion) = &methodology_inputs
+        && let Some(version) = &suggestion.methodology_version
+    {
+        risk.methodology_version = Some(version.clone());
     }
 
     definition.risks.push(risk.clone());
@@ -472,10 +472,8 @@ fn scenario_proposals(
     }
     let raw = if !canonical.is_empty() {
         canonical
-    } else if let Some(category) = observation.fact("category") {
-        category
     } else {
-        "security.finding"
+        observation.fact("category").unwrap_or("security.finding")
     };
     let scenario_key = normalize_scenario(raw);
     let title = if observation.narrative().trim().is_empty() {

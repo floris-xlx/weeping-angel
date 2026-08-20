@@ -15,7 +15,7 @@ fn offline_parse_package_json() {
     let names: Vec<_> = pkgs.iter().map(|p| p.name.as_str()).collect();
     assert!(names.contains(&"react"));
     assert!(names.contains(&"acme-private"));
-    assert!(!names.iter().any(|n| *n == "local"));
+    assert!(!names.contains(&"local"));
 }
 
 #[test]

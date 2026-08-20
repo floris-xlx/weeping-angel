@@ -1895,6 +1895,11 @@ fn iso_r_019_structural_only_legal_boundary_holds() {
 #[test]
 fn iso_r_020_neighbor_suites_stay_registered_after_sliver_supersession() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
+    assert!(
+        !toml.contains("sdd_iso27001_remap_baseline")
+            && !toml.contains("tests/contracts/iso27001_remap.baseline.rs"),
+        "ISO-R-020: superseded remap baseline must stay deleted (see ISO-R-000)"
+    );
     for name in [
         "sdd_assurance_runtime_target",
         "sdd_iso27001_assurance_target",
@@ -1903,7 +1908,6 @@ fn iso_r_020_neighbor_suites_stay_registered_after_sliver_supersession() {
         "sdd_population_runtime_target",
         "sdd_iam_catalog_target",
         "sdd_iso27001_remap_target",
-        "sdd_iso27001_remap_baseline",
     ] {
         assert!(
             toml.contains(name),

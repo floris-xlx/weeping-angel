@@ -110,9 +110,10 @@ impl Check for HeadersCheck {
                 }
             }
 
-            if let Some(csp) = resp.header("content-security-policy") {
-                if csp.contains("unsafe-inline") || csp.contains("unsafe-eval") {
-                    findings.push(
+            if let Some(csp) = resp.header("content-security-policy")
+                && (csp.contains("unsafe-inline") || csp.contains("unsafe-eval"))
+            {
+                findings.push(
                         Finding::builder(self.id(), "csp-unsafe")
                             .title("CSP allows unsafe-inline or unsafe-eval")
                             .severity(Severity::Medium)
@@ -125,20 +126,19 @@ impl Check for HeadersCheck {
                             .evidence(Evidence::new("content-security-policy", csp))
                             .build(),
                     );
-                }
             }
 
-            if let Some(xcto) = resp.header("x-content-type-options") {
-                if !xcto.eq_ignore_ascii_case("nosniff") {
-                    findings.push(
-                        Finding::builder(self.id(), "xcto-invalid")
-                            .title("X-Content-Type-Options is not nosniff")
-                            .severity(Severity::Low)
-                            .url(resp.final_url.as_str())
-                            .description(format!("Value is `{xcto}`, expected `nosniff`."))
-                            .build(),
-                    );
-                }
+            if let Some(xcto) = resp.header("x-content-type-options")
+                && !xcto.eq_ignore_ascii_case("nosniff")
+            {
+                findings.push(
+                    Finding::builder(self.id(), "xcto-invalid")
+                        .title("X-Content-Type-Options is not nosniff")
+                        .severity(Severity::Low)
+                        .url(resp.final_url.as_str())
+                        .description(format!("Value is `{xcto}`, expected `nosniff`."))
+                        .build(),
+                );
             }
         }
 

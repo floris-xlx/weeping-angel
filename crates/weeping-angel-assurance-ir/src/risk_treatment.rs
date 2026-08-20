@@ -751,7 +751,7 @@ fn require_principal(principal: &PrincipalRef) -> Result<(), TreatmentError> {
     }
 }
 
-fn principal_identity<'a>(principal: &'a PrincipalRef) -> Option<&'a str> {
+fn principal_identity(principal: &PrincipalRef) -> Option<&str> {
     match principal {
         PrincipalRef::Identity(id) => Some(id.as_str()),
         PrincipalRef::Team(_) | PrincipalRef::Role(_) => None,
@@ -816,10 +816,7 @@ fn is_suppressing(decision: &RiskTreatmentDecision, as_of: DateTime<Utc>) -> boo
     match decision.strategy {
         TreatmentStrategy::Accept => acceptance_in_force_for(decision, as_of),
         TreatmentStrategy::Mitigate | TreatmentStrategy::Avoid | TreatmentStrategy::Transfer => {
-            match decision.expires_at {
-                Some(expires_at) if as_of >= expires_at => false,
-                _ => true,
-            }
+            !matches!(decision.expires_at, Some(expires_at) if as_of >= expires_at)
         }
     }
 }
@@ -956,23 +953,22 @@ pub fn validate_treatment_inventory(
             )));
         }
 
-        if let Some(prior) = &decision.supersedes {
-            if prior.as_str() == decision.id.as_str() || !treatment_ids.contains(prior.as_str()) {
-                return Err(TreatmentError::Message(format!(
-                    "invalid supersedes reference {prior} on treatment {}",
-                    decision.id
-                )));
-            }
+        if let Some(prior) = &decision.supersedes
+            && (prior.as_str() == decision.id.as_str() || !treatment_ids.contains(prior.as_str()))
+        {
+            return Err(TreatmentError::Message(format!(
+                "invalid supersedes reference {prior} on treatment {}",
+                decision.id
+            )));
         }
-        if let Some(successor) = &decision.superseded_by {
-            if successor.as_str() == decision.id.as_str()
-                || !treatment_ids.contains(successor.as_str())
-            {
-                return Err(TreatmentError::Message(format!(
-                    "invalid supersededBy reference {successor} on treatment {}",
-                    decision.id
-                )));
-            }
+        if let Some(successor) = &decision.superseded_by
+            && (successor.as_str() == decision.id.as_str()
+                || !treatment_ids.contains(successor.as_str()))
+        {
+            return Err(TreatmentError::Message(format!(
+                "invalid supersededBy reference {successor} on treatment {}",
+                decision.id
+            )));
         }
 
         if decision.state.is_active() {
@@ -1036,13 +1032,9 @@ fn latest_completed<'a>(
     assessment: &'a AssessmentDefinition,
     risk_id: &RiskId,
 ) -> Option<&'a RiskTreatmentDecision> {
-    assessment
-        .risk_treatments
-        .iter()
-        .filter(|decision| {
-            decision.risk_id == *risk_id && decision.state == TreatmentState::Completed
-        })
-        .next_back()
+    assessment.risk_treatments.iter().rfind(|decision| {
+        decision.risk_id == *risk_id && decision.state == TreatmentState::Completed
+    })
 }
 
 fn collect_principal_errors(

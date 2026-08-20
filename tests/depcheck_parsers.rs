@@ -59,8 +59,8 @@ fn parse_package_json_skips_git_and_file() {
     assert!(names.contains(&"react"));
     assert!(names.contains(&"acme-billing-sdk-not-real-xyz"));
     assert!(names.contains(&"typescript"));
-    assert!(!names.iter().any(|n| *n == "left-pad"));
-    assert!(!names.iter().any(|n| *n == "local-helper"));
+    assert!(!names.contains(&"left-pad"));
+    assert!(!names.contains(&"local-helper"));
 }
 
 #[test]
@@ -83,8 +83,8 @@ fn parse_cargo_toml_skips_path_and_git() {
     let names: Vec<_> = pkgs.iter().map(|p| p.name.as_str()).collect();
     assert!(names.contains(&"serde"));
     assert!(names.contains(&"acme-private-crate-xyz"));
-    assert!(!names.iter().any(|n| *n == "local-util"));
-    assert!(!names.iter().any(|n| *n == "git-dep"));
+    assert!(!names.contains(&"local-util"));
+    assert!(!names.contains(&"git-dep"));
 }
 
 #[test]
@@ -94,11 +94,7 @@ fn parse_go_mod_drops_replaced_modules() {
     assert_eq!(eco, Ecosystem::Go);
     let names: Vec<_> = pkgs.iter().map(|p| p.name.as_str()).collect();
     assert!(names.contains(&"github.com/stretchr/testify"));
-    assert!(
-        !names
-            .iter()
-            .any(|n| *n == "example.com/internal/acme-go-sdk-xyz")
-    );
+    assert!(!names.contains(&"example.com/internal/acme-go-sdk-xyz"));
 }
 
 #[test]
@@ -110,8 +106,8 @@ fn parse_composer_skips_platform() {
     assert!(names.contains(&"monolog/monolog"));
     assert!(names.contains(&"acme/internal-billing-xyz"));
     assert!(names.contains(&"phpunit/phpunit"));
-    assert!(!names.iter().any(|n| *n == "php"));
-    assert!(!names.iter().any(|n| *n == "ext-json"));
+    assert!(!names.contains(&"php"));
+    assert!(!names.contains(&"ext-json"));
 }
 
 #[test]

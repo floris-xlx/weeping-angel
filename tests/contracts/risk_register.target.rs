@@ -798,7 +798,7 @@ fn rr_012_revise_and_transition_preserve_history_and_increment_version() {
 /// RR-013: CIA raw inputs serialize when present and omit when unset.
 #[test]
 fn rr_013_cia_raw_inputs_omit_when_unset_and_do_not_replace_ratings() {
-    let omitted = serde_json::to_value(&Risk::new(RiskId::new("risk:cia"), "t", "d")).unwrap();
+    let omitted = serde_json::to_value(Risk::new(RiskId::new("risk:cia"), "t", "d")).unwrap();
     assert!(omitted.get("cia").is_none());
 
     let with_cia = json!({

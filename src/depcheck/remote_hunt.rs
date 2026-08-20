@@ -263,10 +263,10 @@ pub async fn hunt_remote(
         };
         let mut kind = detect_from_content(&body);
         // Filename hint from URL path
-        if kind == FileKind::Unknown {
-            if let Some(name) = url.split('?').next().and_then(|u| u.rsplit('/').next()) {
-                kind = super::detect::detect_file_type(std::path::Path::new(name), Some(&body));
-            }
+        if kind == FileKind::Unknown
+            && let Some(name) = url.split('?').next().and_then(|u| u.rsplit('/').next())
+        {
+            kind = super::detect::detect_file_type(std::path::Path::new(name), Some(&body));
         }
         if kind == FileKind::Unknown {
             continue;

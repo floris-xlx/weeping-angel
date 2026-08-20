@@ -222,10 +222,12 @@ fn package_id_refers_to(id: &str, name: &str) -> bool {
 }
 
 fn package_name_from_id(id: &str) -> Option<String> {
-    if let Some(first) = id.split_whitespace().next() {
-        if !first.contains('/') && !first.contains(':') && !first.contains('+') {
-            return Some(first.to_string());
-        }
+    if let Some(first) = id.split_whitespace().next()
+        && !first.contains('/')
+        && !first.contains(':')
+        && !first.contains('+')
+    {
+        return Some(first.to_string());
     }
     if let Some((_, after_hash)) = id.rsplit_once('#') {
         if let Some((name, _)) = after_hash.split_once('@') {
@@ -847,7 +849,7 @@ fn act_010_collector_descriptor_has_evidence_types_not_frameworks() {
 #[test]
 fn act_011_bridge_projects_observation_without_rewriting_to_semantic_finding() {
     let hit = sample_hit();
-    let before = serde_json::to_value(&hit.to_semantic_finding()).unwrap();
+    let before = serde_json::to_value(hit.to_semantic_finding()).unwrap();
     let obs = bridge::from_engine_hit(&hit);
     assert_eq!(
         obs.evidence_type(),
@@ -864,7 +866,7 @@ fn act_011_bridge_projects_observation_without_rewriting_to_semantic_finding() {
         "observation must retain security evidence from the hit"
     );
 
-    let after = serde_json::to_value(&hit.to_semantic_finding()).unwrap();
+    let after = serde_json::to_value(hit.to_semantic_finding()).unwrap();
     assert_eq!(
         before, after,
         "ACT-011: to_semantic_finding stays security-only and is not rewritten by the bridge"

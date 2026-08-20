@@ -129,13 +129,14 @@ impl Check for ExposuresCheck {
                     );
                 }
 
-                if path.contains("swagger") || path.contains("openapi") || path.contains("api-docs")
-                {
-                    if resp.body.contains("swagger")
+                if (path.contains("swagger")
+                    || path.contains("openapi")
+                    || path.contains("api-docs"))
+                    && (resp.body.contains("swagger")
                         || resp.body.contains("openapi")
-                        || resp.body.contains("paths")
-                    {
-                        findings.push(
+                        || resp.body.contains("paths"))
+                {
+                    findings.push(
                             Finding::builder(self.id(), "api-docs-exposed")
                                 .title("API documentation endpoint accessible")
                                 .severity(Severity::Low)
@@ -148,7 +149,6 @@ impl Check for ExposuresCheck {
                                 )
                                 .build(),
                         );
-                    }
                 }
             }
 

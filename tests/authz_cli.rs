@@ -37,8 +37,8 @@ fn loopback_defaults_http() {
 
 #[test]
 fn consent_parser_accepts_yes() {
-    assert_eq!(parse_consent("yes").unwrap(), true);
-    assert_eq!(parse_consent("true").unwrap(), true);
+    assert!(parse_consent("yes").unwrap());
+    assert!(parse_consent("true").unwrap());
     assert!(parse_consent("false").is_err());
 }
 

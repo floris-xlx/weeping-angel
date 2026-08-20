@@ -239,62 +239,62 @@ fn analyze_interprocedural_file(lines: &[&str], sink_idx: usize) -> TaintResult 
     }
 
     // If sink is inside a source function (param-based): params treated as tainted
-    if let Some(name) = &sink_fn {
-        if let Some(range) = funcs.get(name) {
-            let header = lines[range.0];
-            if header.contains('(') {
-                // mark param names
-                if let Some(params) = header.split_once('(').and_then(|(_, r)| r.split_once(')')) {
-                    for p in params.0.split(',') {
-                        let p = p
-                            .trim()
-                            .split(':')
-                            .next()
-                            .unwrap_or("")
-                            .trim()
-                            .split('=')
-                            .next()
-                            .unwrap_or("")
-                            .trim();
-                        if !p.is_empty() && p != "self" && p != "cls" {
-                            tainted_names.push(p.to_string());
+    if let Some(name) = &sink_fn
+        && let Some(range) = funcs.get(name)
+    {
+        let header = lines[range.0];
+        if header.contains('(') {
+            // mark param names
+            if let Some(params) = header.split_once('(').and_then(|(_, r)| r.split_once(')')) {
+                for p in params.0.split(',') {
+                    let p = p
+                        .trim()
+                        .split(':')
+                        .next()
+                        .unwrap_or("")
+                        .trim()
+                        .split('=')
+                        .next()
+                        .unwrap_or("")
+                        .trim();
+                    if !p.is_empty() && p != "self" && p != "cls" {
+                        tainted_names.push(p.to_string());
+                    }
+                }
+            }
+        }
+        // re-run local with synthetic sources if params used with sink and any caller exists
+        let mut tainted: HashSet<String> = tainted_names.iter().cloned().collect();
+        let sink = lines[sink_idx];
+        if idents_intersect(sink, &tainted) {
+            // only upgrade if something in file calls this function with source-ish args
+            let mut called_with_source = false;
+            let call_re = Regex::new(&format!(r"\b{}\s*\(", regex::escape(name))).unwrap();
+            for (i, line) in lines.iter().enumerate() {
+                if i >= range.0 && i <= range.1 {
+                    continue;
+                }
+                if call_re.is_match(line) && SOURCE_EXPR.is_match(line) {
+                    called_with_source = true;
+                    sources.push(line.trim().chars().take(120).collect());
+                    break;
+                }
+                // also: x = source; foo(x)
+                if call_re.is_match(line) {
+                    // check previous 5 lines for source assign
+                    let from = i.saturating_sub(5);
+                    for prev in &lines[from..i] {
+                        if SOURCE_EXPR.is_match(prev) {
+                            called_with_source = true;
+                            sources.push(prev.trim().chars().take(120).collect());
+                            break;
                         }
                     }
                 }
             }
-            // re-run local with synthetic sources if params used with sink and any caller exists
-            let mut tainted: HashSet<String> = tainted_names.iter().cloned().collect();
-            let sink = lines[sink_idx];
-            if idents_intersect(sink, &tainted) {
-                // only upgrade if something in file calls this function with source-ish args
-                let mut called_with_source = false;
-                let call_re = Regex::new(&format!(r"\b{}\s*\(", regex::escape(name))).unwrap();
-                for (i, line) in lines.iter().enumerate() {
-                    if i >= range.0 && i <= range.1 {
-                        continue;
-                    }
-                    if call_re.is_match(line) && SOURCE_EXPR.is_match(line) {
-                        called_with_source = true;
-                        sources.push(line.trim().chars().take(120).collect());
-                        break;
-                    }
-                    // also: x = source; foo(x)
-                    if call_re.is_match(line) {
-                        // check previous 5 lines for source assign
-                        let from = i.saturating_sub(5);
-                        for prev in &lines[from..i] {
-                            if SOURCE_EXPR.is_match(prev) {
-                                called_with_source = true;
-                                sources.push(prev.trim().chars().take(120).collect());
-                                break;
-                            }
-                        }
-                    }
-                }
-                if called_with_source {
-                    reaches = true;
-                    let _ = &mut tainted;
-                }
+            if called_with_source {
+                reaches = true;
+                let _ = &mut tainted;
             }
         }
     }
@@ -347,27 +347,27 @@ fn split_functions(lines: &[&str]) -> HashMap<String, (usize, usize)> {
         } else {
             None
         };
-        if let Some(name) = name {
-            if !name.is_empty() {
-                let start = i;
-                let mut end = lines.len().saturating_sub(1);
-                for j in (i + 1)..lines.len() {
-                    let u = lines[j].trim();
-                    if u.starts_with("def ")
-                        || u.starts_with("function ")
-                        || u.starts_with("fn ")
-                        || u.starts_with("pub fn ")
-                        || u.starts_with("async fn ")
-                        || u.starts_with("async function ")
-                    {
-                        end = j.saturating_sub(1);
-                        break;
-                    }
+        if let Some(name) = name
+            && !name.is_empty()
+        {
+            let start = i;
+            let mut end = lines.len().saturating_sub(1);
+            for j in (i + 1)..lines.len() {
+                let u = lines[j].trim();
+                if u.starts_with("def ")
+                    || u.starts_with("function ")
+                    || u.starts_with("fn ")
+                    || u.starts_with("pub fn ")
+                    || u.starts_with("async fn ")
+                    || u.starts_with("async function ")
+                {
+                    end = j.saturating_sub(1);
+                    break;
                 }
-                map.insert(name, (start, end));
-                i = end + 1;
-                continue;
             }
+            map.insert(name, (start, end));
+            i = end + 1;
+            continue;
         }
         i += 1;
     }

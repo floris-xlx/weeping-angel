@@ -322,8 +322,7 @@ fn scp_t01_nested_inclusion_explain_trace() {
                 .iter()
                 .any(|id| *id == "bu:finance" || *id == "business-unit:finance")
                 || repo.explain.contains("business-unit:finance"))
-            && (hop_ids.iter().any(|id| *id == "service:payments")
-                || repo.explain.contains("service:payments")),
+            && (hop_ids.contains(&"service:payments") || repo.explain.contains("service:payments")),
         "lineage must name repo, business unit, and service hops; got {hop_ids:?}"
     );
 

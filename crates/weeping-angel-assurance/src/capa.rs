@@ -177,7 +177,7 @@ pub fn evaluate_capa_effectiveness(
     let mut relevant: Vec<&ControlTestResult> = results
         .iter()
         .filter(|result| {
-            (watched.is_empty() || watched.iter().any(|id| *id == &result.control_id))
+            (watched.is_empty() || watched.contains(&&result.control_id))
                 && result.checked_at >= period.start
                 && result.checked_at < period.end
         })

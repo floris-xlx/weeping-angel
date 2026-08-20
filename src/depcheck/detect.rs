@@ -114,14 +114,14 @@ fn detect_json(sample: &str, full: &str) -> FileKind {
         return FileKind::PackageLockJson;
     }
 
-    if let Some(deps) = obj.get("dependencies").and_then(|v| v.as_object()) {
-        if let Some((_, first)) = deps.iter().next() {
-            if first.is_object() {
-                return FileKind::PackageLockJson;
-            }
-            if first.is_string() {
-                return FileKind::PackageJson;
-            }
+    if let Some(deps) = obj.get("dependencies").and_then(|v| v.as_object())
+        && let Some((_, first)) = deps.iter().next()
+    {
+        if first.is_object() {
+            return FileKind::PackageLockJson;
+        }
+        if first.is_string() {
+            return FileKind::PackageJson;
         }
     }
 
@@ -129,12 +129,11 @@ fn detect_json(sample: &str, full: &str) -> FileKind {
         return FileKind::ComposerJson;
     }
 
-    if let Some(pkgs) = obj.get("packages").and_then(|v| v.as_array()) {
-        if let Some(first) = pkgs.first().and_then(|v| v.as_object()) {
-            if first.contains_key("name") {
-                return FileKind::ComposerLock;
-            }
-        }
+    if let Some(pkgs) = obj.get("packages").and_then(|v| v.as_array())
+        && let Some(first) = pkgs.first().and_then(|v| v.as_object())
+        && first.contains_key("name")
+    {
+        return FileKind::ComposerLock;
     }
 
     if obj.contains_key("default") && obj.contains_key("develop") {

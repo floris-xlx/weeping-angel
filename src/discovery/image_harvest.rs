@@ -81,7 +81,7 @@ impl MethodProbe {
         let content_length = resp
             .header("content-length")
             .and_then(|v| v.parse().ok())
-            .or_else(|| {
+            .or({
                 // some servers omit length on HEAD; still record body len if any
                 if !resp.body.is_empty() {
                     Some(resp.body.len() as u64)
@@ -306,20 +306,20 @@ pub fn collect_from_html(base: &Url, html: &str) -> Vec<ImageCandidate> {
                 .or_else(|| el.value().attr("name"))
                 .unwrap_or("")
                 .to_ascii_lowercase();
-            if prop.contains("image") || prop.contains("thumbnail") {
-                if let Some(c) = el.value().attr("content") {
-                    push(&mut map, c, ImageSource::MetaOg);
-                }
+            if (prop.contains("image") || prop.contains("thumbnail"))
+                && let Some(c) = el.value().attr("content")
+            {
+                push(&mut map, c, ImageSource::MetaOg);
             }
         }
     }
     if let Ok(sel) = Selector::parse("link[rel]") {
         for el in document.select(&sel) {
             let rel = el.value().attr("rel").unwrap_or("").to_ascii_lowercase();
-            if rel.contains("icon") || rel.contains("apple-touch") || rel.contains("image_src") {
-                if let Some(h) = el.value().attr("href") {
-                    push(&mut map, h, ImageSource::LinkIcon);
-                }
+            if (rel.contains("icon") || rel.contains("apple-touch") || rel.contains("image_src"))
+                && let Some(h) = el.value().attr("href")
+            {
+                push(&mut map, h, ImageSource::LinkIcon);
             }
         }
     }

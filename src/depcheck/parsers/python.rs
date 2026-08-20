@@ -189,7 +189,8 @@ pub fn parse_pyproject_toml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem
 
     static OPT: OnceLock<Regex> = OnceLock::new();
     let opt = OPT.get_or_init(|| {
-        Regex::new(r"(?ms)^\[project\.optional-dependencies\.\w+\]\s*$\n(.*?)(?=^\[|\z)")
+        // No lookaround: capture until next TOML table header or end.
+        Regex::new(r"(?ms)^\[project\.optional-dependencies\.\w+\]\s*$\n(.*?)(?:^\[|\z)")
             .expect("optional deps") // panic-ok: regex literal
     });
     for c in opt.captures_iter(content) {

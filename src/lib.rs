@@ -1,5 +1,18 @@
 //! weeping-angel — authorized dual-domain security toolchain (web + code).
 
+#![allow(
+    clippy::manual_non_exhaustive,
+    clippy::manual_strip,
+    clippy::field_reassign_with_default,
+    clippy::regex_creation_in_loops,
+    clippy::too_many_arguments,
+    clippy::needless_range_loop,
+    clippy::unnecessary_sort_by,
+    clippy::unnecessary_filter_map,
+    clippy::if_same_then_else,
+    clippy::wildcard_in_or_patterns
+)]
+
 pub mod assurance_catalog;
 pub mod assurance_explain;
 pub mod assurance_soa;
@@ -189,12 +202,12 @@ fn resolve_depcheck_kind(
         let path = args.path.as_ref().or(args.target.as_ref());
         // Only force a default kind for a *single unknown file*. Directories must auto-detect
         // per file, then optionally filter by provider ecosystem.
-        if let Some(target) = path {
-            if target.is_file() {
-                let detected = crate::depcheck::detect::detect_file_type(target, None);
-                if detected == FileKind::Unknown {
-                    return Ok(Some(eco.default_file_kind()));
-                }
+        if let Some(target) = path
+            && target.is_file()
+        {
+            let detected = crate::depcheck::detect::detect_file_type(target, None);
+            if detected == FileKind::Unknown {
+                return Ok(Some(eco.default_file_kind()));
             }
         }
         return Ok(None);
@@ -383,14 +396,13 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
                             Err(_) => {}
                         }
                     }
-                    if let Some(http) = &deps_client {
-                        if let Ok(subs) =
+                    if let Some(http) = &deps_client
+                        && let Ok(subs) =
                             depsdev::fetch_transitive(http, eco, &pkg.name, &pkg.version).await
-                        {
-                            for sub in subs {
-                                if !seen.contains(&sub.name) {
-                                    queue.push_back(sub);
-                                }
+                    {
+                        for sub in subs {
+                            if !seen.contains(&sub.name) {
+                                queue.push_back(sub);
                             }
                         }
                     }
@@ -607,14 +619,13 @@ pub async fn run_depcheck_command(args: crate::cli::DepcheckArgs) -> Result<i32>
         // Email checks on packages that exist
         if let Some(http) = &email_client {
             for s in &summary.safe {
-                match email_check::check_package_emails(http, summary.ecosystem, &s.name).await {
-                    Ok(findings) => {
-                        for f in findings {
-                            eprintln!("[+] {}", f.detail);
-                            worst_exit = worst_exit.max(1);
-                        }
+                if let Ok(findings) =
+                    email_check::check_package_emails(http, summary.ecosystem, &s.name).await
+                {
+                    for f in findings {
+                        eprintln!("[+] {}", f.detail);
+                        worst_exit = worst_exit.max(1);
                     }
-                    Err(_) => {}
                 }
             }
         }
@@ -871,7 +882,7 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
 
     let mut extra_headers: Vec<(String, String)> = cli::parse_header_lines(&args.headers)?;
     for h in &file_cfg.headers {
-        if let Ok(parsed) = parse::parse_header_lines(&[h.clone()]) {
+        if let Ok(parsed) = parse::parse_header_lines(std::slice::from_ref(h)) {
             extra_headers.extend(parsed);
         }
     }
@@ -961,13 +972,13 @@ pub async fn run_scan_command(args: ScanArgs) -> Result<i32> {
     )?;
 
     // When -o is set, also emit a Codex-compatible sealed scan bundle beside reports.
-    if let Some(out) = args.output.as_ref() {
-        if let Err(e) = write_web_sealed_bundle(&report, out, env!("CARGO_PKG_VERSION")) {
-            crate::style::eprint_line(&format!(
-                "{} sealed contract: {e:#}",
-                crate::style::err("warning:")
-            ));
-        }
+    if let Some(out) = args.output.as_ref()
+        && let Err(e) = write_web_sealed_bundle(&report, out, env!("CARGO_PKG_VERSION"))
+    {
+        crate::style::eprint_line(&format!(
+            "{} sealed contract: {e:#}",
+            crate::style::err("warning:")
+        ));
     }
 
     Ok(exit_code_for(&report, fail_on))

@@ -50,13 +50,12 @@ pub fn parse_go_mod(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
             };
             let rep = rep.split("//").next().unwrap_or("").trim();
             if let Some((left, right)) = rep.split_once("=>") {
-                let right_parts: Vec<&str> = right.trim().split_whitespace().collect();
-                if let Some(first) = right_parts.first() {
-                    if !domain.is_match(first) {
-                        if let Some(mod_name) = left.trim().split_whitespace().next() {
-                            replaced.insert(mod_name.to_string());
-                        }
-                    }
+                let right_parts: Vec<&str> = right.split_whitespace().collect();
+                if let Some(first) = right_parts.first()
+                    && !domain.is_match(first)
+                    && let Some(mod_name) = left.split_whitespace().next()
+                {
+                    replaced.insert(mod_name.to_string());
                 }
             }
             continue;

@@ -1,4 +1,4 @@
-//! Repository health gate: `cargo xtask guard`.
+//! Repository health gate: `cargo xtask guard`, plus `cargo xtask inventory`.
 //!
 //! Evaluation plane: `run_guard` loads one [`RepositoryModel`] (Cargo
 //! workspace, package graph, filesystem, architecture manifests,
@@ -6,11 +6,13 @@
 //! framework packs, catalog sources, cached source index) and runs
 //! [`ArchitectureCheck::check`]. Checks do not reread the Rust tree.
 //!
-//! Implemented: 01–15. No debt-backed skips.
+//! Implemented: 01–15. No debt-backed skips. Inventory regenerates
+//! `docs/debt/current.md` (`--json` / `--markdown` / `--check`).
 
 pub mod architecture;
 pub mod checks;
 pub mod debt;
+pub mod inventory;
 pub mod model;
 pub mod report;
 
@@ -23,10 +25,12 @@ pub use architecture::{
     OwnershipRow, REQUIRED_OWNERSHIP, SPEC_LIFECYCLE_SCHEMA,
 };
 pub use checks::{
-    ArchitectureCheck, check_01_architecture_manifest, check_02_ownership,
-    check_03_forbidden_patterns, check_04_architecture_invariants, explain_invariant,
+    ArchitectureCheck, active_spec_drift_in_text, check_01_architecture_manifest,
+    check_02_ownership, check_03_forbidden_patterns, check_04_architecture_invariants,
+    check_active_spec_drift, explain_invariant,
 };
 pub use debt::{DEBT_SCHEMA, validate_debt_register_file, validate_debt_register_str};
+pub use inventory::{INVENTORY_SCHEMA, InventoryReport, main_inventory};
 pub use model::RepositoryModel;
 pub use report::{
     CheckResult, CheckStatus, GUARD_REPORT_SCHEMA, GuardCounts, GuardReport, GuardSkip,
@@ -113,8 +117,11 @@ where
                 if report.failed() { 1 } else { 0 }
             }
         }
+        Some("inventory") => main_inventory(&args),
         _ => {
-            eprintln!("usage: cargo xtask guard [--json] [--check NN] [--explain INV-…]");
+            eprintln!(
+                "usage: cargo xtask <guard|inventory> …\n  guard [--json] [--check NN] [--explain INV-…]\n  inventory [--json | --markdown | --check]"
+            );
             2
         }
     }

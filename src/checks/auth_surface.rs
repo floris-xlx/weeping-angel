@@ -82,9 +82,8 @@ impl Check for AuthSurfaceCheck {
                         let is_login =
                             !is_signup || LOGIN_HINTS.iter().any(|h| form_text.contains(h));
 
-                        if is_signup {
-                            if seen.insert(format!("signup-form:{url}")) {
-                                findings.push(
+                        if is_signup && seen.insert(format!("signup-form:{url}")) {
+                            findings.push(
                                     Finding::builder(self.id(), "signup-form")
                                         .title("Signup / registration form detected")
                                         .severity(Severity::Info)
@@ -98,7 +97,7 @@ impl Check for AuthSurfaceCheck {
                                         ))
                                         .build(),
                                 );
-                                findings.push(
+                            findings.push(
                                     Finding::builder(self.id(), "signup-unguarded")
                                         .title("Signup surface is unauthenticated (public form)")
                                         .severity(Severity::Info)
@@ -111,7 +110,6 @@ impl Check for AuthSurfaceCheck {
                                         )
                                         .build(),
                                 );
-                            }
                         }
 
                         if is_login || !is_signup {

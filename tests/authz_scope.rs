@@ -87,7 +87,7 @@ fn bare_host_pipeline_normalize_then_authz() {
         NormalizeOptions::default(),
     )
     .unwrap();
-    let hosts = normalize_allow_hosts(raw.iter().map(|u| u.clone()).collect::<Vec<_>>());
+    let hosts = normalize_allow_hosts(raw.to_vec());
     // hosts extracted from URLs
     assert!(hosts.iter().any(|h| h == "example.com"));
     assert!(hosts.iter().any(|h| h == "127.0.0.1"));

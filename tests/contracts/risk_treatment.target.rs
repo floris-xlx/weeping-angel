@@ -855,7 +855,7 @@ fn p08_t12_all_four_strategies_share_the_state_machine() {
         assert!(err.is_err(), "unknown strategy tags fail closed");
     }
 
-    let json = serde_json::to_value(&TreatmentStrategy::Mitigate).unwrap();
+    let json = serde_json::to_value(TreatmentStrategy::Mitigate).unwrap();
     assert_eq!(json, json!("mitigate"));
 }
 

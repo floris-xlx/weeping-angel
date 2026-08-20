@@ -77,7 +77,7 @@ fn spa_next_data_and_js_routes() {
 
     let js = r#"router.push("/settings"); path: "/billing/plans""#;
     let from_js = spa::extract_from_js(&base, js);
-    assert!(!from_js.is_empty() || true); // best-effort
+    let _ = from_js; // best-effort parse
 }
 
 #[test]

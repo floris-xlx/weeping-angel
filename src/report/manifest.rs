@@ -105,12 +105,11 @@ pub fn from_report(report: &ScanReport) -> SurfaceManifest {
             "firebase" => {
                 firebase.detected = true;
                 firebase.signals.push(format!("{}: {}", f.id, f.title));
-                if f.id == "firebase-project-id" {
-                    if let Some(pid) = f.evidence.iter().find(|e| e.location == "projectId") {
-                        if !firebase.project_ids.contains(&pid.snippet) {
-                            firebase.project_ids.push(pid.snippet.clone());
-                        }
-                    }
+                if f.id == "firebase-project-id"
+                    && let Some(pid) = f.evidence.iter().find(|e| e.location == "projectId")
+                    && !firebase.project_ids.contains(&pid.snippet)
+                {
+                    firebase.project_ids.push(pid.snippet.clone());
                 }
             }
             "rate-limits" => match f.id.as_str() {
@@ -119,10 +118,10 @@ pub fn from_report(report: &ScanReport) -> SurfaceManifest {
                         rate_limits.routes_with_signals.push(f.url.clone());
                     }
                 }
-                "no-rate-limit-signal" | "burst-no-throttle" => {
-                    if !rate_limits.routes_without_signals.contains(&f.url) {
-                        rate_limits.routes_without_signals.push(f.url.clone());
-                    }
+                "no-rate-limit-signal" | "burst-no-throttle"
+                    if !rate_limits.routes_without_signals.contains(&f.url) =>
+                {
+                    rate_limits.routes_without_signals.push(f.url.clone());
                 }
                 _ => {}
             },

@@ -690,7 +690,12 @@ fn p20_t02_successful_exercise_within_rto_rpo_demonstrates_recovery() {
     assert_eq!(row["results"][0]["outcome"], "passed");
     assert_eq!(row["results"][0]["observedRecoveryDurationSeconds"], 1800);
     assert_eq!(row["results"][0]["observedDataLossWindowSeconds"], 60);
-    assert!(1800 < 3600 && 60 < 300, "fixture is inside RTO/RPO");
+    let observed_recovery = 1800u64;
+    let rto = 3600u64;
+    let observed_loss = 60u64;
+    let rpo = 300u64;
+    assert!(observed_recovery < rto, "recovery duration inside RTO");
+    assert!(observed_loss < rpo, "data-loss window inside RPO");
     let evidence = capability_evidence(true, Some(true));
     let expected = json!({
         "planExistence": "satisfied",

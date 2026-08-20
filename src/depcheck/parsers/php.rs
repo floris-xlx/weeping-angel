@@ -16,15 +16,14 @@ pub fn parse_composer_json(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)
                 continue;
             };
             let ty = obj.get("type").and_then(|v| v.as_str()).unwrap_or("");
-            if matches!(ty, "path" | "vcs" | "git") {
-                if let Some(name) = obj
+            if matches!(ty, "path" | "vcs" | "git")
+                && let Some(name) = obj
                     .get("package")
                     .and_then(|v| v.as_object())
                     .and_then(|p| p.get("name"))
                     .and_then(|v| v.as_str())
-                {
-                    local_repos.insert(name.to_string());
-                }
+            {
+                local_repos.insert(name.to_string());
             }
         }
     }

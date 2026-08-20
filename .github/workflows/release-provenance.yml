@@ -1,0 +1,136 @@
+# Supply-chain evidence for published GitHub Releases:
+# SBOM, cargo audit, Sigstore-signed blobs, GitHub provenance + SBOM attestations.
+#
+# Triggered when cargo-dist undrafts a release (`release: published`) and
+# optionally as a cargo-dist post-announce reusable workflow.
+#
+# This attests the *binary and its dependency graph*. It is not ISO 27001
+# certification and must never be described as such.
+
+name: release-provenance
+
+on:
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      plan:
+        description: "cargo-dist plan JSON from the Release workflow"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attest (default: latest published)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-provenance-${{ github.event.release.tag_name || inputs.tag || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'release' || github.event.release.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tag="${{ github.event.release.tag_name }}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="$(gh release view --json tagName --jq .tagName)"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Attesting release $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Dependency audit
+        uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build release binary (linux gnu)
+        run: cargo build --release --locked --bin weeping-angel
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          artifact-name: weeping-angel-${{ steps.tag.outputs.tag }}.sbom.spdx.json
+          output-file: weeping-angel.sbom.spdx.json
+
+      - name: Generate binary CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          file: target/release/weeping-angel
+          format: cyclonedx-json
+          artifact-name: weeping-angel-${{ steps.tag.outputs.tag }}.cdx.json
+          output-file: weeping-angel.cdx.json
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign SBOM and binary (keyless)
+        shell: bash
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          set -euo pipefail
+          sha256sum target/release/weeping-angel weeping-angel.sbom.spdx.json weeping-angel.cdx.json \
+            | tee weeping-angel.sha256
+          for blob in weeping-angel.sbom.spdx.json weeping-angel.cdx.json target/release/weeping-angel; do
+            base="$(basename "$blob")"
+            cosign sign-blob --yes \
+              --bundle "${base}.cosign.bundle" \
+              "$blob"
+          done
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: target/release/weeping-angel
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: target/release/weeping-angel
+          sbom-path: weeping-angel.sbom.spdx.json
+
+      - name: Upload evidence to GitHub Release
+        if: github.event_name == 'release' || inputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.tag.outputs.tag }}"
+          gh release upload "$tag" \
+            weeping-angel.sbom.spdx.json \
+            weeping-angel.cdx.json \
+            weeping-angel.sha256 \
+            weeping-angel.sbom.spdx.json.cosign.bundle \
+            weeping-angel.cdx.json.cosign.bundle \
+            weeping-angel.cosign.bundle \
+            --clobber

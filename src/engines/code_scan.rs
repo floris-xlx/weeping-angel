@@ -282,17 +282,13 @@ pub fn run_code_scan_with_opts(
     if let (Ok(fraw), Ok(mraw)) = (
         fs::read_to_string(scan_dir.join("findings.json")),
         fs::read_to_string(scan_dir.join("scan-manifest.json")),
-    ) {
-        if let (Ok(sealed_f), Ok(sealed_m)) = (
-            serde_json::from_str::<FindingsDocument>(&fraw),
-            serde_json::from_str::<ManifestDocument>(&mraw),
-        ) {
-            if let Ok(sarif) =
-                crate::contract::sarif::findings_to_sarif(&sealed_f, &sealed_m, producer_version)
-            {
-                let _ = fs::write(scan_dir.join("findings.sarif.json"), sarif);
-            }
-        }
+    ) && let (Ok(sealed_f), Ok(sealed_m)) = (
+        serde_json::from_str::<FindingsDocument>(&fraw),
+        serde_json::from_str::<ManifestDocument>(&mraw),
+    ) && let Ok(sarif) =
+        crate::contract::sarif::findings_to_sarif(&sealed_f, &sealed_m, producer_version)
+    {
+        let _ = fs::write(scan_dir.join("findings.sarif.json"), sarif);
     }
 
     Ok(CodeScanResult {
@@ -386,10 +382,10 @@ pub fn inventory_source_files(root: &Path, scope_prefix: Option<&str>) -> Result
         {
             continue;
         }
-        if let Some(prefix) = scope_prefix {
-            if !(rel == *prefix || rel.starts_with(&format!("{prefix}/"))) {
-                continue;
-            }
+        if let Some(prefix) = scope_prefix
+            && !(rel == *prefix || rel.starts_with(&format!("{prefix}/")))
+        {
+            continue;
         }
         let ext = entry
             .path()

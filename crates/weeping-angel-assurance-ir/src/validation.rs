@@ -284,7 +284,7 @@ fn supplier_exception_in_force(
     assessment.exceptions.iter().any(|exception| {
         exception_binds_vendor(exception, vendor)
             && exception.status == ExceptionStatus::Approved
-            && !exception.expires_at.is_some_and(|expires| expires < as_of)
+            && exception.expires_at.is_none_or(|expires| expires >= as_of)
     })
 }
 
@@ -505,6 +505,7 @@ fn validate_vendor_history(vendor: &Vendor) -> Result<(), IrValidationError> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_control_implementations(
     assessment: &AssessmentDefinition,
     control_ids: &BTreeSet<String>,
@@ -542,7 +543,7 @@ fn validate_control_implementations(
 
     detect_implementation_supersession_cycles(assessment)?;
 
-    for hit in overlap_report(assessment) {
+    if let Some(hit) = overlap_report(assessment).into_iter().next() {
         return Err(IrValidationError::Message(format!(
             "implementation overlap {} and {} on control {}: {} ({})",
             hit.left_id, hit.right_id, hit.control_id, hit.reason, hit.selectors_or_assets
@@ -551,6 +552,7 @@ fn validate_control_implementations(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_implementation_row(
     assessment: &AssessmentDefinition,
     impln: &ControlImplementation,
@@ -895,6 +897,7 @@ pub fn validate_risk_reviews_at(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_risk_record(
     risk: &Risk,
     asset_ids: &BTreeSet<String>,

@@ -33,11 +33,11 @@ fn main() -> ExitCode {
     };
 
     if let Some(output) = args.output {
-        if let Some(parent) = output.parent() {
-            if let Err(error) = fs::create_dir_all(parent) {
-                eprintln!("Failed to create {}: {error}", parent.display());
-                return ExitCode::from(1);
-            }
+        if let Some(parent) = output.parent()
+            && let Err(error) = fs::create_dir_all(parent)
+        {
+            eprintln!("Failed to create {}: {error}", parent.display());
+            return ExitCode::from(1);
         }
         if let Err(error) = fs::write(&output, format!("{rendered}\n")) {
             eprintln!("Failed to write {}: {error}", output.display());

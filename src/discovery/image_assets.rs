@@ -207,10 +207,8 @@ pub fn extract_from_html(base: &Url, html: &str) -> Vec<Url> {
             if let Some(style) = el.value().attr("style") {
                 for cap in CSS_URL_RE.captures_iter(style) {
                     let u = &cap[1];
-                    if is_image_path(u) || u.starts_with("data:") {
-                        if !u.starts_with("data:") {
-                            push_resolved(&mut out, base, u);
-                        }
+                    if (is_image_path(u) || u.starts_with("data:")) && !u.starts_with("data:") {
+                        push_resolved(&mut out, base, u);
                     }
                 }
             }
@@ -525,10 +523,10 @@ fn push_resolved(out: &mut Vec<Url>, base: &Url, raw: &str) {
     }
     if let Some(u) = resolve_link(base, raw) {
         out.push(u);
-    } else if raw.starts_with("http://") || raw.starts_with("https://") {
-        if let Ok(u) = Url::parse(raw) {
-            out.push(u);
-        }
+    } else if (raw.starts_with("http://") || raw.starts_with("https://"))
+        && let Ok(u) = Url::parse(raw)
+    {
+        out.push(u);
     }
 }
 

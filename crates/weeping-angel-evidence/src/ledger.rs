@@ -13,8 +13,8 @@ use crate::{CollectionRun, EVIDENCE_SCHEMA, EvidenceEnvelope, EvidenceType};
 
 thread_local! {
     static PRIOR_ENVELOPES: RefCell<BTreeMap<String, EvidenceEnvelope>> =
-        RefCell::new(BTreeMap::new());
-    static PRIOR_EVENTS: RefCell<Vec<EvidenceValidityEvent>> = RefCell::new(Vec::new());
+        const { RefCell::new(BTreeMap::new()) };
+    static PRIOR_EVENTS: RefCell<Vec<EvidenceValidityEvent>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Typed corrupt-payload failure. Distinct from outbound [`LedgerError::Serialize`].
@@ -628,14 +628,13 @@ fn validate_persisted_document(payload: &str) -> Result<(), LedgerError> {
         .get("schemaVersion")
         .or_else(|| value.get("schema"))
         .and_then(|v| v.as_str())
+        && !known_document_schema(found)
     {
-        if !known_document_schema(found) {
-            return Err(PersistenceIntegrity::from(IncompatibleSchema {
-                found: found.into(),
-                expected: EVIDENCE_SCHEMA.into(),
-            })
-            .into());
-        }
+        return Err(PersistenceIntegrity::from(IncompatibleSchema {
+            found: found.into(),
+            expected: EVIDENCE_SCHEMA.into(),
+        })
+        .into());
     }
     Ok(())
 }

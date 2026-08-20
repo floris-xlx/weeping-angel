@@ -583,7 +583,7 @@ impl AssuranceScheduler {
         }
 
         for spec in &collection_jobs {
-            let run_id = spec.run_identity(now, spec.collector_id(), &spec.configuration_digest());
+            let run_id = spec.run_identity(now, spec.collector_id(), spec.configuration_digest());
             if let Some(slot) = self.store.load_slot(&run_id)
                 && slot.status == SlotStatus::Succeeded
             {
@@ -851,7 +851,7 @@ impl AssuranceScheduler {
     }
 
     fn mark_success(&self, spec: &JobSpec, now: DateTime<Utc>) {
-        let run_id = spec.run_identity(now, spec.collector_id(), &spec.configuration_digest());
+        let run_id = spec.run_identity(now, spec.collector_id(), spec.configuration_digest());
         let mut state = self
             .store
             .load_job(&spec.job_id)
@@ -867,7 +867,7 @@ impl AssuranceScheduler {
         });
         state.failure_state = FailureState::None;
         state.attempt_count = 0;
-        if let Some(cadence) = chrono::Duration::from_std(spec.cadence).ok() {
+        if let Ok(cadence) = chrono::Duration::from_std(spec.cadence) {
             state.next_run = spec.slot_for(now) + cadence;
         }
         self.store.save_job(&spec.job_id, state);

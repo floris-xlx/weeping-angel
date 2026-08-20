@@ -53,22 +53,20 @@ impl Check for RateLimitsCheck {
             routes_checked.insert(url.clone());
             let status = resp.status.as_u16();
 
-            if status == 429 {
-                if seen.insert(format!("429:{url}")) {
-                    routes_with_limits.insert(url.clone());
-                    let retry = resp.header("retry-after").unwrap_or("(none)");
-                    findings.push(
-                        Finding::builder(self.id(), "http-429")
-                            .title("HTTP 429 Too Many Requests observed")
-                            .severity(Severity::Info)
-                            .url(&url)
-                            .description(format!(
-                                "Target returned 429 (rate limited). Retry-After: {retry}."
-                            ))
-                            .evidence(Evidence::new("status", "429"))
-                            .build(),
-                    );
-                }
+            if status == 429 && seen.insert(format!("429:{url}")) {
+                routes_with_limits.insert(url.clone());
+                let retry = resp.header("retry-after").unwrap_or("(none)");
+                findings.push(
+                    Finding::builder(self.id(), "http-429")
+                        .title("HTTP 429 Too Many Requests observed")
+                        .severity(Severity::Info)
+                        .url(&url)
+                        .description(format!(
+                            "Target returned 429 (rate limited). Retry-After: {retry}."
+                        ))
+                        .evidence(Evidence::new("status", "429"))
+                        .build(),
+                );
             }
 
             let mut rate_headers: Vec<(String, String)> = Vec::new();
@@ -95,13 +93,12 @@ impl Check for RateLimitsCheck {
                 "ratelimit-reset",
                 "ratelimit-policy",
             ] {
-                if let Some(v) = resp.header(name) {
-                    if !rate_headers
+                if let Some(v) = resp.header(name)
+                    && !rate_headers
                         .iter()
                         .any(|(k, _)| k.eq_ignore_ascii_case(name))
-                    {
-                        rate_headers.push((name.into(), v.into()));
-                    }
+                {
+                    rate_headers.push((name.into(), v.into()));
                 }
             }
 

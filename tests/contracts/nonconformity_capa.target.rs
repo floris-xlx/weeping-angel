@@ -351,7 +351,7 @@ fn satisfy_window(
 fn nc_001_complete_capa() {
     require_capa_engine("NC-001 Complete CAPA");
 
-    let (mut nc, mut action, implemented_at) = complete_through_implemented();
+    let (mut nc, action, implemented_at) = complete_through_implemented();
     assert_eq!(nc.status, NonconformityStatus::Implemented);
     assert_eq!(action.status, CorrectiveActionStatus::Implemented);
     assert!(action.implemented_at.is_some());
@@ -479,7 +479,7 @@ fn nc_003_overdue_action() {
     let classification = nc.classification;
     let status = nc.status;
 
-    let mut assessment = persist(nc, vec![action.clone()]);
+    let assessment = persist(nc, vec![action.clone()]);
     let overdue = overdue_corrective_actions(&assessment, as_of);
     assert!(
         overdue.iter().any(|id| id.as_str() == "ca.mfa-gate"),

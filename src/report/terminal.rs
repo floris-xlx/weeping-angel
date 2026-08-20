@@ -142,7 +142,7 @@ pub fn print_report(report: &ScanReport, max_routes: usize, report_width: usize)
             }
             line.push_str(&cell);
         }
-        if line.trim().len() > 0 {
+        if !line.trim().is_empty() {
             style::eprint_line(&line);
         }
     }

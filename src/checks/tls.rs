@@ -36,9 +36,10 @@ impl Check for TlsCheck {
             // check if HTTPS variant works
             let mut https = ctx.seed.clone();
             let _ = https.set_scheme("https");
-            if let Ok(resp) = ctx.client.get(&https).await {
-                if resp.status.is_success() {
-                    findings.push(
+            if let Ok(resp) = ctx.client.get(&https).await
+                && resp.status.is_success()
+            {
+                findings.push(
                         Finding::builder(self.id(), "https-available")
                             .title("HTTPS is available; prefer it as primary")
                             .severity(Severity::Low)
@@ -48,7 +49,6 @@ impl Check for TlsCheck {
                             )
                             .build(),
                     );
-                }
             }
         }
 

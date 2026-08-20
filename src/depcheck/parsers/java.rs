@@ -24,7 +24,7 @@ pub fn parse_pom_xml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(e)) | Ok(Event::Empty(e)) => {
-                let local = local_name(&e.name().as_ref());
+                let local = local_name(e.name().as_ref());
                 if local == "dependency" {
                     in_dependency = true;
                     group_id.clear();
@@ -46,7 +46,7 @@ pub fn parse_pom_xml(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
                 }
             }
             Ok(Event::End(e)) => {
-                let local = local_name(&e.name().as_ref());
+                let local = local_name(e.name().as_ref());
                 if local == "dependency" {
                     if !group_id.is_empty() && !artifact_id.is_empty() {
                         let key = format!("{group_id}:{artifact_id}");

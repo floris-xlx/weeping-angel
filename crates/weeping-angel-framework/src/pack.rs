@@ -418,10 +418,10 @@ pub fn load_framework_pack_from_with(
     let mut evidence_requirements = Vec::new();
     if let Some(index) = catalog {
         for id in &used_control_ids {
-            if let Some(control) = index.control(id) {
-                if !controls.iter().any(|c: &Control| c.id() == control.id()) {
-                    controls.push(control.clone());
-                }
+            if let Some(control) = index.control(id)
+                && !controls.iter().any(|c: &Control| c.id() == control.id())
+            {
+                controls.push(control.clone());
             }
             for planned in index.tests_for(id) {
                 for ty in &planned.required_evidence {

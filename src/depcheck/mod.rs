@@ -71,11 +71,7 @@ pub fn load_url_body(
     let kind = kind_override.unwrap_or_else(|| {
         let path_hint = url::Url::parse(url)
             .ok()
-            .and_then(|u| {
-                PathBuf::from(u.path())
-                    .file_name()
-                    .map(|s| PathBuf::from(s))
-            })
+            .and_then(|u| PathBuf::from(u.path()).file_name().map(PathBuf::from))
             .unwrap_or_else(|| PathBuf::from("remote.json"));
         detect_file_type(&path_hint, Some(&body))
     });

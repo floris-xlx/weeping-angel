@@ -18,7 +18,7 @@ use weeping_angel_assurance_ir::{
     ASSURANCE_IR_SCHEMA, AssessmentDefinition, AssessmentId, Asset, AssetId, AssetKind,
     CandidateConfidence, CandidateStatus, DismissalRecord, Identity, IdentityId, IdentityKind,
     PrincipalRef, ProcessingActivity, ProcessingActivityId, PromotionRecord, Risk, RiskCandidate,
-    RiskCandidateId, RiskId, RiskStatus, ScoreSuggestion, SuggestedRiskCategory, ValidateIr,
+    RiskCandidateId, RiskId, RiskStatus, ScoreSuggestion, ValidateIr,
 };
 use weeping_angel_collector::{CollectorScope, EvidenceCollector, FixtureCollector};
 use weeping_angel_control_test::Effectiveness;
@@ -227,7 +227,7 @@ fn identify_now(
     ))
 }
 
-fn proposed<'a>(candidates: &'a [RiskCandidate]) -> Vec<&'a RiskCandidate> {
+fn proposed(candidates: &[RiskCandidate]) -> Vec<&RiskCandidate> {
     candidates
         .iter()
         .filter(|c| {
@@ -871,17 +871,17 @@ fn p07_score_suggestion_is_optional_and_validated() {
 
     let ident = crate_sources_joined("weeping-angel-assurance");
     let risk_id_dir = crate_src("weeping-angel-assurance").join("risk_identification");
-    let mut ident_engine = ident.clone();
-    if risk_id_dir.is_dir() {
-        ident_engine = crate_sources_joined("weeping-angel-assurance");
+    let ident_engine = if risk_id_dir.is_dir() {
         let mut files = Vec::new();
         walk_rs_files(&risk_id_dir, &mut files);
-        ident_engine = files
+        files
             .iter()
             .map(|p| fs::read_to_string(p).unwrap())
             .collect::<Vec<_>>()
-            .join("\n");
-    }
+            .join("\n")
+    } else {
+        ident.clone()
+    };
     assert!(
         !ident_engine.contains("RiskRating::High")
             && !ident_engine.contains("enum RiskRating")

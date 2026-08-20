@@ -57,21 +57,21 @@ pub fn analyze_npm_project(
     });
 
     if let Some(ref pj) = pkg_path {
-        if let Ok(text) = fs::read_to_string(pj) {
-            if let Ok(data) = serde_json::from_str::<Value>(&text) {
-                report.package_name = data
-                    .get("name")
-                    .and_then(|v| v.as_str())
-                    .map(str::to_string);
-                analyze_package_json(
-                    &data,
-                    pj,
-                    vulnerable,
-                    entrypoint_override,
-                    project_root,
-                    &mut report,
-                );
-            }
+        if let Ok(text) = fs::read_to_string(pj)
+            && let Ok(data) = serde_json::from_str::<Value>(&text)
+        {
+            report.package_name = data
+                .get("name")
+                .and_then(|v| v.as_str())
+                .map(str::to_string);
+            analyze_package_json(
+                &data,
+                pj,
+                vulnerable,
+                entrypoint_override,
+                project_root,
+                &mut report,
+            );
         }
     } else if let Some(ep) = entrypoint_override {
         report.entrypoint = Some(ep.to_string());

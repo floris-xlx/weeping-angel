@@ -379,6 +379,7 @@ pub fn propose_sample(
 }
 
 /// Persist an accepted sample. A proposal alone is not the sample.
+#[allow(clippy::too_many_arguments)]
 pub fn accept_sample(
     audit: &mut Audit,
     proposal: Option<&AuditSampleProposal>,

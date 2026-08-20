@@ -72,10 +72,10 @@ pub async fn fetch_transitive(
                 .or_else(|| dep.get("name"))
                 .and_then(|v| v.as_str());
             let pver = dep.get("version").and_then(|v| v.as_str()).unwrap_or("*");
-            if let Some(n) = pname {
-                if !n.is_empty() {
-                    out.push(PackageRef::new(n, pver));
-                }
+            if let Some(n) = pname
+                && !n.is_empty()
+            {
+                out.push(PackageRef::new(n, pver));
             }
         }
     }

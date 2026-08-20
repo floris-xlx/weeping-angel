@@ -851,7 +851,7 @@ fn ipo_015_dual_suite_and_schema() {
         !cargo.contains("name = \"sdd_interested_parties_obligations_baseline\"")
             && cargo
                 .contains("path = \"tests/contracts/interested_parties_obligations.target.rs\"")
-            && !toml
+            && !cargo
                 .contains("path = \"tests/contracts/interested_parties_obligations.baseline.rs\"")
             && cargo.contains("name = \"sdd_interested_parties_obligations_target\"")
             && cargo

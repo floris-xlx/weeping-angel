@@ -667,11 +667,11 @@ fn parse_duration(raw: &str) -> Duration {
         let n: u64 = days.parse().unwrap_or(365);
         return Duration::from_secs(n * 24 * 3600);
     }
-    if let Some(rest) = trimmed.strip_prefix('P') {
-        if let Some(days) = rest.strip_suffix('D') {
-            let n: u64 = days.parse().unwrap_or(365);
-            return Duration::from_secs(n * 24 * 3600);
-        }
+    if let Some(rest) = trimmed.strip_prefix('P')
+        && let Some(days) = rest.strip_suffix('D')
+    {
+        let n: u64 = days.parse().unwrap_or(365);
+        return Duration::from_secs(n * 24 * 3600);
     }
     Duration::from_secs(trimmed.parse().unwrap_or(365 * 24 * 3600))
 }

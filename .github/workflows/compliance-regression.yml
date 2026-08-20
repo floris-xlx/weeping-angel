@@ -1,0 +1,77 @@
+# Catalog / framework / assurance-contract regression gate.
+# Complements CI (fmt/clippy/test/guard on every PR) and security-diff.
+# Readiness only — never a certification claim.
+
+name: compliance-regression
+
+on:
+  pull_request:
+    paths:
+      - "catalog/**"
+      - "frameworks/**"
+      - "crates/weeping-angel-*/**"
+      - "tests/contracts/**"
+      - "tests/iso27001_framework_completeness.rs"
+      - "schemas/**"
+      - "scripts/test-certification-bundle.sh"
+      - ".github/workflows/compliance-regression.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  assurance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Lint
+        run: cargo clippy --workspace --all-targets --features demo -- -D warnings
+
+      - name: Architecture guard
+        run: cargo xtask guard
+
+      - name: Contract tests
+        run: cargo test --workspace --features demo
+
+      - name: Validate canonical catalog
+        run: cargo run --quiet --bin weeping-angel -- assurance catalog validate
+
+      - name: Validate ISO 27001 framework
+        run: >
+          cargo run --quiet --bin weeping-angel -- assurance framework validate
+          frameworks/iso-27001/2022
+
+      - name: Assert standards completeness
+        run: cargo test --test iso27001_framework_completeness --offline
+
+      - name: Build deterministic certification fixture
+        run: ./scripts/test-certification-bundle.sh
+
+      - name: Upload assurance fixture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weeping-angel-assurance-fixture
+          path: target/assurance-fixture
+          if-no-files-found: ignore

@@ -50,8 +50,8 @@ pub fn terminal_width(override_w: usize) -> usize {
 }
 
 pub fn rule(width: usize, ch: char) -> String {
-    let n = width.min(120).max(40);
-    let line: String = std::iter::repeat(ch).take(n).collect();
+    let n = width.clamp(40, 120);
+    let line: String = std::iter::repeat_n(ch, n).collect();
     magenta(&line)
 }
 
@@ -307,7 +307,7 @@ pub fn log_request_ok(
         LogHttp::Off => return,
         LogHttp::Summary => {
             let c = REQ_LOG_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-            if c % 25 != 0 && !(500..=599).contains(&status) {
+            if !c.is_multiple_of(25) && !(500..=599).contains(&status) {
                 return;
             }
         }
@@ -329,22 +329,22 @@ pub fn log_request_ok(
         let back = dim("←");
         eprint_line(&format!("{arrow} {n_s} {meth} {url_s}"));
         let mut line = format!("  {back} {st}  {time}  {size}");
-        if let Some(fu) = final_url {
-            if fu != url {
-                line.push_str(&format!(
-                    "  {} {}",
-                    dim("redir→"),
-                    dim(&truncate_url(fu, 48))
-                ));
-            }
+        if let Some(fu) = final_url
+            && fu != url
+        {
+            line.push_str(&format!(
+                "  {} {}",
+                dim("redir→"),
+                dim(&truncate_url(fu, 48))
+            ));
         }
         eprint_line(&line);
     } else {
         let mut line = format!("{} {n_s} {meth} {st} {time} {size} {url_s}", dim("→"));
-        if let Some(fu) = final_url {
-            if fu != url {
-                line.push_str(&format!(" {}", dim("↪")));
-            }
+        if let Some(fu) = final_url
+            && fu != url
+        {
+            line.push_str(&format!(" {}", dim("↪")));
         }
         eprint_line(&line);
     }

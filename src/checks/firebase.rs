@@ -67,16 +67,16 @@ impl Check for FirebaseCheck {
             let body = &resp.body;
             let page = resp.final_url.as_str();
 
-            if FIREBASE_HOST_RE.is_match(body)
+            if (FIREBASE_HOST_RE.is_match(body)
                 || body.contains("firebase/app")
                 || body.contains("firebase/firestore")
                 || body.contains("firebase/auth")
                 || body.contains("getFirestore")
                 || body.contains("initializeFirestore")
-                || body.contains("collection(") && body.contains("firebase")
+                || body.contains("collection(") && body.contains("firebase"))
+                && seen.insert(format!("sdk:{page}"))
             {
-                if seen.insert(format!("sdk:{page}")) {
-                    findings.push(
+                findings.push(
                         Finding::builder(self.id(), "firebase-client-sdk")
                             .title("Firebase / Firestore client usage detected")
                             .severity(Severity::Info)
@@ -90,7 +90,6 @@ impl Check for FirebaseCheck {
                             ))
                             .build(),
                     );
-                }
             }
 
             for cap in API_KEY_RE.captures_iter(body) {
@@ -159,12 +158,13 @@ impl Check for FirebaseCheck {
                 }
             }
 
-            if let Some(m) = FIREBASE_CONFIG_BLOB_RE.find(body) {
-                if seen.insert(format!(
+            if let Some(m) = FIREBASE_CONFIG_BLOB_RE.find(body)
+                && seen.insert(format!(
                     "config:{}",
                     m.as_str().chars().take(40).collect::<String>()
-                )) {
-                    findings.push(
+                ))
+            {
+                findings.push(
                         Finding::builder(self.id(), "firebase-config-blob")
                             .title("Firebase config object embedded in client")
                             .severity(Severity::Low)
@@ -182,13 +182,14 @@ impl Check for FirebaseCheck {
                             ))
                             .build(),
                     );
-                }
             }
 
             // Realtime DB open-rules smell: large JSON dump paths
-            if body.contains(".firebaseio.com") && body.contains(".json") {
-                if seen.insert(format!("rtdb-json:{page}")) {
-                    findings.push(
+            if body.contains(".firebaseio.com")
+                && body.contains(".json")
+                && seen.insert(format!("rtdb-json:{page}"))
+            {
+                findings.push(
                         Finding::builder(self.id(), "firebase-rtdb-url")
                             .title("Firebase Realtime Database URL pattern in client")
                             .severity(Severity::Medium)
@@ -206,7 +207,6 @@ impl Check for FirebaseCheck {
                             ))
                             .build(),
                     );
-                }
             }
 
             for cap in FIRESTORE_DB_URL_RE.captures_iter(body) {
@@ -238,15 +238,15 @@ impl Check for FirebaseCheck {
             }
 
             // Identity Toolkit / email-password Auth REST references
-            if body.contains("identitytoolkit.googleapis.com")
+            if (body.contains("identitytoolkit.googleapis.com")
                 || body.contains("signInWithPassword")
                 || body.contains("accounts:signUp")
                 || (body.contains("firebase")
                     && (body.contains("createUserWithEmailAndPassword")
-                        || body.contains("signInWithEmailAndPassword")))
+                        || body.contains("signInWithEmailAndPassword"))))
+                && seen.insert(format!("identity:{page}"))
             {
-                if seen.insert(format!("identity:{page}")) {
-                    findings.push(
+                findings.push(
                         Finding::builder(self.id(), "firebase-auth-rest")
                             .title("Firebase Auth / Identity Toolkit surface referenced")
                             .severity(Severity::Info)
@@ -259,7 +259,6 @@ impl Check for FirebaseCheck {
                             )
                             .build(),
                     );
-                }
             }
         }
 
@@ -333,28 +332,27 @@ impl Check for FirebaseCheck {
         // Probe in-scope paths that look like Firestore proxies
         for asset in &ctx.assets {
             let path = asset.url.path().to_ascii_lowercase();
-            if path.contains("firestore")
+            if (path.contains("firestore")
                 || path.contains("/firebase")
-                || path.ends_with("/__/auth/handler")
+                || path.ends_with("/__/auth/handler"))
+                && seen.insert(format!("path:{}", asset.url))
             {
-                if seen.insert(format!("path:{}", asset.url)) {
-                    let sev = if (200..300).contains(&asset.status) {
-                        Severity::Medium
-                    } else {
-                        Severity::Info
-                    };
-                    findings.push(
-                        Finding::builder(self.id(), "firestore-path")
-                            .title("Firestore/Firebase-related path on target")
-                            .severity(sev)
-                            .url(asset.url.as_str())
-                            .description(format!(
-                                "Path suggests Firebase/Firestore proxy or auth handler (HTTP {}).",
-                                asset.status
-                            ))
-                            .build(),
-                    );
-                }
+                let sev = if (200..300).contains(&asset.status) {
+                    Severity::Medium
+                } else {
+                    Severity::Info
+                };
+                findings.push(
+                    Finding::builder(self.id(), "firestore-path")
+                        .title("Firestore/Firebase-related path on target")
+                        .severity(sev)
+                        .url(asset.url.as_str())
+                        .description(format!(
+                            "Path suggests Firebase/Firestore proxy or auth handler (HTTP {}).",
+                            asset.status
+                        ))
+                        .build(),
+                );
             }
         }
 

@@ -169,7 +169,7 @@ pub async fn run_scan(
             match res {
                 Ok(resp) => {
                     crawl_done += 1;
-                    if crawl_done == 1 || crawl_done % 10 == 0 {
+                    if crawl_done == 1 || crawl_done.is_multiple_of(10) {
                         progress(&format!(
                             "  crawl {crawl_done} fetched (queue left {}, reqs={})",
                             queue.len(),
@@ -184,95 +184,93 @@ pub async fn run_scan(
                         source: "crawl".into(),
                     });
 
-                    if module_enabled(&opts.modules, "discovery") && depth < opts.depth {
-                        if resp.is_html() {
-                            let links =
-                                discovery::crawl::extract_links(&resp.final_url, &resp.body);
-                            for link in links {
-                                try_enqueue(
-                                    &authz,
-                                    &mut discovered,
-                                    &mut queue,
-                                    link,
-                                    depth + 1,
-                                    opts.max_urls,
-                                );
-                            }
-                            let images = discovery::image_assets::extract_from_html(
-                                &resp.final_url,
-                                &resp.body,
+                    if module_enabled(&opts.modules, "discovery")
+                        && depth < opts.depth
+                        && resp.is_html()
+                    {
+                        let links = discovery::crawl::extract_links(&resp.final_url, &resp.body);
+                        for link in links {
+                            try_enqueue(
+                                &authz,
+                                &mut discovered,
+                                &mut queue,
+                                link,
+                                depth + 1,
+                                opts.max_urls,
                             );
-                            for img in images {
-                                try_enqueue(
-                                    &authz,
-                                    &mut discovered,
-                                    &mut queue,
-                                    img,
-                                    depth + 1,
-                                    opts.max_urls,
-                                );
+                        }
+                        let images =
+                            discovery::image_assets::extract_from_html(&resp.final_url, &resp.body);
+                        for img in images {
+                            try_enqueue(
+                                &authz,
+                                &mut discovered,
+                                &mut queue,
+                                img,
+                                depth + 1,
+                                opts.max_urls,
+                            );
+                        }
+                        let spa_urls =
+                            discovery::spa::extract_from_html(&resp.final_url, &resp.body);
+                        for ep in spa_urls {
+                            try_enqueue(
+                                &authz,
+                                &mut discovered,
+                                &mut queue,
+                                ep,
+                                depth + 1,
+                                opts.max_urls,
+                            );
+                        }
+                        let scripts =
+                            discovery::js_endpoints::script_srcs(&resp.final_url, &resp.body);
+                        for script_url in scripts {
+                            if !authz.url_in_scope(&script_url) {
+                                continue;
                             }
-                            let spa_urls =
-                                discovery::spa::extract_from_html(&resp.final_url, &resp.body);
-                            for ep in spa_urls {
-                                try_enqueue(
-                                    &authz,
-                                    &mut discovered,
-                                    &mut queue,
-                                    ep,
-                                    depth + 1,
-                                    opts.max_urls,
+                            if let Ok(js_resp) = client.get(&script_url).await {
+                                let endpoints = discovery::js_endpoints::extract_endpoints(
+                                    &script_url,
+                                    &js_resp.body,
                                 );
-                            }
-                            let scripts =
-                                discovery::js_endpoints::script_srcs(&resp.final_url, &resp.body);
-                            for script_url in scripts {
-                                if !authz.url_in_scope(&script_url) {
-                                    continue;
-                                }
-                                if let Ok(js_resp) = client.get(&script_url).await {
-                                    let endpoints = discovery::js_endpoints::extract_endpoints(
-                                        &script_url,
-                                        &js_resp.body,
+                                for ep in endpoints {
+                                    try_enqueue(
+                                        &authz,
+                                        &mut discovered,
+                                        &mut queue,
+                                        ep,
+                                        depth + 1,
+                                        opts.max_urls,
                                     );
-                                    for ep in endpoints {
-                                        try_enqueue(
-                                            &authz,
-                                            &mut discovered,
-                                            &mut queue,
-                                            ep,
-                                            depth + 1,
-                                            opts.max_urls,
-                                        );
-                                    }
-                                    let spa_js =
-                                        discovery::spa::extract_from_js(&script_url, &js_resp.body);
-                                    for ep in spa_js {
-                                        try_enqueue(
-                                            &authz,
-                                            &mut discovered,
-                                            &mut queue,
-                                            ep,
-                                            depth + 1,
-                                            opts.max_urls,
-                                        );
-                                    }
-                                    let js_images = discovery::image_assets::extract_from_js(
-                                        &script_url,
-                                        &js_resp.body,
-                                    );
-                                    for img in js_images {
-                                        try_enqueue(
-                                            &authz,
-                                            &mut discovered,
-                                            &mut queue,
-                                            img,
-                                            depth + 1,
-                                            opts.max_urls,
-                                        );
-                                    }
-                                    response_cache.insert(script_url.as_str().to_string(), js_resp);
                                 }
+                                let spa_js =
+                                    discovery::spa::extract_from_js(&script_url, &js_resp.body);
+                                for ep in spa_js {
+                                    try_enqueue(
+                                        &authz,
+                                        &mut discovered,
+                                        &mut queue,
+                                        ep,
+                                        depth + 1,
+                                        opts.max_urls,
+                                    );
+                                }
+                                let js_images = discovery::image_assets::extract_from_js(
+                                    &script_url,
+                                    &js_resp.body,
+                                );
+                                for img in js_images {
+                                    try_enqueue(
+                                        &authz,
+                                        &mut discovered,
+                                        &mut queue,
+                                        img,
+                                        depth + 1,
+                                        opts.max_urls,
+                                    );
+                                }
+                                response_cache.insert(script_url.as_str().to_string(), js_resp);
                             }
                         }
                     }
@@ -424,24 +422,24 @@ pub async fn run_scan(
             if !img.exists {
                 continue;
             }
-            if let Ok(u) = Url::parse(&img.url) {
-                if discovered.insert(img.url.clone()) {
-                    assets.push(DiscoveredAsset {
-                        url: u,
-                        status: img
-                            .head
-                            .as_ref()
-                            .map(|h| h.status)
-                            .or_else(|| img.get.as_ref().map(|g| g.status))
-                            .unwrap_or(200),
-                        content_type: img
-                            .head
-                            .as_ref()
-                            .and_then(|h| h.content_type.clone())
-                            .or_else(|| img.get.as_ref().and_then(|g| g.content_type.clone())),
-                        source: "image-head".into(),
-                    });
-                }
+            if let Ok(u) = Url::parse(&img.url)
+                && discovered.insert(img.url.clone())
+            {
+                assets.push(DiscoveredAsset {
+                    url: u,
+                    status: img
+                        .head
+                        .as_ref()
+                        .map(|h| h.status)
+                        .or_else(|| img.get.as_ref().map(|g| g.status))
+                        .unwrap_or(200),
+                    content_type: img
+                        .head
+                        .as_ref()
+                        .and_then(|h| h.content_type.clone())
+                        .or_else(|| img.get.as_ref().and_then(|g| g.content_type.clone())),
+                    source: "image-head".into(),
+                });
             }
         }
 
@@ -518,7 +516,7 @@ pub async fn run_scan(
         let mut probed = 0usize;
         for (u, res) in results {
             probed += 1;
-            if probed == 1 || probed % 25 == 0 || probed == total_paths {
+            if probed == 1 || probed.is_multiple_of(25) || probed == total_paths {
                 progress(&format!(
                     "  wordlist {probed}/{total_paths} (hits={}, reqs={})",
                     assets.iter().filter(|a| a.source == "wordlist").count(),
@@ -678,31 +676,30 @@ pub async fn run_scan(
                     .build(),
             );
 
-            if asset.source == "image-pattern"
+            if (asset.source == "image-pattern"
                 || asset.source == "image-head"
-                || discovery::image_assets::is_image_path(asset.url.path())
+                || discovery::image_assets::is_image_path(asset.url.path()))
+                && let Some(info) = discovery::image_assets::describe_pattern(asset.url.path())
             {
-                if let Some(info) = discovery::image_assets::describe_pattern(asset.url.path()) {
-                    image_patterns.insert(info.directory.clone());
-                    if (200..300).contains(&asset.status) {
-                        findings.push(
-                            Finding::builder("discovery", "image-asset")
-                                .title(format!(
-                                    "Hosted image asset ({}…/{}.{})",
-                                    info.family.trim_end_matches('/'),
-                                    info.stem,
-                                    info.extension
-                                ))
-                                .severity(Severity::Info)
-                                .url(asset.url.as_str())
-                                .description(format!(
-                                    "Image reachable via hosting pattern family `{}` \
+                image_patterns.insert(info.directory.clone());
+                if (200..300).contains(&asset.status) {
+                    findings.push(
+                        Finding::builder("discovery", "image-asset")
+                            .title(format!(
+                                "Hosted image asset ({}…/{}.{})",
+                                info.family.trim_end_matches('/'),
+                                info.stem,
+                                info.extension
+                            ))
+                            .severity(Severity::Info)
+                            .url(asset.url.as_str())
+                            .description(format!(
+                                "Image reachable via hosting pattern family `{}` \
                                      (section=`{}`, template=`{}`). Source: {}.",
-                                    info.family, info.section, info.template, asset.source
-                                ))
-                                .build(),
-                        );
-                    }
+                                info.family, info.section, info.template, asset.source
+                            ))
+                            .build(),
+                    );
                 }
             }
         }

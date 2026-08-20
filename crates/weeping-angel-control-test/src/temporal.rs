@@ -127,15 +127,15 @@ pub fn select_evidence<'a>(
     let mut out: Vec<&'a EvidenceEnvelope> = set
         .iter()
         .filter(|env| {
-            if let Some(ty) = &query.evidence_type {
-                if env.observation().evidence_type() != ty {
-                    return false;
-                }
+            if let Some(ty) = &query.evidence_type
+                && env.observation().evidence_type() != ty
+            {
+                return false;
             }
-            if let Some(subject) = &query.subject {
-                if env.provenance().asset().as_str() != subject {
-                    return false;
-                }
+            if let Some(subject) = &query.subject
+                && env.provenance().asset().as_str() != subject
+            {
+                return false;
             }
             if let Some(t) = query.as_of {
                 if query.include_revoked {
@@ -231,10 +231,10 @@ fn sample_instants(evidence: &EvidenceSet, period: TimeRange) -> Vec<DateTime<Ut
                 set.insert(t);
             }
         }
-        if let Some(until) = env.valid_until() {
-            if period.contains(until) {
-                set.insert(until);
-            }
+        if let Some(until) = env.valid_until()
+            && period.contains(until)
+        {
+            set.insert(until);
         }
     }
     for event in evidence.validity_events() {
@@ -242,10 +242,10 @@ fn sample_instants(evidence: &EvidenceSet, period: TimeRange) -> Vec<DateTime<Ut
             set.insert(event.at);
         }
     }
-    if let Some(last) = period.end.checked_sub_signed(TimeDelta::nanoseconds(1)) {
-        if last >= period.start {
-            set.insert(last);
-        }
+    if let Some(last) = period.end.checked_sub_signed(TimeDelta::nanoseconds(1))
+        && last >= period.start
+    {
+        set.insert(last);
     }
     set.into_iter().collect()
 }
@@ -324,9 +324,8 @@ pub(crate) fn select_for_selector<'a>(
     select_latest_as_of(&matching, context.as_of(), evidence)
 }
 
-/// Stale is policy freshness of a still-valid candidate; expired is outside validity.
-
 /// Distinct from stale (`max_age`): expired means outside validity (`valid_until`).
+/// Stale is policy freshness of a still-valid candidate; expired is outside validity.
 pub fn period_for_evaluate(
     context: &AssessmentContext,
     _evidence: &EvidenceSet,
@@ -338,12 +337,8 @@ pub fn period_for_evaluate(
         Effectiveness::ManualReviewRequired => PeriodEffectiveness::ManualReviewRequired,
         Effectiveness::Ineffective => PeriodEffectiveness::Ineffective,
         _ => {
-            let period = context.period().unwrap_or_else(|| implicit_period(context));
-            if period.start < period.end {
-                PeriodEffectiveness::InsufficientObservationCoverage
-            } else {
-                PeriodEffectiveness::InsufficientObservationCoverage
-            }
+            let _period = context.period().unwrap_or_else(|| implicit_period(context));
+            PeriodEffectiveness::InsufficientObservationCoverage
         }
     }
 }

@@ -1,6 +1,7 @@
 //! Individual `ArchitectureCheck` implementations (01–15).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 use std::path::Path;
 
 use crate::architecture::{
@@ -385,10 +386,10 @@ fn eval_ownership_live_crates(repo: &RepositoryModel) -> (bool, String) {
 fn eval_no_hypothetical_packages(repo: &RepositoryModel) -> (bool, String) {
     let mut hits = Vec::new();
     let names = repo.forbidden_package_names();
-    if names.is_empty() {
-        if let Some(err) = &repo.forbidden_error {
-            return (false, err.clone());
-        }
+    if names.is_empty()
+        && let Some(err) = &repo.forbidden_error
+    {
+        return (false, err.clone());
     }
     for name in &names {
         if repo.package_names.iter().any(|p| p == name) {
@@ -894,13 +895,11 @@ fn check_15_on_model(repo: &RepositoryModel) -> Result<(), String> {
             ));
         }
         // Masquerade: superseded/retired cannot also be advertised as active.
-        if row.state == "superseded" || row.state == "retired" {
-            if row.state == "active" {
-                return Err(format!(
-                    "spec {} cannot masquerade as active while {}",
-                    row.path, row.state
-                ));
-            }
+        if (row.state == "superseded" || row.state == "retired") && row.state == "active" {
+            return Err(format!(
+                "spec {} cannot masquerade as active while {}",
+                row.path, row.state
+            ));
         }
         if row.state == "active" {
             if row.ownership.is_empty() {
@@ -963,5 +962,125 @@ fn check_15_on_model(repo: &RepositoryModel) -> Result<(), String> {
             "spec depends_on graph is not acyclic (cycle involving {cycle})"
         ));
     }
+
+    check_active_spec_drift_on_model(repo)?;
     Ok(())
+}
+
+/// Active-spec drift: superseded-state phrases must not appear in active voice.
+pub fn check_active_spec_drift(root: &Path) -> Result<(), String> {
+    check_active_spec_drift_on_model(&RepositoryModel::load(root))
+}
+
+fn check_active_spec_drift_on_model(repo: &RepositoryModel) -> Result<(), String> {
+    if let Some(err) = &repo.spec_lifecycle_error {
+        return Err(err.clone());
+    }
+    for row in &repo.spec_lifecycle {
+        if row.state != "active" {
+            continue;
+        }
+        let text = match fs::read_to_string(repo.root.join(&row.path)) {
+            Ok(t) => t,
+            Err(e) => return Err(format!("read {}: {e}", row.path)),
+        };
+        if let Some(hit) = find_active_voice_drift(&text) {
+            return Err(format!(
+                "active-spec drift in {}: superseded-state phrase in active voice ({hit})",
+                row.path
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Test/helper: scan one markdown body for active-plane superseded phrases.
+pub fn active_spec_drift_in_text(text: &str) -> Option<&'static str> {
+    find_active_voice_drift(text)
+}
+
+fn find_active_voice_drift(text: &str) -> Option<&'static str> {
+    let unscanned = active_plane_text(text);
+    if unscanned.contains("skip-with-debt")
+        && (unscanned.contains("05–12") || unscanned.contains("05-12"))
+    {
+        return Some("05–12 + skip-with-debt");
+    }
+    if unscanned.contains("Guards **05–12** stay stubs")
+        || unscanned.contains("05–12 stay stubs")
+        || unscanned.contains("05-12 stay stubs")
+    {
+        return Some("05–12 stay stubs");
+    }
+    if unscanned.contains("Increment-2 current plane")
+        && (unscanned.contains("05–12") || unscanned.contains("05-12"))
+        && unscanned.contains("skip")
+    {
+        return Some("Increment-2 current plane skip archaeology");
+    }
+    if (unscanned.contains("05–12") || unscanned.contains("05-12"))
+        && (unscanned.contains("14–15") || unscanned.contains("14-15"))
+        && unscanned.contains("may skip")
+    {
+        return Some("05–12 / 14–15 may skip");
+    }
+    if unscanned.contains("skip(DEBT-GUARD-NN)")
+        && (unscanned.contains("05–12") || unscanned.contains("05-12"))
+    {
+        return Some("skip(DEBT-GUARD-NN) for 05–12 as live status");
+    }
+    None
+}
+
+/// Active-plane scan: document header (before first `##`) plus current-plane /
+/// collision-fence sections that are not Historical/characterization fences.
+fn active_plane_text(text: &str) -> String {
+    let mut out = String::new();
+    let mut in_code = false;
+    let mut past_header = false;
+    let mut include_section = false;
+    for line in text.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") {
+            in_code = !in_code;
+            continue;
+        }
+        if in_code {
+            continue;
+        }
+        // Only ##+ headings end the header table / open body sections. A leading
+        // `# Title` remains part of the document header scan region.
+        if trimmed.starts_with("##") {
+            past_header = true;
+            let heading = trimmed.trim_start_matches('#').trim();
+            let lower = heading.to_ascii_lowercase();
+            let historical = lower.contains("historical")
+                || lower.contains("characterization")
+                || lower.contains("baseline")
+                || lower.contains("current behavior")
+                || lower.contains("found case")
+                || lower.contains("remaining_backlog")
+                || lower.contains("shipped stub policy")
+                || lower.starts_with("3.")
+                || lower.starts_with("12.");
+            include_section = !historical
+                && (lower.contains("collision fence")
+                    || lower.contains("current plane")
+                    || lower.contains("guard checks (current")
+                    || lower.starts_with("0. collision fence"));
+            continue;
+        }
+        if line.contains("characterization") || line.contains("Characterization") {
+            continue;
+        }
+        if line.contains("Historical") && line.contains("|") {
+            // Header rows that point archaeology at Historical are allowed.
+            continue;
+        }
+        if !past_header || include_section {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out
 }

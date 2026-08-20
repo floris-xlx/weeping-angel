@@ -321,7 +321,7 @@ fn json_has_any(value: &Value, keys: &[&str]) -> bool {
     keys.iter().any(|k| value.get(*k).is_some())
 }
 
-fn metric_object<'a>(json: &'a Value) -> Option<&'a Value> {
+fn metric_object(json: &Value) -> Option<&Value> {
     json.get("coverageMetrics")
         .or_else(|| json.get("metrics"))
         .or_else(|| json.get("coverage"))
@@ -920,7 +920,7 @@ fn lin_012_assurance_explain_parses_and_is_dispatched() {
         .expect("assurance family exists");
     let names: Vec<&str> = assurance.get_subcommands().map(|c| c.get_name()).collect();
     assert!(
-        names.iter().any(|n| *n == "explain"),
+        names.contains(&"explain"),
         "LIN-012: `assurance explain` must be a clap subcommand; have {names:?}"
     );
 

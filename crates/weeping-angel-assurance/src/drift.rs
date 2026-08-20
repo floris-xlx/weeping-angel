@@ -510,6 +510,7 @@ fn detect_semantic_events(previous: &IsmsSnapshot, next: &IsmsSnapshot) -> Vec<I
     events
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit(
     kind: IsmsEventKind,
     occurred_at: DateTime<Utc>,
@@ -698,6 +699,7 @@ fn ordinal_jump(prev: Option<i32>, next: Option<i32>) -> i32 {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn emit_governance(
     events: &mut Vec<IsmsEvent>,
     previous: &IsmsSnapshot,

@@ -504,29 +504,29 @@ impl<'a> Engine<'a> {
                 inherited = Some((closer, parent_row));
             }
         }
-        if let Some((_, parent_row)) = inherited {
-            if parent_row.decision != ScopeDecision::Unknown {
-                competing.push(Competing {
-                    polarity: match parent_row.decision {
-                        ScopeDecision::OutOfScope => Polarity::Exclude,
-                        _ => Polarity::Include,
-                    },
+        if let Some((_, parent_row)) = inherited
+            && parent_row.decision != ScopeDecision::Unknown
+        {
+            competing.push(Competing {
+                polarity: match parent_row.decision {
+                    ScopeDecision::OutOfScope => Polarity::Exclude,
+                    _ => Polarity::Include,
+                },
+                rank: RANK_INHERIT,
+                conditional: parent_row.decision == ScopeDecision::Conditional,
+                rule: InfluencingRule {
+                    class: InfluencingRuleClass::Inheritance,
                     rank: RANK_INHERIT,
-                    conditional: parent_row.decision == ScopeDecision::Conditional,
-                    rule: InfluencingRule {
-                        class: InfluencingRuleClass::Inheritance,
-                        rank: RANK_INHERIT,
-                        selector_digest: canonical_digest(&parent_row.id).unwrap_or_default(),
-                        exclusion_index: None,
-                        owner: None,
-                        approval_ref: None,
-                        approved_at: None,
-                        expires_at: None,
-                        review_by: None,
-                        applied: true,
-                    },
-                });
-            }
+                    selector_digest: canonical_digest(&parent_row.id).unwrap_or_default(),
+                    exclusion_index: None,
+                    owner: None,
+                    approval_ref: None,
+                    approved_at: None,
+                    expires_at: None,
+                    review_by: None,
+                    applied: true,
+                },
+            });
         }
 
         if !known {
@@ -775,18 +775,16 @@ impl<'a> Engine<'a> {
                 return true;
             }
             let tags = &asset.tags;
-            if let Some(bu) = tags.get("businessUnit") {
-                if let Some(ctx) = self.context {
-                    if ctx
-                        .organization
-                        .business_units
-                        .iter()
-                        .any(|unit| unit.id.as_str() == bu)
-                        && self.bound_orgs.contains(ctx.organization.id.as_str())
-                    {
-                        return true;
-                    }
-                }
+            if let Some(bu) = tags.get("businessUnit")
+                && let Some(ctx) = self.context
+                && ctx
+                    .organization
+                    .business_units
+                    .iter()
+                    .any(|unit| unit.id.as_str() == bu)
+                && self.bound_orgs.contains(ctx.organization.id.as_str())
+            {
+                return true;
             }
             let mut current = asset.parent.clone();
             let mut guard = 0u32;
@@ -821,36 +819,34 @@ impl<'a> Engine<'a> {
         if let Some(bu) = tags.get("businessUnit") {
             out.push(SubjectRef::new(SubjectKind::BusinessUnit, bu.clone()));
         }
-        if let Some(asset) = self.assets.get(&subject.id) {
-            if let Some(parent) = &asset.parent {
-                let kind = self
-                    .assets
-                    .get(parent.as_str())
-                    .map(|a| asset_subject_kind(a.kind))
-                    .unwrap_or(SubjectKind::Asset);
-                out.push(SubjectRef::new(kind, parent.as_str().to_string()));
-            }
+        if let Some(asset) = self.assets.get(&subject.id)
+            && let Some(parent) = &asset.parent
+        {
+            let kind = self
+                .assets
+                .get(parent.as_str())
+                .map(|a| asset_subject_kind(a.kind))
+                .unwrap_or(SubjectKind::Asset);
+            out.push(SubjectRef::new(kind, parent.as_str().to_string()));
         }
-        if subject.kind == SubjectKind::BusinessUnit {
-            if let Some(ctx) = self.context {
-                if let Some(bu) = ctx
-                    .organization
-                    .business_units
-                    .iter()
-                    .find(|b| b.id.as_str() == subject.id)
-                {
-                    if let Some(parent) = &bu.parent_id {
-                        out.push(SubjectRef::new(
-                            SubjectKind::BusinessUnit,
-                            parent.as_str().to_string(),
-                        ));
-                    } else {
-                        out.push(SubjectRef::new(
-                            SubjectKind::Organization,
-                            ctx.organization.id.as_str().to_string(),
-                        ));
-                    }
-                }
+        if subject.kind == SubjectKind::BusinessUnit
+            && let Some(ctx) = self.context
+            && let Some(bu) = ctx
+                .organization
+                .business_units
+                .iter()
+                .find(|b| b.id.as_str() == subject.id)
+        {
+            if let Some(parent) = &bu.parent_id {
+                out.push(SubjectRef::new(
+                    SubjectKind::BusinessUnit,
+                    parent.as_str().to_string(),
+                ));
+            } else {
+                out.push(SubjectRef::new(
+                    SubjectKind::Organization,
+                    ctx.organization.id.as_str().to_string(),
+                ));
             }
         }
         out
@@ -1031,39 +1027,35 @@ fn identity_subject_kind(kind: IdentityKind) -> SubjectKind {
 }
 
 fn kinds_compatible(selector: SubjectKind, subject: SubjectKind) -> bool {
-    if selector == subject {
-        return true;
-    }
-    match (selector, subject) {
-        (
-            SubjectKind::Asset,
-            SubjectKind::Organization
-            | SubjectKind::Repository
-            | SubjectKind::Service
-            | SubjectKind::Application
-            | SubjectKind::Database
-            | SubjectKind::CloudAccount
-            | SubjectKind::CloudResource
-            | SubjectKind::Device
-            | SubjectKind::Network
-            | SubjectKind::Dataset
-            | SubjectKind::DataStore
-            | SubjectKind::Endpoint
-            | SubjectKind::Branch
-            | SubjectKind::Deployment,
-        ) => true,
-        (
-            SubjectKind::Identity | SubjectKind::PersonnelPopulation,
-            SubjectKind::Identity
-            | SubjectKind::User
-            | SubjectKind::PrivilegedIdentity
-            | SubjectKind::PersonnelPopulation,
-        ) => true,
-        (SubjectKind::User, SubjectKind::Identity) => true,
-        (SubjectKind::Dataset, SubjectKind::DataStore)
-        | (SubjectKind::DataStore, SubjectKind::Dataset) => true,
-        _ => false,
-    }
+    selector == subject
+        || matches!(
+            (selector, subject),
+            (
+                SubjectKind::Asset,
+                SubjectKind::Organization
+                    | SubjectKind::Repository
+                    | SubjectKind::Service
+                    | SubjectKind::Application
+                    | SubjectKind::Database
+                    | SubjectKind::CloudAccount
+                    | SubjectKind::CloudResource
+                    | SubjectKind::Device
+                    | SubjectKind::Network
+                    | SubjectKind::Dataset
+                    | SubjectKind::DataStore
+                    | SubjectKind::Endpoint
+                    | SubjectKind::Branch
+                    | SubjectKind::Deployment,
+            ) | (
+                SubjectKind::Identity | SubjectKind::PersonnelPopulation,
+                SubjectKind::Identity
+                    | SubjectKind::User
+                    | SubjectKind::PrivilegedIdentity
+                    | SubjectKind::PersonnelPopulation,
+            ) | (SubjectKind::User, SubjectKind::Identity)
+                | (SubjectKind::Dataset, SubjectKind::DataStore)
+                | (SubjectKind::DataStore, SubjectKind::Dataset)
+        )
 }
 
 fn non_condition_tags(tags: &BTreeMap<String, String>) -> BTreeMap<String, String> {

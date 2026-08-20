@@ -27,10 +27,10 @@ pub fn script_srcs(base: &Url, html: &str) -> Vec<Url> {
     };
     let mut out = Vec::new();
     for el in document.select(&sel) {
-        if let Some(src) = el.value().attr("src") {
-            if let Some(u) = resolve_link(base, src) {
-                out.push(u);
-            }
+        if let Some(src) = el.value().attr("src")
+            && let Some(u) = resolve_link(base, src)
+        {
+            out.push(u);
         }
     }
     out

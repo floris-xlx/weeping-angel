@@ -2,10 +2,10 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** — increment 1 (Phase 0 freeze + Phase 1 architecture-as-law). Checks 01/02/03/04/13 real; 05–12 and 14–15 `skip(DEBT-GUARD-NN)` with live ids. |
+| Status | **Implemented** — increment 1 (Phase 0 freeze + Phase 1 architecture-as-law). Post–product-law plane: Guards **01–15** pass on the healthy tree (`ProductLawCheck` 05–12; 14/15 real). Historical increment-1 stub-skip archaeology is not current law. |
 | Program | Architectural-cleanup PROGRAM (29 phases: **0–28**). One coordinated program, not unrelated refactors. |
 | Slice | Increment 1 — **Phase 0** (freeze architectural expansion) + **Phase 1** (architecture-as-law: Guard 04 evaluation, ownership kinds, executable forbidden patterns, structured guard report/CLI). **Not** phases 2–28. |
-| Dual-suite | `xtask/tests/*.rs` (Cargo auto-discovers `cargo test -p xtask`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Repo-wide SDD contracts historically live in `tests/contracts/` with root `Cargo.toml` `[[test]]` rows; **this increment’s executable law is `cargo test -p xtask`**. Neighbor `sdd_repository_integrity_target` (RI-T13) is amended at implement so check **04** is pass/evaluated while **05–12 / 14–15** stay debt-backed skips. |
+| Dual-suite | `xtask/tests/*.rs` (Cargo auto-discovers `cargo test -p xtask`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Repo-wide SDD contracts historically live in `tests/contracts/` with root `Cargo.toml` `[[test]]` rows; **this increment’s executable law is `cargo test -p xtask`**. Neighbor `sdd_repository_integrity_target` expects check **04** pass/evaluated and live product-law checks **05–12** / **14–15** pass on the healthy tree. |
 | ADR | **Accepted** [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md). Next unique number after [ADR 0009](../adr/0009-repository-health-gate.md). Do **not** mint another `0003-*`. Duplicate prefixes remain `DEBT-DUP-ADR`. |
 | Predecessor law | [`docs/specs/repository-integrity.md`](repository-integrity.md) + ADR 0009 (health gate increment 1: manifests + debt + checks 01/02/03/13). This program **extends** that gate; it does not replace the assurance spine. |
 | Public contract | Assurance runtime public contract remains [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (untouched this increment). |
@@ -17,7 +17,7 @@
 | Base branch | `main` |
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) |
 | `adr_needed` | **true** — architecture-as-law: `RepositoryModel` + `ArchitectureCheck`, ownership kinds, executable forbidden kinds, structured `GuardReport`/CLI |
-| Workspace verify (after implement) | `cargo test -p xtask -- --nocapture`; `cargo xtask guard` (expect **04 pass**, other stubs skip with live debt IDs, exit 0) |
+| Workspace verify (after implement) | `cargo test -p xtask -- --nocapture`; `cargo xtask guard` (expect **01–15 pass**, exit 0) |
 
 This document is the durable human SSOT for the **full 29-phase architectural-cleanup program** and for **increment 1 acceptance**. It owns:
 

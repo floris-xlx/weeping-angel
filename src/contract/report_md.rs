@@ -61,14 +61,14 @@ pub fn project_report_md(
             out.push_str(s);
             out.push_str("\n\n");
         }
-        if let Some(assets) = &tm.assets {
-            if !assets.is_empty() {
-                out.push_str("**Assets**\n\n");
-                for a in assets {
-                    out.push_str(&format!("- {a}\n"));
-                }
-                out.push('\n');
+        if let Some(assets) = &tm.assets
+            && !assets.is_empty()
+        {
+            out.push_str("**Assets**\n\n");
+            for a in assets {
+                out.push_str(&format!("- {a}\n"));
             }
+            out.push('\n');
         }
     }
 

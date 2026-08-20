@@ -21,10 +21,10 @@ fn expand_list_args_flattens() {
 #[test]
 fn bool_loose_matrix() {
     for t in ["true", "TRUE", "yes", "Y", "1", "on", " On "] {
-        assert_eq!(parse_bool_loose(t).unwrap(), true, "{t}");
+        assert!(parse_bool_loose(t).unwrap(), "{t}");
     }
     for f in ["false", "no", "N", "0", "off"] {
-        assert_eq!(parse_bool_loose(f).unwrap(), false, "{f}");
+        assert!(!parse_bool_loose(f).unwrap(), "{f}");
     }
     assert!(parse_bool_loose("maybe").is_err());
 }
@@ -42,7 +42,7 @@ fn consent_matrix() {
         "owned",
         "authorized",
     ] {
-        assert_eq!(parse_consent(t).unwrap(), true, "consent {t:?}");
+        assert!(parse_consent(t).unwrap(), "consent {t:?}");
     }
     for f in ["false", "no", "0", "off"] {
         assert!(parse_consent(f).is_err(), "should reject {f}");
@@ -52,8 +52,8 @@ fn consent_matrix() {
 
 #[test]
 fn optional_bool_empty_is_true() {
-    assert_eq!(parse_optional_bool("").unwrap(), true);
-    assert_eq!(parse_optional_bool("false").unwrap(), false);
+    assert!(parse_optional_bool("").unwrap());
+    assert!(!parse_optional_bool("false").unwrap());
 }
 
 #[test]

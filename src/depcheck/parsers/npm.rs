@@ -81,13 +81,12 @@ pub fn parse_package_lock_json(content: &str) -> Result<(Vec<PackageRef>, Ecosys
             if obj.get("link").and_then(|v| v.as_bool()) == Some(true) {
                 continue;
             }
-            if let Some(resolved) = obj.get("resolved").and_then(|v| v.as_str()) {
-                if resolved.starts_with("file:")
+            if let Some(resolved) = obj.get("resolved").and_then(|v| v.as_str())
+                && (resolved.starts_with("file:")
                     || resolved.starts_with("git+")
-                    || resolved.starts_with("git://")
-                {
-                    continue;
-                }
+                    || resolved.starts_with("git://"))
+            {
+                continue;
             }
             let name = if let Some(n) = obj.get("name").and_then(|v| v.as_str()) {
                 n.to_string()
@@ -108,10 +107,10 @@ pub fn parse_package_lock_json(content: &str) -> Result<(Vec<PackageRef>, Ecosys
         }
     }
 
-    if packages.is_empty() {
-        if let Some(deps) = data.get("dependencies") {
-            extract_lock_v1(deps, &mut packages);
-        }
+    if packages.is_empty()
+        && let Some(deps) = data.get("dependencies")
+    {
+        extract_lock_v1(deps, &mut packages);
     }
 
     Ok((map_to_vec(packages), Ecosystem::Npm))
@@ -124,23 +123,22 @@ fn extract_lock_v1(deps: &Value, packages: &mut BTreeMap<String, String>) {
     for (name, info) in obj {
         match info {
             Value::Object(o) => {
-                if let Some(resolved) = o.get("resolved").and_then(|v| v.as_str()) {
-                    if resolved.starts_with("file:")
+                if let Some(resolved) = o.get("resolved").and_then(|v| v.as_str())
+                    && (resolved.starts_with("file:")
                         || resolved.starts_with("git+")
-                        || resolved.starts_with("git://")
-                    {
-                        continue;
-                    }
+                        || resolved.starts_with("git://"))
+                {
+                    continue;
                 }
                 let mut pkg_name = name.clone();
-                if let Some(from) = o.get("from").and_then(|v| v.as_str()) {
-                    if from.contains("npm:") {
-                        static RE: OnceLock<Regex> = OnceLock::new();
-                        let re = RE
-                            .get_or_init(|| Regex::new(r"npm:(@?[^@]+)").expect("npm from regex"));
-                        if let Some(c) = re.captures(from) {
-                            pkg_name = c[1].to_string();
-                        }
+                if let Some(from) = o.get("from").and_then(|v| v.as_str())
+                    && from.contains("npm:")
+                {
+                    static RE: OnceLock<Regex> = OnceLock::new();
+                    let re =
+                        RE.get_or_init(|| Regex::new(r"npm:(@?[^@]+)").expect("npm from regex"));
+                    if let Some(c) = re.captures(from) {
+                        pkg_name = c[1].to_string();
                     }
                 }
                 let ver = o

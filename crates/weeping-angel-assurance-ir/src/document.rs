@@ -42,18 +42,14 @@ pub enum DocumentVersionStatus {
 /// Confidentiality / classification. Extensible via [`InformationClassification::Other`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
 pub enum InformationClassification {
     Public,
+    #[default]
     Internal,
     Confidential,
     Restricted,
     Other(String),
-}
-
-impl Default for InformationClassification {
-    fn default() -> Self {
-        Self::Internal
-    }
 }
 
 /// Fail-closed document-control errors. `MissingApproval` and `Immutable*` are matchable.
@@ -446,10 +442,10 @@ impl ControlledDocument {
         if remaining.len() == 1 {
             return remaining.pop();
         }
-        if let Some(current) = self.current_version.as_deref() {
-            if let Some(idx) = remaining.iter().position(|v| v.version == current) {
-                return Some(remaining[idx]);
-            }
+        if let Some(current) = self.current_version.as_deref()
+            && let Some(idx) = remaining.iter().position(|v| v.version == current)
+        {
+            return Some(remaining[idx]);
         }
         remaining.sort_by_key(|v| v.effective_from);
         remaining.pop()
@@ -531,22 +527,22 @@ impl ControlledDocument {
                     });
                 }
             }
-            if let Some(supersedes) = version.supersedes_version.as_deref() {
-                if self.version(supersedes).is_none() {
-                    return Err(DocumentControlError::UnknownSupersedes {
-                        id: self.id.as_str().to_string(),
-                        supersedes: supersedes.to_string(),
-                    });
-                }
-            }
-        }
-        if let Some(current) = self.current_version.as_deref() {
-            if self.version(current).is_none() {
-                return Err(DocumentControlError::UnknownCurrentVersion {
+            if let Some(supersedes) = version.supersedes_version.as_deref()
+                && self.version(supersedes).is_none()
+            {
+                return Err(DocumentControlError::UnknownSupersedes {
                     id: self.id.as_str().to_string(),
-                    version: current.to_string(),
+                    supersedes: supersedes.to_string(),
                 });
             }
+        }
+        if let Some(current) = self.current_version.as_deref()
+            && self.version(current).is_none()
+        {
+            return Err(DocumentControlError::UnknownCurrentVersion {
+                id: self.id.as_str().to_string(),
+                version: current.to_string(),
+            });
         }
         if has_supersession_cycle(self) {
             return Err(DocumentControlError::SupersessionCycle {

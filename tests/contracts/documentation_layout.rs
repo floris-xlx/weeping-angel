@@ -58,6 +58,7 @@ const CANONICAL_SPECS: &[&str] = &[
     "docs/specs/repository-integrity.md",
     "docs/specs/architectural-cleanup-program.md",
     "docs/specs/repository-hygiene.md",
+    "docs/specs/structural-reconciliation.md",
     "docs/specs/collector-hexagonal.md",
 ];
 
@@ -105,10 +106,10 @@ fn adr_prefixes_are_unique() {
     let mut seen = std::collections::BTreeMap::<String, Vec<String>>::new();
     for entry in fs::read_dir(&dir).unwrap() {
         let name = entry.unwrap().file_name().to_string_lossy().into_owned();
-        if let Some(prefix) = name.get(..4) {
-            if prefix.bytes().all(|b| b.is_ascii_digit()) {
-                seen.entry(prefix.to_string()).or_default().push(name);
-            }
+        if let Some(prefix) = name.get(..4)
+            && prefix.bytes().all(|b| b.is_ascii_digit())
+        {
+            seen.entry(prefix.to_string()).or_default().push(name);
         }
     }
     let dups: Vec<_> = seen.into_iter().filter(|(_, v)| v.len() > 1).collect();

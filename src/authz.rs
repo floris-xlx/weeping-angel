@@ -112,15 +112,15 @@ impl Authorization {
         }
         // allow "*.example.com" style: stored as ".example.com" or "*.example.com"
         for pattern in &self.allow_hosts {
-            if let Some(suffix) = pattern.strip_prefix("*.") {
-                if host == suffix || host.ends_with(&format!(".{suffix}")) {
-                    return true;
-                }
+            if let Some(suffix) = pattern.strip_prefix("*.")
+                && (host == suffix || host.ends_with(&format!(".{suffix}")))
+            {
+                return true;
             }
-            if let Some(suffix) = pattern.strip_prefix('.') {
-                if host == suffix || host.ends_with(&format!(".{suffix}")) {
-                    return true;
-                }
+            if let Some(suffix) = pattern.strip_prefix('.')
+                && (host == suffix || host.ends_with(&format!(".{suffix}")))
+            {
+                return true;
             }
         }
         false

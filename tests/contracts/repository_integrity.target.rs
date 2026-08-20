@@ -44,7 +44,6 @@ const ADR_IDENTITY_SCHEMA: &str = "weeping-angel/adr-identity/v1";
 const SPEC_LIFECYCLE_SCHEMA: &str = "weeping-angel/spec-lifecycle/v1";
 const GUARD_REPORT_SCHEMA: &str = "weeping-angel/guard-report/v1";
 
-
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
@@ -96,11 +95,11 @@ fn collect_rs(dir: PathBuf) -> String {
             let path = entry.path();
             if path.is_dir() {
                 walk(&path, out);
-            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-                if let Ok(text) = fs::read_to_string(&path) {
-                    out.push_str(&text);
-                    out.push('\n');
-                }
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs")
+                && let Ok(text) = fs::read_to_string(&path)
+            {
+                out.push_str(&text);
+                out.push('\n');
             }
         }
     }
@@ -274,8 +273,8 @@ fn ri_t04_assurance_cli_is_root_package() {
         .iter()
         .map(|v| v.as_str().expect("path str"))
         .collect();
-    assert!(paths.iter().any(|p| *p == "src/main.rs"));
-    assert!(paths.iter().any(|p| *p == "src/cli.rs"));
+    assert!(paths.contains(&"src/main.rs"));
+    assert!(paths.contains(&"src/cli.rs"));
     assert!(!rel("crates/weeping-angel-assurance-cli/Cargo.toml").is_file());
 }
 
@@ -823,7 +822,7 @@ fn ri_t20_policy_lives_in_versioned_architecture_files() {
         .collect();
     for kind in OWNERSHIP_KINDS {
         assert!(
-            kinds.iter().any(|k| *k == kind),
+            kinds.contains(&kind),
             "policy.ownership_kinds must include {kind}; got {kinds:?}"
         );
     }
@@ -836,7 +835,7 @@ fn ri_t20_policy_lives_in_versioned_architecture_files() {
         .collect();
     for concept in OWNERSHIP_CONCEPTS {
         assert!(
-            concepts.iter().any(|c| *c == concept),
+            concepts.contains(&concept),
             "policy.required_concepts must include {concept}; got {concepts:?}"
         );
     }

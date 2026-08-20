@@ -90,7 +90,7 @@ fn impl_from_json(value: Value) -> ControlImplementation {
 }
 
 fn round_trip(value: Value) -> Value {
-    serde_json::to_value(&impl_from_json(value)).unwrap()
+    serde_json::to_value(impl_from_json(value)).unwrap()
 }
 
 fn control_with_required_evidence() -> Control {
@@ -214,7 +214,7 @@ const ADDITIVE_JSON_KEYS: &[&str] = &[
     "supersededAt",
 ];
 
-fn json_slot<'a>(value: &'a Value, key: &str) -> Value {
+fn json_slot(value: &Value, key: &str) -> Value {
     match value.get(key) {
         Some(v) => v.clone(),
         None => json!([]),

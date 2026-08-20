@@ -29,10 +29,10 @@ pub fn parse_packages_config(content: &str) -> Result<(Vec<PackageRef>, Ecosyste
                             _ => {}
                         }
                     }
-                    if let Some(name) = id {
-                        if !name.is_empty() {
-                            packages.insert(name, version);
-                        }
+                    if let Some(name) = id
+                        && !name.is_empty()
+                    {
+                        packages.insert(name, version);
                     }
                 }
             }
@@ -68,10 +68,10 @@ pub fn parse_csproj(content: &str) -> Result<(Vec<PackageRef>, Ecosystem)> {
                             _ => {}
                         }
                     }
-                    if let Some(name) = include {
-                        if !name.is_empty() {
-                            packages.insert(name, version);
-                        }
+                    if let Some(name) = include
+                        && !name.is_empty()
+                    {
+                        packages.insert(name, version);
                     }
                 }
             }

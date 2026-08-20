@@ -313,6 +313,17 @@ supersedes = []
 successor = ""
 
 [[spec]]
+path = "docs/specs/structural-reconciliation.md"
+state = "active"
+ownership = ["repository_guard"]
+depends_on = [
+  "docs/specs/repository-integrity.md",
+  "docs/specs/architectural-cleanup-program.md",
+]
+supersedes = []
+successor = ""
+
+[[spec]]
 path = "docs/specs/supplier-risk.md"
 state = "active"
 ownership = ["catalog"]

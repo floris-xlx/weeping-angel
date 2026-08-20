@@ -63,10 +63,10 @@ pub fn extract_from_js(base: &Url, js: &str) -> Vec<Url> {
     }
     for cap in QUOTED_PATH.captures_iter(js) {
         let p = &cap[1];
-        if is_useful_path(p) {
-            if let Some(u) = resolve_link(base, p) {
-                out.push(u);
-            }
+        if is_useful_path(p)
+            && let Some(u) = resolve_link(base, p)
+        {
+            out.push(u);
         }
     }
     for cap in HASH_ROUTE.captures_iter(js) {
@@ -90,10 +90,10 @@ fn paths_from_jsonish(base: &Url, blob: &str) -> Vec<Url> {
     let mut out = Vec::new();
     for cap in QUOTED_PATH.captures_iter(blob) {
         let p = &cap[1];
-        if is_useful_path(p) {
-            if let Some(u) = resolve_link(base, p) {
-                out.push(u);
-            }
+        if is_useful_path(p)
+            && let Some(u) = resolve_link(base, p)
+        {
+            out.push(u);
         }
     }
     // also absolute URLs

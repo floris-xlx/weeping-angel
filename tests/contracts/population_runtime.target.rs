@@ -292,10 +292,10 @@ fn f64_metric(root: &Value, key: &str) -> Option<f64> {
         if let Some(n) = cell.as_f64() {
             return Some(n);
         }
-        if let Some(s) = cell.as_str() {
-            if let Ok(n) = s.parse::<f64>() {
-                return Some(n);
-            }
+        if let Some(s) = cell.as_str()
+            && let Ok(n) = s.parse::<f64>()
+        {
+            return Some(n);
         }
     }
     None

@@ -186,12 +186,11 @@ async fn fetch_cargo_emails(client: &Client, package: &str) -> Result<Vec<String
         let _ = authors; // authors often not on summary
     }
     // Prefer owners → user — crates.io rarely exposes emails publicly; try authors string on versions
-    if let Some(vers) = data.get("versions").and_then(|v| v.as_array()) {
-        if let Some(authors) = vers.first().and_then(|v| v.get("crate_size"))
-        // placeholder to keep structure
-        {
-            let _ = authors;
-        }
+    if let Some(vers) = data.get("versions").and_then(|v| v.as_array())
+        && let Some(authors) = vers.first().and_then(|v| v.get("crate_size"))
+    // placeholder to keep structure
+    {
+        let _ = authors;
     }
     // Parse any email-looking strings from crate homepage/repository is weak; use authors if present
     if let Some(authors) = data

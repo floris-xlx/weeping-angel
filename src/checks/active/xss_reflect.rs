@@ -103,10 +103,10 @@ fn html_escape(s: &str) -> String {
 fn param_urls(ctx: &ScanContext, limit: usize) -> Vec<Url> {
     let mut out = Vec::new();
     for u in &ctx.discovered_urls {
-        if let Ok(parsed) = Url::parse(u) {
-            if parsed.query().is_some() {
-                out.push(parsed);
-            }
+        if let Ok(parsed) = Url::parse(u)
+            && parsed.query().is_some()
+        {
+            out.push(parsed);
         }
         if out.len() >= limit {
             break;

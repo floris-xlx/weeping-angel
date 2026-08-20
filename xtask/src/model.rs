@@ -254,15 +254,14 @@ fn load_workspace(
             let Some(rel) = item.as_str() else { continue };
             members.push(rel.to_string());
             let member_cargo = root.join(rel).join("Cargo.toml");
-            if let Ok(member) = read_toml(&member_cargo) {
-                if let Some(name) = member
+            if let Ok(member) = read_toml(&member_cargo)
+                && let Some(name) = member
                     .get("package")
                     .and_then(|p| p.get("name"))
                     .and_then(|n| n.as_str())
-                {
-                    names.insert(name.to_string());
-                    graph.insert(name.to_string(), collect_dep_names(&member));
-                }
+            {
+                names.insert(name.to_string());
+                graph.insert(name.to_string(), collect_dep_names(&member));
             }
         }
     }
@@ -324,10 +323,10 @@ fn list_dir_files(dir: &Path, ext: &str) -> Vec<String> {
     };
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) == Some(ext) {
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                out.push(name.to_string());
-            }
+        if path.extension().and_then(|e| e.to_str()) == Some(ext)
+            && let Some(name) = path.file_name().and_then(|n| n.to_str())
+        {
+            out.push(name.to_string());
         }
     }
     out.sort();

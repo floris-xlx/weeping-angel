@@ -255,7 +255,7 @@ fn attach_population(out: population::PopulationOutcome, refs: &mut Vec<String>)
 
 fn eval_node(
     expr: &TestExpr,
-    envelopes: &[&EvidenceEnvelope],
+    _envelopes: &[&EvidenceEnvelope],
     evidence: &EvidenceSet,
     index: &EvidenceIndex<'_>,
     context: &AssessmentContext,
@@ -480,7 +480,7 @@ fn eval_node(
             let mut worst = Effectiveness::Effective;
             let mut notes = Vec::new();
             for child in nodes {
-                let out = eval_node(child, envelopes, evidence, index, context, refs, missing);
+                let out = eval_node(child, _envelopes, evidence, index, context, refs, missing);
                 notes.push(out.rationale);
                 worst = worse(worst, out.effectiveness);
             }
@@ -490,7 +490,7 @@ fn eval_node(
             let mut best = Effectiveness::InsufficientEvidence;
             let mut notes = Vec::new();
             for child in nodes {
-                let out = eval_node(child, envelopes, evidence, index, context, refs, missing);
+                let out = eval_node(child, _envelopes, evidence, index, context, refs, missing);
                 notes.push(out.rationale.clone());
                 if rank(out.effectiveness) < rank(best) {
                     best = out.effectiveness;
@@ -501,7 +501,7 @@ fn eval_node(
         TestExpr::None(nodes) => {
             let any = eval_node(
                 &TestExpr::Any(nodes.clone()),
-                envelopes,
+                _envelopes,
                 evidence,
                 index,
                 context,
@@ -515,7 +515,7 @@ fn eval_node(
             }
         }
         TestExpr::Not(inner) => {
-            let out = eval_node(inner, envelopes, evidence, index, context, refs, missing);
+            let out = eval_node(inner, _envelopes, evidence, index, context, refs, missing);
             let flipped = match out.effectiveness {
                 Effectiveness::Effective => Effectiveness::Ineffective,
                 Effectiveness::Ineffective => Effectiveness::Effective,

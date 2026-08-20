@@ -25,9 +25,9 @@ use weeping_angel_assurance::bridge;
 use weeping_angel_assurance::{AssessmentReport, AssessmentScope, AssuranceEngine};
 use weeping_angel_assurance_ir::crosswalk::ComplianceGraph;
 use weeping_angel_assurance_ir::{
-    ASSURANCE_IR_SCHEMA, AssessmentId, AssetId, Control, ControlId, EvidenceRequirement,
-    EvidenceRequirementId, FrameworkId, FrameworkVersion, Mapping, MappingCompleteness,
-    MappingDirection, Requirement, RequirementId,
+    AssessmentId, AssetId, Control, ControlId, EvidenceRequirement, EvidenceRequirementId,
+    FrameworkId, FrameworkVersion, Mapping, MappingCompleteness, MappingDirection, Requirement,
+    RequirementId,
 };
 use weeping_angel_collector::{CollectorDescriptor, EvidenceCollector, FixtureCollector};
 use weeping_angel_control_test::{
@@ -604,7 +604,7 @@ fn evd_001_envelopes_are_immutable_and_carry_identity_fields() {
 #[test]
 fn evd_002_duplicate_evidence_is_deduplicated_by_the_ledger() {
     let src = crate_sources_joined("weeping-angel-evidence");
-    require_needles("EVD-002", &src, &LEDGER_NEEDLES);
+    require_needles("EVD-002", &src, LEDGER_NEEDLES);
     assert!(
         !src.contains("set_compliant") && !src.contains("set_control_status"),
         "EVD-002: ledger must not own conclusions"
@@ -926,9 +926,9 @@ fn gh_009_tokens_never_leak() {
 #[test]
 fn scanner_bridge_is_one_way_and_empty_scan_is_not_effective() {
     let hit = sample_hit();
-    let before = serde_json::to_value(&hit.to_semantic_finding()).unwrap();
+    let before = serde_json::to_value(hit.to_semantic_finding()).unwrap();
     let obs = bridge::from_engine_hit(&hit);
-    let after = serde_json::to_value(&hit.to_semantic_finding()).unwrap();
+    let after = serde_json::to_value(hit.to_semantic_finding()).unwrap();
     assert_eq!(before, after, "bridge must not rewrite SemanticFinding");
     assert!(
         obs.fact("iso27001").is_none(),
@@ -1109,7 +1109,7 @@ fn cli_exposes_framework_collect_evidence_result_compare_soa() {
     let cmd = Cli::clap_command();
     let names: Vec<&str> = cmd.get_subcommands().map(|c| c.get_name()).collect();
     assert!(
-        names.iter().any(|n| *n == "assurance"),
+        names.contains(&"assurance"),
         "Commands must grow an `assurance` family without leaking compiler topology; have {names:?}"
     );
     let cases = [

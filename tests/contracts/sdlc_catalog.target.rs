@@ -1057,7 +1057,7 @@ fn sdlc_008_iso_pack_source_sliver_unchanged_and_population_id_is_canonical() {
         assert!(
             text_has(&metadata, id)
                 || pack.controls.iter().any(|c| c.id().as_str() == *id)
-                || catalog.control(*id).is_err(),
+                || catalog.control(id).is_err(),
             "SDLC-008: this slice must not invent a competing pack-local `{id}` library"
         );
     }
@@ -1553,11 +1553,16 @@ fn sdlc_016_no_repository_toml_and_provider_neutral_collectors_share_contracts()
         "SDLC-016: prefer evidence/sdlc.toml so ghc_b028 stays green (no evidence/repository.toml)"
     );
     let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
+    assert!(
+        !text_has(&cargo, "sdd_github_collector_baseline")
+            && !text_has(&cargo, "tests/contracts/github_collector.baseline.rs"),
+        "SDLC-016: superseded github_collector baseline must stay deleted"
+    );
     for suite in [
         "sdd_iso27001_assurance_target",
         "sdd_iam_catalog_target",
         "sdd_canonical_assurance_catalog_target",
-        "sdd_github_collector_baseline",
+        "sdd_github_collector_target",
     ] {
         assert!(
             text_has(&cargo, suite),

@@ -39,14 +39,20 @@ const FRESH_MAX_AGE: Duration = Duration::from_secs(24 * 3600);
 const INITIAL_BACKOFF: Duration = Duration::from_secs(60);
 const MAX_BACKOFF: Duration = Duration::from_secs(240);
 const TIMEOUT: Duration = Duration::from_secs(30);
-const ASSET: &str = "repo:in-scope";
-const MFA_TYPE: &str = "identity.privileged.mfa";
+const ORG_ASSET: &str = "org:cas";
+const SUBJECT: &str = "user:cas-admin";
+const INV_TYPE: &str = "evidence.identity.inventory";
+const PRIV_TYPE: &str = "evidence.identity.privileged-membership";
+const MFA_TYPE: &str = "evidence.identity.mfa-status";
 const MFA_CONTROL: &str = "control.identity.privileged-mfa";
 const COLLECTOR_OK: &str = "fixture.cas-ok";
 const COLLECTOR_FAIL: &str = "fixture.cas-fail";
 const COLLECTOR_SLOW: &str = "fixture.cas-slow";
 const COLLECTOR_A: &str = "fixture.cas-a";
 const COLLECTOR_B: &str = "fixture.cas-b";
+/// Catalog privileged-MFA fixture emits org inventory + subject inventory +
+/// privileged-membership + mfa-status (see `privileged_mfa_observations`).
+const ENVELOPES_PER_COLLECT: usize = 4;
 
 fn manifest_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -70,30 +76,100 @@ fn iso_target() -> FrameworkTarget {
 }
 
 fn scope() -> AssessmentScope {
-    AssessmentScope::new().allow_asset(AssetId::new(ASSET))
+    AssessmentScope::new()
+        .allow_asset(AssetId::new(ORG_ASSET))
+        .allow_asset(AssetId::new(SUBJECT))
 }
 
-fn mfa_observation(salt: &str) -> EvidenceObservation {
-    EvidenceObservation::new(EvidenceType::new(MFA_TYPE))
-        .with_fact("enabled", "true")
-        .with_fact("salt", salt)
-        .with_narrative("privileged MFA is enabled")
+fn cas_identity_types() -> [EvidenceType; 3] {
+    [
+        EvidenceType::new(INV_TYPE),
+        EvidenceType::new(PRIV_TYPE),
+        EvidenceType::new(MFA_TYPE),
+    ]
+}
+
+/// Catalog-shaped privileged-MFA population: authoritative org inventory + one
+/// privileged subject with MFA enabled (`test.identity.privileged-mfa-enabled`).
+fn privileged_mfa_observations(salt: &str) -> Vec<(AssetId, EvidenceObservation)> {
+    vec![
+        (
+            AssetId::new(ORG_ASSET),
+            EvidenceObservation::new(EvidenceType::new(INV_TYPE))
+                .with_fact("population_id", ORG_ASSET)
+                .with_fact("authoritative", "true")
+                .with_fact("account_kind", "organization")
+                .with_fact("salt", salt)
+                .with_narrative("authoritative identity population"),
+        ),
+        (
+            AssetId::new(SUBJECT),
+            EvidenceObservation::new(EvidenceType::new(INV_TYPE))
+                .with_fact("subject_id", SUBJECT)
+                .with_fact("account_kind", "user")
+                .with_fact("unique_key", SUBJECT)
+                .with_fact("authoritative", "true")
+                .with_fact("salt", salt)
+                .with_narrative("privileged identity inventory row"),
+        ),
+        (
+            AssetId::new(SUBJECT),
+            EvidenceObservation::new(EvidenceType::new(PRIV_TYPE))
+                .with_fact("subject_id", SUBJECT)
+                .with_fact("privileged", "true")
+                .with_fact("roles", "admin")
+                .with_fact("membership_observed_at", "2026-08-18T12:00:00Z")
+                .with_fact("salt", salt)
+                .with_narrative("subject is privileged"),
+        ),
+        (
+            AssetId::new(SUBJECT),
+            EvidenceObservation::new(EvidenceType::new(MFA_TYPE))
+                .with_fact("subject_id", SUBJECT)
+                .with_fact("mfa_enabled", "true")
+                .with_fact("salt", salt)
+                .with_narrative("privileged MFA is enabled"),
+        ),
+    ]
 }
 
 fn ok_collector(id: &str, salt: &str) -> FixtureCollector {
-    FixtureCollector::new(id, "1")
-        .with_evidence_types([EvidenceType::new(MFA_TYPE)])
-        .with_planned(AssetId::new(ASSET), mfa_observation(salt))
+    let mut collector = FixtureCollector::new(id, "1").with_evidence_types(cas_identity_types());
+    for (asset, observation) in privileged_mfa_observations(salt) {
+        collector = collector.with_planned(asset, observation);
+    }
+    collector
 }
 
-fn seal_prior(collector_id: &str, collected_at: DateTime<Utc>, salt: &str) -> EvidenceEnvelope {
-    let provenance = EvidenceProvenance {
-        collector_id: collector_id.into(),
-        collected_at,
-        scope: ASSET.into(),
-        asset: AssetId::new(ASSET),
-    };
-    EvidenceEnvelope::seal(mfa_observation(salt), provenance).expect("seal prior envelope")
+fn seal_prior(
+    collector_id: &str,
+    collected_at: DateTime<Utc>,
+    salt: &str,
+) -> Vec<EvidenceEnvelope> {
+    privileged_mfa_observations(salt)
+        .into_iter()
+        .map(|(asset, observation)| {
+            let provenance = EvidenceProvenance {
+                collector_id: collector_id.into(),
+                collected_at,
+                scope: ORG_ASSET.into(),
+                asset,
+            };
+            EvidenceEnvelope::seal(observation, provenance).expect("seal prior envelope")
+        })
+        .collect()
+}
+
+fn append_priors(
+    ledger: &Arc<Mutex<EvidenceLedger>>,
+    envelopes: Vec<EvidenceEnvelope>,
+) -> Vec<String> {
+    let digests: Vec<String> = envelopes.iter().map(|e| e.digest().to_string()).collect();
+    let mut guard = ledger.lock().unwrap();
+    for env in envelopes {
+        guard.append(env).expect("seed prior envelope");
+    }
+    digests
 }
 
 struct CountingCollector {
@@ -148,9 +224,9 @@ impl EvidenceCollector for FailingCollector {
         CollectorDescriptor {
             id: self.id.clone(),
             version: "1".into(),
-            evidence_types: BTreeSet::from([EvidenceType::new(MFA_TYPE)]),
+            evidence_types: BTreeSet::from(cas_identity_types()),
             provider_family: "fixture".into(),
-            subject_types: BTreeSet::from(["repository".into()]),
+            subject_types: BTreeSet::from(["identity".into()]),
             capabilities: CollectorCapabilities {
                 offline: true,
                 worker_safe: true,
@@ -181,9 +257,9 @@ impl EvidenceCollector for ClockAdvancingCollector {
         CollectorDescriptor {
             id: self.id.clone(),
             version: "1".into(),
-            evidence_types: BTreeSet::from([EvidenceType::new(MFA_TYPE)]),
+            evidence_types: BTreeSet::from(cas_identity_types()),
             provider_family: "fixture".into(),
-            subject_types: BTreeSet::from(["repository".into()]),
+            subject_types: BTreeSet::from(["identity".into()]),
             capabilities: CollectorCapabilities {
                 offline: true,
                 worker_safe: true,
@@ -476,9 +552,10 @@ fn cas_006_timeout_marks_attempt_without_hanging_tick() {
         work: Duration::from_secs(90),
         collects: collects.clone(),
     };
-    let prior = seal_prior(COLLECTOR_SLOW, t0() - chrono::Duration::hours(1), "prior");
-    let prior_digest = prior.digest().to_string();
-    ledger.lock().unwrap().append(prior).expect("seed prior");
+    let prior_digests = append_priors(
+        &ledger,
+        seal_prior(COLLECTOR_SLOW, t0() - chrono::Duration::hours(1), "prior"),
+    );
 
     let mut scheduler = scheduler_builder(clock.clone(), store, ledger.clone())
         .collector(collector)
@@ -497,7 +574,9 @@ fn cas_006_timeout_marks_attempt_without_hanging_tick() {
     );
     let still = ledger.lock().unwrap().query().expect("query");
     assert!(
-        still.iter().any(|e| e.digest() == prior_digest),
+        prior_digests
+            .iter()
+            .all(|d| still.iter().any(|e| e.digest() == *d)),
         "timed-out collect must not delete prior envelopes"
     );
 }
@@ -581,7 +660,7 @@ fn cas_008_duplicate_tick_dedupes_run_identity() {
     );
     assert_eq!(
         ledger.lock().unwrap().query().expect("query").len(),
-        1,
+        ENVELOPES_PER_COLLECT,
         "duplicate tick must not double ledger envelopes"
     );
 }
@@ -650,7 +729,7 @@ fn cas_010_concurrent_independent_collectors_do_not_cross_runs() {
     assert_ne!(report.run_ids[0], report.run_ids[1]);
 
     let envelopes = ledger.lock().unwrap().query().expect("query");
-    assert_eq!(envelopes.len(), 2);
+    assert_eq!(envelopes.len(), ENVELOPES_PER_COLLECT * 2);
     let run_a = report
         .collection_runs
         .iter()
@@ -692,13 +771,7 @@ fn cas_011_stale_previous_evidence_is_not_erased() {
     let store = InMemorySchedulerStore::new();
     let ledger = shared_ledger();
     let stale_at = t0() - chrono::Duration::hours(48);
-    let prior = seal_prior(COLLECTOR_FAIL, stale_at, "stale");
-    let digest = prior.digest().to_string();
-    ledger
-        .lock()
-        .unwrap()
-        .append(prior)
-        .expect("seed stale prior");
+    let digests = append_priors(&ledger, seal_prior(COLLECTOR_FAIL, stale_at, "stale"));
 
     let (collector, _) = FailingCollector::new(COLLECTOR_FAIL);
     let mut scheduler = scheduler_builder(clock, store, ledger.clone())
@@ -716,8 +789,10 @@ fn cas_011_stale_previous_evidence_is_not_erased() {
     );
     let still = ledger.lock().unwrap().query().expect("query");
     assert!(
-        still.iter().any(|e| e.digest() == digest),
-        "failed collect must not delete the stale prior envelope"
+        digests
+            .iter()
+            .all(|d| still.iter().any(|e| e.digest() == *d)),
+        "failed collect must not delete the stale prior envelopes"
     );
 }
 
@@ -728,13 +803,7 @@ fn cas_012_fresh_previous_evidence_is_reattached() {
     let store = InMemorySchedulerStore::new();
     let ledger = shared_ledger();
     let fresh_at = t0() - chrono::Duration::hours(1);
-    let prior = seal_prior(COLLECTOR_FAIL, fresh_at, "fresh");
-    let digest = prior.digest().to_string();
-    ledger
-        .lock()
-        .unwrap()
-        .append(prior)
-        .expect("seed fresh prior");
+    let digests = append_priors(&ledger, seal_prior(COLLECTOR_FAIL, fresh_at, "fresh"));
 
     let (collector, _) = FailingCollector::new(COLLECTOR_FAIL);
     let mut scheduler = scheduler_builder(clock, store, ledger.clone())
@@ -757,8 +826,10 @@ fn cas_012_fresh_previous_evidence_is_reattached() {
     );
     let still = ledger.lock().unwrap().query().expect("query");
     assert!(
-        still.iter().any(|e| e.digest() == digest),
-        "failed collect must not delete the fresh prior envelope"
+        digests
+            .iter()
+            .all(|d| still.iter().any(|e| e.digest() == *d)),
+        "failed collect must not delete the fresh prior envelopes"
     );
 }
 

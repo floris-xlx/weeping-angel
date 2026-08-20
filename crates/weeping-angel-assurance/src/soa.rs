@@ -692,25 +692,19 @@ fn combine_effectiveness(results: &[&ControlTestResult]) -> Option<Effectiveness
         return None;
     }
     let states: Vec<Effectiveness> = results.iter().map(|r| r.effectiveness).collect();
-    if states.iter().any(|e| *e == Effectiveness::Ineffective) {
+    if states.contains(&Effectiveness::Ineffective) {
         return Some(Effectiveness::Ineffective);
     }
-    if states.iter().any(|e| *e == Effectiveness::StaleEvidence) {
+    if states.contains(&Effectiveness::StaleEvidence) {
         return Some(Effectiveness::StaleEvidence);
     }
-    if states
-        .iter()
-        .any(|e| *e == Effectiveness::InsufficientEvidence)
-    {
+    if states.contains(&Effectiveness::InsufficientEvidence) {
         return Some(Effectiveness::InsufficientEvidence);
     }
-    if states
-        .iter()
-        .any(|e| *e == Effectiveness::PartiallyEffective)
-    {
+    if states.contains(&Effectiveness::PartiallyEffective) {
         return Some(Effectiveness::PartiallyEffective);
     }
-    if states.iter().any(|e| *e == Effectiveness::Effective) {
+    if states.contains(&Effectiveness::Effective) {
         return Some(Effectiveness::Effective);
     }
     states.first().copied()

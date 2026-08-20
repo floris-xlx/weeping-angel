@@ -1,8 +1,10 @@
-# Live repository counts — 2026-08 implement snapshot
+# Historical — repository counts — 2026-08 implement snapshot
+
+**Historical** evidence only. Not live status. Current mechanical counts live in [`current.md`](current.md) (`cargo xtask inventory`).
 
 Re-measured on the increment-1 implement tree (Windows). Inclusion rule: all matching files under the repo **excluding** `target/`, `target-*`, and `node_modules/`.
 
-Spec-first characterization (SHA `f560196c57e77df2573cfb9a4b384d3cf1c21e8a`) is preserved in `docs/specs/repository-integrity.md` §3.6. This file is evidence, not the debt register.
+Spec-first characterization (SHA `f560196c57e77df2573cfb9a4b384d3cf1c21e8a`) is preserved in `docs/specs/repository-integrity.md` Historical sections. This file is evidence, not the debt register.
 
 ## Test binaries and suites
 

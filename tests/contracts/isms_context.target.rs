@@ -568,7 +568,7 @@ fn ctx_t06_impossible_lifecycle_states_fail_closed() {
         .validate()
         .expect("Draft may omit methodology and cadence");
 
-    let mut wire = serde_json::to_value(&golden_context()).unwrap();
+    let mut wire = serde_json::to_value(golden_context()).unwrap();
     wire["lifecycle"] = Value::String("archived".into());
     let decoded = serde_json::from_value::<IsmsContext>(wire);
     assert!(
@@ -581,7 +581,7 @@ fn ctx_t06_impossible_lifecycle_states_fail_closed() {
 /// stays free of network/SDK types.
 #[test]
 fn ctx_t07_generic_ir_is_provider_and_framework_neutral() {
-    let json = serde_json::to_value(&golden_context()).unwrap();
+    let json = serde_json::to_value(golden_context()).unwrap();
     let mut keys = BTreeSet::new();
     collect_object_keys(&json, &mut keys);
     let forbidden = [
@@ -755,7 +755,7 @@ fn ctx_t11_schema_remains_assurance_ir_v1() {
 /// CTX-T12: durable definition must not carry assessment-result fields.
 #[test]
 fn ctx_t12_context_is_definition_not_assessment_results() {
-    let json = serde_json::to_value(&golden_context()).unwrap();
+    let json = serde_json::to_value(golden_context()).unwrap();
     let obj: &Map<String, Value> = json.as_object().unwrap();
     for forbidden in [
         "effectiveness",

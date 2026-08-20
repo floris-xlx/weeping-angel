@@ -980,7 +980,10 @@ fn ghc_012_golden_missing_branch_protection_permission_is_diagnostic() {
             }),
         "403 on protection must produce PermissionDenied / insufficient-evidence diagnostics"
     );
-    for env in of_type(&batch.envelopes, "evidence.repository.branch-protection") {
+    if let Some(env) = of_type(&batch.envelopes, "evidence.repository.branch-protection")
+        .into_iter()
+        .next()
+    {
         assert!(
             typed_bool(env, "protected"),
             "403 must never become protected=false for {}",
@@ -1043,7 +1046,10 @@ fn ghc_014_golden_archived_excluded_by_selector() {
             .all(|id| !id.contains("legacy") && !id.contains("archived")),
         "selector exclude_archived must drop archived repos from inventory.subject: {subjects:?}"
     );
-    for env in of_type(&batch.envelopes, "evidence.repository.branch-protection") {
+    if let Some(env) = of_type(&batch.envelopes, "evidence.repository.branch-protection")
+        .into_iter()
+        .next()
+    {
         assert!(
             !subject_of(env).contains("legacy"),
             "archived repo must not enter the protection population"
@@ -1423,7 +1429,10 @@ fn ghc_012b_inline_protection_403_is_not_protected_false() {
         scope: repo_scope("acme", "app"),
     })
     .unwrap_or_else(|e| panic!("protection 403 is a per-subject diagnostic, not a batch Err: {e}"));
-    for env in of_type(&batch.envelopes, "evidence.repository.branch-protection") {
+    if let Some(env) = of_type(&batch.envelopes, "evidence.repository.branch-protection")
+        .into_iter()
+        .next()
+    {
         panic!(
             "403 must not emit branch-protection facts (got protected={:?})",
             env.observation().fact_value("protected")

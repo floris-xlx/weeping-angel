@@ -148,7 +148,7 @@ fn export_argument_node(arg: &Arg) -> ArgumentNode {
         .collect();
     let short = arg.get_short().map(|v| format!("-{v}"));
     let long = arg.get_long().map(|v| format!("--{v}"));
-    let positional_index = arg.get_index().map(|v| v as usize);
+    let positional_index = arg.get_index();
     let value_suffix = if argument_takes_value(arg) {
         format!(" {}", argument_value_placeholder(arg))
     } else {

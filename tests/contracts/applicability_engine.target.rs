@@ -46,6 +46,7 @@ fn crate_src(name: &str) -> PathBuf {
     manifest_dir().join("crates").join(name).join("src")
 }
 
+#[allow(dead_code)]
 fn crate_sources_joined(name: &str) -> String {
     let mut files = Vec::new();
     walk_rs_files(&crate_src(name), &mut files);

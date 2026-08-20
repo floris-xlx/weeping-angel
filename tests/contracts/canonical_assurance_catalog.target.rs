@@ -794,7 +794,7 @@ fn cat_011_cli_parses_and_inspect_shows_fixture_control() {
         .expect("assurance family exists");
     let names: Vec<&str> = assurance.get_subcommands().map(|c| c.get_name()).collect();
     assert!(
-        names.iter().any(|n| *n == "catalog"),
+        names.contains(&"catalog"),
         "AssuranceCommand must grow `catalog`; have {names:?}"
     );
 

@@ -158,15 +158,15 @@ fn source_grep_helper() -> &'static str {
 fn hygiene_owned_paths() -> Vec<String> {
     let mut out = vec!["tests/contracts/repository_hygiene.target.rs".to_string()];
     let support = rel("tests/support");
-    if support.is_dir() {
-        if let Ok(entries) = fs::read_dir(&support) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.extension().and_then(|e| e.to_str()) == Some("rs") {
-                    if let Ok(rel_path) = p.strip_prefix(repo_root()) {
-                        out.push(rel_path.to_string_lossy().replace('\\', "/"));
-                    }
-                }
+    if support.is_dir()
+        && let Ok(entries) = fs::read_dir(&support)
+    {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.extension().and_then(|e| e.to_str()) == Some("rs")
+                && let Ok(rel_path) = p.strip_prefix(repo_root())
+            {
+                out.push(rel_path.to_string_lossy().replace('\\', "/"));
             }
         }
     }

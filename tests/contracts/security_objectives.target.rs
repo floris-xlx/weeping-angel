@@ -91,6 +91,7 @@ fn crate_sources_joined(name: &str) -> String {
         .join("\n")
 }
 
+#[allow(dead_code)]
 fn product_crate_sources_joined() -> String {
     let crates_dir = manifest_dir().join("crates");
     let mut chunks = Vec::new();
@@ -1075,7 +1076,7 @@ fn so_t11_historical_as_of_snapshots_are_immutable() {
         &objective,
         &metric,
         &target,
-        &[first_meas.clone()],
+        std::slice::from_ref(&first_meas),
         t1,
         &evidence,
     );
@@ -1129,7 +1130,7 @@ fn so_t12_deterministic_status_transitions() {
         &dated,
         &metric,
         &target,
-        &[meet.clone()],
+        std::slice::from_ref(&meet),
         as_of_before_deadline(),
         &evidence,
     );
@@ -1137,7 +1138,7 @@ fn so_t12_deterministic_status_transitions() {
         &dated,
         &metric,
         &target,
-        &[meet.clone()],
+        std::slice::from_ref(&meet),
         as_of_before_deadline(),
         &evidence,
     );
@@ -1154,7 +1155,7 @@ fn so_t12_deterministic_status_transitions() {
         &dated,
         &metric,
         &target,
-        &[meet.clone()],
+        std::slice::from_ref(&meet),
         as_of_after_deadline(),
         &evidence,
     );
@@ -1164,7 +1165,7 @@ fn so_t12_deterministic_status_transitions() {
         &dated,
         &metric,
         &target,
-        &[miss.clone()],
+        std::slice::from_ref(&miss),
         as_of_before_deadline(),
         &evidence,
     );
@@ -1184,7 +1185,7 @@ fn so_t12_deterministic_status_transitions() {
         &standing,
         &metric,
         &target,
-        &[meet.clone()],
+        std::slice::from_ref(&meet),
         far_future,
         &evidence,
     );

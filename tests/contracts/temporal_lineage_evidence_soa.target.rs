@@ -557,11 +557,7 @@ fn tle_004_validity_history_is_append_only() {
         fn_append(&ledger_src).contains("INSERT OR IGNORE"),
         "TLE-004: envelope append stays INSERT OR IGNORE by digest"
     );
-    require_needles(
-        "TLE-004",
-        &fn_append(&ledger_src),
-        &["transaction", "BEGIN"],
-    );
+    require_needles("TLE-004", fn_append(&ledger_src), &["transaction", "BEGIN"]);
 
     let mut ledger = EvidenceLedger::open_in_memory().unwrap();
     let env = seal_at(ts(2026, 5, 1, 0), "append-only");

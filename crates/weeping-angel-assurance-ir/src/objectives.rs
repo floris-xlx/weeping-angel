@@ -103,6 +103,7 @@ pub struct SecurityObjective {
 }
 
 impl SecurityObjective {
+    #[allow(clippy::too_many_arguments)]
     pub fn try_new(
         id: SecurityObjectiveId,
         title: impl Into<String>,

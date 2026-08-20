@@ -359,7 +359,7 @@ fn assert_json_guard_report(stdout: &str) {
         "duration",
     ] {
         assert!(
-            stdout.contains(&format!("\"{field}\"")) || stdout.contains(&format!("{field}")),
+            stdout.contains(&format!("\"{field}\"")) || stdout.contains(field),
             "JSON GuardReport must include {field}: {stdout}"
         );
     }
@@ -802,7 +802,7 @@ fn acp_t14_cli_explain_prints_invariant_evaluation() {
     );
 }
 
-/// ACP-T15: live `cargo xtask guard` — 04 pass; 05–12 / 14–15 skip; exit 0.
+/// ACP-T15: live `cargo xtask guard` — 01–15 pass (product-law 05–12 included).
 #[test]
 fn acp_t15_live_guard_04_passes_remaining_stubs_skip() {
     let report = run_guard(&live_root());

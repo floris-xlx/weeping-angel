@@ -250,13 +250,13 @@ impl ValidateIr for IsmsContext {
             }
         }
         for unit in &self.organization.business_units {
-            if let Some(parent) = &unit.parent_id {
-                if parent == &unit.id || !unit_ids.contains(parent.as_str()) {
-                    return Err(IrValidationError::Message(format!(
-                        "dangling business unit parentId {} on {}",
-                        parent, unit.id
-                    )));
-                }
+            if let Some(parent) = &unit.parent_id
+                && (parent == &unit.id || !unit_ids.contains(parent.as_str()))
+            {
+                return Err(IrValidationError::Message(format!(
+                    "dangling business unit parentId {} on {}",
+                    parent, unit.id
+                )));
             }
         }
 

@@ -147,10 +147,11 @@ fn looks_like_authority_or_path(s: &str) -> bool {
         return true;
     }
     // host:port where host may lack dots (e.g. myservice:8080 in lab)
-    if let Some((host, port)) = authority.rsplit_once(':') {
-        if !host.is_empty() && port.chars().all(|c| c.is_ascii_digit()) {
-            return true;
-        }
+    if let Some((host, port)) = authority.rsplit_once(':')
+        && !host.is_empty()
+        && port.chars().all(|c| c.is_ascii_digit())
+    {
+        return true;
     }
     authority.contains('.') || authority.contains("localhost")
 }
@@ -182,10 +183,10 @@ fn authority_host(authority: &str) -> String {
             .trim_matches(|c| c == '[' || c == ']')
             .to_string();
     }
-    if let Some((h, port)) = without_user.rsplit_once(':') {
-        if port.chars().all(|c| c.is_ascii_digit()) {
-            return h.to_string();
-        }
+    if let Some((h, port)) = without_user.rsplit_once(':')
+        && port.chars().all(|c| c.is_ascii_digit())
+    {
+        return h.to_string();
     }
     without_user.to_string()
 }
@@ -204,10 +205,10 @@ fn should_default_http(host: &str, authority: &str) -> bool {
         };
     }
     // Explicit :80 → http
-    if let Some((_, port)) = authority.rsplit_once(':') {
-        if port == "80" {
-            return true;
-        }
+    if let Some((_, port)) = authority.rsplit_once(':')
+        && port == "80"
+    {
+        return true;
     }
     false
 }

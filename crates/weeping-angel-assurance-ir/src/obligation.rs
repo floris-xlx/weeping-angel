@@ -429,10 +429,7 @@ pub fn obligation_applies(
 }
 
 /// Active obligations whose applicability at T is in-scope (not expired / not-current / out-of-scope).
-pub fn current_obligations_at<'a>(
-    registry: &'a ObligationRegistry,
-    t: DateTime<Utc>,
-) -> Vec<&'a Obligation> {
+pub fn current_obligations_at(registry: &ObligationRegistry, t: DateTime<Utc>) -> Vec<&Obligation> {
     registry.current_obligations_at(t)
 }
 
@@ -779,15 +776,14 @@ impl ObligationRegistry {
                     obligation.source_id, obligation.id
                 )));
             }
-            if let Some(pred) = &obligation.supersedes {
-                if !obligation_ids.contains(pred.as_str())
-                    && !self.obligations.iter().any(|row| &row.id == pred)
-                {
-                    return Err(IrValidationError::Message(format!(
-                        "dangling predecessor {pred} on obligation {}",
-                        obligation.id
-                    )));
-                }
+            if let Some(pred) = &obligation.supersedes
+                && !obligation_ids.contains(pred.as_str())
+                && !self.obligations.iter().any(|row| &row.id == pred)
+            {
+                return Err(IrValidationError::Message(format!(
+                    "dangling predecessor {pred} on obligation {}",
+                    obligation.id
+                )));
             }
             for selector in &obligation.applicability.subjects {
                 for subject_id in &selector.ids {

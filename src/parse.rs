@@ -137,13 +137,11 @@ pub fn parse_header_lines(lines: &[String]) -> Result<Vec<(String, String)>> {
 pub fn cookie_header_from_args(raw: &[String]) -> Option<String> {
     let parts: Vec<String> = coalesce_kv_tokens(raw)
         .into_iter()
-        .filter_map(|tok| {
+        .map(|tok| {
             if let Some((k, v)) = split_kv(&tok) {
-                Some(format!("{k}={v}"))
-            } else if tok.contains('=') {
-                Some(tok)
+                format!("{k}={v}")
             } else {
-                Some(tok)
+                tok
             }
         })
         .collect();
@@ -183,10 +181,10 @@ fn host_from_allow_entry(raw: &str) -> Option<String> {
         } else {
             s.to_string()
         };
-        if let Ok(u) = url::Url::parse(&candidate) {
-            if let Some(h) = u.host_str() {
-                return Some(normalize_host_token(h));
-            }
+        if let Ok(u) = url::Url::parse(&candidate)
+            && let Some(h) = u.host_str()
+        {
+            return Some(normalize_host_token(h));
         }
     }
 
@@ -257,9 +255,9 @@ mod tests {
 
     #[test]
     fn consent_truthy() {
-        assert_eq!(parse_consent("yes").unwrap(), true);
-        assert_eq!(parse_consent("true").unwrap(), true);
-        assert_eq!(parse_consent("1").unwrap(), true);
+        assert!(parse_consent("yes").unwrap());
+        assert!(parse_consent("true").unwrap());
+        assert!(parse_consent("1").unwrap());
     }
 
     #[test]

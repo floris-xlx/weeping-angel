@@ -11,11 +11,11 @@
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | Documentation architecture | [`docs/adr/0004-documentation-architecture.md`](../adr/0004-documentation-architecture.md) — human SSOT is this file under `docs/specs/`. `docs/sdd/repository-integrity.md` is a pointer stub only. Generated traces go to `.sdd/runs/` and `.sdd/artifacts/` only. |
 | Neighbors (must stay GREEN after implement) | `sdd_documentation_layout` (this path already in `CANONICAL_SPECS`), `sdd_assurance_runtime_target`, `sdd_canonical_assurance_catalog_target`, `sdd_iso27001_assurance_target`; ACP target suite under `xtask/tests` after its increment-2 assertion updates |
-| Collision fence | Prompt 1 exclusive surfaces only (see [§10](#10-increment-2-collision-fence)). Guards **05–12** stay stubs/plumbing (Prompts 2/3 own product semantics). Prompt 4 owns panic budget, broad test retirement, schemas, README/audit hygiene. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. |
+| Collision fence | Prompt 1 exclusive surfaces only (see [§10](#10-increment-2-collision-fence)). Guards **01–15** are real `ArchitectureCheck`s on the healthy tree (`ProductLawCheck` for **05–12**). Prompt 4 owns panic budget, broad test retirement, schemas, README/audit hygiene. Do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli`. Stub/skip archaeology lives under **Historical**. |
 | Repository | `floris-xlx/weeping-angel` |
 | Base branch | `main` |
 | Increment-1 characterization SHA | `f560196c57e77df2573cfb9a4b384d3cf1c21e8a` |
-| Increment-2 current plane | Modular `xtask` (`model` / `architecture` / `debt` / `checks` / `report`); Guards **01–04, 13–15** real; **05–12** skip-with-debt |
+| Increment-2 current plane | Modular `xtask` (`model` / `architecture` / `debt` / `checks` / `report`); Guards **01–15** real / pass on the healthy tree; `DEBT-GUARD-05`…`12` (and 14/15) **resolved** |
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) — this program does not edit IR |
 | `adr_needed` | **true** (increment 1: 0009/0010). Increment 2: **Accepted** ADR **0011** (modular guard engine, policy-in-`architecture/`, real Guards 14/15, debt-expiry, additive JSON). |
 | Workspace verify | `cargo fmt --all -- --check`; `cargo test -p xtask`; `cargo xtask guard`; `cargo test --test sdd_repository_integrity_target`; `cargo test --test sdd_documentation_layout` |
@@ -62,7 +62,7 @@ This slice may add **only** the health-gate surfaces listed in §4. It must not 
 | Existing dual-suite bodies except additive `Cargo.toml` `[[test]]` rows and `CANONICAL_SPECS` | Neighbors stay GREEN |
 | `tests/sdd/` | ADR 0004 forbids this path |
 | Hypothetical packages `weeping-angel-catalog`, `weeping-angel-assurance-cli` | **Do not invent** |
-| Guard checks 05–12 as real product-semantic implementations | remaining_backlog / Prompts 2–3 — stub fail-closed or skip-with-debt only. Check **04** is [ADR 0010](../adr/0010-architecture-as-law.md). Checks **14–15** are increment 2 ([ADR 0011](../adr/0011-repository-guard-governance.md)). |
+| Guard checks 05–12 product semantics (historical row; now landed) | Prompts 2/3 owned product semantics. Check **04** is [ADR 0010](../adr/0010-architecture-as-law.md). Checks **14–15** are increment 2 ([ADR 0011](../adr/0011-repository-guard-governance.md)). Live tree: **05–12** are `ProductLawCheck` and pass. |
 
 Suggested **implement** surfaces (new files only, plus tiny wiring):
 

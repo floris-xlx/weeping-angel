@@ -25,10 +25,10 @@ pub fn extract_links(base: &Url, html: &str) -> Vec<Url> {
             continue;
         };
         for el in document.select(&sel) {
-            if let Some(href) = el.value().attr(attr) {
-                if let Some(u) = resolve_link(base, href) {
-                    out.push(u);
-                }
+            if let Some(href) = el.value().attr(attr)
+                && let Some(u) = resolve_link(base, href)
+            {
+                out.push(u);
             }
         }
     }
