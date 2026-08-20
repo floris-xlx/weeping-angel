@@ -17,8 +17,9 @@ use chrono::{DateTime, TimeZone, Utc};
 use serde_json::Value;
 use weeping_angel_assurance::lineage::{
     AssessmentDefinitionSnapshot, CanonicalCatalogSnapshot, EvidenceSnapshot,
-    FrameworkPackSnapshot, LineageApplicabilitySnapshot, LineageBundle, detect_digest_mismatch,
+    FrameworkPackSnapshot, LineageBundle, detect_digest_mismatch,
 };
+use weeping_angel_assurance::applicability::ApplicabilitySnapshot;
 use weeping_angel_assurance::readiness::FrameworkReadinessSnapshot;
 use weeping_angel_assurance::{
     AssessmentRun, AssessmentScope, AssuranceEngine, reconstruct, replay_assessment,
@@ -201,10 +202,10 @@ fn mismatched_bundle() -> LineageBundle {
             digest: "def-live".into(),
             definition: Assessment::new(AssessmentId::new("assess-unpinned")),
         },
-        applicability: LineageApplicabilitySnapshot {
-            schema: lineage_schema().into(),
+        applicability: ApplicabilitySnapshot {
+            schema: weeping_angel_assurance::applicability::APPLICABILITY_SNAPSHOT_SCHEMA.into(),
             assessment_id: AssessmentId::new("assess-unpinned"),
-            scope: "repo:in-scope".into(),
+            scope: weeping_angel_assurance_ir::AssessmentScope::default(),
             requirement_decisions: Vec::new(),
             control_decisions: Vec::new(),
             pack_entries: Vec::new(),

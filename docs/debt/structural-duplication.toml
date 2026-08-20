@@ -164,39 +164,33 @@ concept = "applicability-snapshot-type-pair"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/applicability/snapshot.rs::ApplicabilitySnapshot"
 canonical_symbol = "ApplicabilitySnapshot"
-duplicates = [
-  "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilitySnapshot (renamed; still a second shape)",
-  "crates/weeping-angel-assurance/src/lineage.rs::LineageApplicabilityDecision",
-  "crates/weeping-angel-assurance/src/lineage.rs::LineagePackApplicabilityEntry",
-]
-migration_state = "consumers still use the lineage snapshot shape alongside applicability::snapshot"
-removal_blockers = ["LineageBundle still stores the parallel type"]
+duplicates = []
+migration_state = "LineageBundle.applicability is ApplicabilitySnapshot; LineageApplicabilitySnapshot and LineagePackApplicabilityEntry deleted; LineageApplicabilityDecision remains an explain projection"
+removal_blockers = []
 public_api_impact = "breaking"
 serialization_impact = "format-change"
-tests = ["sdd_structural_reconciliation_target"]
-status = "consumers-migrating"
+tests = ["sdd_consolidation_c04_dup004"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = ""
+debt_id = "DUP-004"
 consumers = [
   "lineage::LineageBundle.applicability / snapshot_applicability",
   "soa.rs imports applicability::ApplicabilitySnapshot for operational SoA",
-  "lib.rs re-exports lineage::ApplicabilitySnapshot for public API",
+  "lib.rs re-exports applicability::ApplicabilitySnapshot",
 ]
 migration = """
-Pick the richer applicability::snapshot model as SSOT (or explicitly rename
-lineage's type to LineageApplicabilityPin). Migrate LineageBundle to store the
-canonical type or a thin pin DTO derived from it. Delete the parallel structs
-in lineage.rs once all reconstruct/replay paths compile.
+LineageBundle.applicability is applicability::ApplicabilitySnapshot.
+snapshot_applicability delegates to pin_compiled_applicability.
+LineageApplicabilitySnapshot and LineagePackApplicabilityEntry deleted.
+LineageApplicabilityDecision remains an explain-only projection.
 """
 guard = """
-Architecture ownership / forbidden-patterns: forbid a second pub struct
-ApplicabilitySnapshot outside applicability/. Contract tests for lineage +
-operational SoA must share one schema id.
+sdd_consolidation_c04_dup004; CON-T14 updated. One pub struct ApplicabilitySnapshot
+in applicability/snapshot.rs. KNOWN_CHECK_IDS stays 15.
 """
 evidence = """
-Two distinct pub struct ApplicabilitySnapshot definitions with incompatible
-fields (scope: AssessmentScope vs String; decisions: ItemDecision vs simplified
-Decision). soa.rs uses applicability::*; lib.rs re-exports lineage::*.
+rg finds pub struct ApplicabilitySnapshot only in applicability/snapshot.rs.
+LineageBundle field type is ApplicabilitySnapshot. No LineageApplicabilitySnapshot.
 """
 
 [[duplication]]

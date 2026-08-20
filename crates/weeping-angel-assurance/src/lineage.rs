@@ -13,6 +13,7 @@ use weeping_angel_assurance_ir::{
 use weeping_angel_control_test::{ControlTestResult, Effectiveness, PopulationEvaluation};
 use weeping_angel_framework::{Assessment, CompiledFramework};
 
+use crate::applicability::ApplicabilitySnapshot;
 use crate::readiness::FrameworkReadinessSnapshot;
 use crate::snapshot::AssessmentRun;
 use crate::soa::StatementOfApplicability;
@@ -64,28 +65,6 @@ pub struct LineageApplicabilityDecision {
     pub rule: ApplicabilityRule,
     pub static_outcome: String,
     pub rationale: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LineagePackApplicabilityEntry {
-    pub reference: String,
-    pub applicable: bool,
-    pub applicability_rationale: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-/// Pinned applicability material for lineage replay (DUP-004: distinct from
-/// `applicability::ApplicabilitySnapshot`).
-pub struct LineageApplicabilitySnapshot {
-    pub schema: String,
-    pub assessment_id: AssessmentId,
-    pub scope: String,
-    pub requirement_decisions: Vec<LineageApplicabilityDecision>,
-    pub control_decisions: Vec<LineageApplicabilityDecision>,
-    pub pack_entries: Vec<LineagePackApplicabilityEntry>,
-    pub digest: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,7 +167,7 @@ pub struct LineageBundle {
     pub pack: FrameworkPackSnapshot,
     pub catalog: CanonicalCatalogSnapshot,
     pub definition: AssessmentDefinitionSnapshot,
-    pub applicability: LineageApplicabilitySnapshot,
+    pub applicability: ApplicabilitySnapshot,
     pub evidence: EvidenceSnapshot,
     pub tests: Vec<ControlTestRun>,
     pub run: AssessmentRun,
@@ -205,40 +184,8 @@ pub fn static_outcome_label(rule: &ApplicabilityRule) -> String {
     }
 }
 
-pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> LineageApplicabilitySnapshot {
-    let requirement_decisions = assessment
-        .requirements
-        .iter()
-        .map(|req| LineageApplicabilityDecision {
-            id: req.id().to_string(),
-            rule: req.applicability().clone(),
-            static_outcome: static_outcome_label(req.applicability()),
-            rationale:
-                "static applicability from ApplicabilityRule; unresolved predicates stay included"
-                    .to_string(),
-        })
-        .collect::<Vec<_>>();
-    let control_decisions = assessment
-        .controls
-        .iter()
-        .map(|ctl| LineageApplicabilityDecision {
-            id: ctl.id().to_string(),
-            rule: ctl.applicability().clone(),
-            static_outcome: static_outcome_label(ctl.applicability()),
-            rationale: "static applicability from ApplicabilityRule".into(),
-        })
-        .collect::<Vec<_>>();
-    let mut snapshot = LineageApplicabilitySnapshot {
-        schema: LINEAGE_SNAPSHOT_SCHEMA.into(),
-        assessment_id: assessment.id.clone(),
-        scope: scope.into(),
-        requirement_decisions,
-        control_decisions,
-        pack_entries: Vec::new(),
-        digest: String::new(),
-    };
-    snapshot.digest = snapshot_digest("applicability-snapshot", &snapshot);
-    snapshot
+pub fn snapshot_applicability(assessment: &Assessment, scope: &str) -> ApplicabilitySnapshot {
+    crate::applicability::pin_compiled_applicability(assessment, scope)
 }
 
 pub fn seal_evidence_snapshot(
@@ -470,7 +417,7 @@ pub fn explain_control(
     report: &AssessmentReport,
     control_id: &str,
     assessment: Option<&Assessment>,
-    applicability: Option<&LineageApplicabilitySnapshot>,
+    applicability: Option<&ApplicabilitySnapshot>,
 ) -> Result<ControlExplanation, AssuranceError> {
     let result = report
         .results
@@ -496,6 +443,25 @@ pub fn explain_control(
                 .iter()
                 .find(|d| d.id == control_id)
                 .cloned()
+        })
+        .map(|d| LineageApplicabilityDecision {
+            id: d.id.clone(),
+            rule: d.rule.clone(),
+            static_outcome: match d.decision {
+                crate::applicability::ApplicabilityDecision::Applicable => "applicable".into(),
+                crate::applicability::ApplicabilityDecision::NotApplicable => {
+                    "not applicable".into()
+                }
+                crate::applicability::ApplicabilityDecision::ManualDeterminationRequired => {
+                    "unresolved".into()
+                }
+            },
+            rationale: d
+                .rationale
+                .iter()
+                .map(|r| r.message.as_str())
+                .collect::<Vec<_>>()
+                .join("; "),
         })
         .unwrap_or_else(|| LineageApplicabilityDecision {
             id: control_id.into(),
@@ -742,7 +708,12 @@ fn verify_replay_bundle(bundle: &LineageBundle) -> Result<(), AssuranceError> {
         ("evidence", bundle.evidence.schema.as_str()),
         ("soa", bundle.soa.schema.as_str()),
     ] {
-        if !snapshot_schema_ok(schema) {
+        let ok = if label == "applicability" {
+            schema == crate::applicability::APPLICABILITY_SNAPSHOT_SCHEMA
+        } else {
+            snapshot_schema_ok(schema)
+        };
+        if !ok {
             return Err(crate::ReplayFailure::IncompatibleSchema(format!(
                 "{label} schema {schema}"
             ))

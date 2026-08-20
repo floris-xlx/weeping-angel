@@ -689,14 +689,20 @@ fn con_t06_close_law_blocks_verified_removed() {
             "{id} v1 resolved maps to canonicalized|consumers-migrating|compatibility-only, got {status}"
         );
     }
-    for id in ["DUP-004", "DUP-005"] {
-        let (status, _) = by_id.get(id).unwrap_or_else(|| panic!("missing {id}"));
-        assert_eq!(
-            status.as_str(),
-            "consumers-migrating",
-            "{id} v1 migrating → consumers-migrating, got {status}"
-        );
-    }
+    let dup004 = by_id.get("DUP-004").unwrap_or_else(|| panic!("missing DUP-004"));
+    assert_eq!(
+        dup004.0.as_str(),
+        "verified",
+        "DUP-004 close law after Lane B snapshot SSOT, got {}",
+        dup004.0
+    );
+    let dup005 = by_id.get("DUP-005").unwrap_or_else(|| panic!("missing DUP-005"));
+    assert_eq!(
+        dup005.0.as_str(),
+        "consumers-migrating",
+        "DUP-005 v1 migrating → consumers-migrating, got {}",
+        dup005.0
+    );
     for id in ["DUP-009", "DUP-012"] {
         let (status, _) = by_id.get(id).unwrap_or_else(|| panic!("missing {id}"));
         assert_ne!(status.as_str(), "verified");
@@ -1122,8 +1128,8 @@ fn con_t14_seeded_concepts_cite_live_symbols_no_hypothetical_crates() {
         "applicability must cite representation ApplicabilitySnapshot"
     );
     assert!(
-        appl_blob.contains("lineage") || blob.contains("LineageApplicabilitySnapshot"),
-        "applicability storage maps persistence_owner=lineage to storage_owner + LineageApplicabilitySnapshot"
+        appl_blob.contains("lineage") || blob.contains("ApplicabilitySnapshot"),
+        "applicability storage maps persistence_owner=lineage to the canonical ApplicabilitySnapshot"
     );
     let snapshot = read_live("crates/weeping-angel-assurance/src/applicability/snapshot.rs");
     assert!(
@@ -1132,8 +1138,12 @@ fn con_t14_seeded_concepts_cite_live_symbols_no_hypothetical_crates() {
     );
     let lineage = read_live("crates/weeping-angel-assurance/src/lineage.rs");
     assert!(
-        lineage.contains("struct LineageApplicabilitySnapshot"),
-        "live LineageApplicabilitySnapshot must remain in lineage.rs"
+        !lineage.contains("struct LineageApplicabilitySnapshot"),
+        "DUP-004: lineage must not keep a parallel ApplicabilitySnapshot domain type"
+    );
+    assert!(
+        lineage.contains("applicability: ApplicabilitySnapshot"),
+        "LineageBundle must pin canonical ApplicabilitySnapshot"
     );
 
     let readiness = concept_table(&parsed, "readiness");
@@ -1628,7 +1638,10 @@ fn con_t20_neighbors_green_product_needles_unchanged() {
     assert!(readiness.contains("fn project_readiness"));
     let lineage = read_live("crates/weeping-angel-assurance/src/lineage.rs");
     assert!(lineage.contains("fn replay_assessment"));
-    assert!(lineage.contains("struct LineageApplicabilitySnapshot"));
+    assert!(
+        !lineage.contains("struct LineageApplicabilitySnapshot"),
+        "DUP-004: no parallel lineage applicability domain type"
+    );
 
     let blob = read_domain_ownership();
     assert!(

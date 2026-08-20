@@ -6,6 +6,8 @@ use weeping_angel_assurance_ir::{
 };
 
 use super::context::ApplicabilityContext;
+use weeping_angel_framework::Assessment;
+
 use super::evaluator::{
     ApplicabilityDecision, ApplicabilityOutcome, ExcludedSubject, PredicateTrace, RationaleEntry,
     UnknownFact, evaluate_applicability_for_subjects,
@@ -126,6 +128,76 @@ pub fn evaluate_assessment_applicability(
     };
     snapshot.digest = snapshot_digest(&snapshot);
     snapshot
+}
+
+impl ApplicabilitySnapshot {
+    pub fn recompute_digest(&mut self) {
+        self.digest = snapshot_digest(self);
+    }
+}
+
+/// Pin compiled-framework static applicability into the canonical snapshot type
+/// (DUP-004). Full Kleene evaluation remains [`evaluate_assessment_applicability`].
+pub fn pin_compiled_applicability(assessment: &Assessment, scope_label: &str) -> ApplicabilitySnapshot {
+    let scope = AssessmentScope {
+        organizations: vec![scope_label.to_string()],
+        ..AssessmentScope::default()
+    };
+    let requirement_decisions = assessment
+        .requirements
+        .iter()
+        .map(|req| static_item_decision(
+            req.id().to_string(),
+            req.applicability().clone(),
+            "static applicability from ApplicabilityRule; unresolved predicates stay included",
+        ))
+        .collect();
+    let control_decisions = assessment
+        .controls
+        .iter()
+        .map(|ctl| static_item_decision(
+            ctl.id().to_string(),
+            ctl.applicability().clone(),
+            "static applicability from ApplicabilityRule",
+        ))
+        .collect();
+    let mut snapshot = ApplicabilitySnapshot {
+        schema: APPLICABILITY_SNAPSHOT_SCHEMA.into(),
+        assessment_id: assessment.id.clone(),
+        scope,
+        requirement_decisions,
+        control_decisions,
+        pack_entries: Vec::new(),
+        digest: String::new(),
+    };
+    snapshot.recompute_digest();
+    snapshot
+}
+
+fn static_item_decision(
+    id: String,
+    rule: ApplicabilityRule,
+    rationale: &str,
+) -> ApplicabilityItemDecision {
+    let decision = match rule.statically_applicable() {
+        Some(true) => ApplicabilityDecision::Applicable,
+        Some(false) => ApplicabilityDecision::NotApplicable,
+        None => ApplicabilityDecision::ManualDeterminationRequired,
+    };
+    ApplicabilityItemDecision {
+        id,
+        rule_digest: canonical_digest(&rule).unwrap_or_default(),
+        rule,
+        decision,
+        rationale: vec![RationaleEntry {
+            code: "static".into(),
+            message: rationale.into(),
+        }],
+        predicates: Vec::new(),
+        unknown_facts: Vec::new(),
+        selected_subjects: Vec::new(),
+        excluded_subjects: Vec::new(),
+    }
 }
 
 fn snapshot_digest(snapshot: &ApplicabilitySnapshot) -> String {

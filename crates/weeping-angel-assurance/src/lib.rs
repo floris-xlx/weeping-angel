@@ -44,12 +44,11 @@ pub use incident_query::{
     incidents_in_period, real_incidents,
 };
 pub use lineage::{
-    AssessmentDefinitionSnapshot, AssessmentSummary, LineageApplicabilitySnapshot,
-    CanonicalCatalogSnapshot, ControlExplanation, ControlTestRun, CoverageMetrics, DigestMismatch,
-    EvidenceSnapshot, FrameworkPackSnapshot, LineageBundle, ObligationExplain,
-    ObligationExplainEdge, StatementOfApplicabilitySnapshot, assessment_result_digest,
-    explain_control, explain_why_control_exists, explain_why_document_exists, reconstruct,
-    replay_assessment,
+    AssessmentDefinitionSnapshot, AssessmentSummary, CanonicalCatalogSnapshot, ControlExplanation,
+    ControlTestRun, CoverageMetrics, DigestMismatch, EvidenceSnapshot, FrameworkPackSnapshot,
+    LineageBundle, ObligationExplain, ObligationExplainEdge, StatementOfApplicabilitySnapshot,
+    assessment_result_digest, explain_control, explain_why_control_exists,
+    explain_why_document_exists, reconstruct, replay_assessment,
 };
 pub use readiness::FrameworkReadinessSnapshot;
 pub use remediation::{
@@ -336,12 +335,17 @@ impl<C: EvidenceCollector> AssuranceEngineBuilder<C> {
             applicability.pack_entries = pack
                 .applicability
                 .iter()
-                .map(|row| crate::lineage::LineagePackApplicabilityEntry {
-                    reference: row.reference.clone(),
-                    applicable: row.applicable.unwrap_or(true),
-                    applicability_rationale: row.applicability_rationale.clone(),
+                .map(|row| crate::applicability::PackApplicabilityEntry {
+                    id: row.reference.clone(),
+                    applicable: row.applicable,
+                    note: if row.applicability_rationale.is_empty() {
+                        None
+                    } else {
+                        Some(row.applicability_rationale.clone())
+                    },
                 })
                 .collect();
+            applicability.recompute_digest();
         }
         let collector_runs = vec![collection_run.run_id.clone()];
         let run = AssessmentRun {

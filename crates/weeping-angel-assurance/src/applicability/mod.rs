@@ -16,5 +16,5 @@ pub use evaluator::{
 };
 pub use snapshot::{
     APPLICABILITY_SNAPSHOT_SCHEMA, ApplicabilityItemDecision, ApplicabilitySnapshot,
-    PackApplicabilityEntry, evaluate_assessment_applicability,
+    PackApplicabilityEntry, evaluate_assessment_applicability, pin_compiled_applicability,
 };

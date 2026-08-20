@@ -13,7 +13,7 @@ required_roles = [
 ]
 
 # Live evidence only (workspace packages; no hypothetical owner seats):
-# ApplicabilitySnapshot, LineageApplicabilitySnapshot, project_readiness,
+# ApplicabilitySnapshot, project_readiness,
 # CanonicalCatalog::load, compile_framework, current() / as_of() / latest(),
 # select_latest_as_of, replay_assessment, project_soa_from_snapshot,
 # ImplementationStatus, Effectiveness, evaluate in run.inc, project_validity,
@@ -28,7 +28,7 @@ adapter_owner = "none"
 module = "applicability"
 representation = "ApplicabilitySnapshot"
 storage_module = "lineage"
-storage_representation = "LineageApplicabilitySnapshot"
+storage_representation = "ApplicabilitySnapshot"
 split = "unified"
 
 [concept.readiness]
