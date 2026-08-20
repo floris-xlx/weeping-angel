@@ -2,8 +2,9 @@
 
 use crate::CollectorError;
 use crate::application::{CollectorRegistry, EnvelopeFactory, ObservationGate};
-use crate::domain::{CollectionBatch, CollectionRequest, CollectorInstance};
+use crate::domain::{CollectionBatch, CollectionRequest, CollectorInstance, CollectorScope};
 use crate::ports::CollectorAdapter;
+use weeping_angel_evidence::EvidenceEnvelope;
 
 /// Owns CollectionRequest → Registry → Adapter → ObservationGate → EnvelopeFactory.
 pub struct CollectionEngine {
@@ -47,6 +48,23 @@ impl CollectionEngine {
         self.factory
             .seal_batch(instance, &request.scope, adapter, &observations)
     }
+}
+
+/// Scheduler/façade envelope collection. Only CollectionEngine seals (DUP-015).
+pub(crate) fn collect_envelopes(
+    adapter: &dyn CollectorAdapter,
+    instance: &CollectorInstance,
+    scope: &CollectorScope,
+) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
+    Ok(CollectionEngine::new()
+        .collect(
+            adapter,
+            instance,
+            CollectionRequest {
+                scope: scope.clone(),
+            },
+        )?
+        .envelopes)
 }
 
 impl Default for CollectionEngine {

@@ -7,7 +7,7 @@ use chrono::Utc;
 use weeping_angel_assurance_ir::AssetId;
 use weeping_angel_evidence::{EvidenceEnvelope, EvidenceType, EvidenceValue};
 
-use crate::application::{CollectionEngine, EnvelopeFactory};
+use crate::application::EnvelopeFactory;
 use crate::domain::{
     CollectionCoverage, CollectionRequest, CollectorCapabilities, CollectorDescriptor,
     CollectorInstance, CollectorScope, CredentialRef, ObservationBatch, ObservationCandidate,
@@ -111,14 +111,7 @@ impl EvidenceCollector for LocalCollector {
     }
 
     fn collect(&self, scope: &CollectorScope) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-        let batch = CollectionEngine::new().collect(
-            self,
-            &self.instance(),
-            CollectionRequest {
-                scope: scope.clone(),
-            },
-        )?;
-        Ok(batch.envelopes)
+        crate::application::engine::collect_envelopes(self, &self.instance(), scope)
     }
 }
 

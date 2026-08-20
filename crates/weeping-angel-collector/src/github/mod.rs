@@ -679,10 +679,7 @@ impl EvidenceCollector for GitHubCollector {
                 .unwrap_or_else(|| scope.as_label());
             return Err(CollectorError::OutOfScope { asset });
         }
-        let batch = self.engine_collect(CollectionRequest {
-            scope: scope.clone(),
-        })?;
-        Ok(batch.envelopes)
+        crate::application::engine::collect_envelopes(self, &self.instance(), scope)
     }
 }
 

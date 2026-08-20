@@ -1,3 +1,6 @@
+//! Web/HTTP scan orchestrator (`run_scan`). Not the code-SAST detector pack.
+//! Detector algorithms live in `crate::engines` (DUP-016).
+
 pub mod scope;
 
 use std::collections::{HashMap, HashSet, VecDeque};

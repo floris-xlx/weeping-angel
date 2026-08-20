@@ -4,7 +4,6 @@ use chrono::{TimeZone, Utc};
 use weeping_angel_assurance_ir::AssetId;
 use weeping_angel_evidence::{EvidenceEnvelope, EvidenceObservation, EvidenceType};
 
-use crate::application::CollectionEngine;
 use crate::domain::{
     CollectionCoverage, CollectionRequest, CollectorCapabilities, CollectorDescriptor,
     CollectorInstance, CollectorScope, CredentialRef, ObservationBatch, ObservationCandidate,
@@ -123,13 +122,6 @@ impl EvidenceCollector for FixtureCollector {
     }
 
     fn collect(&self, scope: &CollectorScope) -> Result<Vec<EvidenceEnvelope>, CollectorError> {
-        let batch = CollectionEngine::new().collect(
-            self,
-            &self.instance(),
-            CollectionRequest {
-                scope: scope.clone(),
-            },
-        )?;
-        Ok(batch.envelopes)
+        crate::application::engine::collect_envelopes(self, &self.instance(), scope)
     }
 }

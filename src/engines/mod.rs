@@ -1,4 +1,5 @@
-//! Algorithmic detection engines (code SAST + adapters).
+//! Code-SAST detector pack (`EngineHit`, per-rule modules).
+//! Web/HTTP scan orchestration lives in `crate::engine` (`run_scan`) (DUP-016).
 
 pub mod authz_routes;
 pub mod cmd_injection;
