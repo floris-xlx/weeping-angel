@@ -17,18 +17,12 @@ use weeping_angel_assurance_ir::{
 };
 use weeping_angel_evidence::EvidenceValue;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn ir_fixture(name: &str) -> PathBuf {
     manifest_dir()
         .join("tests/fixtures/assurance-ir/v1")
         .join(name)
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
 }
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -42,26 +36,6 @@ fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
             out.push(path);
         }
     }
-}
-
-fn crate_src(name: &str) -> PathBuf {
-    let path = manifest_dir().join("crates").join(name).join("src");
-    assert!(
-        path.is_dir(),
-        "expected crate sources at {}",
-        path.display()
-    );
-    path
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn product_crate_sources_joined() -> String {

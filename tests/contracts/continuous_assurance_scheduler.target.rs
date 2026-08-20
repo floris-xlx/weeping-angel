@@ -8,7 +8,6 @@
 
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -54,13 +53,7 @@ const COLLECTOR_B: &str = "fixture.cas-b";
 /// privileged-membership + mfa-status (see `privileged_mfa_observations`).
 const ENVELOPES_PER_COLLECT: usize = 4;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 19, 12, 0, 0).unwrap()

@@ -25,10 +25,6 @@ use weeping_angel_assurance_ir::{
 use weeping_angel_canonical_catalog::CanonicalCatalog;
 use weeping_angel_control_test::Effectiveness;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
     for entry in entries {
@@ -52,16 +48,6 @@ fn crate_src(name: &str) -> PathBuf {
     path
 }
 
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
 fn product_crate_sources_joined() -> String {
     let crates_dir = manifest_dir().join("crates");
     let mut chunks = Vec::new();
@@ -83,21 +69,7 @@ fn product_crate_sources_joined() -> String {
     chunks.join("\n")
 }
 
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
-
-fn require_needles(label: &str, src: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !src.contains(n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label}: missing required incident-governance surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles

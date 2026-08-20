@@ -25,9 +25,7 @@ use weeping_angel_control_test::{EvidenceSet, Population, PopulationCompleteness
 
 const SNAPSHOT_SCHEMA: &str = "weeping-angel/applicability-snapshot/v1";
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -44,17 +42,6 @@ fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 fn crate_src(name: &str) -> PathBuf {
     manifest_dir().join("crates").join(name).join("src")
-}
-
-#[allow(dead_code)]
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn applicability_sources() -> String {
@@ -77,10 +64,6 @@ fn applicability_sources() -> String {
         .map(|p| fs::read_to_string(p).unwrap())
         .collect::<Vec<_>>()
         .join("\n")
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
 }
 
 fn requirement_with(id: &str, rule: ApplicabilityRule) -> Requirement {

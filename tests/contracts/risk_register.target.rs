@@ -8,9 +8,6 @@
 //! asserts additive operational fields, status machine, graph integrity, Prompt 05
 //! scoring consumption, finding N:N contributors, and history/supersession.
 
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::{Value, json};
 use weeping_angel::finding::Finding;
@@ -22,58 +19,7 @@ use weeping_angel_assurance_ir::{
 };
 use weeping_angel_control_test::Effectiveness;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if entry.file_type().unwrap().is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
-
-fn crate_src(name: &str) -> PathBuf {
-    let path = manifest_dir().join("crates").join(name).join("src");
-    assert!(
-        path.is_dir(),
-        "expected crate sources at {}",
-        path.display()
-    );
-    path
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
-
-fn require_needles(label: &str, src: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !src.contains(n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label}: missing required surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles

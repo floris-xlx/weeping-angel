@@ -9,48 +9,11 @@
 //! Compile-safe: do not import symbols that do not exist yet.
 //! Do not implement the projector in this file and do not `#[ignore]`.
 
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use serde_json::Value;
 use weeping_angel_assurance::soa::Applicability;
 use weeping_angel_assurance::{StatementOfApplicability, project_soa};
 use weeping_angel_assurance_ir::{Control, ControlImplementation};
 use weeping_angel_control_test::Effectiveness;
-
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if entry.file_type().unwrap().is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(
-        &manifest_dir().join("crates").join(name).join("src"),
-        &mut files,
-    );
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
 
 fn soa_src() -> String {
     read_repo_file("crates/weeping-angel-assurance/src/soa.rs")
@@ -110,17 +73,7 @@ fn blob(entry: &Value) -> String {
     entry.to_string().to_ascii_lowercase()
 }
 
-fn require_needles(label: &str, src: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !src.contains(n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label}: missing required surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn impl_status_is_not_implemented(value: &str) -> bool {
     let n = value.to_ascii_lowercase().replace(['_', '-'], "");

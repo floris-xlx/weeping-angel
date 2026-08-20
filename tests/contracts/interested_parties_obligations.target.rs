@@ -41,13 +41,6 @@ const DOC_CONFIDENTIALITY: &str = "doc.policy.employment-confidentiality";
 const RISK_RETENTION: &str = "risk.records.retention-failure";
 const CONTROL_MISSING: &str = "control.missing";
 
-fn manifest_dir() -> PathBuf {
-    option_env!("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .filter(|p| p.join("Cargo.toml").is_file())
-        .unwrap_or_else(|| PathBuf::from("."))
-}
-
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
     for entry in entries {
@@ -69,20 +62,6 @@ fn crate_src(name: &str) -> PathBuf {
         path.display()
     );
     path
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
 }
 
 fn ir_src() -> String {
@@ -113,17 +92,7 @@ fn product_crate_sources_joined() -> String {
     chunks.join("\n")
 }
 
-fn require_needles(label: &str, src: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !src.contains(*n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label}: missing required interested parties / obligations surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles

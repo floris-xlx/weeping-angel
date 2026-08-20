@@ -83,9 +83,7 @@ const FORBIDDEN_CATALOG_DEPS: &[&str] = &[
     "cloudflare",
 ];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn catalog_v1() -> PathBuf {
     manifest_dir().join("catalog/canonical/v1")
@@ -106,27 +104,6 @@ fn walk_files(dir: &Path, out: &mut Vec<PathBuf>) {
             out.push(path);
         }
     }
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    walk_files(dir, out);
-    out.retain(|p| p.extension().and_then(|e| e.to_str()) == Some("rs"));
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let src = manifest_dir().join("crates").join(name).join("src");
-    assert!(
-        src.is_dir(),
-        "expected crate sources at {} (dedicated catalog crate is required)",
-        src.display()
-    );
-    let mut files = Vec::new();
-    walk_rs_files(&src, &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn read_crate_toml(name: &str) -> String {

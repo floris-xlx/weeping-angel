@@ -5,11 +5,8 @@
 //! Tests are `#[ignore]` so this stub is not a second green bar.
 
 use std::fs;
-use std::path::PathBuf;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 #[test]
 #[ignore = "superseded by target suite"]

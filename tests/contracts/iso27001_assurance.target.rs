@@ -126,40 +126,12 @@ const LEDGER_NEEDLES: &[&str] = &[
     "fn supersede",
 ];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
 fn iso_pack_dir() -> PathBuf {
     manifest_dir().join("frameworks/iso-27001/2022")
 }
 
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
-
 fn crate_src(name: &str) -> PathBuf {
     manifest_dir().join("crates").join(name).join("src")
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .filter_map(|p| fs::read_to_string(p).ok())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn walk_text_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -286,17 +258,7 @@ fn sample_hit() -> EngineHit {
     }
 }
 
-fn require_needles(label: &str, haystack: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !haystack.contains(n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label} is missing required surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn looks_like_protected_iso_text(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();

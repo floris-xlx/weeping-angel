@@ -65,76 +65,89 @@ register.toml DEBT-SCHEMA-DUP status=resolved after the duplicate tree was delet
 id = "DUP-002"
 concept = "contract-test-require-needles-helper"
 severity = "p1"
-canonical_owner = "tests/support (proposed; does not exist yet) or a single shared test module"
+canonical_owner = "tests/support/mod.rs::require_needles"
 canonical_symbol = "require_needles"
-duplicates = [
-  "tests/contracts/assessment_lineage.target.rs",
-  "tests/contracts/control_implementation_registry.target.rs",
-  "tests/contracts/controlled_documents.target.rs",
-  "tests/contracts/continuity_resilience.target.rs",
-  "tests/contracts/iso27001_assurance.target.rs",
-  "tests/contracts/interested_parties_obligations.target.rs",
-  "tests/contracts/incident_governance.target.rs",
-  "tests/contracts/nonconformity_capa.target.rs",
-  "tests/contracts/internal_audit.target.rs",
-  "tests/contracts/operational_soa.target.rs",
-  "tests/contracts/population_runtime.target.rs",
-  "tests/contracts/remediation_engine.target.rs",
-  "tests/contracts/risk_register.target.rs",
-  "tests/contracts/supplier_risk.target.rs",
-  "tests/contracts/temporal_lineage_evidence_soa.target.rs",
-  "tests/contracts/temporal_assurance.target.rs",
-  "tests/contracts/typed_evidence.target.rs",
-]
-migration_state = "confirmed duplicate helper; consumers still use per-file copies"
-removal_blockers = ["tests/support module does not exist yet"]
+duplicates = []
+migration_state = "canonical owner exists; 17 sdd_*_target binaries include tests/support/mod.rs; per-file copies deleted"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "confirmed"
+tests = ["sdd_consolidation_c01_target"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = ""
-consumers = ["SDD dual-suite / contract target binaries that needle-grep crate sources"]
+debt_id = "C01"
+consumers = [
+  "sdd_assessment_lineage_target",
+  "sdd_control_implementation_registry_target",
+  "sdd_controlled_documents_target",
+  "sdd_continuity_resilience_target",
+  "sdd_iso27001_assurance_target",
+  "sdd_interested_parties_obligations_target",
+  "sdd_incident_governance_target",
+  "sdd_nonconformity_capa_target",
+  "sdd_internal_audit_target",
+  "sdd_operational_soa_target",
+  "sdd_population_runtime_target",
+  "sdd_remediation_engine_target",
+  "sdd_risk_register_target",
+  "sdd_supplier_risk_target",
+  "sdd_temporal_lineage_evidence_soa_target",
+  "sdd_temporal_assurance_target",
+  "sdd_typed_evidence_target",
+]
 migration = """
-Extract one shared require_needles(+ optional crate_sources_joined) into a
-tests/support module or xtask test helper crate used only by contract tests.
-Rewrite call sites; delete local copies. Do not invent tests/sdd/.
+Extracted one crate-private require_needles into tests/support/mod.rs.
+Each of the 17 contract binaries includes that file via include!; local copies deleted.
 """
 guard = """
-Inventory count of 'fn require_needles' should trend to 1 (or a documented small set).
-Optional forbidden-pattern / maintainability rule capping duplicate helper definitions.
+Inventory uniqueness: require_needles_fns == 1 after trimmed.starts_with(\"fn require_needles\").
+duplicate_helper_definitions aliases require_needles_fns. Guard 04
+INV-CONSOLIDATION-EXPANSION-RESTRICTED forbids increase. C01 target
+xtask/tests/sdd_consolidation_c01_target.rs pins uniqueness at 1.
 """
 evidence = """
-inventory current.md: 18 files defining fn require_needles, 222 call sites.
-rg -l 'fn require_needles' tests/contracts lists 17+ target files with near-copies.
+C01 extract+migrate+delete: tests/support/mod.rs is the only fn require_needles
+definition. 17 tests/contracts/*.target.rs copies gone. Inventory matcher is
+starts_with so inventory.rs is not counted. Live require_needles_fns = 1,
+require_needles_calls = 206 (≤ freeze 222). C01 baseline deleted after target GREEN.
+Postcheck 2026-08-20: cargo xtask guard 01–15 pass; cargo xtask inventory
+require_needles_fns=1 require_needles_calls=206 root_test_binaries=45
+tests_rs_autodiscovered=16 tests_contracts_rs=43; inventory --check exit 0.
+Close law: owner unique, 17 include! consumers, copies gone (not aliases),
+C01 target + Guard 04 uniqueness. No Guard 16. Expansion metrics did not increase.
 """
 
 [[duplication]]
 id = "DUP-003"
 concept = "contract-test-filesystem-discovery-helpers"
 severity = "p1"
-canonical_owner = "tests/support (proposed)"
+canonical_owner = "tests/support/mod.rs filesystem helpers"
 canonical_symbol = "tests/support::filesystem_helpers"
-duplicates = [
-  "tests/contracts/**/*.target.rs :: manifest_dir / read_repo_file / crate_sources_joined / text_has",
-]
-migration_state = "confirmed; per-file helpers remain"
-removal_blockers = ["shared test-support module not extracted"]
+duplicates = []
+migration_state = "canonical owner exists; contract suites include tests/support/mod.rs; per-file copies deleted"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "confirmed"
+tests = ["sdd_consolidation_c01_dup003"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = ""
-consumers = ["nearly every tests/contracts/*.target.rs suite"]
+debt_id = "DUP-003"
+consumers = [
+  "tests/contracts/*.target.rs",
+]
 migration = """
-Same shared test-support module as DUP-002. Replace per-file
-PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")) helpers with one API.
+Same tests/support/mod.rs as DUP-002. Per-file fn manifest_dir / read_repo_file /
+crate_sources_joined / text_has copies collapsed onto that module via include!.
 """
-guard = "Maintainability / inventory metric on duplicate helper fn names in tests/contracts."
+guard = """
+xtask/tests/sdd_consolidation_c01_dup003.rs pins one owner under tests/support/
+and zero per-file copies in tests/contracts/*.target.rs. DUP-002 close law
+(require_needles uniqueness) still holds. KNOWN_CHECK_IDS stays 15.
+"""
 evidence = """
-rg shows dozens of identical fn manifest_dir / read_repo_file / crate_sources_joined
-definitions across target suites (~299 matching lines sampled).
+Owner tests/support/mod.rs defines crate-private manifest_dir, read_repo_file,
+crate_sources_joined, text_has. tests/contracts/*.target.rs copies deleted
+(not aliases). Live contract_fs_helper_copies = 1 (owner only).
 """
 
 [[duplication]]

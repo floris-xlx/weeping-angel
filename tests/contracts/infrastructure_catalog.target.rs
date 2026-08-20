@@ -262,9 +262,7 @@ const CLASSIFIABLE_FIELDS: &[&str] = &[
     "reviewed_at",
 ];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn catalog_v1() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
@@ -305,16 +303,6 @@ fn crate_src(name: &str) -> PathBuf {
         path.display()
     );
     path
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn product_rs_joined() -> String {

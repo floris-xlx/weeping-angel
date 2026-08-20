@@ -6,7 +6,7 @@
 //! `acknowledgement_coverage`, `validate`). Do not `#[ignore]`.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use chrono::{DateTime, TimeZone, Utc};
@@ -26,26 +26,6 @@ use weeping_angel_evidence::{
 
 const DOCUMENT_RS: &str = "crates/weeping-angel-assurance-ir/src/document.rs";
 
-fn manifest_dir() -> PathBuf {
-    option_env!("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .filter(|p| p.join("Cargo.toml").is_file())
-        .unwrap_or_else(|| PathBuf::from("."))
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if entry.file_type().unwrap().is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
-
 fn crate_src(name: &str) -> PathBuf {
     let path = manifest_dir().join("crates").join(name).join("src");
     assert!(
@@ -56,35 +36,11 @@ fn crate_src(name: &str) -> PathBuf {
     path
 }
 
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
-
 fn document_rs_path() -> PathBuf {
     crate_src("weeping-angel-assurance-ir").join("document.rs")
 }
 
-fn require_needles(label: &str, src: &str, needles: &[&str]) {
-    let missing: Vec<&str> = needles
-        .iter()
-        .copied()
-        .filter(|n| !src.contains(*n))
-        .collect();
-    assert!(
-        missing.is_empty(),
-        "{label}: missing required document-control surface {missing:?}"
-    );
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles

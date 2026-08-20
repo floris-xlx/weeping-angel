@@ -95,9 +95,7 @@ const ASSURANCE_PACKAGES: &[&str] = &[
     "weeping-angel-assurance",
 ];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn collect_object_keys(value: &Value, out: &mut BTreeSet<String>) {
     match value {

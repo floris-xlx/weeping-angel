@@ -248,9 +248,7 @@ const CONCLUSION_PHRASES: &[&str] = &[
     "security review effective",
 ];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn harness_relpath(kind: &str) -> String {
     format!("tests/contracts/sdlc_catalog.{kind}.rs")
@@ -331,10 +329,6 @@ fn is_sdlc_family_id(id: &str) -> bool {
 
 fn line_has(line: &str, needle: &str) -> bool {
     line.find(needle).is_some()
-}
-
-fn text_has(haystack: &str, needle: &str) -> bool {
-    haystack.find(needle).is_some()
 }
 
 fn text_lacks(haystack: &str, needle: &str) -> bool {

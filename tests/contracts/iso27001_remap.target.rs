@@ -36,22 +36,7 @@ use weeping_angel_framework::{
     validate_framework_pack,
 };
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if entry.file_type().unwrap().is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn crate_src(name: &str) -> PathBuf {
     let path = manifest_dir().join("crates").join(name).join("src");
@@ -61,16 +46,6 @@ fn crate_src(name: &str) -> PathBuf {
         path.display()
     );
     path
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_rs_files(&crate_src(name), &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn iso_pack_dir() -> PathBuf {

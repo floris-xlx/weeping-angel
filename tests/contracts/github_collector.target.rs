@@ -278,9 +278,7 @@ const ORG_REPOS_PAGE: &str = r#"[
     {"name":"other","full_name":"acme/other","visibility":"private","default_branch":"main","archived":false}
 ]"#;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn walk_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {

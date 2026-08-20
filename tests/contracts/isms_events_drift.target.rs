@@ -16,7 +16,6 @@
 
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::PathBuf;
 
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::Value;
@@ -42,9 +41,7 @@ const ENVELOPE: &str = "sha256:envelope-mfa-window";
 const SNAP_PREV: &str = "snap-prev";
 const SNAP_NEXT: &str = "snap-next";
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 18, 12, 0, 0).unwrap()

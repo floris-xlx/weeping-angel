@@ -306,11 +306,7 @@ const IAM_FIXTURES: &[&str] = &[
     "break-glass-approved-exception",
 ];
 
-fn manifest_dir() -> PathBuf {
-    option_env!("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| std::env::current_dir().expect("cwd"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
@@ -328,16 +324,6 @@ fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
 
 fn crate_src(name: &str) -> PathBuf {
     manifest_dir().join("crates").join(name).join("src")
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_files(&crate_src(name), "rs", &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn catalog_v1_dir() -> PathBuf {

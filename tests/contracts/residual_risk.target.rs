@@ -9,9 +9,6 @@
 //! they fail because those types/APIs are missing (not because of a passing
 //! spec-id lock).
 
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use chrono::{DateTime, TimeZone, Utc};
 use weeping_angel_assurance::residual::{
     ResidualRiskRequest, ResidualRiskStore, project_residual_risk, query_residual_risk,
@@ -33,37 +30,7 @@ const INHERENT_HIGH_ORDINAL: u32 = 4;
 const INHERENT_HIGH_RATING: &str = "high";
 const MIN_RESIDUAL_FLOOR: u32 = 1;
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
-}
-
-fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if entry.file_type().unwrap().is_dir() {
-            walk_rs_files(&path, out);
-        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-            out.push(path);
-        }
-    }
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let src = manifest_dir().join("crates").join(name).join("src");
-    let mut files = Vec::new();
-    walk_rs_files(&src, &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn projected_at() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 19, 12, 0, 0).unwrap()

@@ -145,9 +145,7 @@ const FORBIDDEN_FRAMEWORK_TOKENS: &[&str] = &[
 
 const FORBIDDEN_GRC_TOKENS: &[&str] = &["vanta", "drata"];
 
-fn manifest_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
 
 fn catalog_v1_dir() -> PathBuf {
     manifest_dir().join("catalog/canonical/v1")
@@ -155,10 +153,6 @@ fn catalog_v1_dir() -> PathBuf {
 
 fn load_catalog() -> CanonicalCatalog {
     CanonicalCatalog::load(catalog_v1_dir()).expect("canonical catalog must load")
-}
-
-fn read_repo_file(rel: &str) -> String {
-    fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
 }
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
@@ -177,16 +171,6 @@ fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
 
 fn crate_src(name: &str) -> PathBuf {
     manifest_dir().join("crates").join(name).join("src")
-}
-
-fn crate_sources_joined(name: &str) -> String {
-    let mut files = Vec::new();
-    walk_files(&crate_src(name), "rs", &mut files);
-    files
-        .iter()
-        .map(|p| fs::read_to_string(p).unwrap())
-        .collect::<Vec<_>>()
-        .join("\n")
 }
 
 fn crate_toml(name: &str) -> String {
