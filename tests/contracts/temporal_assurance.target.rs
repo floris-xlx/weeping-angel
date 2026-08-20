@@ -47,7 +47,10 @@ fn product_crates_joined() -> String {
         .join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 /// Mirrors private `DigestBody` in `weeping-angel-evidence`.
 #[derive(Serialize)]
@@ -173,9 +176,9 @@ fn eval_eq(
 fn dual_suite_target_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_temporal_assurance_target")
-            && toml.contains("tests/contracts/temporal_assurance.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+        harness_src().contains("temporal_assurance.target.rs")
+            && harness_src().contains("temporal_assurance.target.rs"),
+        "target suite must be wired as a harness module"
     );
     assert!(
         !toml.contains("sdd_temporal_assurance_baseline")

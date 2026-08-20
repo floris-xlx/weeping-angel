@@ -306,7 +306,10 @@ const IAM_FIXTURES: &[&str] = &[
     "break-glass-approved-exception",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
@@ -856,9 +859,9 @@ fn gov_000_dual_suite_is_registered() {
     assert!(
         !toml.contains("sdd_governance_catalog_baseline")
             && !toml.contains("tests/contracts/governance_catalog.baseline.rs")
-            && toml.contains("sdd_governance_catalog_target")
-            && toml.contains("tests/contracts/governance_catalog.target.rs"),
-        "governance catalog dual-suite must be listed in root Cargo.toml (tests/contracts/*.rs is not auto-discovered)"
+            && harness_src().contains("governance_catalog.target.rs")
+            && harness_src().contains("governance_catalog.target.rs"),
+        "governance catalog dual-suite must be wired as a harness module (tests/contracts/*.rs is not auto-discovered)"
     );
 }
 
@@ -1528,9 +1531,10 @@ fn gov_016_iso_and_iam_gates_stay_intact() {
         "GOV-016: ISO pack metadata must stay free of governance catalog catalog ids"
     );
 
-    let cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
+    let _cargo = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        cargo.contains("sdd_iso27001_assurance_target") && cargo.contains("sdd_iam_catalog_target"),
+        harness_src().contains("iso27001_assurance.target.rs")
+            && harness_src().contains("iam_catalog.target.rs"),
         "GOV-016: ISO and IAM target suites stay registered"
     );
 

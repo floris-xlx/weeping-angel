@@ -73,7 +73,10 @@ fn blob(entry: &Value) -> String {
     entry.to_string().to_ascii_lowercase()
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn impl_status_is_not_implemented(value: &str) -> bool {
     let n = value.to_ascii_lowercase().replace(['_', '-'], "");
@@ -412,7 +415,9 @@ fn soa_t10_pinned_snapshot_not_live_project_soa() {
             .find("pub fn project_soa_from_snapshot")
             .expect("from_snapshot");
         let rest = &src[start..];
-        rest.split("pub fn project_soa_live(").next().unwrap_or(rest)
+        rest.split("pub fn project_soa_live(")
+            .next()
+            .unwrap_or(rest)
     };
     assert!(
         !from_snap.contains("resolve_pack_dir") && !from_snap.contains("applicability.toml"),
@@ -438,7 +443,9 @@ fn soa_t11_live_project_soa_is_not_sole_historical_path() {
         "SOA-T11: live project_soa_live must not be the sole reconstruction path"
     );
     let live_fn = {
-        let start = src.find("pub fn project_soa_live(").expect("project_soa_live");
+        let start = src
+            .find("pub fn project_soa_live(")
+            .expect("project_soa_live");
         &src[start..]
     };
     assert!(

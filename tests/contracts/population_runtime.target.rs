@@ -89,7 +89,10 @@ fn read_crate_file(name: &str, rel: &str) -> String {
     fs::read_to_string(crate_src(name).join(rel)).unwrap()
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let found: Vec<&str> = needles
@@ -341,9 +344,9 @@ fn dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         !toml.contains("sdd_population_runtime_baseline")
-            && toml.contains("sdd_population_runtime_target")
+            && harness_src().contains("population_runtime.target.rs")
             && !toml.contains("tests/contracts/population_runtime.baseline.rs")
-            && toml.contains("tests/contracts/population_runtime.target.rs")
+            && harness_src().contains("population_runtime.target.rs")
     );
 }
 

@@ -27,7 +27,10 @@ use weeping_angel_evidence::{
     looks_like_compliance_claim,
 };
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -895,10 +898,10 @@ fn p07_dual_suite_registered_and_risk_json_still_decodes() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_risk_identification_baseline")
-            && toml.contains("sdd_risk_identification_target")
+            && harness_src().contains("risk_identification.target.rs")
             && !toml.contains("tests/contracts/risk_identification.baseline.rs")
-            && toml.contains("tests/contracts/risk_identification.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("risk_identification.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
 
     let raw = fs::read_to_string(ir_fixture("risk.json")).unwrap();

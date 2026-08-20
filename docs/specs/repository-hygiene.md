@@ -5,7 +5,7 @@
 | Status | **Implemented** — `sdd_repository_hygiene_target` is law. Baseline skip-superseded. **Schema SSOT closed (Phase 3):** only `schemas/codex-security/`; `DEBT-SCHEMA-DUP` resolved; `codex-security/schemas/` must not be reintroduced. C01 later extracted contract-test `require_needles` into `tests/support/mod.rs` (DUP-002); hygiene-owned suites still must not call it. |
 | Program | Repository cleanup (concurrent Prompts 1–4) |
 | Slice | Prompt 4 — ignored-test retirement, dual-suite collapse (non-colliding), panic budget, Codex Security schema SSOT, generated-artifact policy, `.gitignore` / README hygiene |
-| Dual-suite | `sdd_repository_hygiene_baseline` · `sdd_repository_hygiene_target` (`tests/contracts/repository_hygiene.{baseline,target}.rs`) — registered as `[[test]]` in root `Cargo.toml`. **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md)) |
+| Dual-suite | `sdd_repository_hygiene_baseline` · `sdd_repository_hygiene_target` (`tests/contracts/repository_hygiene.{baseline,target}.rs`) — modules of the one `weeping-angel` harness (`apps/cli/tests/harness.rs`; [ADR 0051](../adr/0051-repository-environment.md)). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md)) |
 | ADR | **Accepted** [`docs/adr/0012-repository-hygiene.md`](../adr/0012-repository-hygiene.md). Concurrent Prompts 1–3 drafted `docs/adr/0011-*.md`; this slice did **not** mint another `0011-*` or a `0003-*`. |
 | Public contract | Assurance runtime remains [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (untouched). |
 | Documentation architecture | [ADR 0004](../adr/0004-documentation-architecture.md) — human SSOT is **this file**. `docs/sdd/` is a stub. Generated traces go to `.sdd/runs/` and `.sdd/artifacts/` only. Before/after counts live in this spec (§3 / §12) and in `.sdd/runs/` after implement — **not** `docs/debt/register.toml`. |
@@ -16,7 +16,7 @@
 | Characterization SHA | `0015f6395e7ead042e3cfd3066fefde3d39aa36b` (working tree 2026-08-19; live counts exclude `target/`, `target-*`, `node_modules/`, `.sdd/`) |
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) — this slice does not edit IR |
 | `adr_needed` | **true** — schema SSOT, generated-artifact policy (extends ADR 0004), production panic budget, dual-suite collapse vs permanent `#[ignore]` |
-| Workspace verify (after implement) | `cargo fmt --all -- --check`; `cargo check --workspace --all-targets`; `cargo test --test sdd_documentation_layout`; `cargo test --test sdd_repository_hygiene_baseline`; `cargo test --test sdd_repository_hygiene_target`. CI today is `cargo test --features demo --all-targets` (not `--workspace`). |
+| Workspace verify (after implement) | `cargo fmt --all -- --check`; `cargo check --workspace --all-targets`; `cargo test -p weeping-angel --test harness documentation_layout`; `cargo test -p weeping-angel --test harness repository_hygiene`. CI today is `cargo test --features demo --all-targets` (not `--workspace`). |
 
 This document is the durable human SSOT for Prompt 4. It owns:
 
@@ -449,8 +449,8 @@ Skipped collapse (target asserts baseline presence): `controlled_documents`, `co
 - Before/after counts recorded in this spec and/or `.sdd/runs/` — not `docs/debt/register.toml`.
 - `cargo fmt --all -- --check` passes.
 - `cargo check --workspace --all-targets` passes.
-- `cargo test --test sdd_documentation_layout` stays GREEN.
-- `cargo test --test sdd_repository_hygiene_target` passes after implement; baseline is GREEN before implement and superseded or deleted after.
+- `cargo test -p weeping-angel --test harness documentation_layout` stays GREEN.
+- `cargo test -p weeping-angel --test harness repository_hygiene` passes after implement; baseline is GREEN before implement and superseded or deleted after.
 - No new `#[ignore]` as a shortcut.
 
 ---
@@ -460,10 +460,8 @@ Skipped collapse (target asserts baseline presence): `controlled_documents`, `co
 ```bash
 cargo fmt --all -- --check
 cargo check --workspace --all-targets
-cargo test --test sdd_documentation_layout
-cargo test --test sdd_repository_hygiene_target
-# baseline is skip-superseded; found-case fails if run with --ignored
-cargo test --test sdd_repository_hygiene_baseline
+cargo test -p weeping-angel --test harness documentation_layout
+cargo test -p weeping-angel --test harness repository_hygiene
 ```
 
 Skip files owned by Prompts 1–3 if they change mid-run.

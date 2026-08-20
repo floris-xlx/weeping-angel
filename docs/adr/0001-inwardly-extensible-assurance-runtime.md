@@ -57,7 +57,7 @@ CLI `weeping-angel assurance {…}` was deferred from this slice. It landed with
 
 ### Crate graph (as built)
 
-Workspace: root package `weeping-angel` (scanner, bins, tests) + assurance members under `crates/`. This slice shipped six; the canonical catalog crate is a later seventh member ([ADR 0003](0003-canonical-assurance-catalog-v1.md)).
+Workspace: package `weeping-angel` at `apps/cli/` (scanner, bins, tests; [ADR 0051](0051-repository-environment.md)) + assurance members under `crates/`. This slice shipped six; the canonical catalog crate is a later seventh member ([ADR 0003](0003-canonical-assurance-catalog-v1.md)). The root `Cargo.toml` is workspace-only.
 
 ```text
 weeping-angel-assurance-ir

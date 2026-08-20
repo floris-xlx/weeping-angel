@@ -53,7 +53,10 @@ const COLLECTOR_B: &str = "fixture.cas-b";
 /// privileged-membership + mfa-status (see `privileged_mfa_observations`).
 const ENVELOPES_PER_COLLECT: usize = 4;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 19, 12, 0, 0).unwrap()
@@ -365,9 +368,9 @@ fn cas_001_dual_suite_registered() {
         "superseded baseline suite must be deleted from Cargo.toml"
     );
     assert!(
-        toml.contains("name = \"sdd_continuous_assurance_scheduler_target\"")
-            && toml.contains("path = \"tests/contracts/continuous_assurance_scheduler.target.rs\""),
-        "target suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
+        harness_src().contains("continuous_assurance_scheduler.target.rs")
+            && harness_src().contains("continuous_assurance_scheduler.target.rs"),
+        "target suite must be wired as a harness module (tests/contracts is not auto-discovered)"
     );
     assert!(
         !manifest_dir()
@@ -967,7 +970,7 @@ fn cas_015_collectors_never_set_effectiveness() {
 /// CAS-016 — If `isms run` exists, clap is not the schedule SSOT.
 #[test]
 fn cas_016_cli_is_thin_and_does_not_define_schedule_semantics() {
-    let cli_src = read_repo_file("src/cli.rs");
+    let cli_src = read_repo_file("apps/cli/src/cli.rs");
     for flag in ["--cadence", "--backoff", "--jitter", "--timeout"] {
         assert!(
             !cli_src.contains(flag),

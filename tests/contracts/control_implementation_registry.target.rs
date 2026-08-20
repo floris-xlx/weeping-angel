@@ -29,7 +29,10 @@ fn lib_src() -> String {
     read_repo_file("crates/weeping-angel-assurance-ir/src/lib.rs")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn impl_from_json(value: Value) -> ControlImplementation {
     serde_json::from_value(value)
@@ -236,10 +239,10 @@ fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_control_implementation_registry_baseline")
-            && toml.contains("sdd_control_implementation_registry_target")
+            && harness_src().contains("control_implementation_registry.target.rs")
             && !toml.contains("tests/contracts/control_implementation_registry.baseline.rs")
-            && toml.contains("tests/contracts/control_implementation_registry.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("control_implementation_registry.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
 }
 
@@ -1000,7 +1003,6 @@ fn cir_014_no_competing_type() {
 /// CIR-015: Neighbor targets
 #[test]
 fn cir_015_neighbor_targets() {
-    let toml = read_repo_file("Cargo.toml");
     for name in [
         "sdd_assurance_runtime_target",
         "sdd_iso27001_assurance_target",
@@ -1009,7 +1011,7 @@ fn cir_015_neighbor_targets() {
         "sdd_compliance_ir_target",
     ] {
         assert!(
-            toml.contains(name),
+            sdd_suite_wired(name),
             "CIR-015: neighbor suite `{name}` must stay registered"
         );
     }

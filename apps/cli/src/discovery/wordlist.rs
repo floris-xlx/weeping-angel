@@ -2,7 +2,10 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
-const EMBEDDED: &str = include_str!("../../wordlists/common-paths.txt");
+const EMBEDDED: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../wordlists/common-paths.txt"
+));
 
 pub fn load_paths(path: &Path) -> Result<Vec<String>> {
     let raw = if path.exists() {

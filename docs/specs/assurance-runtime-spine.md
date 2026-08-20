@@ -339,11 +339,11 @@ weeping-angel-framework
         └── weeping-angel-assurance   (facade)
 ```
 
-Workspace conversion (**done**):
+Workspace conversion (**done** for this slice; **path facts after** [ADR 0051](../adr/0051-repository-environment.md)):
 
-1. Root `Cargo.toml` is a virtual-style `[workspace]` **plus** the existing scanner `[package]` at `.` (not moved under `crates/weeping-angel`, so packager / WiX / `CARGO_MANIFEST_DIR` fixtures stay valid).
-2. Members: `crates/weeping-angel-assurance-ir`, `…-framework`, `…-evidence`, `…-collector`, `…-control-test`, `…-assurance`.
-3. Implemented extra edges (allowed): collector → IR **identity** types only (`AssetId`, `EvidenceType`); facade → IR + evidence + root `weeping-angel` (bridge).
+1. Root `Cargo.toml` is workspace-only (`[workspace]` + `[workspace.package]` + `[workspace.dependencies]`). The publishable CLI package is `weeping-angel` at `apps/cli/` (packager / WiX / `CARGO_MANIFEST_DIR` follow that package).
+2. Members: seven `crates/weeping-angel-*` libraries + `xtask` + `apps/cli` (nine crates).
+3. Implemented extra edges (allowed): collector → IR **identity** types only (`AssetId`, `EvidenceType`); facade → IR + evidence + package `weeping-angel` (bridge).
 4. Forbidden edges (tests): framework ↛ collector / SDKs; collector ↛ framework catalogs; control-test ↛ collector / network; IR ↛ upper crates. Facade is the public composition root.
 
 Facade sketch (not CLI):
@@ -385,7 +385,7 @@ Stubs exist so `compile_framework` can dispatch on profile without shipping cata
 
 ## 15. Dual-suite TDD protocol
 
-Cargo does not auto-discover `tests/contracts/`. Implementation MUST add:
+Cargo does not auto-discover `tests/contracts/`. After [ADR 0051](../adr/0051-repository-environment.md) the suites are modules of the one `[[test]]` harness on package `weeping-angel` (`apps/cli/tests/harness.rs`), not per-suite root `Cargo.toml` rows. Historical implement-era registration looked like:
 
 ```toml
 [[test]]

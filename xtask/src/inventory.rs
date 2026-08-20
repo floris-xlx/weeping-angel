@@ -159,7 +159,8 @@ impl InventoryReport {
         }
         schema_locations.sort();
 
-        let root_test_binaries = count_toml_tables(root.join("Cargo.toml"), "[[test]]");
+        let root_test_binaries =
+            count_toml_tables(weeping_angel_package_manifest(root), "[[test]]");
         let tests_rs_autodiscovered = count_dir_ext(root.join("tests"), "rs", false);
         let tests_contracts_rs = count_dir_ext(root.join("tests/contracts"), "rs", false);
         let adr_markdown_files = count_dir_ext(root.join("docs/adr"), "md", false);
@@ -273,11 +274,7 @@ impl InventoryReport {
         out.push_str("This file is the **current** mechanical snapshot. ");
         out.push_str("`docs/debt/baseline-2026-08.md` is **Historical** evidence only.\n\n");
         out.push_str("Inclusion rule: all matching paths under the repo root **excluding** ");
-        let quoted: Vec<String> = self
-            .exclusions
-            .iter()
-            .map(|e| format!("`{e}`"))
-            .collect();
+        let quoted: Vec<String> = self.exclusions.iter().map(|e| format!("`{e}`")).collect();
         out.push_str(&quoted.join(", "));
         out.push_str(".\n\n");
         out.push_str("## Counts\n\n");
@@ -428,9 +425,7 @@ impl InventoryReport {
         out.push_str("# Frozen Phase 0 consolidation baseline\n\n");
         out.push_str("This file is the **frozen Phase 0** consolidation snapshot, **not** the live [`current.md`](current.md). ");
         out.push_str("`docs/debt/current.md` remains the live mechanical inventory projection (`weeping-angel/inventory/v1`). ");
-        out.push_str(
-            "Counts come from the same `xtask/src/model.rs` walker (`walk_tree`). ",
-        );
+        out.push_str("Counts come from the same `xtask/src/model.rs` walker (`walk_tree`). ");
         out.push_str("Public-symbol / type-name metrics are a **line-based heuristic** (not a uniqueness ban).\n\n");
         out.push_str(&format!(
             "- schema: `{CONSOLIDATION_BASELINE_SCHEMA}`\n- program: `architectural-consolidation`\n- phase: `0`\n- source: `{INVENTORY_SCHEMA}`\n"
@@ -618,6 +613,15 @@ fn collect_ownership_snapshots(root: &Path) -> Vec<OwnershipSnapshot> {
     }
     out.sort_by(|a, b| a.concept.cmp(&b.concept));
     out
+}
+
+fn weeping_angel_package_manifest(root: &Path) -> PathBuf {
+    let apps = root.join("apps/cli/Cargo.toml");
+    if apps.is_file() {
+        apps
+    } else {
+        root.join("Cargo.toml")
+    }
 }
 
 fn count_workspace_crates(root: &Path) -> u64 {

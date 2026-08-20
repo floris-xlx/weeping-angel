@@ -17,7 +17,7 @@ fn read_live(rel: &str) -> String {
 
 #[test]
 fn dup016_workbenches_are_two_products() {
-    let rust_wb = read_live("src/workbench/mod.rs");
+    let rust_wb = read_live("apps/cli/src/workbench/mod.rs");
     assert!(
         rust_wb.contains("CREATE TABLE IF NOT EXISTS scans"),
         "weeping-angel workbench indexes sealed scan directories"
@@ -45,12 +45,12 @@ fn dup016_workbenches_are_two_products() {
 
 #[test]
 fn dup016_engine_orchestrator_vs_detector_pack() {
-    let orchestrator = read_live("src/engine/mod.rs");
+    let orchestrator = read_live("apps/cli/src/engine/mod.rs");
     assert!(
         orchestrator.contains("pub async fn run_scan"),
         "src/engine is the web/HTTP scan orchestrator"
     );
-    let detectors = read_live("src/engines/mod.rs");
+    let detectors = read_live("apps/cli/src/engines/mod.rs");
     assert!(
         detectors.contains("pub struct EngineHit") || detectors.contains("struct EngineHit"),
         "src/engines is the code-SAST detector pack"

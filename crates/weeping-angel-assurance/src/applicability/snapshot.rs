@@ -138,7 +138,10 @@ impl ApplicabilitySnapshot {
 
 /// Pin compiled-framework static applicability into the canonical snapshot type
 /// (DUP-004). Full Kleene evaluation remains [`evaluate_assessment_applicability`].
-pub fn pin_compiled_applicability(assessment: &Assessment, scope_label: &str) -> ApplicabilitySnapshot {
+pub fn pin_compiled_applicability(
+    assessment: &Assessment,
+    scope_label: &str,
+) -> ApplicabilitySnapshot {
     let scope = AssessmentScope {
         organizations: vec![scope_label.to_string()],
         ..AssessmentScope::default()
@@ -146,20 +149,24 @@ pub fn pin_compiled_applicability(assessment: &Assessment, scope_label: &str) ->
     let requirement_decisions = assessment
         .requirements
         .iter()
-        .map(|req| static_item_decision(
-            req.id().to_string(),
-            req.applicability().clone(),
-            "static applicability from ApplicabilityRule; unresolved predicates stay included",
-        ))
+        .map(|req| {
+            static_item_decision(
+                req.id().to_string(),
+                req.applicability().clone(),
+                "static applicability from ApplicabilityRule; unresolved predicates stay included",
+            )
+        })
         .collect();
     let control_decisions = assessment
         .controls
         .iter()
-        .map(|ctl| static_item_decision(
-            ctl.id().to_string(),
-            ctl.applicability().clone(),
-            "static applicability from ApplicabilityRule",
-        ))
+        .map(|ctl| {
+            static_item_decision(
+                ctl.id().to_string(),
+                ctl.applicability().clone(),
+                "static applicability from ApplicabilityRule",
+            )
+        })
         .collect();
     let mut snapshot = ApplicabilitySnapshot {
         schema: APPLICABILITY_SNAPSHOT_SCHEMA.into(),

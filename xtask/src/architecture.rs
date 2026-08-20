@@ -91,7 +91,7 @@ pub const REQUIRED_OWNERSHIP: [(&str, &str, &[&str]); 7] = [
     (
         "assurance_cli",
         "weeping-angel",
-        &["src/main.rs", "src/cli.rs"],
+        &["apps/cli/src/main.rs", "apps/cli/src/cli.rs"],
     ),
 ];
 

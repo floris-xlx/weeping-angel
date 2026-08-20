@@ -21,7 +21,10 @@ use weeping_angel_assurance_ir::{
     Vendor, VendorId, canonical_digest,
 };
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -943,16 +946,16 @@ fn sr_014_has_vendor_presence_and_catalog_family_untouched() {
     );
 }
 
-/// SR-015: dual-suite names are listed in root Cargo.toml.
+/// SR-015: dual-suite runs as a harness module.
 #[test]
 fn sr_015_dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_supplier_risk_baseline")
-            && toml.contains("sdd_supplier_risk_target")
+            && harness_src().contains("supplier_risk.target.rs")
             && !toml.contains("tests/contracts/supplier_risk.baseline.rs")
-            && toml.contains("tests/contracts/supplier_risk.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("supplier_risk.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
     require_needles(
         "SR-015 lib.rs re-exports the operational supplier contract",

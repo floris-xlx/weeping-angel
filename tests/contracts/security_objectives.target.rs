@@ -50,7 +50,10 @@ const ATTESTATION: &str =
 const CADENCE_30D: u64 = 2_592_000;
 const FRESHNESS_7D: u64 = 7 * 24 * 3600;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -1455,15 +1458,15 @@ fn so_t19_schema_assurance_ir_and_evaluation_snapshot_v1() {
     assert!(snap.get("evidenceSnapshotDigest").is_some());
 }
 
-/// SO: dual-suite names registered in root Cargo.toml; this spec listed in CANONICAL_SPECS
+/// SO: dual-suite runs as a harness module; this spec listed in CANONICAL_SPECS
 #[test]
 fn so_t20_dual_suite_registered_and_spec_in_canonical_specs() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("name = \"sdd_security_objectives_baseline\"")
             && !toml.contains("path = \"tests/contracts/security_objectives.baseline.rs\"")
-            && toml.contains("name = \"sdd_security_objectives_target\"")
-            && toml.contains("path = \"tests/contracts/security_objectives.target.rs\""),
+            && harness_src().contains("security_objectives.target.rs")
+            && harness_src().contains("security_objectives.target.rs"),
         "security objectives dual-suite must be explicitly listed (not auto-discovered)"
     );
     let layout = read_repo_file("tests/contracts/documentation_layout.rs");

@@ -133,7 +133,7 @@ fn dup014_close_law() {
     let root = live_root();
     let report = InventoryReport::collect(&root);
     assert_eq!(report.counts.require_needles_fns, 1);
-    assert_eq!(report.counts.root_test_binaries, 45);
+    assert_eq!(report.counts.root_test_binaries, 1);
     assert_eq!(report.counts.tests_rs_autodiscovered, 16);
     assert_eq!(report.counts.tests_contracts_rs, 43);
     assert_eq!(KNOWN_CHECK_IDS.len(), 15);

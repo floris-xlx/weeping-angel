@@ -16,6 +16,10 @@ use std::process::Command;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
 }
 
 fn rel(path: &str) -> PathBuf {
@@ -68,17 +72,17 @@ const SCHEMA_SSOT_DIR: &str = "schemas/codex-security";
 const SCHEMA_SECOND_DIR: &str = "codex-security/schemas";
 
 const BUDGETED_PREFIXES: &[&str] = &[
-    "src/parse.rs",
-    "src/http/",
-    "src/authz.rs",
-    "src/report/",
-    "src/workbench/",
-    "src/cli.rs",
-    "src/lib.rs",
-    "src/main.rs",
-    "src/contract/",
-    "src/discovery/",
-    "src/depcheck/parsers/",
+    "apps/cli/src/parse.rs",
+    "apps/cli/src/http/",
+    "apps/cli/src/authz.rs",
+    "apps/cli/src/report/",
+    "apps/cli/src/workbench/",
+    "apps/cli/src/cli.rs",
+    "apps/cli/src/lib.rs",
+    "apps/cli/src/main.rs",
+    "apps/cli/src/contract/",
+    "apps/cli/src/discovery/",
+    "apps/cli/src/depcheck/parsers/",
 ];
 
 /// Prompt 1–3 owned dual-suite stems. Hygiene must not delete these.
@@ -165,7 +169,12 @@ fn hygiene_owned_paths() -> Vec<String> {
             if p.extension().and_then(|e| e.to_str()) == Some("rs")
                 && let Ok(rel_path) = p.strip_prefix(repo_root())
             {
-                out.push(rel_path.to_string_lossy().replace('\\', "/"));
+                let rel = rel_path.to_string_lossy().replace('\\', "/");
+                // C01 owner of require_needles; not a hygiene-owned suite.
+                if rel.starts_with("tests/support/") {
+                    continue;
+                }
+                out.push(rel);
             }
         }
     }
@@ -175,17 +184,18 @@ fn hygiene_owned_paths() -> Vec<String> {
 #[test]
 fn dual_suite_is_registered_and_tests_sdd_stays_absent() {
     let cargo = read("Cargo.toml");
+    let harness = read("apps/cli/tests/harness.rs");
     assert!(
         !cargo.contains("name = \"sdd_repository_hygiene_baseline\""),
         "superseded hygiene baseline must not stay registered"
     );
     assert!(
-        cargo.contains("name = \"sdd_repository_hygiene_target\""),
-        "register sdd_repository_hygiene_target in root Cargo.toml"
+        harness.contains("repository_hygiene.target.rs"),
+        "hygiene target must remain a harness module"
     );
     assert!(
-        !cargo.contains("path = \"tests/contracts/repository_hygiene.baseline.rs\"")
-            && cargo.contains("path = \"tests/contracts/repository_hygiene.target.rs\""),
+        !harness.contains("repository_hygiene.baseline.rs")
+            && harness.contains("tests/contracts/repository_hygiene.target.rs"),
         "hygiene target lives under tests/contracts/; baseline deleted"
     );
     assert!(!rel("tests/sdd").exists(), "do not create tests/sdd/");
@@ -285,7 +295,7 @@ fn schema_ssot_is_schemas_codex_security_only() {
                 continue;
             };
             let rel = path
-                .strip_prefix(env!("CARGO_MANIFEST_DIR"))
+                .strip_prefix(repo_root())
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .replace('\\', "/");

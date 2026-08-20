@@ -19,7 +19,10 @@ use weeping_angel_assurance_ir::{
 };
 use weeping_angel_control_test::Effectiveness;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -817,15 +820,15 @@ fn rr_014_owner_is_principal_ref_and_dangling_identity_fails_closed() {
     );
 }
 
-/// RR-015: dual-suite names are listed in root Cargo.toml.
+/// RR-015: dual-suite runs as a harness module.
 #[test]
 fn rr_015_dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_risk_register_baseline")
-            && toml.contains("sdd_risk_register_target")
+            && harness_src().contains("risk_register.target.rs")
             && !toml.contains("tests/contracts/risk_register.baseline.rs")
-            && toml.contains("tests/contracts/risk_register.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("risk_register.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
 }

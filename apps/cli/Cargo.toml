@@ -1,0 +1,116 @@
+[package]
+name = "weeping-angel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+homepage = "https://github.com/floris-xlx/weeping-angel"
+description = "Authorized web recon, code SAST, and dependency-confusion scanning CLI"
+readme = "../../README.md"
+keywords = [
+    "security",
+    "scanner",
+    "recon",
+    "web",
+]
+categories = [
+    "command-line-utilities",
+    "development-tools",
+]
+default-run = "weeping-angel"
+
+[package.metadata.dist]
+dist = true
+
+[package.metadata.wix]
+upgrade-guid = "56BAEF93-DBA2-4BB4-8502-89C386C68D67"
+path-guid = "DAA53BD2-B2CE-4B13-A9A7-61C7F515C785"
+license = false
+eula = false
+
+[package.metadata.packager]
+before-packaging-command = "cargo build --release --bin weeping-angel"
+product-name = "weeping-angel"
+identifier = "dev.floris.weeping-angel"
+out-dir = "target/packager"
+
+[[package.metadata.packager.binaries]]
+path = "weeping-angel"
+main = true
+
+[package.metadata.packager.deb]
+section = "utils"
+priority = "optional"
+
+[[package.metadata.packager.wix.languages]]
+identifier = "en-US"
+
+[[bin]]
+name = "weeping-angel"
+path = "src/main.rs"
+
+[[bin]]
+name = "weeping-angel-docs-export"
+path = "src/bin/weeping-angel-docs-export.rs"
+
+[[example]]
+name = "weeping-angel-demo"
+path = "examples/weeping-angel-demo.rs"
+required-features = ["demo"]
+
+[features]
+default = ["web"]
+web = []
+demo = []
+
+[dependencies]
+anyhow.workspace = true
+async-trait.workspace = true
+axum.workspace = true
+chrono.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+futures.workspace = true
+hex.workspace = true
+indicatif.workspace = true
+once_cell.workspace = true
+quick-xml.workspace = true
+regex.workspace = true
+reqwest.workspace = true
+rusqlite.workspace = true
+scraper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+toml.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+url.workspace = true
+uuid.workspace = true
+walkdir.workspace = true
+weeping-angel-assurance.workspace = true
+weeping-angel-canonical-catalog.workspace = true
+weeping-angel-evidence.workspace = true
+
+[dev-dependencies]
+axum.workspace = true
+serde.workspace = true
+tempfile.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+weeping-angel-assurance.workspace = true
+weeping-angel-assurance-ir.workspace = true
+weeping-angel-collector.workspace = true
+weeping-angel-control-test.workspace = true
+weeping-angel-evidence.workspace = true
+weeping-angel-framework.workspace = true
+
+[[test]]
+name = "harness"
+path = "tests/harness.rs"

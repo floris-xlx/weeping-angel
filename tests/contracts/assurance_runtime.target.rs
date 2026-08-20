@@ -95,7 +95,10 @@ const ASSURANCE_PACKAGES: &[&str] = &[
     "weeping-angel-assurance",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn collect_object_keys(value: &Value, out: &mut BTreeSet<String>) {
     match value {

@@ -29,7 +29,10 @@ use weeping_angel_assurance_ir::{
     validate_assessment_against_context,
 };
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -789,15 +792,15 @@ fn ctx_t13_existing_spine_types_are_not_renamed() {
     );
 }
 
-/// CTX-T14: dual-suite `[[test]]` names are listed in root Cargo.toml.
+/// CTX-T14: dual-suite runs as a harness module (not a root catalog).
 #[test]
 fn ctx_t14_dual_suite_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("name = \"sdd_isms_context_baseline\"")
             && !toml.contains("path = \"tests/contracts/isms_context.baseline.rs\"")
-            && toml.contains("name = \"sdd_isms_context_target\"")
-            && toml.contains("path = \"tests/contracts/isms_context.target.rs\""),
+            && harness_src().contains("isms_context.target.rs")
+            && harness_src().contains("isms_context.target.rs"),
         "ISMS context IR dual-suite must be explicitly listed (not auto-discovered)"
     );
 }

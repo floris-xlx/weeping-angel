@@ -46,6 +46,10 @@ const GUARD_REPORT_SCHEMA: &str = "weeping-angel/guard-report/v1";
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
 }
 
 fn rel(path: &str) -> PathBuf {
@@ -205,7 +209,7 @@ fn ri_t02_ownership_table_uses_live_crate_names() {
         (
             "assurance_cli",
             "weeping-angel",
-            &["src/main.rs", "src/cli.rs"][..],
+            &["apps/cli/src/main.rs", "apps/cli/src/cli.rs"][..],
         ),
     ];
     for (concept, crate_name, required_paths) in required {
@@ -253,7 +257,7 @@ fn ri_t03_catalog_crate_is_canonical_catalog() {
     assert!(!rel("crates/weeping-angel-catalog/Cargo.toml").is_file());
 }
 
-/// RI-T04: assurance_cli is the root weeping-angel package (src/main.rs + src/cli.rs).
+/// RI-T04: assurance_cli is the weeping-angel package (apps/cli).
 #[test]
 fn ri_t04_assurance_cli_is_root_package() {
     let arch = parse_toml("architecture/architecture.toml");
@@ -273,8 +277,8 @@ fn ri_t04_assurance_cli_is_root_package() {
         .iter()
         .map(|v| v.as_str().expect("path str"))
         .collect();
-    assert!(paths.contains(&"src/main.rs"));
-    assert!(paths.contains(&"src/cli.rs"));
+    assert!(paths.contains(&"apps/cli/src/main.rs"));
+    assert!(paths.contains(&"apps/cli/src/cli.rs"));
     assert!(!rel("crates/weeping-angel-assurance-cli/Cargo.toml").is_file());
 }
 
@@ -601,10 +605,11 @@ fn ri_t14_ci_runs_xtask_guard() {
 #[test]
 fn ri_t15_dual_suite_registered_in_cargo_toml() {
     let cargo = read("Cargo.toml");
+    let harness = read("apps/cli/tests/harness.rs");
     assert!(!cargo.contains("name = \"sdd_repository_integrity_baseline\""));
-    assert!(cargo.contains("name = \"sdd_repository_integrity_target\""));
-    assert!(!cargo.contains("path = \"tests/contracts/repository_integrity.baseline.rs\""));
-    assert!(cargo.contains("path = \"tests/contracts/repository_integrity.target.rs\""));
+    assert!(harness.contains("repository_integrity.target.rs"));
+    assert!(!harness.contains("repository_integrity.baseline.rs"));
+    assert!(harness.contains("tests/contracts/repository_integrity.target.rs"));
 }
 
 /// After target GREEN, baseline absence tests are skip-superseded.
@@ -1257,6 +1262,7 @@ fn ri_t30_ci_requires_guard_and_does_not_path_filter_bypass() {
         "docs/debt/",
         "xtask/",
         "src/",
+        "apps/cli/",
         "crates/",
         "frameworks/",
         "catalog/",
@@ -1283,6 +1289,7 @@ fn ri_t30_ci_requires_guard_and_does_not_path_filter_bypass() {
             "docs/debt/**",
             "xtask/**",
             "src/**",
+            "apps/cli/**",
             "crates/**",
             "frameworks/**",
             "catalog/**",

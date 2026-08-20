@@ -251,10 +251,14 @@ pub struct LoadedPack {
 pub fn pack_search_roots() -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("frameworks"));
-        roots.push(base.join("..").join("..").join("frameworks"));
-        roots.push(base.join("..").join("frameworks"));
+        let mut base = PathBuf::from(dir);
+        for _ in 0..5 {
+            roots.push(base.join("frameworks"));
+            match base.parent() {
+                Some(parent) => base = parent.to_path_buf(),
+                None => break,
+            }
+        }
     }
     roots.push(PathBuf::from("frameworks"));
     roots

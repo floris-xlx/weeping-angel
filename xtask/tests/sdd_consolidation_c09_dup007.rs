@@ -43,7 +43,9 @@ fn dup007_shared_leaf_helper_without_moving_select_latest_as_of() {
         "ledger as_of leaf uses the shared helper"
     );
     assert!(
-        ledger.contains("pub fn as_of(") && ledger.contains("pub fn current(") && ledger.contains("pub fn latest("),
+        ledger.contains("pub fn as_of(")
+            && ledger.contains("pub fn current(")
+            && ledger.contains("pub fn latest("),
         "public clocks remain distinct"
     );
 }

@@ -59,7 +59,7 @@ paths = ["crates/weeping-angel-evidence"]
 [ownership.assurance_cli]
 crate = "weeping-angel"
 kind = "facade"
-paths = ["src/main.rs", "src/cli.rs"]
+paths = ["apps/cli/src/main.rs", "apps/cli/src/cli.rs"]
 
 [ownership.repository_guard]
 crate = "xtask"

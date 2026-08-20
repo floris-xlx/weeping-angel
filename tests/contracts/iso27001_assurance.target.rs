@@ -258,7 +258,10 @@ fn sample_hit() -> EngineHit {
     }
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn looks_like_protected_iso_text(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
@@ -283,9 +286,9 @@ fn dual_suite_is_registered_in_root_cargo_toml() {
     assert!(
         !cargo.contains("sdd_iso27001_assurance_baseline")
             && !cargo.contains("tests/contracts/iso27001_assurance.baseline.rs")
-            && cargo.contains("sdd_iso27001_assurance_target")
-            && cargo.contains("tests/contracts/iso27001_assurance.target.rs"),
-        "root Cargo.toml must register the dual-suite (tests/contracts is not auto-discovered)"
+            && harness_src().contains("iso27001_assurance.target.rs")
+            && harness_src().contains("iso27001_assurance.target.rs"),
+        "wired as a harness module the dual-suite (tests/contracts is not auto-discovered)"
     );
 }
 

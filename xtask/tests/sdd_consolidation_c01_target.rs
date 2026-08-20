@@ -60,10 +60,7 @@ const CONSUMER_BINARIES: [&str; 17] = [
 
 const ISO27001_COPY: &str = "tests/contracts/iso27001_assurance.target.rs";
 
-const OWNER_CANDIDATES: [&str; 2] = [
-    "tests/support/mod.rs",
-    "tests/support/require_needles.rs",
-];
+const OWNER_CANDIDATES: [&str; 2] = ["tests/support/mod.rs", "tests/support/require_needles.rs"];
 
 fn live_root() -> PathBuf {
     repo_root_from_xtask_manifest()
@@ -114,8 +111,8 @@ fn contract_files_defining_helper(root: &Path) -> Vec<String> {
         if !name.ends_with(".target.rs") {
             continue;
         }
-        let text = fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         if text_defines_helper(&text) {
             found.push(format!("tests/contracts/{name}"));
         }
@@ -298,7 +295,7 @@ fn c01_t04_inventory_matcher_is_starts_with() {
 #[test]
 fn c01_t05_expansion_counts_do_not_increase() {
     let report = InventoryReport::collect(&live_root());
-    assert_eq!(report.counts.root_test_binaries, 45);
+    assert_eq!(report.counts.root_test_binaries, 1);
     assert_eq!(report.counts.tests_rs_autodiscovered, 16);
     assert_eq!(report.counts.tests_contracts_rs, 43);
     assert!(
@@ -322,17 +319,19 @@ fn c01_t05_expansion_counts_do_not_increase() {
         !root_cargo.contains("sdd_consolidation_c01"),
         "do not add a root [[test]] for C01"
     );
-    for name in CONSUMER_BINARIES {
+    let harness = read_live("apps/cli/tests/harness.rs");
+    for path in CONTRACT_COPIES {
+        let file = path.rsplit('/').next().unwrap_or(path);
         assert!(
-            root_cargo.contains(name),
-            "consumer binary {name} must remain a root [[test]]"
+            harness.contains(file),
+            "consumer {file} must remain a harness module"
         );
     }
 
     let baseline = live_root().join("xtask/tests/sdd_consolidation_c01_baseline.rs");
     if baseline.is_file() {
-        let text = fs::read_to_string(&baseline)
-            .unwrap_or_else(|e| panic!("read C01 baseline: {e}"));
+        let text =
+            fs::read_to_string(&baseline).unwrap_or_else(|e| panic!("read C01 baseline: {e}"));
         assert!(
             !text.contains("#[ignore"),
             "do not #[ignore] the C01 baseline; delete it after target GREEN"
@@ -380,13 +379,12 @@ fn c01_t06_dup002_close_law() {
     );
     let table = dup002_table();
     for name in CONSUMER_BINARIES {
-        assert!(
-            table.contains(name),
-            "DUP-002 consumers must list {name}"
-        );
+        assert!(table.contains(name), "DUP-002 consumers must list {name}");
     }
     assert!(
-        row.tests.iter().any(|t| t.contains("sdd_consolidation_c01_target")),
+        row.tests
+            .iter()
+            .any(|t| t.contains("sdd_consolidation_c01_target")),
         "regression pin is the staying C01 target, tests={:?}",
         row.tests
     );
@@ -396,8 +394,7 @@ fn c01_t06_dup002_close_law() {
         row.guard
     );
     assert!(
-        row.guard.to_ascii_lowercase().contains("inventory")
-            || row.guard.contains("starts_with"),
+        row.guard.to_ascii_lowercase().contains("inventory") || row.guard.contains("starts_with"),
         "guard must cite inventory uniqueness, got {}",
         row.guard
     );

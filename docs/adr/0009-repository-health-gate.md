@@ -14,11 +14,11 @@ depends_on = ["0001-inwardly-extensible-assurance-runtime", "0004-documentation-
 | Status | **Accepted** — increment 1 health gate is law: architecture ownership SSOT + `cargo xtask guard` (checks 01, 02, 03, 13) is mandatory in CI. `sdd_repository_integrity_target` GREEN; baseline skip-superseded. |
 | Date | 2026-08-19 |
 | Deciders | Weeping Angel maintainers |
-| Supercedes | Nothing in the assurance spine, catalog, or collector decisions. Does **not** renumber existing `0003-*` / `0005-*` / `0007-*` / `0008-*` ADR files. **Amended by** [ADR 0010](0010-architecture-as-law.md) for Guard 04 evaluation, ownership `kind`, executable forbidden kinds, and structured `GuardReport`/CLI. |
+| Supercedes | Nothing in the assurance spine, catalog, or collector decisions. Does **not** renumber existing `0003-*` / `0005-*` / `0007-*` / `0008-*` ADR files. **Amended by** [ADR 0010](0010-architecture-as-law.md) for Guard 04 evaluation, ownership `kind`, executable forbidden kinds, and structured `GuardReport`/CLI. **Path facts after** [ADR 0051](0051-repository-environment.md): CLI package remains `weeping-angel` at `apps/cli/`; this ADR still owns the health command (no second CLI, no Guard 16). |
 | Extends | [ADR 0001](0001-inwardly-extensible-assurance-runtime.md) (crate graph as built), [ADR 0004](0004-documentation-architecture.md) (specs / ADRs / contracts / `.sdd/`) |
 | Spec | [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md) |
 | Characterization | `f560196c57e77df2573cfb9a4b384d3cf1c21e8a` |
-| Tests | `sdd_repository_integrity_target` GREEN (`tests/contracts/repository_integrity.target.rs`, RI-T01–T16). `sdd_repository_integrity_baseline` `#[ignore = "superseded by sdd_repository_integrity_target"]`. Parser/fixture coverage in `cargo test -p xtask`. Dual-suite registered in root `Cargo.toml`. |
+| Tests | `sdd_repository_integrity_target` GREEN (`tests/contracts/repository_integrity.target.rs`, RI-T01–T16). `sdd_repository_integrity_baseline` `#[ignore = "superseded by sdd_repository_integrity_target"]`. Parser/fixture coverage in `cargo test -p xtask`. Dual-suite runs via the one `weeping-angel` harness ([ADR 0051](0051-repository-environment.md)), not a root `[[test]]` catalog. |
 
 > Filename **`0009-*`**. Cite **this file by path**. Do **not** add a `0003-repository-integrity.md` sibling. Duplicate `0003-*` IDs already exist and are debt (`DEBT-DUP-ADR`), not a license to mint another `0003`. Architecture-as-law increment: [ADR 0010](0010-architecture-as-law.md). Next unique number is **0011**.
 
@@ -64,7 +64,7 @@ architecture/forbidden-patterns.toml  schema weeping-angel/forbidden-patterns/v1
 | `temporal_evidence_selection` | `weeping-angel-assurance` | `crates/weeping-angel-assurance/src/temporal.rs` |
 | `assessment_lineage` | `weeping-angel-assurance` | `crates/weeping-angel-assurance/src/lineage.rs` |
 | `evidence_persistence` | `weeping-angel-evidence` | `crates/weeping-angel-evidence` |
-| `assurance_cli` | `weeping-angel` | `src/main.rs`, `src/cli.rs` |
+| `assurance_cli` | `weeping-angel` | `apps/cli/src/main.rs`, `apps/cli/src/cli.rs` (package name unchanged; path per [ADR 0051](0051-repository-environment.md)) |
 
 Packages `weeping-angel-catalog` and `weeping-angel-assurance-cli` **must not** be created. Mapping them in the ownership table is a check-02 failure.
 
@@ -109,7 +109,7 @@ CI job `test` runs `cargo xtask guard` as a mandatory step (`repository health g
 
 ### 4. Dual-suite is explicit, not auto-discovered
 
-`[[test]]` names `sdd_repository_integrity_{baseline,target}` are registered in root `Cargo.toml`. Human spec remains [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md); `docs/sdd/repository-integrity.md` is a pointer stub (ADR 0004). That spec path is in `CANONICAL_SPECS`.
+Contract suites stay under `tests/contracts/` and are **not** Cargo auto-discovery. After [ADR 0051](0051-repository-environment.md) they are modules of the one `[[test]]` harness on package `weeping-angel` (`apps/cli/tests/harness.rs`), not a root `Cargo.toml` `[[test]]` catalog. Human spec remains [`docs/specs/repository-integrity.md`](../specs/repository-integrity.md); `docs/sdd/repository-integrity.md` is a pointer stub (ADR 0004). That spec path is in `CANONICAL_SPECS`.
 
 ## Non-goals (remaining_backlog)
 
@@ -129,4 +129,5 @@ P0 framework expression preservation; fail-closed pack parsing; catalog SSOT mig
 - Successor increment: [`docs/specs/architectural-cleanup-program.md`](../specs/architectural-cleanup-program.md), [ADR 0010](0010-architecture-as-law.md)
 - Debt register: [`docs/debt/register.toml`](../debt/register.toml), [`docs/debt/README.md`](../debt/README.md)
 - Layout: [ADR 0004](0004-documentation-architecture.md)
+- Environment (workspace SSOT; does not replace this health-gate ADR): [ADR 0051](0051-repository-environment.md)
 - Crate graph: [ADR 0001](0001-inwardly-extensible-assurance-runtime.md)

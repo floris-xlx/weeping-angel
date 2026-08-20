@@ -92,7 +92,10 @@ fn product_crate_sources_joined() -> String {
     chunks.join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -818,14 +821,10 @@ fn ipo_015_dual_suite_and_schema() {
     let cargo = read_repo_file("Cargo.toml");
     assert!(
         !cargo.contains("name = \"sdd_interested_parties_obligations_baseline\"")
-            && cargo
-                .contains("path = \"tests/contracts/interested_parties_obligations.target.rs\"")
             && !cargo
                 .contains("path = \"tests/contracts/interested_parties_obligations.baseline.rs\"")
-            && cargo.contains("name = \"sdd_interested_parties_obligations_target\"")
-            && cargo
-                .contains("path = \"tests/contracts/interested_parties_obligations.target.rs\""),
-        "IPO-015: dual-suite names must be registered in root Cargo.toml"
+            && harness_src().contains("interested_parties_obligations.target.rs"),
+        "IPO-015: dual-suite names must be wired as a harness module"
     );
     let lib = read_repo_file("crates/weeping-angel-assurance-ir/src/lib.rs");
     assert!(

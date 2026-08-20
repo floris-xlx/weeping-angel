@@ -689,42 +689,54 @@ fn con_t06_close_law_blocks_verified_removed() {
             "{id} v1 resolved maps to canonicalized|consumers-migrating|compatibility-only, got {status}"
         );
     }
-    let dup001 = by_id.get("DUP-001").unwrap_or_else(|| panic!("missing DUP-001"));
+    let dup001 = by_id
+        .get("DUP-001")
+        .unwrap_or_else(|| panic!("missing DUP-001"));
     assert_eq!(
         dup001.0.as_str(),
         "verified",
         "DUP-001 close law after duplicate schema tree deleted, got {}",
         dup001.0
     );
-    let dup008 = by_id.get("DUP-008").unwrap_or_else(|| panic!("missing DUP-008"));
+    let dup008 = by_id
+        .get("DUP-008")
+        .unwrap_or_else(|| panic!("missing DUP-008"));
     assert_eq!(
         dup008.0.as_str(),
         "verified",
         "DUP-008 close law after catalog root walk SSOT, got {}",
         dup008.0
     );
-    let dup013 = by_id.get("DUP-013").unwrap_or_else(|| panic!("missing DUP-013"));
+    let dup013 = by_id
+        .get("DUP-013")
+        .unwrap_or_else(|| panic!("missing DUP-013"));
     assert_eq!(
         dup013.0.as_str(),
         "verified",
         "DUP-013 close law after Lane C pack-parse SSOT, got {}",
         dup013.0
     );
-    let dup004 = by_id.get("DUP-004").unwrap_or_else(|| panic!("missing DUP-004"));
+    let dup004 = by_id
+        .get("DUP-004")
+        .unwrap_or_else(|| panic!("missing DUP-004"));
     assert_eq!(
         dup004.0.as_str(),
         "verified",
         "DUP-004 close law after Lane B snapshot SSOT, got {}",
         dup004.0
     );
-    let dup011 = by_id.get("DUP-011").unwrap_or_else(|| panic!("missing DUP-011"));
+    let dup011 = by_id
+        .get("DUP-011")
+        .unwrap_or_else(|| panic!("missing DUP-011"));
     assert_eq!(
         dup011.0.as_str(),
         "verified",
         "DUP-011 close law after Lane B readiness SSOT, got {}",
         dup011.0
     );
-    let dup005 = by_id.get("DUP-005").unwrap_or_else(|| panic!("missing DUP-005"));
+    let dup005 = by_id
+        .get("DUP-005")
+        .unwrap_or_else(|| panic!("missing DUP-005"));
     assert_eq!(
         dup005.0.as_str(),
         "verified",
@@ -1322,12 +1334,13 @@ fn con_t14_seeded_concepts_cite_live_symbols_no_hypothetical_crates() {
     let cli = concept_table(&parsed, "assurance_cli");
     assert_eq!(owner_seat(cli, "semantic_owner").as_str(), "weeping-angel");
     assert!(
-        blob.contains("src/main.rs") && blob.contains("src/cli.rs"),
-        "assurance_cli facade must cite src/main.rs and src/cli.rs"
+        blob.contains("apps/cli/src/main.rs") && blob.contains("apps/cli/src/cli.rs"),
+        "assurance_cli facade must cite apps/cli/src/main.rs and apps/cli/src/cli.rs"
     );
     assert!(
-        live_root().join("src/main.rs").is_file() && live_root().join("src/cli.rs").is_file(),
-        "CLI facade files must remain at src/main.rs and src/cli.rs"
+        live_root().join("apps/cli/src/main.rs").is_file()
+            && live_root().join("apps/cli/src/cli.rs").is_file(),
+        "CLI facade files must remain at apps/cli/src/main.rs and apps/cli/src/cli.rs"
     );
 
     let collectors = concept_table(&parsed, "collectors");
@@ -1774,8 +1787,8 @@ path = "tests/expansion_extra.rs"
         &root.join("xtask/Cargo.toml"),
         "[package]\nname = \"xtask\"\nversion = \"0.0.0\"\nedition = \"2024\"\n",
     );
-    write_file(&root.join("src/main.rs"), "");
-    write_file(&root.join("src/cli.rs"), "");
+    write_file(&root.join("apps/cli/src/main.rs"), "");
+    write_file(&root.join("apps/cli/src/cli.rs"), "");
     write_file(
         &root.join("crates/weeping-angel-assurance/src/readiness.rs"),
         "",

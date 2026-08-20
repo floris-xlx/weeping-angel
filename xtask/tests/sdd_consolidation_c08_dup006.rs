@@ -41,7 +41,7 @@ fn dup006_live_and_pinned_soa_paths_are_named() {
         "scheduler must not call the removed ambiguous name"
     );
 
-    let historical = read_live("src/assurance_soa.rs");
+    let historical = read_live("apps/cli/src/assurance_soa.rs");
     assert!(
         historical.contains("project_soa_from_snapshot"),
         "CLI historical SoA uses the pinned path"

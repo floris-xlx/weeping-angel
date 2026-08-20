@@ -22,8 +22,13 @@ use weeping_angel_assurance_ir::{
     typed_canonical_digest,
 };
 
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
+
 fn ir_src() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("crates/weeping-angel-assurance-ir")
+    manifest_dir().join("crates/weeping-angel-assurance-ir")
 }
 
 fn ir_sources() -> String {
@@ -469,7 +474,7 @@ fn ir_025_framework_catalogs_compile_without_extending_control() {
 
 #[test]
 fn ir_golden_fixtures_round_trip() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/assurance-ir/v1");
+    let dir = manifest_dir().join("tests/fixtures/assurance-ir/v1");
     let control: Control =
         serde_json::from_str(&std::fs::read_to_string(dir.join("control.json")).unwrap()).unwrap();
     assert_eq!(control.id().as_str(), "control.access.mfa");
@@ -512,10 +517,7 @@ fn ir_golden_fixtures_round_trip() {
 
 #[test]
 fn dual_suite_is_registered() {
-    let toml =
-        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"))
-            .unwrap();
-    assert!(toml.contains("sdd_compliance_ir_target"));
+    assert_suite_in_harness("compliance_ir.target.rs");
 }
 
 fn collect_keys(value: &serde_json::Value, out: &mut BTreeSet<String>) {

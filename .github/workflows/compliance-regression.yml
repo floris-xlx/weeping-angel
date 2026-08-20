@@ -17,6 +17,8 @@ on:
       - ".github/workflows/compliance-regression.yml"
       - "Cargo.toml"
       - "Cargo.lock"
+      - "apps/cli/**"
+      - "rust-toolchain.toml"
   push:
     branches: [main]
   workflow_dispatch:
@@ -36,7 +38,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain from rust-toolchain.toml
+        uses: dtolnay/rust-toolchain@master
         with:
           components: clippy, rustfmt
 

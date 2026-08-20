@@ -1,9 +1,9 @@
 [package]
 name = "weeping-angel-framework"
-version = "0.2.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 description = "Fail-closed framework compile (Athena-shaped) for Weeping Angel assurance"
-license = "MIT"
 publish = false
 
 [features]
@@ -11,8 +11,8 @@ default = []
 demo = []
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-thiserror = "2"
-toml = "0.8"
-weeping-angel-assurance-ir = { path = "../weeping-angel-assurance-ir" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+weeping-angel-assurance-ir.workspace = true

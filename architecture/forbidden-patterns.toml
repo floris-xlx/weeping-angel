@@ -13,7 +13,7 @@ rationale = "Live catalog crate is weeping-angel-canonical-catalog"
 id = "FORBID-HYPOTHETICAL-ASSURANCE-CLI"
 kind = "package"
 value = "weeping-angel-assurance-cli"
-rationale = "Assurance CLI is the root weeping-angel package (src/main.rs, src/cli.rs)"
+rationale = "Assurance CLI is the weeping-angel package (apps/cli/src/main.rs, apps/cli/src/cli.rs)"
 
 [[pattern]]
 id = "FORBID-TESTS-SDD"

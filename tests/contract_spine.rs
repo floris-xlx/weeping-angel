@@ -3,6 +3,14 @@
 use std::fs;
 use std::path::PathBuf;
 
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
+}
+
 use tempfile::tempdir;
 use weeping_angel::contract::{
     CoverageDocument, FindingsDocument, ManifestDocument, derive_fingerprint, ensure_scan_layout,
@@ -40,7 +48,7 @@ fn finalize_example_fixture_writes_report() {
     fs::create_dir_all(&scan_dir).unwrap();
 
     // Copy example completed-scan as draft (already sealed; re-seal is fine)
-    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/completed-scan");
+    let fixture = repo_root().join("tests/fixtures/completed-scan");
     for name in ["scan-manifest.json", "findings.json", "coverage.json"] {
         fs::copy(fixture.join(name), scan_dir.join(name)).unwrap();
     }

@@ -5,7 +5,7 @@
 | Status | **Increment 1 implemented.** **Increment 2 implemented** — modular guard engine, architecture policy SSOT, real Guards 14/15, fail-closed debt expiry. |
 | Program | Repository Integrity & Technical-Debt Reconciliation |
 | Slice | **Increment 2** — Repository Guard and Governance Hardening (Prompt 1). Extends increment 1 (§0–§9) rather than forking a second SSOT. |
-| Dual-suite | `sdd_repository_integrity_baseline` · `sdd_repository_integrity_target` (`tests/contracts/repository_integrity.{baseline,target}.rs`) — **not** auto-discovered; listed as `[[test]]` in root `Cargo.toml`. Increment-1 absence tests RI-B01–B10 and increment-2 characterization RI-B11–B18 stay `#[ignore]`-superseded (do **not** re-enable). Desired increment-2 behavior is additive target IDs RI-T18–T31. Architectural-cleanup dual-suite remains `xtask/tests/sdd_architectural_cleanup_{baseline,target}.rs` (`cargo test -p xtask`). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)). |
+| Dual-suite | `sdd_repository_integrity_baseline` · `sdd_repository_integrity_target` (`tests/contracts/repository_integrity.{baseline,target}.rs`) — **not** auto-discovered; modules of the one `weeping-angel` harness (`apps/cli/tests/harness.rs`; [ADR 0051](../adr/0051-repository-environment.md)). Increment-1 absence tests RI-B01–B10 and increment-2 characterization RI-B11–B18 stay `#[ignore]`-superseded (do **not** re-enable). Desired increment-2 behavior is additive target IDs RI-T18–T31. Architectural-cleanup dual-suite remains `xtask/tests/sdd_architectural_cleanup_{baseline,target}.rs` (`cargo test -p xtask`). `tests/sdd/` is forbidden ([ADR 0004](../adr/0004-documentation-architecture.md)). |
 | ADR | Increment 1: **Accepted** [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md), **Accepted** [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md). Increment 2: **Accepted** [`docs/adr/0011-repository-guard-governance.md`](../adr/0011-repository-guard-governance.md). Duplicate `0003-*` / `0005-*` / `0007-*` / `0008-*` (and pinned concurrent `0011-*`) IDs remain grandfathered debt (`DEBT-DUP-ADR`); do **not** silently renumber. Do **not** rewrite 0009/0010 decision bodies. |
 | Public contract | This file. Assurance runtime public contract remains [`docs/specs/assurance-runtime.md`](assurance-runtime.md) (untouched). |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
@@ -18,7 +18,7 @@
 | Increment-2 current plane | Modular `xtask` (`model` / `architecture` / `debt` / `checks` / `report`); Guards **01–15** real / pass on the healthy tree; `DEBT-GUARD-05`…`12` (and 14/15) **resolved** |
 | IR schema (do not fork) | `assurance-ir/v1` (`ASSURANCE_IR_SCHEMA`) — this program does not edit IR |
 | `adr_needed` | **true** (increment 1: 0009/0010). Increment 2: **Accepted** ADR **0011** (modular guard engine, policy-in-`architecture/`, real Guards 14/15, debt-expiry, additive JSON). |
-| Workspace verify | `cargo fmt --all -- --check`; `cargo test -p xtask`; `cargo xtask guard`; `cargo test --test sdd_repository_integrity_target`; `cargo test --test sdd_documentation_layout` |
+| Workspace verify | `cargo fmt --all -- --check`; `cargo test -p xtask`; `cargo xtask guard`; `cargo test -p weeping-angel --test harness repository_integrity`; `cargo test -p weeping-angel --test harness documentation_layout` |
 
 This document is the durable human SSOT for the Repository Integrity program. Increment 1 owns **architecture manifests**, **canonical concept ownership**, **forbidden-pattern declarations**, **the technical-debt register**, **the 2026-08 live baseline snapshot**, **`cargo xtask guard` as the single repository health command**, and **mandatory CI wiring**. Increment 2 (this revision) owns turning that gate into a **durable architectural enforcement system**: modular guard engine, single-load `RepositoryModel` with cached source, versioned policy under `architecture/`, real ADR identity/graph (Guard 14), real spec lifecycle (Guard 15), and fail-closed debt expiry.
 
@@ -504,11 +504,10 @@ Target tests (must fail before product files exist; pass after):
 ## 7. Dual-suite and verify commands
 
 ```text
-cargo test --test sdd_repository_integrity_target
-cargo test --test sdd_repository_integrity_baseline -- --ignored
+cargo test -p weeping-angel --test harness repository_integrity
 cargo test -p xtask
 cargo xtask guard
-cargo test --test sdd_documentation_layout
+cargo test -p weeping-angel --test harness documentation_layout
 cargo fmt --all -- --check
 ```
 

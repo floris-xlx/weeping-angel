@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "apps/cli",
     "crates/weeping-angel-assurance-ir",
     "crates/weeping-angel-framework",
     "crates/weeping-angel-evidence",
@@ -10,412 +11,56 @@ members = [
     "crates/weeping-angel-canonical-catalog",
     "xtask",
 ]
+default-members = ["apps/cli"]
 
-[package]
-repository = "https://github.com/floris-xlx/weeping-angel"
-homepage = "https://github.com/floris-xlx/weeping-angel"
-name = "weeping-angel"
+[workspace.package]
 version = "0.2.0"
 edition = "2024"
-description = "Authorized web recon, code SAST, and dependency-confusion scanning CLI"
 license = "MIT"
-readme = "README.md"
+repository = "https://github.com/floris-xlx/weeping-angel"
 authors = ["floris-xlx"]
-keywords = [
-    "security",
-    "scanner",
-    "recon",
-    "web",
-]
-categories = [
-    "command-line-utilities",
-    "development-tools",
-]
-default-run = "weeping-angel"
+rust-version = "1.96"
 
-[package.metadata.dist]
-dist = true
-
-[package.metadata.wix]
-upgrade-guid = "56BAEF93-DBA2-4BB4-8502-89C386C68D67"
-path-guid = "DAA53BD2-B2CE-4B13-A9A7-61C7F515C785"
-license = false
-eula = false
-
-[package.metadata.packager]
-before-packaging-command = "cargo build --release --bin weeping-angel"
-product-name = "weeping-angel"
-identifier = "dev.floris.weeping-angel"
-out-dir = "target/packager"
-
-[[package.metadata.packager.binaries]]
-path = "weeping-angel"
-main = true
-
-[package.metadata.packager.deb]
-section = "utils"
-priority = "optional"
-
-[[package.metadata.packager.wix.languages]]
-identifier = "en-US"
-
-[[bin]]
-name = "weeping-angel"
-path = "src/main.rs"
-
-[[bin]]
-name = "weeping-angel-docs-export"
-path = "src/bin/weeping-angel-docs-export.rs"
-
-[[example]]
-name = "weeping-angel-demo"
-path = "examples/weeping-angel-demo.rs"
-required-features = ["demo"]
-
-[features]
-default = ["web"]
-web = []
-demo = []
-
-[profile.dist]
-inherits = "release"
-lto = "thin"
-
-[dependencies]
+[workspace.dependencies]
 anyhow = "1"
 async-trait = "0.1"
+axum = { version = "0.8", features = ["multipart"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+clap = { version = "4", features = ["derive", "env", "color", "wrap_help", "unicode", "string"] }
+clap_complete = "4"
 futures = "0.3"
 hex = "0.4"
 indicatif = "0.17"
+inventory = "0.3"
 once_cell = "1"
+quick-xml = { version = "0.41.0", features = ["serialize"] }
 regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "cookies", "gzip", "brotli", "deflate", "json"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
 scraper = "0.23"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"
 sha2 = "0.10"
+tempfile = "3"
 thiserror = "2"
+tokio = { version = "1", features = ["full"] }
 toml = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "cors"] }
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = { version = "2", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
 walkdir = "2"
 weeping-angel-assurance = { path = "crates/weeping-angel-assurance" }
-weeping-angel-canonical-catalog = { path = "crates/weeping-angel-canonical-catalog" }
-weeping-angel-evidence = { path = "crates/weeping-angel-evidence" }
-
-[dependencies.quick-xml]
-version = "0.41.0"
-features = ["serialize"]
-
-[dependencies.rusqlite]
-version = "0.32"
-features = ["bundled"]
-
-[dependencies.chrono]
-version = "0.4"
-default-features = false
-features = [
-    "clock",
-    "std",
-    "serde",
-]
-
-[dependencies.clap]
-version = "4"
-features = [
-    "derive",
-    "env",
-    "color",
-    "wrap_help",
-    "unicode",
-    "string",
-]
-
-[dependencies.clap_complete]
-version = "4"
-
-[dependencies.reqwest]
-version = "0.12"
-default-features = false
-features = [
-    "rustls-tls",
-    "cookies",
-    "gzip",
-    "brotli",
-    "deflate",
-    "json",
-]
-
-[dependencies.serde]
-version = "1"
-features = ["derive"]
-
-[dependencies.tokio]
-version = "1"
-features = ["full"]
-
-[dependencies.tracing-subscriber]
-version = "0.3"
-features = ["env-filter"]
-
-[dependencies.url]
-version = "2"
-features = ["serde"]
-
-[dependencies.uuid]
-version = "1"
-features = ["v4"]
-
-[dependencies.axum]
-version = "0.8"
-features = ["multipart"]
-
-[dependencies.tower]
-version = "0.5"
-
-[dependencies.tower-http]
-version = "0.6"
-features = [
-    "fs",
-    "cors",
-]
-
-[dev-dependencies]
-axum = "0.8"
-tempfile = "3"
-tower = "0.5"
-weeping-angel-assurance = { path = "crates/weeping-angel-assurance" }
 weeping-angel-assurance-ir = { path = "crates/weeping-angel-assurance-ir" }
+weeping-angel-canonical-catalog = { path = "crates/weeping-angel-canonical-catalog" }
 weeping-angel-collector = { path = "crates/weeping-angel-collector" }
 weeping-angel-control-test = { path = "crates/weeping-angel-control-test" }
 weeping-angel-evidence = { path = "crates/weeping-angel-evidence" }
 weeping-angel-framework = { path = "crates/weeping-angel-framework" }
 
-[dev-dependencies.tower-http]
-version = "0.6"
-features = ["fs"]
-
-[dev-dependencies.serde]
-version = "1"
-features = ["derive"]
-
-[[test]]
-name = "e2e_demo"
-path = "tests/e2e_demo.rs"
-required-features = ["demo"]
-
-[[test]]
-name = "e2e_recon"
-path = "tests/e2e_recon.rs"
-required-features = ["demo"]
-
-
-[[test]]
-name = "sdd_assurance_runtime_target"
-path = "tests/contracts/assurance_runtime.target.rs"
-
-
-[[test]]
-name = "sdd_iso27001_assurance_target"
-path = "tests/contracts/iso27001_assurance.target.rs"
-
-
-[[test]]
-name = "sdd_iso27001_remap_target"
-path = "tests/contracts/iso27001_remap.target.rs"
-
-[[test]]
-name = "sdd_compliance_ir_target"
-path = "tests/contracts/compliance_ir.target.rs"
-
-
-[[test]]
-name = "sdd_population_runtime_target"
-path = "tests/contracts/population_runtime.target.rs"
-
-
-[[test]]
-name = "sdd_typed_evidence_target"
-path = "tests/contracts/typed_evidence.target.rs"
-
-
-[[test]]
-name = "sdd_iam_catalog_target"
-path = "tests/contracts/iam_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_canonical_assurance_catalog_target"
-path = "tests/contracts/canonical_assurance_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_github_collector_target"
-path = "tests/contracts/github_collector.target.rs"
-
-
-[[test]]
-name = "sdd_collector_hexagonal_target"
-path = "tests/contracts/collector_hexagonal.target.rs"
-
-
-[[test]]
-name = "sdd_assessment_lineage_target"
-path = "tests/contracts/assessment_lineage.target.rs"
-
-
-[[test]]
-name = "sdd_vulnerability_catalog_target"
-path = "tests/contracts/vulnerability_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_sdlc_catalog_target"
-path = "tests/contracts/sdlc_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_infrastructure_catalog_target"
-path = "tests/contracts/infrastructure_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_applicability_engine_target"
-path = "tests/contracts/applicability_engine.target.rs"
-
-
-[[test]]
-name = "sdd_governance_catalog_target"
-path = "tests/contracts/governance_catalog.target.rs"
-
-
-[[test]]
-name = "sdd_risk_register_target"
-path = "tests/contracts/risk_register.target.rs"
-
-
-[[test]]
-name = "sdd_operational_soa_target"
-path = "tests/contracts/operational_soa.target.rs"
-
-
-[[test]]
-name = "sdd_controlled_documents_target"
-path = "tests/contracts/controlled_documents.target.rs"
-
-[[test]]
-name = "sdd_documentation_layout"
-path = "tests/contracts/documentation_layout.rs"
-
-
-[[test]]
-name = "sdd_risk_methodology_target"
-path = "tests/contracts/risk_methodology.target.rs"
-
-
-[[test]]
-name = "sdd_risk_treatment_target"
-path = "tests/contracts/risk_treatment.target.rs"
-
-
-[[test]]
-name = "sdd_risk_identification_target"
-path = "tests/contracts/risk_identification.target.rs"
-
-
-[[test]]
-name = "sdd_residual_risk_target"
-path = "tests/contracts/residual_risk.target.rs"
-
-
-[[test]]
-name = "sdd_continuous_assurance_scheduler_target"
-path = "tests/contracts/continuous_assurance_scheduler.target.rs"
-
-
-[[test]]
-name = "sdd_continuity_resilience_target"
-path = "tests/contracts/continuity_resilience.target.rs"
-
-
-[[test]]
-name = "sdd_temporal_assurance_target"
-path = "tests/contracts/temporal_assurance.target.rs"
-
-
-[[test]]
-name = "sdd_evidence_validity_temporal_assurance_target"
-path = "tests/contracts/evidence_validity_temporal_assurance.target.rs"
-
-
-[[test]]
-name = "sdd_control_implementation_registry_target"
-path = "tests/contracts/control_implementation_registry.target.rs"
-
-
-[[test]]
-name = "sdd_incident_governance_target"
-path = "tests/contracts/incident_governance.target.rs"
-
-
-[[test]]
-name = "sdd_supplier_risk_target"
-path = "tests/contracts/supplier_risk.target.rs"
-
-
-[[test]]
-name = "sdd_isms_events_drift_target"
-path = "tests/contracts/isms_events_drift.target.rs"
-
-
-[[test]]
-name = "sdd_isms_context_target"
-path = "tests/contracts/isms_context.target.rs"
-
-
-[[test]]
-name = "sdd_remediation_engine_target"
-path = "tests/contracts/remediation_engine.target.rs"
-
-
-
-[[test]]
-name = "sdd_security_objectives_target"
-path = "tests/contracts/security_objectives.target.rs"
-
-[[test]]
-name = "sdd_personnel_security_target"
-path = "tests/contracts/personnel_security.target.rs"
-
-
-[[test]]
-name = "sdd_interested_parties_obligations_target"
-path = "tests/contracts/interested_parties_obligations.target.rs"
-
-
-[[test]]
-name = "sdd_internal_audit_target"
-path = "tests/contracts/internal_audit.target.rs"
-
-
-[[test]]
-name = "sdd_nonconformity_capa_target"
-path = "tests/contracts/nonconformity_capa.target.rs"
-
-
-[[test]]
-name = "sdd_scope_engine_target"
-path = "tests/contracts/scope_engine.target.rs"
-
-
-[[test]]
-name = "sdd_repository_integrity_target"
-path = "tests/contracts/repository_integrity.target.rs"
-
-
-[[test]]
-name = "sdd_temporal_lineage_evidence_soa_target"
-path = "tests/contracts/temporal_lineage_evidence_soa.target.rs"
-
-
-[[test]]
-name = "sdd_repository_hygiene_target"
-path = "tests/contracts/repository_hygiene.target.rs"
+[profile.dist]
+inherits = "release"
+lto = "thin"

@@ -9,7 +9,7 @@
 | Extends | [ADR 0004](0004-documentation-architecture.md) (specs / ADRs / contracts / `.sdd/`) |
 | Spec | [`docs/specs/repository-hygiene.md`](../specs/repository-hygiene.md) |
 | Characterization | `0015f6395e7ead042e3cfd3066fefde3d39aa36b` |
-| Tests | `sdd_repository_hygiene_target` GREEN (`tests/contracts/repository_hygiene.target.rs`). `sdd_repository_hygiene_baseline` skip-superseded. Both registered in root `Cargo.toml`. Neighbor `sdd_documentation_layout` indexes this spec in `CANONICAL_SPECS`. |
+| Tests | `sdd_repository_hygiene_target` GREEN (`tests/contracts/repository_hygiene.target.rs`). `sdd_repository_hygiene_baseline` skip-superseded. Both run through the one `weeping-angel` harness (`apps/cli/tests/harness.rs`; [ADR 0051](0051-repository-environment.md)). Neighbor `sdd_documentation_layout` indexes this spec in `CANONICAL_SPECS`. |
 
 > Filename **`0012-*`**. Cite **this file by path**. Concurrent cleanup drafts occupy `0011-*`. Duplicate historical `0003-*` / `0005-*` / `0007-*` / `0008-*` prefixes remain `DEBT-DUP-ADR` (Prompt 1). Do **not** add `0003-repository-hygiene.md`.
 
@@ -77,7 +77,7 @@ A compact audit **manifest** (generator, schema version, source commit, digest, 
 
 ### 3. Production panic budget
 
-Runtime failure that can come from **input, IO, network, auth, reporting, or workbench state** in root `src/**` (excluding `#[cfg(test)]` and the demo lab) returns a typed `Result` / error with context.
+Runtime failure that can come from **input, IO, network, auth, reporting, or workbench state** in scanner `apps/cli/src/**` (formerly repo-root `src/**`; excluding `#[cfg(test)]` and the demo lab) returns a typed `Result` / error with context.
 
 `.unwrap()` / `.expect()` remain only for:
 
@@ -96,7 +96,7 @@ This slice does not convert unwraps in Prompt 2/3 crates.
 - **This increment collapsed none of those pairs.** Nearly every GREEN `*.target.rs` still asserts its `*.baseline.rs` path in `Cargo.toml`. Deleting them would fail Prompt 1–3 targets. Hygiene reports the skip list; it does not delete foreign baselines to move a count.
 - Do not delete coverage to improve counts.
 - Do not add `#[ignore]` to hide a red test. The only new ignore allowed on hygiene-owned files is the skip-supersede attr on `repository_hygiene.baseline.rs`.
-- `tests/contracts/` remains explicitly listed in root `Cargo.toml` (ADR 0004). Auto-discovery continues to own `tests/*.rs`. `e2e_demo` / `e2e_recon` stay explicit because of `required-features = ["demo"]`.
+- `tests/contracts/` is wired through the one `[[test]]` harness on package `weeping-angel` (ADR 0004 / ADR 0051). Repo-root `tests/*.rs` still run via that harness (`#[path]`), not as extra `[[test]]` rows. `e2e_demo` / `e2e_recon` stay `demo`-gated inside the harness.
 - Source-grep `require_needles` is forbidden in hygiene-owned tests. Existing needles in Prompt 2/3 targets are left in place during concurrent work.
 
 ### 5. Admission hygiene
@@ -105,7 +105,7 @@ Root `.gitignore` must fail-closed for secrets (`.env` / `.env.*`), `node_module
 
 ### 6. Documentation indexes
 
-Root README explains capabilities, architecture, and canonical commands. Dual-suite inventories are **not** hand-synchronized in `docs/contracts/README.md`; point at `docs/specs/`, `tests/contracts/`, and `Cargo.toml`.
+Root README explains capabilities, architecture, and canonical commands. Dual-suite inventories are **not** hand-synchronized in `docs/contracts/README.md`; point at `docs/specs/`, `tests/contracts/`, and `apps/cli/tests/harness.rs`.
 
 Hygiene metrics are recorded in the spec and/or `.sdd/runs/`, **not** in `docs/debt/register.toml` (Prompt 1).
 
@@ -120,7 +120,7 @@ Unchanged: do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli
 - Prompt 1 can later close `DEBT-IGNORE` / `DEBT-UNWRAP` / `DEBT-SCHEMA-DUP` using this slice’s proof without this slice editing the register.
 - Concurrent Prompts 2/3 keep their `require_needles` targets and dual-suite baselines until a non-colliding pass.
 - Before/after counts live in the spec §12 (and optionally `.sdd/runs/repository-hygiene-counts.md`), never `docs/debt/register.toml`.
-- Root README stays capability + CLI. `docs/contracts/README.md` is a pointer (`rg "^name = \"sdd_" Cargo.toml`), not a hand-maintained suite inventory.
+- Root README stays capability + CLI. `docs/contracts/README.md` is a pointer (`rg "tests/contracts/" apps/cli/tests/harness.rs`), not a hand-maintained suite inventory.
 
 ## Non-goals
 
@@ -133,5 +133,6 @@ Unchanged: do not invent `weeping-angel-catalog` or `weeping-angel-assurance-cli
 - Spec: [`docs/specs/repository-hygiene.md`](../specs/repository-hygiene.md)
 - Layout: [ADR 0004](0004-documentation-architecture.md)
 - Health gate (do not edit): [ADR 0009](0009-repository-health-gate.md), [ADR 0010](0010-architecture-as-law.md)
+- Environment (workspace SSOT / one harness; does not replace this hygiene ADR): [ADR 0051](0051-repository-environment.md)
 - Schema SSOT: [`schemas/codex-security/`](../../schemas/codex-security/); generated copy stamp: [`codex-security/schemas/GENERATED_FROM_SSOT`](../../codex-security/schemas/GENERATED_FROM_SSOT)
 - Index: [`docs/contracts/README.md`](../contracts/README.md)

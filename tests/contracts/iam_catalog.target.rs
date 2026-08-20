@@ -169,7 +169,10 @@ const POPULATION_OPS: &[&str] = &[
     "none_subjects",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_files(dir: &Path, ext: &str, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -195,7 +198,7 @@ fn crate_src(name: &str) -> PathBuf {
 fn product_rs_joined() -> String {
     let mut files = Vec::new();
     walk_rs_files(&manifest_dir().join("crates"), &mut files);
-    walk_rs_files(&manifest_dir().join("src"), &mut files);
+    walk_rs_files(&manifest_dir().join("apps/cli/src"), &mut files);
     files
         .iter()
         .map(|p| fs::read_to_string(p).unwrap())
@@ -577,9 +580,9 @@ fn iam_000_dual_suite_is_registered() {
     assert!(
         !toml.contains("sdd_iam_catalog_baseline")
             && !toml.contains("tests/contracts/iam_catalog.baseline.rs")
-            && toml.contains("sdd_iam_catalog_target")
-            && toml.contains("tests/contracts/iam_catalog.target.rs"),
-        "dual-suite sdd_iam_catalog_baseline + sdd_iam_catalog_target must be listed in root Cargo.toml"
+            && harness_src().contains("iam_catalog.target.rs")
+            && harness_src().contains("iam_catalog.target.rs"),
+        "dual-suite sdd_iam_catalog_baseline + sdd_iam_catalog_target must be wired as a harness module"
     );
 }
 

@@ -17,7 +17,7 @@ required_roles = [
 # CanonicalCatalog::load, compile_framework, current() / as_of() / latest(),
 # select_latest_as_of, replay_assessment, project_soa_from_snapshot,
 # ImplementationStatus, Effectiveness, evaluate in run.inc, project_validity,
-# CollectorAdapter, src/main.rs, src/cli.rs.
+# CollectorAdapter, apps/cli/src/main.rs, apps/cli/src/cli.rs.
 
 [concept.applicability]
 semantic_owner = "weeping-angel-assurance"
@@ -151,8 +151,8 @@ storage_owner = "none"
 projection_owner = "none"
 evaluation_primitive_owner = "none"
 adapter_owner = "weeping-angel"
-facade = "src/main.rs"
-cli = "src/cli.rs"
+facade = "apps/cli/src/main.rs"
+cli = "apps/cli/src/cli.rs"
 split = "facade"
 
 [concept.collectors]

@@ -67,7 +67,10 @@ fn product_crate_sources_joined() -> String {
     chunks.join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -576,10 +579,10 @@ fn p20_t11_dual_suite_is_registered_and_specified() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_continuity_resilience_baseline")
-            && toml.contains("sdd_continuity_resilience_target")
+            && harness_src().contains("continuity_resilience.target.rs")
             && !toml.contains("tests/contracts/continuity_resilience.baseline.rs")
-            && toml.contains("tests/contracts/continuity_resilience.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+            && harness_src().contains("continuity_resilience.target.rs"),
+        "target suite must be wired as a harness module"
     );
     let spec = read_repo_file("docs/specs/continuity-resilience.md");
     for id in [
@@ -1169,7 +1172,7 @@ fn p20_t16_evidence_crate_has_no_demonstrated_recovery_conclusion() {
             "evaluate_continuity_resilience",
         ],
     );
-    let wb = read_repo_file("src/workbench/remediation.rs");
+    let wb = read_repo_file("apps/cli/src/workbench/remediation.rs");
     assert!(
         wb.contains("pub struct RemediationRequest"),
         "P20-T16: scanner workbench remediation stays a patch helper"

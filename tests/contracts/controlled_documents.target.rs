@@ -40,7 +40,10 @@ fn document_rs_path() -> PathBuf {
     crate_src("weeping-angel-assurance-ir").join("document.rs")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -624,7 +627,7 @@ fn cd_010_dangling_refs_fail_closed() {
         .expect("CD-010: empty link lists are valid against an empty universe");
 }
 
-/// CD-011: dual-suite binaries are registered in root Cargo.toml.
+/// CD-011: dual-suite runs as a harness module.
 #[test]
 fn cd_011_dual_suite_registered() {
     let cargo = read_repo_file("Cargo.toml");
@@ -634,10 +637,10 @@ fn cd_011_dual_suite_registered() {
     );
     assert!(!cargo.contains("path = \"tests/contracts/controlled_documents.baseline.rs\""));
     assert!(
-        cargo.contains("name = \"sdd_controlled_documents_target\""),
+        harness_src().contains("controlled_documents.target.rs"),
         "CD-011: target suite must be listed"
     );
-    assert!(cargo.contains("path = \"tests/contracts/controlled_documents.target.rs\""));
+    assert!(harness_src().contains("controlled_documents.target.rs"));
     let spec = read_repo_file("docs/specs/controlled-documents.md");
     assert!(
         spec.contains("Controlled Document and Policy Registry"),

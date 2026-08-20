@@ -249,3 +249,17 @@ severity = "high"
 remediation = "Implemented as ArchitectureCheck spec-lifecycle (increment 2)."
 repository_guard = "15"
 regression_tests = ["sdd_repository_integrity_target", "sdd_architectural_cleanup_target"]
+
+[[finding]]
+id = "DEBT-ENV"
+title = "Repository environment reconciliation"
+status = "in-progress"
+summary = "P0 landed: virtual Cargo workspace, apps/cli package weeping-angel, [workspace.package]/[workspace.dependencies], pinned rust-toolchain.toml, one [[test]] harness (root_test_binaries 45→1, workspace_crates stays 9). P1–P3 remain: root pnpm workspace, nested lock/postinstall removal, xtask doctor/ci/docs, topology/dep-direction guards, release SSOT. Canonical owner is architecture + xtask (ADR 0009 / ADR 0051); no Guard 16, Turbo, or second health CLI."
+source = "docs/adr/0051-repository-environment.md"
+owner = "weeping-angel maintainers"
+introduced = "2026-08-20"
+severity = "high"
+remediation = "Collapse competing workspace/lockfile/generation/CI/test-registry representations onto xtask + architecture. P0 pin: xtask/tests/sdd_consolidation_debt_env_target.rs."
+repository_guard = "04"
+regression_tests = ["sdd_consolidation_debt_env_target"]
+review_by = "2026-12-31"

@@ -15,15 +15,13 @@ use std::time::Duration;
 
 use chrono::{DateTime, TimeZone, Utc};
 use serde_json::Value;
+use weeping_angel_assurance::applicability::ApplicabilitySnapshot;
 use weeping_angel_assurance::lineage::{
     AssessmentDefinitionSnapshot, CanonicalCatalogSnapshot, EvidenceSnapshot,
     FrameworkPackSnapshot, LineageBundle, detect_digest_mismatch,
 };
-use weeping_angel_assurance::applicability::ApplicabilitySnapshot;
 use weeping_angel_assurance::readiness::FrameworkReadinessSnapshot;
-use weeping_angel_assurance::{
-    AssessmentRun, AssessmentScope, AssuranceEngine, replay_assessment,
-};
+use weeping_angel_assurance::{AssessmentRun, AssessmentScope, AssuranceEngine, replay_assessment};
 use weeping_angel_assurance_ir::{
     AssessmentId, AssetId, ControlId, ControlTestId, FrameworkVersion,
 };
@@ -58,7 +56,7 @@ fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 fn product_crates_joined() -> String {
     let mut files = Vec::new();
     walk_rs_files(&manifest_dir().join("crates"), &mut files);
-    walk_rs_files(&manifest_dir().join("src"), &mut files);
+    walk_rs_files(&manifest_dir().join("apps/cli/src"), &mut files);
     files
         .iter()
         .map(|p| fs::read_to_string(p).unwrap())
@@ -66,7 +64,10 @@ fn product_crates_joined() -> String {
         .join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -347,13 +348,12 @@ fn expired_then_valid_fixture(ledger: &mut EvidenceLedger) -> (EvidenceEnvelope,
 
 #[test]
 fn tle_000_target_registered_against_spec() {
-    let cargo = read_repo_file("Cargo.toml");
     require_needles(
         "TLE-000",
-        &cargo,
+        &harness_src(),
         &[
-            "name = \"sdd_temporal_lineage_evidence_soa_target\"",
-            "path = \"tests/contracts/temporal_lineage_evidence_soa.target.rs\"",
+            "temporal_lineage_evidence_soa.target.rs",
+            "tests/contracts/temporal_lineage_evidence_soa.target.rs",
         ],
     );
     let spec = read_repo_file("docs/specs/temporal-lineage-evidence-soa.md");
@@ -368,7 +368,7 @@ fn tle_000_target_registered_against_spec() {
     );
     forbid_needles(
         "TLE-000",
-        &cargo,
+        &read_repo_file("Cargo.toml"),
         &["weeping-angel-catalog", "weeping-angel-assurance-cli"],
     );
 }
@@ -827,7 +827,7 @@ fn tle_011_corrupt_and_incompatible_schema_are_typed_fail_closed_errors() {
 
 #[test]
 fn tle_012_historical_soa_does_not_call_live_project_soa() {
-    let cli = read_repo_file("src/assurance_soa.rs");
+    let cli = read_repo_file("apps/cli/src/assurance_soa.rs");
     let latest_arm = {
         let start = cli
             .find("assessment.is_empty() || assessment.eq_ignore_ascii_case(\"latest\")")

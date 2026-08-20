@@ -83,7 +83,10 @@ const FORBIDDEN_CATALOG_DEPS: &[&str] = &[
     "cloudflare",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn catalog_v1() -> PathBuf {
     manifest_dir().join("catalog/canonical/v1")
@@ -388,10 +391,10 @@ fn cat_016_dual_suite_is_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         !toml.contains("sdd_canonical_assurance_catalog_baseline")
-            && toml.contains("sdd_canonical_assurance_catalog_target")
+            && harness_src().contains("canonical_assurance_catalog.target.rs")
             && !toml.contains("tests/contracts/canonical_assurance_catalog.baseline.rs")
-            && toml.contains("tests/contracts/canonical_assurance_catalog.target.rs"),
-        "dual-suite binaries must stay registered in root Cargo.toml"
+            && harness_src().contains("canonical_assurance_catalog.target.rs"),
+        "dual-suite binaries must stay wired as a harness module"
     );
 }
 
@@ -794,7 +797,7 @@ fn cat_011_cli_parses_and_inspect_shows_fixture_control() {
         );
     }
 
-    let cli_src = fs::read_to_string(manifest_dir().join("src/cli.rs")).unwrap();
+    let cli_src = fs::read_to_string(manifest_dir().join("apps/cli/src/cli.rs")).unwrap();
     assert!(
         cli_src.contains("Catalog"),
         "parser surface lives in src/cli.rs"
@@ -806,8 +809,8 @@ fn cat_011_cli_parses_and_inspect_shows_fixture_control() {
         "execution must not be inlined in the clap enum"
     );
 
-    let main = fs::read_to_string(manifest_dir().join("src/main.rs")).unwrap();
-    let exec_module = manifest_dir().join("src/assurance_catalog.rs");
+    let main = fs::read_to_string(manifest_dir().join("apps/cli/src/main.rs")).unwrap();
+    let exec_module = manifest_dir().join("apps/cli/src/assurance_catalog.rs");
     assert!(
         main.contains("AssuranceCommand::Catalog")
             || main.contains("catalog::")

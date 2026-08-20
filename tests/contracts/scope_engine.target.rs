@@ -38,7 +38,10 @@ const AS_OF: (i32, u32, u32, u32, u32, u32) = (2026, 8, 18, 12, 0, 0);
 const PINNED_NESTED_EXPLAIN: &str =
     "repo:payments -> business-unit:finance -> service:payments -> ISMS scope -> InScope";
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn as_of() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(AS_OF.0, AS_OF.1, AS_OF.2, AS_OF.3, AS_OF.4, AS_OF.5)
@@ -815,7 +818,7 @@ fn scp_t12_facade_and_collector_adapter_only_in_scope_assets() {
 /// SCP-T13: crawl `src/engine/scope.rs` stays URL membership (collision fence).
 #[test]
 fn scp_t13_crawl_scope_module_unchanged() {
-    let src = read_repo_file("src/engine/scope.rs");
+    let src = read_repo_file("apps/cli/src/engine/scope.rs");
     assert!(src.contains("pub fn in_scope(authz: &Authorization, url: &Url) -> bool"));
     assert!(src.contains("authz.url_in_scope(url)"));
     assert!(
@@ -859,8 +862,8 @@ fn scp_t15_dual_suite_and_spec_registered() {
     assert!(
         !toml.contains("name = \"sdd_scope_engine_baseline\"")
             && !toml.contains("path = \"tests/contracts/scope_engine.baseline.rs\"")
-            && toml.contains("name = \"sdd_scope_engine_target\"")
-            && toml.contains("path = \"tests/contracts/scope_engine.target.rs\""),
+            && harness_src().contains("scope_engine.target.rs")
+            && harness_src().contains("scope_engine.target.rs"),
         "scope engine dual-suite must be explicitly listed (tests/contracts is not auto-discovered)"
     );
 

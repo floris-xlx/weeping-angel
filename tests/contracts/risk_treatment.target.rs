@@ -19,7 +19,10 @@ use weeping_angel_assurance_ir::{
     treatment_required, typed_canonical_digest, validate_treatments_at,
 };
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn golden_risk_json() -> String {
     read_repo_file("tests/fixtures/assurance-ir/v1/risk.json")
@@ -931,9 +934,9 @@ fn p08_t15_collectors_cannot_emit_treatment_ratings_or_acceptance() {
 fn p08_t16_dual_suite_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_risk_treatment_target")
-            && toml.contains("tests/contracts/risk_treatment.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+        harness_src().contains("risk_treatment.target.rs")
+            && harness_src().contains("risk_treatment.target.rs"),
+        "target suite must be wired as a harness module"
     );
     assert!(
         !toml.contains("sdd_risk_treatment_baseline")

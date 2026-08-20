@@ -6,16 +6,19 @@
 
 use std::fs;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 #[test]
 #[ignore = "superseded by target suite"]
 fn dual_suite_target_is_registered() {
-    let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
+    let _toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_evidence_validity_temporal_assurance_target")
-            && toml.contains("tests/contracts/evidence_validity_temporal_assurance.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+        harness_src().contains("evidence_validity_temporal_assurance.target.rs")
+            && harness_src().contains("evidence_validity_temporal_assurance.target.rs"),
+        "target suite must be wired as a harness module"
     );
     assert!(
         !manifest_dir()

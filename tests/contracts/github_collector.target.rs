@@ -278,7 +278,10 @@ const ORG_REPOS_PAGE: &str = r#"[
     {"name":"other","full_name":"acme/other","visibility":"private","default_branch":"main","archived":false}
 ]"#;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
@@ -588,8 +591,8 @@ fn ghc_000_dual_suite_remains_registered() {
         "baseline suite must stay registered"
     );
     assert!(
-        toml.contains("name = \"sdd_github_collector_target\"")
-            && toml.contains("path = \"tests/contracts/github_collector.target.rs\""),
+        harness_src().contains("github_collector.target.rs")
+            && harness_src().contains("github_collector.target.rs"),
         "target suite must stay registered"
     );
 }

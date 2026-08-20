@@ -6,6 +6,10 @@ use std::path::{Path, PathBuf};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
 }
 
 fn read(rel: &str) -> String {
@@ -96,6 +100,7 @@ fn decisions_live_under_docs_adr() {
     assert!(exists("docs/adr/0010-architecture-as-law.md"));
     assert!(exists("docs/adr/0011-repository-guard-governance.md"));
     assert!(exists("docs/adr/0012-repository-hygiene.md"));
+    assert!(exists("docs/adr/0051-repository-environment.md"));
     assert!(exists(
         "docs/adr/0013-collector-hexagonal-modular-monolith.md"
     ));
@@ -119,14 +124,14 @@ fn adr_prefixes_are_unique() {
 
 #[test]
 fn executable_invariants_live_under_tests_contracts() {
-    let cargo = read("Cargo.toml");
+    let harness = read("apps/cli/tests/harness.rs");
     assert!(
-        cargo.contains("path = \"tests/contracts/assurance_runtime.target.rs\""),
-        "dual-suite must be listed under tests/contracts/"
+        harness.contains("tests/contracts/assurance_runtime.target.rs"),
+        "dual-suite must remain a harness module under tests/contracts/"
     );
     assert!(
-        !cargo.contains("tests/sdd/"),
-        "Cargo.toml must not still point at tests/sdd/"
+        !harness.contains("tests/sdd/"),
+        "harness must not still point at tests/sdd/"
     );
     assert!(exists("tests/contracts/assurance_runtime.target.rs"));
     assert!(

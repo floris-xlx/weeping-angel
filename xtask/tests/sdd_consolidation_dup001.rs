@@ -44,7 +44,9 @@ fn dup001_close_law() {
     assert_eq!(row.status, "verified");
     assert_eq!(row.canonical_symbol, "schemas/codex-security");
     assert!(
-        row.tests.iter().any(|t| t.contains("sdd_consolidation_dup001")),
+        row.tests
+            .iter()
+            .any(|t| t.contains("sdd_consolidation_dup001")),
         "regression pin is sdd_consolidation_dup001, tests={:?}",
         row.tests
     );

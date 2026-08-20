@@ -41,7 +41,10 @@ const ENVELOPE: &str = "sha256:envelope-mfa-window";
 const SNAP_PREV: &str = "snap-prev";
 const SNAP_NEXT: &str = "snap-next";
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn t0() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 18, 12, 0, 0).unwrap()
@@ -368,9 +371,9 @@ fn dual_suite_is_registered() {
     assert!(
         !toml.contains("name = \"sdd_isms_events_drift_baseline\"")
             && !toml.contains("path = \"tests/contracts/isms_events_drift.baseline.rs\"")
-            && toml.contains("name = \"sdd_isms_events_drift_target\"")
-            && toml.contains("path = \"tests/contracts/isms_events_drift.target.rs\""),
-        "dual-suite must be listed in root Cargo.toml (tests/contracts is not auto-discovered)"
+            && harness_src().contains("isms_events_drift.target.rs")
+            && harness_src().contains("isms_events_drift.target.rs"),
+        "dual-suite must be wired as a harness module (tests/contracts is not auto-discovered)"
     );
 }
 

@@ -69,7 +69,10 @@ fn product_crate_sources_joined() -> String {
     chunks.join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -267,7 +270,7 @@ fn ig_001_alert_or_finding_is_not_an_incident_until_declare() {
             "impl From<weeping_angel::finding::Finding>",
         ],
     );
-    let finding_src = read_repo_file("src/finding.rs");
+    let finding_src = read_repo_file("apps/cli/src/finding.rs");
     assert!(
         !finding_src.contains("Incident") && !finding_src.contains("declare"),
         "src/finding.rs must not promote into incident IR"
@@ -887,9 +890,9 @@ fn ig_012_dual_suite_registered_and_canonical_specs() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_incident_governance_baseline")
-            && toml.contains("sdd_incident_governance_target")
+            && harness_src().contains("incident_governance.target.rs")
             && !toml.contains("tests/contracts/incident_governance.baseline.rs")
-            && toml.contains("tests/contracts/incident_governance.target.rs"),
+            && harness_src().contains("incident_governance.target.rs"),
         "IG-012: target suite listed; superseded baseline deleted"
     );
     assert!(

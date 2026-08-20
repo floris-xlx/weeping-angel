@@ -50,7 +50,10 @@ fn product_crates_joined() -> String {
         + &crate_sources_joined("weeping-angel-assurance")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn require_capa_engine(label: &str) {
     require_needles(
@@ -1065,8 +1068,8 @@ fn nc_012_dual_suite_registration() {
     assert!(
         !cargo.contains("name = \"sdd_nonconformity_capa_baseline\"")
             && !cargo.contains("path = \"tests/contracts/nonconformity_capa.baseline.rs\"")
-            && cargo.contains("name = \"sdd_nonconformity_capa_target\"")
-            && cargo.contains("path = \"tests/contracts/nonconformity_capa.target.rs\"")
+            && harness_src().contains("nonconformity_capa.target.rs")
+            && harness_src().contains("nonconformity_capa.target.rs")
     );
     assert!(
         manifest_dir()

@@ -38,7 +38,10 @@ fn product_crates_joined() -> String {
         + &crate_sources_joined("weeping-angel-assurance")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -331,11 +334,11 @@ fn sample_result(effectiveness: Effectiveness) -> ControlTestResult {
 fn ia_dual_suite_is_registered_and_specified() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
-        toml.contains("sdd_internal_audit_target")
-            && toml.contains("tests/contracts/internal_audit.target.rs")
+        harness_src().contains("internal_audit.target.rs")
+            && harness_src().contains("internal_audit.target.rs")
             && !toml.contains("sdd_internal_audit_baseline")
             && !toml.contains("tests/contracts/internal_audit.baseline.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+        "dual-suite must be wired as a harness module"
     );
     let spec = read_repo_file("docs/specs/internal-audit.md");
     for id in [

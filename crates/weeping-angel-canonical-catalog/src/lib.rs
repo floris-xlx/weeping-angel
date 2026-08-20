@@ -642,10 +642,14 @@ fn load_workspace_catalog() -> Option<CatalogProjection> {
 pub fn canonical_catalog_search_roots() -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let base = PathBuf::from(dir);
-        roots.push(base.join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("catalog/canonical/v1"));
-        roots.push(base.join("..").join("..").join("catalog/canonical/v1"));
+        let mut base = PathBuf::from(dir);
+        for _ in 0..5 {
+            roots.push(base.join("catalog/canonical/v1"));
+            match base.parent() {
+                Some(parent) => base = parent.to_path_buf(),
+                None => break,
+            }
+        }
     }
     roots.push(PathBuf::from("catalog/canonical/v1"));
     roots

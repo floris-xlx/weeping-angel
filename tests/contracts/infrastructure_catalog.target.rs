@@ -262,7 +262,10 @@ const CLASSIFIABLE_FIELDS: &[&str] = &[
     "reviewed_at",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn catalog_v1() -> PathBuf {
     let dir = manifest_dir().join("catalog/canonical/v1");
@@ -308,7 +311,7 @@ fn crate_src(name: &str) -> PathBuf {
 fn product_rs_joined() -> String {
     let mut files = Vec::new();
     walk_rs_files(&manifest_dir().join("crates"), &mut files);
-    walk_rs_files(&manifest_dir().join("src"), &mut files);
+    walk_rs_files(&manifest_dir().join("apps/cli/src"), &mut files);
     files
         .iter()
         .map(|p| fs::read_to_string(p).unwrap())
@@ -657,9 +660,9 @@ fn infra_000_dual_suite_is_registered() {
     assert!(
         !toml.contains("sdd_infrastructure_catalog_baseline")
             && !toml.contains("tests/contracts/infrastructure_catalog.baseline.rs")
-            && toml.contains("sdd_infrastructure_catalog_target")
-            && toml.contains("tests/contracts/infrastructure_catalog.target.rs"),
-        "dual-suite sdd_infrastructure_catalog_baseline + sdd_infrastructure_catalog_target must be listed in root Cargo.toml"
+            && harness_src().contains("infrastructure_catalog.target.rs")
+            && harness_src().contains("infrastructure_catalog.target.rs"),
+        "dual-suite sdd_infrastructure_catalog_baseline + sdd_infrastructure_catalog_target must be wired as a harness module"
     );
 }
 

@@ -32,7 +32,10 @@ fn crate_src(name: &str) -> PathBuf {
     path
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -145,11 +148,11 @@ fn assert_type_mismatch(result: &weeping_angel_control_test::ControlTestResult) 
 
 #[test]
 fn dual_suite_target_is_registered() {
-    let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
+    let _toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
-        toml.contains("sdd_typed_evidence_target")
-            && toml.contains("tests/contracts/typed_evidence.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+        harness_src().contains("typed_evidence.target.rs")
+            && harness_src().contains("typed_evidence.target.rs"),
+        "target suite must be wired as a harness module"
     );
 }
 

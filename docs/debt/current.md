@@ -8,16 +8,16 @@ Inclusion rule: all matching paths under the repo root **excluding** `target/`, 
 
 | Metric | Count |
 | --- | --- |
-| Root `[[test]]` binaries | 45 |
+| Root `[[test]]` binaries | 1 |
 | `tests/*.rs` (auto-discovered) | 16 |
 | `tests/contracts/*.rs` | 43 |
 | ignored tests (`#[ignore`) | 5 |
-| `.unwrap()` in `*.rs` | 1161 |
-| `.expect(` in `*.rs` | 632 |
-| unwrap + expect | 1793 |
+| `.unwrap()` in `*.rs` | 999 |
+| `.expect(` in `*.rs` | 576 |
+| unwrap + expect | 1575 |
 | Files defining `fn require_needles` | 1 |
 | `require_needles(` occurrences | 206 |
-| ADR markdown files | 50 |
+| ADR markdown files | 51 |
 | Catalog test TOML | 13 |
 | Framework packs | 2 |
 | `*.schema.json` files | 3 |

@@ -80,7 +80,7 @@ fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 fn product_crates_joined() -> String {
     let mut files = Vec::new();
     walk_rs_files(&manifest_dir().join("crates"), &mut files);
-    walk_rs_files(&manifest_dir().join("src"), &mut files);
+    walk_rs_files(&manifest_dir().join("apps/cli/src"), &mut files);
     files
         .iter()
         .map(|p| fs::read_to_string(p).unwrap())
@@ -88,7 +88,10 @@ fn product_crates_joined() -> String {
         .join("\n")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn forbid_needles(label: &str, src: &str, needles: &[&str]) {
     let present: Vec<&str> = needles
@@ -451,7 +454,9 @@ fn lin_003_explanation_references_exact_evidence_digests() {
         ],
     );
 
-    let explain_rs = manifest_dir().join("src").join("assurance_explain.rs");
+    let explain_rs = manifest_dir()
+        .join("apps/cli/src")
+        .join("assurance_explain.rs");
     assert!(
         explain_rs.is_file()
             || crates.contains("fn explain")
@@ -786,10 +791,10 @@ fn lin_009_dual_suite_binaries_are_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         !toml.contains("sdd_assessment_lineage_baseline")
-            && toml.contains("sdd_assessment_lineage_target")
+            && harness_src().contains("assessment_lineage.target.rs")
             && !toml.contains("tests/contracts/assessment_lineage.baseline.rs")
-            && toml.contains("tests/contracts/assessment_lineage.target.rs"),
-        "LIN-009: dual-suite binaries must be registered in root Cargo.toml"
+            && harness_src().contains("assessment_lineage.target.rs"),
+        "LIN-009: dual-suite binaries must be wired as a harness module"
     );
 }
 
@@ -868,7 +873,7 @@ fn lin_011_one_registry_loader_path_for_every_framework() {
 
 #[test]
 fn lin_012_assurance_explain_parses_and_is_dispatched() {
-    let cli_src = read_repo_file("src/cli.rs");
+    let cli_src = read_repo_file("apps/cli/src/cli.rs");
     require_needles(
         "LIN-012 CLI parser",
         &cli_src,
@@ -902,7 +907,7 @@ fn lin_012_assurance_explain_parses_and_is_dispatched() {
         other => panic!("LIN-012: expected Assurance, got {other:?}"),
     }
 
-    let main = read_repo_file("src/main.rs");
+    let main = read_repo_file("apps/cli/src/main.rs");
     require_needles(
         "LIN-012 explain is dispatched, not banner-exit-0",
         &main,
@@ -1022,14 +1027,13 @@ fn lin_014_ledger_persists_runs_append_only() {
 
 #[test]
 fn lin_015_neighbor_sdd_targets_remain_registered() {
-    let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     for name in [
         "sdd_assurance_runtime_target",
         "sdd_iso27001_assurance_target",
         "sdd_canonical_assurance_catalog_target",
     ] {
         assert!(
-            toml.contains(name),
+            sdd_suite_wired(name),
             "LIN-015: neighbor suite `{name}` must stay registered"
         );
     }

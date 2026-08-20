@@ -48,7 +48,9 @@ fn dup008_close_law() {
     assert_eq!(row.status, "verified");
     assert_eq!(row.canonical_symbol, "canonical_catalog_search_roots");
     assert!(
-        row.tests.iter().any(|t| t.contains("sdd_consolidation_dup008")),
+        row.tests
+            .iter()
+            .any(|t| t.contains("sdd_consolidation_dup008")),
         "regression pin is sdd_consolidation_dup008, tests={:?}",
         row.tests
     );

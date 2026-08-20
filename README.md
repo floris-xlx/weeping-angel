@@ -185,7 +185,7 @@ Continuous scheduling is library `tick`, not a clap loop. Reports pin catalog an
 
 ## Workspace
 
-Root package `weeping-angel` is the CLI (scanner + assurance facade). Assurance libraries live under `crates/`. `xtask` is repository law, not a product crate.
+Root `Cargo.toml` is a virtual workspace (`[workspace.package]` / `[workspace.dependencies]`; [ADR 0051](docs/adr/0051-repository-environment.md)). Package **name** `weeping-angel` is the CLI at `apps/cli/` (scanner + assurance facade). Assurance libraries live under `crates/`. `xtask` is repository law, not a product crate. Pin: `rust-toolchain.toml`. Contract suites run through one `[[test]]` harness (`apps/cli/tests/harness.rs`).
 
 ```text
 weeping-angel-assurance-ir          framework-neutral IR
@@ -195,7 +195,7 @@ weeping-angel-assurance-ir          framework-neutral IR
                 └── weeping-angel-collector evidence types only (GitHub, local, …)
 
 ir + evidence → weeping-angel-control-test     offline, provider-blind
-framework + collector + control-test + root
+framework + collector + control-test + weeping-angel (apps/cli)
               → weeping-angel-assurance        public facade
 ```
 
@@ -231,6 +231,7 @@ Start here if you are reading architecture, not running scans:
 - [GitHub collector evidence contract](docs/specs/github-collector.md)
 - [Documentation layout](docs/adr/0004-documentation-architecture.md)
 - [Repository health gate](docs/adr/0009-repository-health-gate.md)
+- [Repository environment](docs/adr/0051-repository-environment.md)
 - [Repository hygiene](docs/specs/repository-hygiene.md)
 - [Structural reconciliation](docs/specs/structural-reconciliation.md) ([ADR 0048](docs/adr/0048-structural-reconciliation.md))
 - [Architectural consolidation](docs/specs/architectural-consolidation-program.md) ([ADR 0049](docs/adr/0049-architectural-consolidation-phase-0.md))

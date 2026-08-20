@@ -98,7 +98,7 @@ paths = ["crates/weeping-angel-evidence"]
 [ownership.assurance_cli]
 crate = "weeping-angel"
 kind = "facade"
-paths = ["src/main.rs", "src/cli.rs"]
+paths = ["apps/cli/src/main.rs", "apps/cli/src/cli.rs"]
 
 [program.architectural_consolidation]
 status = "active"
@@ -192,8 +192,9 @@ guard_check = "04"
         "pub fn current() {}\npub fn as_of() {}\npub fn latest() {}\n",
     )
     .unwrap();
-    fs::write(root.join("src/main.rs"), "").unwrap();
-    fs::write(root.join("src/cli.rs"), "").unwrap();
+    fs::create_dir_all(root.join("apps/cli/src")).unwrap();
+    fs::write(root.join("apps/cli/src/main.rs"), "").unwrap();
+    fs::write(root.join("apps/cli/src/cli.rs"), "").unwrap();
     fs::create_dir_all(root.join("docs/adr")).unwrap();
     fs::create_dir_all(root.join("docs/specs")).unwrap();
     fs::write(

@@ -3,6 +3,14 @@
 use std::fs;
 use std::path::PathBuf;
 
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
+}
+
 use tempfile::tempdir;
 use weeping_angel::contract::{FindingsDocument, paths};
 use weeping_angel::engines::code_scan::run_code_scan;
@@ -13,10 +21,7 @@ use weeping_angel::engines::{
 
 #[test]
 fn engines_detect_toy_patterns() {
-    let src = fs::read_to_string(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/code-toy/src/app.py"),
-    )
-    .unwrap();
+    let src = fs::read_to_string(repo_root().join("tests/fixtures/code-toy/src/app.py")).unwrap();
     let path_hits = path_traversal::scan("src/app.py", &src);
     let cmd_hits = cmd_injection::scan("src/app.py", &src);
     let sec_hits = secrets_code::scan("src/app.py", &src);
@@ -36,7 +41,7 @@ fn engines_detect_toy_patterns() {
 
 #[test]
 fn scan_code_seals_findings_from_toy() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/code-toy");
+    let root = repo_root().join("tests/fixtures/code-toy");
     let dir = tempdir().unwrap();
     let scan_dir = dir.path().join("out");
 

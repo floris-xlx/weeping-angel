@@ -1,9 +1,9 @@
 [package]
 name = "weeping-angel-assurance"
-version = "0.2.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 description = "Public assurance facade: collectors + compile + control-tests"
-license = "MIT"
 publish = false
 
 [features]
@@ -11,14 +11,14 @@ default = []
 demo = []
 
 [dependencies]
-chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-thiserror = "2"
-toml = "0.8"
-weeping-angel-assurance-ir = { path = "../weeping-angel-assurance-ir" }
-weeping-angel-canonical-catalog = { path = "../weeping-angel-canonical-catalog" }
-weeping-angel-collector = { path = "../weeping-angel-collector" }
-weeping-angel-control-test = { path = "../weeping-angel-control-test" }
-weeping-angel-evidence = { path = "../weeping-angel-evidence" }
-weeping-angel-framework = { path = "../weeping-angel-framework" }
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+weeping-angel-assurance-ir.workspace = true
+weeping-angel-canonical-catalog.workspace = true
+weeping-angel-collector.workspace = true
+weeping-angel-control-test.workspace = true
+weeping-angel-evidence.workspace = true
+weeping-angel-framework.workspace = true

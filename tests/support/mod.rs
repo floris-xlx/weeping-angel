@@ -15,12 +15,57 @@ fn require_needles(label: &str, src: &str, needles: &[&str]) {
 
 #[allow(dead_code)]
 fn manifest_dir() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    repo_root()
+}
+
+#[allow(dead_code)]
+fn repo_root() -> std::path::PathBuf {
+    let mut dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    for _ in 0..4 {
+        if dir.join("xtask").join("Cargo.toml").is_file()
+            && dir.join("architecture").join("architecture.toml").is_file()
+        {
+            return dir;
+        }
+        match dir.parent() {
+            Some(parent) => dir = parent.to_path_buf(),
+            None => break,
+        }
+    }
+    panic!(
+        "repo root not found from apps/cli CARGO_MANIFEST_DIR {}",
+        env!("CARGO_MANIFEST_DIR")
+    );
 }
 
 #[allow(dead_code)]
 fn read_repo_file(rel: &str) -> String {
-    std::fs::read_to_string(manifest_dir().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+    std::fs::read_to_string(repo_root().join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+}
+
+#[allow(dead_code)]
+fn harness_src() -> String {
+    read_repo_file("apps/cli/tests/harness.rs")
+}
+
+#[allow(dead_code)]
+fn assert_suite_in_harness(contract_file: &str) {
+    let harness = harness_src();
+    assert!(
+        harness.contains(contract_file),
+        "{contract_file} must remain a harness module"
+    );
+}
+
+#[allow(dead_code)]
+fn sdd_suite_wired(name: &str) -> bool {
+    let harness = harness_src();
+    if harness.contains(name) {
+        return true;
+    }
+    let stem = name.strip_prefix("sdd_").unwrap_or(name);
+    let stem = stem.strip_suffix("_target").unwrap_or(stem);
+    harness.contains(&format!("{stem}.target.rs")) || harness.contains(&format!("{stem}.rs"))
 }
 
 #[allow(dead_code)]
@@ -39,7 +84,7 @@ fn crate_sources_joined(name: &str) -> String {
         }
     }
 
-    let src = manifest_dir().join("crates").join(name).join("src");
+    let src = repo_root().join("crates").join(name).join("src");
     assert!(
         src.is_dir(),
         "expected crate sources at {}",

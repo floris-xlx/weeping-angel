@@ -17,7 +17,10 @@ use weeping_angel_assurance_ir::{
 };
 use weeping_angel_evidence::EvidenceValue;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn ir_fixture(name: &str) -> PathBuf {
     manifest_dir()

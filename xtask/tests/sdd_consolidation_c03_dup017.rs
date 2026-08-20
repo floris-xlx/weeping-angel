@@ -117,7 +117,9 @@ fn dup017_close_law() {
     assert_eq!(row.status, "verified");
     assert_eq!(row.canonical_symbol, "select_latest_as_of");
     assert!(
-        row.tests.iter().any(|t| t.contains("sdd_consolidation_c03_dup017")),
+        row.tests
+            .iter()
+            .any(|t| t.contains("sdd_consolidation_c03_dup017")),
         "regression pin missing, tests={:?}",
         row.tests
     );

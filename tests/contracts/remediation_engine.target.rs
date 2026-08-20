@@ -21,7 +21,10 @@ fn product_crates_joined() -> String {
         + &crate_sources_joined("weeping-angel-assurance")
 }
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn require_engine(case: &str) {
     require_needles(
@@ -549,7 +552,7 @@ fn re_011_additive_assessment() {
     golden.validate().unwrap();
 }
 
-/// RE-012: dual-suite registered in root Cargo.toml.
+/// RE-012: dual-suite runs as a harness module.
 #[test]
 fn re_012_dual_suite_registered() {
     let cargo = read_repo_file("Cargo.toml");
@@ -559,9 +562,9 @@ fn re_012_dual_suite_registered() {
         "baseline suite must stay listed"
     );
     assert!(
-        cargo.contains("sdd_remediation_engine_target")
-            && cargo.contains("tests/contracts/remediation_engine.target.rs"),
-        "target suite must be listed in root Cargo.toml"
+        harness_src().contains("remediation_engine.target.rs")
+            && harness_src().contains("remediation_engine.target.rs"),
+        "target suite must be wired as a harness module"
     );
     assert!(
         !cargo.contains("tests/sdd/"),

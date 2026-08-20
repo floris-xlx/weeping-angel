@@ -25,7 +25,10 @@ use weeping_angel_control_test::{EvidenceSet, Population, PopulationCompleteness
 
 const SNAPSHOT_SCHEMA: &str = "weeping-angel/applicability-snapshot/v1";
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn walk_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display()));
@@ -157,10 +160,10 @@ fn dual_suite_is_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_applicability_engine_baseline")
-            && toml.contains("sdd_applicability_engine_target")
+            && harness_src().contains("applicability_engine.target.rs")
             && !toml.contains("tests/contracts/applicability_engine.baseline.rs")
-            && toml.contains("tests/contracts/applicability_engine.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("applicability_engine.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
 }
 

@@ -30,7 +30,10 @@ const INHERENT_HIGH_ORDINAL: u32 = 4;
 const INHERENT_HIGH_RATING: &str = "high";
 const MIN_RESIDUAL_FLOOR: u32 = 1;
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn projected_at() -> DateTime<Utc> {
     Utc.with_ymd_and_hms(2026, 8, 19, 12, 0, 0).unwrap()
@@ -837,16 +840,16 @@ fn p09_t16_fail_closed_missing_control_test_snapshot() {
     assert_fail_closed(project(req), "missing control-test snapshot");
 }
 
-/// P09-T17: Dual-suite binaries registered in root `Cargo.toml`.
+/// P09-T17: Dual-suite runs as a harness module.
 #[test]
 fn p09_t17_dual_suite_binaries_registered() {
     let toml = read_repo_file("Cargo.toml");
     assert!(
         !toml.contains("sdd_residual_risk_baseline")
-            && toml.contains("sdd_residual_risk_target")
+            && harness_src().contains("residual_risk.target.rs")
             && !toml.contains("tests/contracts/residual_risk.baseline.rs")
-            && toml.contains("tests/contracts/residual_risk.target.rs"),
-        "dual-suite must be listed in root Cargo.toml"
+            && harness_src().contains("residual_risk.target.rs"),
+        "dual-suite must be wired as a harness module"
     );
 }
 

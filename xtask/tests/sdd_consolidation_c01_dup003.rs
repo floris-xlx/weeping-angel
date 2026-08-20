@@ -51,8 +51,8 @@ fn contract_files_defining(root: &Path, helper: &str) -> Vec<String> {
         if !name.ends_with(".target.rs") {
             continue;
         }
-        let text = fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         if text_defines(&text, helper) {
             found.push(format!("tests/contracts/{name}"));
         }
@@ -86,10 +86,7 @@ fn dup003_owner_defines_filesystem_helpers() {
 
     let owner = read_live(OWNER);
     for helper in FS_HELPERS {
-        assert!(
-            text_defines(&owner, helper),
-            "{OWNER} must define {helper}"
-        );
+        assert!(text_defines(&owner, helper), "{OWNER} must define {helper}");
     }
     assert!(
         owner.contains(&format!(
@@ -98,7 +95,12 @@ fn dup003_owner_defines_filesystem_helpers() {
         "DUP-002 close law: needle helper stays in the same module"
     );
     let vis = "pub";
-    for name in ["manifest_dir", "read_repo_file", "crate_sources_joined", "text_has"] {
+    for name in [
+        "manifest_dir",
+        "read_repo_file",
+        "crate_sources_joined",
+        "text_has",
+    ] {
         assert!(
             !owner.contains(&format!("{vis} fn {name}")),
             "filesystem helpers must stay crate-private ({name})"
@@ -129,11 +131,16 @@ fn dup003_contract_copies_gone() {
         if !name.ends_with(".target.rs") {
             continue;
         }
-        let text = fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-        let uses_fs = ["manifest_dir(", "read_repo_file(", "crate_sources_joined(", "text_has("]
-            .iter()
-            .any(|call| text.contains(call));
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let uses_fs = [
+            "manifest_dir(",
+            "read_repo_file(",
+            "crate_sources_joined(",
+            "text_has(",
+        ]
+        .iter()
+        .any(|call| text.contains(call));
         if !uses_fs {
             continue;
         }
@@ -168,7 +175,7 @@ fn dup003_close_law_and_dup002_still_holds() {
         report.counts.require_needles_fns, 1,
         "DUP-002 close law: one require_needles definition"
     );
-    assert_eq!(report.counts.root_test_binaries, 45);
+    assert_eq!(report.counts.root_test_binaries, 1);
     assert_eq!(report.counts.tests_rs_autodiscovered, 16);
     assert_eq!(report.counts.tests_contracts_rs, 43);
     assert_eq!(KNOWN_CHECK_IDS.len(), 15);

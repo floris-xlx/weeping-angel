@@ -3,6 +3,14 @@
 use std::fs;
 use std::path::PathBuf;
 
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("apps/cli CARGO_MANIFEST_DIR")
+        .to_path_buf()
+}
+
 use weeping_angel::depcheck::convert::packages_to_map;
 use weeping_angel::depcheck::detect::{detect_file_type, detect_from_content};
 use weeping_angel::depcheck::filter::{
@@ -12,9 +20,7 @@ use weeping_angel::depcheck::parsers::parse_manifest;
 use weeping_angel::depcheck::types::{Ecosystem, FileKind, PackageRef};
 
 fn fixture(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/depcheck")
-        .join(name)
+    repo_root().join("tests/fixtures/depcheck").join(name)
 }
 
 fn read_fixture(name: &str) -> String {

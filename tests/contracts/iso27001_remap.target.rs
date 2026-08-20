@@ -36,7 +36,10 @@ use weeping_angel_framework::{
     validate_framework_pack,
 };
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn crate_src(name: &str) -> PathBuf {
     let path = manifest_dir().join("crates").join(name).join("src");
@@ -415,19 +418,19 @@ fn iso_r_000_dual_suite_remains_registered() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml")).unwrap();
     assert!(
         !toml.contains("sdd_iso27001_remap_baseline")
-            && toml.contains("sdd_iso27001_remap_target")
+            && harness_src().contains("iso27001_remap.target.rs")
             && !toml.contains("tests/contracts/iso27001_remap.baseline.rs")
-            && toml.contains("tests/contracts/iso27001_remap.target.rs"),
+            && harness_src().contains("iso27001_remap.target.rs"),
         "ISO-R: dual-suite sdd_iso27001_remap_{{baseline,target}} must stay registered"
     );
     assert!(
-        toml.contains("sdd_iso27001_assurance_target")
+        harness_src().contains("iso27001_assurance.target.rs")
             && !toml.contains("sdd_iso27001_assurance_baseline"),
         "ISO-R: must not reuse or delete the MVP iso27001_assurance dual-suite"
     );
     assert!(
-        !toml.contains("name = \"sdd_iso27001_assurance_target\"")
-            || toml.contains("path = \"tests/contracts/iso27001_assurance.target.rs\""),
+        !harness_src().contains("iso27001_assurance.target.rs")
+            || harness_src().contains("iso27001_assurance.target.rs"),
         "ISO-R: remap suite files are not iso27001_assurance.*"
     );
 }
@@ -1885,7 +1888,7 @@ fn iso_r_020_neighbor_suites_stay_registered_after_sliver_supersession() {
         "sdd_iso27001_remap_target",
     ] {
         assert!(
-            toml.contains(name),
+            sdd_suite_wired(name),
             "ISO-R-020: neighbor suite `{name}` must stay registered"
         );
     }

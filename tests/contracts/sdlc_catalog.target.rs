@@ -248,7 +248,10 @@ const CONCLUSION_PHRASES: &[&str] = &[
     "security review effective",
 ];
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/support/mod.rs"));
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/support/mod.rs"
+));
 
 fn harness_relpath(kind: &str) -> String {
     format!("tests/contracts/sdlc_catalog.{kind}.rs")
@@ -844,8 +847,8 @@ fn sdlc_001_catalog_tree_lists_and_loads_sdlc_files() {
     assert!(
         !text_has(&cargo, "sdd_sdlc_catalog_baseline")
             && !text_has(&cargo, &baseline)
-            && text_has(&cargo, "sdd_sdlc_catalog_target")
-            && text_has(&cargo, &target),
+            && sdd_suite_wired("sdd_sdlc_catalog_target")
+            && text_has(&harness_src(), &target),
         "SDLC-001: target suite listed; superseded baseline deleted"
     );
 }
@@ -1559,7 +1562,7 @@ fn sdlc_016_no_repository_toml_and_provider_neutral_collectors_share_contracts()
         "sdd_github_collector_target",
     ] {
         assert!(
-            text_has(&cargo, suite),
+            sdd_suite_wired(suite),
             "SDLC-016: sibling suite `{suite}` must remain registered"
         );
     }

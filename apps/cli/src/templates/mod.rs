@@ -129,10 +129,22 @@ pub fn load_templates(dir: &Path) -> Result<Vec<Template>> {
 /// Built-in fallbacks if templates/ is missing (e.g. installed binary).
 pub fn embedded_templates() -> Vec<Template> {
     let yamls = [
-        include_str!("../../templates/exposed-env.yaml"),
-        include_str!("../../templates/git-exposed.yaml"),
-        include_str!("../../templates/swagger-exposed.yaml"),
-        include_str!("../../templates/spring-actuator.yaml"),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../templates/exposed-env.yaml"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../templates/git-exposed.yaml"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../templates/swagger-exposed.yaml"
+        )),
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../templates/spring-actuator.yaml"
+        )),
     ];
     yamls
         .iter()
