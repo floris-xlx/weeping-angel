@@ -669,7 +669,7 @@ fn con_t06_close_law_blocks_verified_removed() {
         by_id.insert(id, (status, symbol));
     }
 
-    for id in ["DUP-001", "DUP-008", "DUP-010", "DUP-013"] {
+    for id in ["DUP-001", "DUP-008", "DUP-010"] {
         let (status, _) = by_id.get(id).unwrap_or_else(|| panic!("missing {id}"));
         assert_ne!(
             status.as_str(),
@@ -689,6 +689,13 @@ fn con_t06_close_law_blocks_verified_removed() {
             "{id} v1 resolved maps to canonicalized|consumers-migrating|compatibility-only, got {status}"
         );
     }
+    let dup013 = by_id.get("DUP-013").unwrap_or_else(|| panic!("missing DUP-013"));
+    assert_eq!(
+        dup013.0.as_str(),
+        "verified",
+        "DUP-013 close law after Lane C pack-parse SSOT, got {}",
+        dup013.0
+    );
     let dup004 = by_id.get("DUP-004").unwrap_or_else(|| panic!("missing DUP-004"));
     assert_eq!(
         dup004.0.as_str(),

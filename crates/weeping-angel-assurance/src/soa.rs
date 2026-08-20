@@ -14,7 +14,8 @@ use weeping_angel_assurance_ir::{
     MappingCompleteness, MappingRelation, PrincipalRef, typed_canonical_digest,
 };
 use weeping_angel_control_test::{ControlTestResult, Effectiveness};
-use weeping_angel_framework::load_framework_pack;
+use weeping_angel_framework::pack::PackError;
+use weeping_angel_framework::{LoadedPack, load_framework_pack};
 
 use crate::applicability::{ApplicabilityDecision, ApplicabilitySnapshot};
 use crate::lineage::{LINEAGE_SNAPSHOT_SCHEMA, StatementOfApplicabilitySnapshot};
@@ -208,6 +209,9 @@ pub enum OperationalSoaError {
     MissingInputDigest { kind: String },
     #[error("missing applicability snapshot")]
     MissingApplicabilitySnapshot,
+    /// Typed pack parse/schema/integrity failure. UnknownPack is not this variant.
+    #[error("framework pack load failed: {0}")]
+    PackLoad(String),
 }
 
 pub fn project_soa_from_snapshot(
@@ -284,8 +288,12 @@ pub fn project_operational_soa(
 ) -> Result<StatementOfApplicability, OperationalSoaError> {
     validate_operational_input(input)?;
 
-    let pack = load_framework_pack(&input.framework, &input.version).ok();
-    let pack_rows = load_pack_soa_rows(&input.framework, &input.version);
+    let pack = match load_framework_pack(&input.framework, &input.version) {
+        Ok(pack) => Some(pack),
+        Err(PackError::UnknownPack(_)) => None,
+        Err(err) => return Err(OperationalSoaError::PackLoad(err.to_string())),
+    };
+    let pack_rows = pack.as_ref().map(pack_soa_rows).unwrap_or_default();
     let mut mappings = pack
         .as_ref()
         .map(|p| p.mappings.clone())
@@ -797,12 +805,8 @@ struct PackSoaRow {
     rationale: String,
 }
 
-fn load_pack_soa_rows(framework: &str, version: &str) -> Vec<PackSoaRow> {
-    // Prefer the framework pack loader (fail-closed PackError path) over a
-    // second TOML parse. Missing/unknown packs still yield an empty SoA row set.
-    let Ok(pack) = weeping_angel_framework::load_framework_pack(framework, version) else {
-        return Vec::new();
-    };
+/// Map already-parsed [`LoadedPack.applicability`] rows. Does not re-read TOML.
+fn pack_soa_rows(pack: &LoadedPack) -> Vec<PackSoaRow> {
     pack.applicability
         .iter()
         .filter(|row| row.soa.unwrap_or(true))

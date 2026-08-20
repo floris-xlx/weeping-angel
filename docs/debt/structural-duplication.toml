@@ -446,32 +446,33 @@ concept = "framework-pack-applicability-toml-parse"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-framework::LoadedPack.applicability (PackApplicabilityRow)"
 canonical_symbol = "LoadedPack.applicability"
-duplicates = [
-  "crates/weeping-angel-assurance/src/lib.rs (maps LoadedPack.applicability → lineage pin)",
-  "crates/weeping-angel-assurance/src/soa.rs::load_pack_soa_rows (maps via load_framework_pack)",
-]
-migration_state = "canonical pack parse exists; assurance still maps rows"
-removal_blockers = ["soa silent Vec::new vs PackError fail-closed fork"]
+duplicates = []
+migration_state = "one parse in pack.rs; assurance maps LoadedPack.applicability; UnknownPack is empty rows; other PackError fail-closed"
+removal_blockers = []
 public_api_impact = "additive"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "canonicalized"
+tests = ["sdd_consolidation_c06_dup013"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = "DEBT-P0-PACK-PARSE"
+debt_id = "DUP-013"
 consumers = [
   "LoadedPack digest body (framework)",
   "AssessmentRun / lineage pack_entries",
-  "project_operational_soa / live project_soa",
+  "project_operational_soa / project_soa_live",
 ]
 migration = """
-Expose typed applicability rows from LoadedPack / pack API. Assurance callers
-consume LoadedPack.applicability instead of re-toml::from_str. Resolve the
-fail-closed PackError path vs soa silent Vec::new behavior fork deliberately.
+pack.rs::load_applicability is the only applicability.toml parser.
+lib.rs and soa.rs consume LoadedPack.applicability. project_operational_soa
+loads the pack once: UnknownPack → empty pack rows; parse/schema/dangling →
+OperationalSoaError::PackLoad. No second toml::from_str. No silent Vec::new
+on PackError.
 """
-guard = "Guard 06 PackError; ADR 0046 pack-as-projection; one parse seat in framework."
+guard = """
+sdd_consolidation_c06_dup013; Guard 06 PackError. KNOWN_CHECK_IDS stays 15.
+"""
 evidence = """
-Three readers of applicability.toml: typed PackError path in pack.rs;
-manual Value picks in lib.rs; silent continue/ok in soa.rs.
+rg finds toml::from_str of applicability.toml only in weeping-angel-framework pack.rs.
+soa.rs has no load_pack_soa_rows and no applicability.toml path.
 """
 
 [[duplication]]
