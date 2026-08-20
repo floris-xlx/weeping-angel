@@ -706,8 +706,8 @@ fn con_t06_close_law_blocks_verified_removed() {
     let dup005 = by_id.get("DUP-005").unwrap_or_else(|| panic!("missing DUP-005"));
     assert_eq!(
         dup005.0.as_str(),
-        "consumers-migrating",
-        "DUP-005 v1 migrating → consumers-migrating, got {}",
+        "verified",
+        "DUP-005 close law after Lane B replay boundary, got {}",
         dup005.0
     );
     for id in ["DUP-009", "DUP-012"] {

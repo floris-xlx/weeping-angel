@@ -22,7 +22,7 @@ use weeping_angel_assurance::lineage::{
 use weeping_angel_assurance::applicability::ApplicabilitySnapshot;
 use weeping_angel_assurance::readiness::FrameworkReadinessSnapshot;
 use weeping_angel_assurance::{
-    AssessmentRun, AssessmentScope, AssuranceEngine, reconstruct, replay_assessment,
+    AssessmentRun, AssessmentScope, AssuranceEngine, replay_assessment,
 };
 use weeping_angel_assurance_ir::{
     AssessmentId, AssetId, ControlId, ControlTestId, FrameworkVersion,
@@ -683,12 +683,6 @@ fn tle_008_replay_incomplete_inconsistent_or_incompatible_schema_fail_closed() {
             "TLE-008: replaying a verified bundle twice is byte-stable"
         ),
         (Err(_), _) | (_, Err(_)) => {
-            // Fail-closed on a verified bundle is not the desired outcome; pins match.
-            let reconstructed = reconstruct(&twice);
-            assert_eq!(
-                reconstructed.digest, twice.run.result_digest,
-                "TLE-008: verified pins must be replayable to the same result identity"
-            );
             panic!("TLE-008: verified bundle must replay Ok twice with identical result identity");
         }
     }

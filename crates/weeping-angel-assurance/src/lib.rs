@@ -48,7 +48,7 @@ pub use lineage::{
     ControlTestRun, CoverageMetrics, DigestMismatch, EvidenceSnapshot, FrameworkPackSnapshot,
     LineageBundle, ObligationExplain, ObligationExplainEdge, StatementOfApplicabilitySnapshot,
     assessment_result_digest, explain_control, explain_why_control_exists,
-    explain_why_document_exists, reconstruct, replay_assessment,
+    explain_why_document_exists, replay_assessment,
 };
 pub use readiness::FrameworkReadinessSnapshot;
 pub use remediation::{

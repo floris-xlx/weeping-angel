@@ -652,7 +652,8 @@ pub fn explain_why_document_exists(
 }
 
 /// Reconstruct a report from pinned snapshots. Does not consult current files.
-pub fn reconstruct(bundle: &LineageBundle) -> AssessmentReport {
+/// Private trusted clone for an already-verified bundle (DUP-005).
+fn reconstruct(bundle: &LineageBundle) -> AssessmentReport {
     let mut report = AssessmentReport {
         assessment_id: bundle.run.id.clone(),
         profile: bundle.run.framework.clone(),
@@ -763,13 +764,6 @@ fn verify_replay_bundle(bundle: &LineageBundle) -> Result<(), AssuranceError> {
         .into());
     }
     Ok(())
-}
-
-/// Deprecated alias of [`reconstruct`] without pin verification.
-/// Prefer [`replay_assessment`] for historical rebuild (DUP-005).
-#[deprecated(note = "use replay_assessment for verified rebuild, or reconstruct only when pins are already verified")]
-pub fn load_lineage(bundle: &LineageBundle) -> AssessmentReport {
-    reconstruct(bundle)
 }
 
 /// Compare pinned digests to current files. Mismatch is detected, never rewritten.

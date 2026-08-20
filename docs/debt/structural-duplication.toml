@@ -199,32 +199,31 @@ concept = "lineage-reconstruct-public-aliases"
 severity = "p1"
 canonical_owner = "crates/weeping-angel-assurance/src/lineage.rs::replay_assessment"
 canonical_symbol = "replay_assessment"
-duplicates = [
-  "crates/weeping-angel-assurance/src/lineage.rs::reconstruct (private helper — keep)",
-  "crates/weeping-angel-assurance/src/lineage.rs::load_lineage (deprecated; no longer crate-root re-export)",
-]
-migration_state = "public alias load_lineage still present as reconstruct without verify"
-removal_blockers = ["callers of load_lineage / reconstruct"]
+duplicates = []
+migration_state = "reconstruct is a private helper of replay_assessment; load_lineage deleted"
+removal_blockers = []
 public_api_impact = "breaking"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "consumers-migrating"
+tests = ["sdd_consolidation_c07_dup005"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = "DEBT-P0-LINEAGE-REBUILD"
+debt_id = "DUP-005"
 consumers = [
   "src/assurance_soa.rs (replay_assessment)",
   "Guard 10 ProductLawCheck (requires replay_assessment; forbids Ok(reconstruct(bundle)))",
-  "any caller of load_lineage / reconstruct",
 ]
 migration = """
-Keep reconstruct as private implementation detail of replay_assessment.
-Deprecate/remove public load_lineage alias (it is reconstruct without verify).
-Ensure no public path returns Ok(reconstruct(...)) without verify_replay_bundle.
+reconstruct is a private implementation detail of replay_assessment.
+load_lineage (reconstruct without verify) is deleted.
+No public path returns Ok(reconstruct(...)) without verify_replay_bundle.
 """
-guard = "Guard 10 already forbids Ok(reconstruct(bundle)) string; extend to forbid pub fn load_lineage if removed."
+guard = """
+sdd_consolidation_c07_dup005; Guard 10 forbids Ok(reconstruct(bundle)).
+KNOWN_CHECK_IDS stays 15. No Guard 16.
+"""
 evidence = """
-load_lineage body is `reconstruct(bundle)`. replay_assessment = verify + reconstruct.
-Guard check 10 required needle: pub fn replay_assessment(; forbidden: Ok(reconstruct(bundle)).
+rg finds no pub fn load_lineage. reconstruct is not pub.
+replay_assessment verifies then reconstructs.
 """
 
 [[duplication]]
