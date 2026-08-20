@@ -1,0 +1,993 @@
+{
+  "agents_fail": 0,
+  "agents_ok": 9,
+  "agents_total": 9,
+  "budget": {
+    "remaining": 39,
+    "spent": 9,
+    "total": 48
+  },
+  "dry_run": false,
+  "duration_ms_sum": 2688434,
+  "event_count": 35,
+  "events": [
+    {
+      "agents_fail": 0,
+      "agents_ok": 0,
+      "agents_total": 0,
+      "budget": { "remaining": 48, "spent": 0, "total": 48 },
+      "detail": {
+        "await_user": false,
+        "dry_run": false,
+        "max_iters": 3,
+        "objective_fp": "6bedaac5f0637088",
+        "root": "."
+      },
+      "duration_ms_sum": 0,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "run_start",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-c01",
+      "seq": 1,
+      "tokens_used_sum": 0,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fa5-467b-7c22-a89d-bde048b7aaa7",
+        "duration_ms": 227656,
+        "label": "sdd-scope",
+        "success": true,
+        "tokens_used": 455114
+      },
+      "duration_ms_sum": 227656,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-c01",
+      "seq": 2,
+      "tokens_used_sum": 455114,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": {
+        "baseline_path": "xtask/tests/sdd_consolidation_C01_baseline.rs",
+        "report_dir": "docs/sdd",
+        "root": ".",
+        "target_path": "xtask/tests/sdd_consolidation_C01_target.rs",
+        "test_command": "cargo test -p xtask -- --nocapture"
+      },
+      "duration_ms_sum": 227656,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase",
+      "phase": "Scope",
+      "run_id": "wa-consolidation-c01",
+      "seq": 3,
+      "tokens_used_sum": 455114,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 1,
+      "agents_total": 1,
+      "budget": { "remaining": 47, "spent": 1, "total": 48 },
+      "detail": { "catalog": "consolidation" },
+      "duration_ms_sum": 227656,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Classify",
+      "run_id": "wa-consolidation-c01",
+      "seq": 4,
+      "tokens_used_sum": 455114,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fa8-ce7d-7073-89d2-c23dd66a278e",
+        "duration_ms": 199548,
+        "label": "sdd-classify",
+        "success": true,
+        "tokens_used": 333999
+      },
+      "duration_ms_sum": 427204,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Classify",
+      "run_id": "wa-consolidation-c01",
+      "seq": 5,
+      "tokens_used_sum": 789113,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {
+        "canonical_owner": "tests/support/mod.rs::require_needles",
+        "capability_exists": true,
+        "disposition": "CONSOLIDATE",
+        "next_workflow": "xylex-sdd-consolidation"
+      },
+      "duration_ms_sum": 427204,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Classify",
+      "run_id": "wa-consolidation-c01",
+      "seq": 6,
+      "tokens_used_sum": 789113,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 2,
+      "agents_total": 2,
+      "budget": { "remaining": 46, "spent": 2, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 427204,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-c01",
+      "seq": 7,
+      "tokens_used_sum": 789113,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fab-e500-7aa2-8783-27c437df795d",
+        "duration_ms": 389276,
+        "label": "sdd-spec",
+        "success": true,
+        "tokens_used": 786021
+      },
+      "duration_ms_sum": 816480,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-c01",
+      "seq": 8,
+      "tokens_used_sum": 1575134,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {
+        "adr_needed": false,
+        "spec_path": "docs/sdd/c01-contract-test-support-consolidation-run/spec.md",
+        "title": "C01 — Contract-test support consolidation (DUP-002 only)"
+      },
+      "duration_ms_sum": 816480,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "Spec",
+      "run_id": "wa-consolidation-c01",
+      "seq": 9,
+      "tokens_used_sum": 1575134,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 3,
+      "agents_total": 3,
+      "budget": { "remaining": 45, "spent": 3, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 816480,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-c01",
+      "seq": 10,
+      "tokens_used_sum": 1575134,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fb1-e211-71a1-812a-8245f3afa419",
+        "duration_ms": 272341,
+        "label": "sdd-baseline-green",
+        "success": true,
+        "tokens_used": 673923
+      },
+      "duration_ms_sum": 1088821,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": false,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-c01",
+      "seq": 11,
+      "tokens_used_sum": 2249057,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1088821,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "gate",
+      "phase": "baseline_green",
+      "run_id": "wa-consolidation-c01",
+      "seq": 12,
+      "tokens_used_sum": 2249057,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {
+        "command": "cargo test -p xtask -- --nocapture",
+        "ok": true,
+        "test_files": ["xtask/tests/sdd_consolidation_c01_baseline.rs"]
+      },
+      "duration_ms_sum": 1088821,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_end",
+      "phase": "BaselineGreen",
+      "run_id": "wa-consolidation-c01",
+      "seq": 13,
+      "tokens_used_sum": 2249057,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 4,
+      "agents_total": 4,
+      "budget": { "remaining": 44, "spent": 4, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1088821,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "phase_start",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-c01",
+      "seq": 14,
+      "tokens_used_sum": 2249057,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fb6-15f9-7393-8652-cf7647e5e485",
+        "duration_ms": 390043,
+        "label": "sdd-target-red",
+        "success": true,
+        "tokens_used": 867917
+      },
+      "duration_ms_sum": 1478864,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": false
+      },
+      "kind": "agent",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-c01",
+      "seq": 15,
+      "tokens_used_sum": 3116974,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask -- --nocapture",
+        "passed": true
+      },
+      "duration_ms_sum": 1478864,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_red",
+      "run_id": "wa-consolidation-c01",
+      "seq": 16,
+      "tokens_used_sum": 3116974,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {
+        "command": "cargo test -p xtask -- --nocapture",
+        "ok": true,
+        "test_files": ["xtask/tests/sdd_consolidation_c01_target.rs"]
+      },
+      "duration_ms_sum": 1478864,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "TargetRed",
+      "run_id": "wa-consolidation-c01",
+      "seq": 17,
+      "tokens_used_sum": 3116974,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 5,
+      "agents_total": 5,
+      "budget": { "remaining": 43, "spent": 5, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 1478864,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-c01",
+      "seq": 18,
+      "tokens_used_sum": 3116974,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fbc-16e4-7f81-835b-d92b63e1370c",
+        "duration_ms": 419325,
+        "label": "sdd-implement",
+        "success": true,
+        "tokens_used": 2040433
+      },
+      "duration_ms_sum": 1898189,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-c01",
+      "seq": 19,
+      "tokens_used_sum": 5157407,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "files_changed": [
+          "tests/support/mod.rs",
+          "xtask/src/inventory.rs",
+          "docs/debt/structural-duplication.toml",
+          "docs/debt/current.md",
+          "tests/contracts/assessment_lineage.target.rs",
+          "tests/contracts/control_implementation_registry.target.rs",
+          "tests/contracts/controlled_documents.target.rs",
+          "tests/contracts/continuity_resilience.target.rs",
+          "tests/contracts/iso27001_assurance.target.rs",
+          "tests/contracts/interested_parties_obligations.target.rs",
+          "tests/contracts/incident_governance.target.rs",
+          "tests/contracts/nonconformity_capa.target.rs",
+          "tests/contracts/internal_audit.target.rs",
+          "tests/contracts/operational_soa.target.rs",
+          "tests/contracts/population_runtime.target.rs",
+          "tests/contracts/remediation_engine.target.rs",
+          "tests/contracts/risk_register.target.rs",
+          "tests/contracts/supplier_risk.target.rs",
+          "tests/contracts/temporal_lineage_evidence_soa.target.rs",
+          "tests/contracts/temporal_assurance.target.rs",
+          "tests/contracts/typed_evidence.target.rs",
+          "xtask/tests/sdd_consolidation_c01_baseline.rs"
+        ],
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 1898189,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Implement",
+      "run_id": "wa-consolidation-c01",
+      "seq": 20,
+      "tokens_used_sum": 5157407,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 6,
+      "agents_total": 6,
+      "budget": { "remaining": 42, "spent": 6, "total": 48 },
+      "detail": { "adr_needed": false },
+      "duration_ms_sum": 1898189,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-c01",
+      "seq": 21,
+      "tokens_used_sum": 5157407,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fc2-89fd-7201-95f1-c7a2ac23e89e",
+        "duration_ms": 465451,
+        "label": "sdd-docs-adr",
+        "success": true,
+        "tokens_used": 1290741
+      },
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-c01",
+      "seq": 22,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "adr_paths": [],
+        "docs_updated": [
+          "docs/sdd/c01-contract-test-support-consolidation-run/spec.md",
+          "docs/contracts/README.md",
+          "tests/contracts/README.md",
+          "docs/specs/architectural-consolidation-program.md",
+          "docs/specs/structural-reconciliation.md",
+          "docs/specs/repository-hygiene.md",
+          "docs/debt/structural-duplication.toml",
+          "docs/debt/migrations/DUP-002.toml",
+          "docs/debt/migrations/DUP-003.toml",
+          "docs/debt/migrations/QUEUE.toml",
+          "docs/sdd/architectural-consolidation-program.md",
+          "architecture/maintainability.toml"
+        ]
+      },
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "DocsAdr",
+      "run_id": "wa-consolidation-c01",
+      "seq": 23,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": { "max_iters": 3 },
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": false,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Iterate",
+      "run_id": "wa-consolidation-c01",
+      "seq": 24,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "evidence": "cargo test -p xtask --test sdd_consolidation_c01_target -- --nocapture\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s\n\ncargo test --test sdd_assessment_lineage_target ... --test sdd_typed_evidence_target\n(all 17 binaries ok: 15+20+16+14+12+18+10+49+12+12+36+13+15+15+17+16+15 passed)\n\ncargo test -p xtask -- --nocapture\nlib 9 passed; debt_register 5 passed; architectural_cleanup 17 passed; architectural_consolidation 20 passed; c01_target 6 passed; structural_reconciliation 15 passed.\ninventory: require_needles_fns=1 require_needles_calls=206 root_test_binaries=45 tests_rs_autodiscovered=16 tests_contracts_rs=43\n\ncargo xtask guard\n01-15 all pass\n\ncargo xtask inventory --check\nexit 0\n\ncargo test -p xtask --test sdd_consolidation_c01_baseline -- --nocapture\nerror: no test target named `sdd_consolidation_c01_baseline` in `xtask` package (deleted after target GREEN)",
+        "passed": true
+      },
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "target_green",
+      "run_id": "wa-consolidation-c01",
+      "seq": 25,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {
+        "baseline_status": "fail",
+        "iters_used": 0,
+        "target_status": "pass"
+      },
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Iterate",
+      "run_id": "wa-consolidation-c01",
+      "seq": 26,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 7,
+      "agents_total": 7,
+      "budget": { "remaining": 41, "spent": 7, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2363640,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "ArchPostcheck",
+      "run_id": "wa-consolidation-c01",
+      "seq": 27,
+      "tokens_used_sum": 6448148,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fc9-b048-7be0-80eb-a4aded35e3f6",
+        "duration_ms": 228081,
+        "label": "sdd-arch-postcheck",
+        "success": true,
+        "tokens_used": 554725
+      },
+      "duration_ms_sum": 2591721,
+      "gates": {
+        "arch_postcheck": false,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "ArchPostcheck",
+      "run_id": "wa-consolidation-c01",
+      "seq": 28,
+      "tokens_used_sum": 7002873,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "evidence": "CONSOLIDATE C01 complete: one require_needles, 17 consumers, copies gone, inventory uniqueness 1/206, guards 01–15 and inventory --check green. No second way, no inventory growth, no new public surface.",
+        "passed": true
+      },
+      "duration_ms_sum": 2591721,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "arch_postcheck",
+      "run_id": "wa-consolidation-c01",
+      "seq": 29,
+      "tokens_used_sum": 7002873,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {
+        "ownership_ok": true,
+        "repo_integrity_ok": true,
+        "suspicious": false
+      },
+      "duration_ms_sum": 2591721,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "ArchPostcheck",
+      "run_id": "wa-consolidation-c01",
+      "seq": 30,
+      "tokens_used_sum": 7002873,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 8,
+      "agents_total": 8,
+      "budget": { "remaining": 40, "spent": 8, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2591721,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-c01",
+      "seq": 31,
+      "tokens_used_sum": 7002873,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 9,
+      "agents_total": 9,
+      "budget": { "remaining": 39, "spent": 9, "total": 48 },
+      "detail": {
+        "agent_id": "01a01fcd-3766-7f12-83bd-d11f9d6843f8",
+        "duration_ms": 96713,
+        "label": "sdd-supersede",
+        "success": true,
+        "tokens_used": 239387
+      },
+      "duration_ms_sum": 2688434,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": false,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "agent",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-c01",
+      "seq": 32,
+      "tokens_used_sum": 7242260,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 9,
+      "agents_total": 9,
+      "budget": { "remaining": 39, "spent": 9, "total": 48 },
+      "detail": {
+        "evidence": "delete: Delete C01 characterization baseline; keep sdd_consolidation_c01_target as uniqueness pin",
+        "passed": true
+      },
+      "duration_ms_sum": 2688434,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "gate",
+      "phase": "baseline_superseded",
+      "run_id": "wa-consolidation-c01",
+      "seq": 33,
+      "tokens_used_sum": 7242260,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 9,
+      "agents_total": 9,
+      "budget": { "remaining": 39, "spent": 9, "total": 48 },
+      "detail": {
+        "action": "Delete C01 characterization baseline; keep sdd_consolidation_c01_target as uniqueness pin",
+        "additive_baseline": false,
+        "baseline_not_green": true,
+        "baseline_retired": true,
+        "super_ok": true,
+        "supersede_kind": "delete",
+        "target_still_green": true
+      },
+      "duration_ms_sum": 2688434,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_end",
+      "phase": "Supersede",
+      "run_id": "wa-consolidation-c01",
+      "seq": 34,
+      "tokens_used_sum": 7242260,
+      "workflow": "xylex-sdd-consolidation"
+    },
+    {
+      "agents_fail": 0,
+      "agents_ok": 9,
+      "agents_total": 9,
+      "budget": { "remaining": 39, "spent": 9, "total": 48 },
+      "detail": {},
+      "duration_ms_sum": 2688434,
+      "gates": {
+        "arch_postcheck": true,
+        "baseline_green": true,
+        "baseline_superseded": true,
+        "dry_run": false,
+        "no_delta": false,
+        "target_green": true,
+        "target_red": true
+      },
+      "kind": "phase_start",
+      "phase": "Finalize",
+      "run_id": "wa-consolidation-c01",
+      "seq": 35,
+      "tokens_used_sum": 7242260,
+      "workflow": "xylex-sdd-consolidation"
+    }
+  ],
+  "gates": {
+    "arch_postcheck": true,
+    "baseline_green": true,
+    "baseline_superseded": true,
+    "dry_run": false,
+    "no_delta": false,
+    "target_green": true,
+    "target_red": true
+  },
+  "max_iters": 3,
+  "no_delta": false,
+  "objective_fp": "6bedaac5f0637088",
+  "reason": "pre_finalize",
+  "run_id": "wa-consolidation-c01",
+  "tokens_used_sum": 7242260,
+  "workflow": "xylex-sdd-consolidation"
+}

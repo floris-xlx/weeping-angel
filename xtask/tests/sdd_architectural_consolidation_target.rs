@@ -1,8 +1,9 @@
-//! Target suite for Architectural Consolidation Program Phase 0.
+//! Target suite for Architectural Consolidation Program Phases 0 and 1.
 //!
-//! Encodes CON-T01–T10 (consolidation mode, frozen baseline, v2 backlog).
-//! Must FAIL (RED) on CURRENT pre-implement code because those three
-//! artifacts/schema/enforcement are absent. Do not implement Phase 0.1–0.3 here.
+//! CON-T01–T10 stay GREEN (Phase 0 freeze/baseline/backlog). CON-T11–T20 encode
+//! domain-ownership law and stay GREEN after Phase 1 implement. CON-T07
+//! reasserts that `sdd_architectural_consolidation_baseline.rs` is deleted
+//! (`INV-NO-SUPERSEDED-BASELINES`); do not `#[ignore]` it.
 //!
 //! Avoid unwrap/expect method-call needles so inventory counts stay CURRENT.
 
@@ -73,6 +74,39 @@ const CONSOLIDATION_INVARIANTS: [&str; 4] = [
     "INV-CONSOLIDATION-EXPANSION-RESTRICTED",
     "INV-STRUCTURAL-DUPLICATION-BACKLOG",
 ];
+
+const DOMAIN_OWNERSHIP_SCHEMA: &str = "weeping-angel/domain-ownership/v1";
+
+const DOMAIN_OWNERSHIP_ROLES: [&str; 5] = [
+    "semantic_owner",
+    "storage_owner",
+    "projection_owner",
+    "evaluation_primitive_owner",
+    "adapter_owner",
+];
+
+const SEEDED_CONCEPTS: [&str; 15] = [
+    "applicability",
+    "readiness",
+    "catalog",
+    "framework",
+    "evidence",
+    "temporal_evaluation",
+    "assessment_replay",
+    "soa",
+    "control_status",
+    "control_test_kernel",
+    "evidence_validity",
+    "catalog_loading",
+    "framework_compilation",
+    "assurance_cli",
+    "collectors",
+];
+
+const DOMAIN_OWNERSHIP_INVARIANTS: [&str; 2] =
+    ["INV-DOMAIN-OWNERSHIP-PRESENT", "INV-DOMAIN-OWNERSHIP-ROLES"];
+
+const HYPOTHETICAL_CRATES: [&str; 2] = ["weeping-angel-catalog", "weeping-angel-assurance-cli"];
 
 const INVENTORY_COUNT_KEYS: [&str; 13] = [
     "root_test_binaries",
@@ -678,6 +712,7 @@ fn con_t06_close_law_blocks_verified_removed() {
 }
 
 /// CON-T07: dual-suite under xtask/tests; no tests/sdd/; no new root [[test]].
+/// After Phase 1 GREEN the characterization file is deleted, not ignored.
 #[test]
 fn con_t07_suites_under_xtask_tests_no_root_harness() {
     let xtask_tests = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -784,6 +819,46 @@ fn con_t09_expansion_increase_fails_guard_04() {
     }
 }
 
+fn domain_ownership_path() -> PathBuf {
+    live_root().join("architecture/domain-ownership.toml")
+}
+
+fn read_domain_ownership() -> String {
+    fs::read_to_string(domain_ownership_path()).unwrap_or_else(|e| {
+        panic!("architecture/domain-ownership.toml must exist and be readable: {e}")
+    })
+}
+
+fn parse_domain_ownership() -> toml::Value {
+    read_domain_ownership()
+        .parse()
+        .unwrap_or_else(|e| panic!("architecture/domain-ownership.toml must parse: {e}"))
+}
+
+fn concept_table<'a>(parsed: &'a toml::Value, id: &str) -> &'a toml::value::Table {
+    parsed
+        .get("concept")
+        .and_then(|v| v.as_table())
+        .and_then(|c| c.get(id))
+        .and_then(|v| v.as_table())
+        .unwrap_or_else(|| panic!("missing [concept.{id}]"))
+}
+
+fn loader_mentions_domain_ownership() -> bool {
+    let src = architecture_src();
+    src.contains("domain-ownership.toml")
+        || src.contains("load_domain_ownership")
+        || src.contains("domain_ownership")
+}
+
+fn owner_seat(table: &toml::value::Table, role: &str) -> String {
+    table
+        .get(role)
+        .and_then(|v| v.as_str())
+        .unwrap_or_else(|| panic!("[concept] missing required role {role}"))
+        .to_string()
+}
+
 /// CON-T10: neighbor suites and live guard 01–15 stay green; ADR remains Draft until GREEN.
 #[test]
 fn con_t10_neighbors_and_live_guard_stay_green() {
@@ -797,6 +872,770 @@ fn con_t10_neighbors_and_live_guard_stay_green() {
         xtask_tests
             .join("sdd_structural_reconciliation_target.rs")
             .is_file()
+    );
+
+    let report = run_guard(&live_root());
+    let rendered = report.render();
+    assert!(!report.failed(), "{rendered}");
+    for id in [
+        "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15",
+    ] {
+        let check = report
+            .checks
+            .iter()
+            .find(|c| c.id == id)
+            .unwrap_or_else(|| panic!("missing check {id}: {rendered}"));
+        assert_eq!(check.status, CheckStatus::Pass, "{rendered}");
+    }
+    assert!(
+        !report.checks.iter().any(|c| c.id == "16"),
+        "no Guard 16: {rendered}"
+    );
+}
+
+/// CON-T11: architecture/domain-ownership.toml is parsed as the concept SSOT.
+#[test]
+fn con_t11_domain_ownership_toml_parsed_schema_roles_seeds() {
+    let path = domain_ownership_path();
+    assert!(
+        path.is_file(),
+        "architecture/domain-ownership.toml must exist as the concept-level SSOT"
+    );
+    let parsed = parse_domain_ownership();
+    assert_eq!(
+        parsed.get("schema").and_then(|v| v.as_str()),
+        Some(DOMAIN_OWNERSHIP_SCHEMA),
+        "schema must be {DOMAIN_OWNERSHIP_SCHEMA}"
+    );
+    let roles = parsed
+        .get("required_roles")
+        .and_then(|v| v.as_array())
+        .unwrap_or_else(|| panic!("required_roles must be a non-empty array"));
+    let role_names: Vec<&str> = roles.iter().filter_map(|v| v.as_str()).collect();
+    assert!(!role_names.is_empty(), "required_roles must be non-empty");
+    for role in DOMAIN_OWNERSHIP_ROLES {
+        assert!(
+            role_names.iter().any(|r| *r == role),
+            "required_roles must include {role}: {role_names:?}"
+        );
+    }
+    assert!(
+        !role_names.iter().any(|r| *r == "persistence_owner"),
+        "persistence_owner maps to storage_owner; it is not a sixth role: {role_names:?}"
+    );
+    let concepts = parsed
+        .get("concept")
+        .and_then(|v| v.as_table())
+        .unwrap_or_else(|| panic!("domain-ownership.toml missing [concept.*] tables"));
+    for id in SEEDED_CONCEPTS {
+        assert!(
+            concepts.contains_key(id),
+            "seeded [concept.{id}] must be present"
+        );
+        let table = concept_table(&parsed, id);
+        for role in DOMAIN_OWNERSHIP_ROLES {
+            assert!(
+                table.get(role).and_then(|v| v.as_str()).is_some(),
+                "[concept.{id}] must declare string role {role}"
+            );
+        }
+    }
+    assert!(
+        loader_mentions_domain_ownership(),
+        "xtask/src/architecture.rs must parse architecture/domain-ownership.toml"
+    );
+    let live = load_architecture_manifest(&live_root())
+        .unwrap_or_else(|e| panic!("live manifests must load once domain-ownership is wired: {e}"));
+    let debug = format!("{live:?}");
+    assert!(
+        debug.contains("semantic_owner")
+            || debug.contains("domain_ownership")
+            || debug.contains("DomainOwnership"),
+        "ArchitectureManifest must carry parsed domain-ownership (paper file is not a pass): {debug}"
+    );
+}
+
+/// CON-T12: missing/malformed domain-ownership.toml fails Guard 01 and/or 04.
+/// A sibling paper file that is not parsed is not a pass.
+#[test]
+fn con_t12_missing_or_malformed_domain_ownership_fails_closed() {
+    assert!(
+        loader_mentions_domain_ownership(),
+        "paper architecture/domain-ownership.toml without a parser is not a pass"
+    );
+
+    let dir = tempdir().unwrap_or_else(|e| panic!("tempdir: {e}"));
+    write_file(
+        &dir.path().join("architecture/architecture.toml"),
+        &read_live("architecture/architecture.toml"),
+    );
+    let missing_load = load_architecture_manifest(dir.path());
+    let missing_c01 = check_01_architecture_manifest(dir.path());
+    assert!(
+        missing_load.is_err() || is_fail(&missing_c01.status),
+        "missing architecture/domain-ownership.toml must fail load_architecture_manifest or Guard 01, got load={missing_load:?} guard={:?}",
+        missing_c01.status
+    );
+
+    write_file(
+        &dir.path().join("architecture/domain-ownership.toml"),
+        "this is not valid TOML {{{ and must fail closed\n",
+    );
+    let paper_load = load_architecture_manifest(dir.path());
+    let paper_c01 = check_01_architecture_manifest(dir.path());
+    assert!(
+        paper_load.is_err() || is_fail(&paper_c01.status),
+        "malformed architecture/domain-ownership.toml must fail closed, got load={paper_load:?} guard={:?}",
+        paper_c01.status
+    );
+
+    let mut bad_schema = String::from("schema = \"not-a-real-schema\"\nrequired_roles = [");
+    for (i, role) in DOMAIN_OWNERSHIP_ROLES.iter().enumerate() {
+        if i > 0 {
+            bad_schema.push_str(", ");
+        }
+        bad_schema.push('"');
+        bad_schema.push_str(role);
+        bad_schema.push('"');
+    }
+    bad_schema.push_str("]\n");
+    write_file(
+        &dir.path().join("architecture/domain-ownership.toml"),
+        &bad_schema,
+    );
+    let schema_load = load_architecture_manifest(dir.path());
+    let schema_c01 = check_01_architecture_manifest(dir.path());
+    assert!(
+        schema_load.is_err() || is_fail(&schema_c01.status),
+        "wrong domain-ownership schema must fail closed, got load={schema_load:?} guard={:?}",
+        schema_c01.status
+    );
+}
+
+/// CON-T13: five roles are not collapsed into crate kind=exclusive;
+/// persistence_owner is not a sixth role.
+#[test]
+fn con_t13_roles_not_collapsed_no_sixth_persistence_owner() {
+    let parsed = parse_domain_ownership();
+    let required = parsed
+        .get("required_roles")
+        .and_then(|v| v.as_array())
+        .unwrap_or_else(|| panic!("required_roles array"));
+    let role_names: Vec<&str> = required.iter().filter_map(|v| v.as_str()).collect();
+    assert_eq!(
+        role_names.len(),
+        5,
+        "exactly five required_roles, got {role_names:?}"
+    );
+    assert!(
+        !role_names.iter().any(|r| *r == "persistence_owner"),
+        "persistence_owner is not a required role"
+    );
+
+    let concepts = parsed
+        .get("concept")
+        .and_then(|v| v.as_table())
+        .unwrap_or_else(|| panic!("[concept] table"));
+    for (id, value) in concepts {
+        let table = value
+            .as_table()
+            .unwrap_or_else(|| panic!("[concept.{id}] must be a table"));
+        for role in DOMAIN_OWNERSHIP_ROLES {
+            assert!(
+                table.get(role).and_then(|v| v.as_str()).is_some(),
+                "[concept.{id}] missing role {role}; do not copy architecture.toml kind=exclusive as fake exclusivity"
+            );
+        }
+        assert!(
+            !table.contains_key("persistence_owner"),
+            "[concept.{id}] must not declare persistence_owner as a role key (map it to storage_owner)"
+        );
+        if table.get("kind").and_then(|v| v.as_str()) == Some("exclusive")
+            && DOMAIN_OWNERSHIP_ROLES
+                .iter()
+                .all(|role| !table.contains_key(*role))
+        {
+            panic!("[concept.{id}] collapsed into kind=exclusive without the five roles");
+        }
+    }
+
+    let dir = tempdir().unwrap_or_else(|e| panic!("tempdir: {e}"));
+    write_file(
+        &dir.path().join("architecture/architecture.toml"),
+        &read_live("architecture/architecture.toml"),
+    );
+    write_file(
+        &dir.path().join("architecture/domain-ownership.toml"),
+        r#"schema = "weeping-angel/domain-ownership/v1"
+required_roles = [
+  "semantic_owner",
+  "storage_owner",
+  "projection_owner",
+  "evaluation_primitive_owner",
+  "adapter_owner",
+  "persistence_owner",
+]
+
+[concept.catalog]
+crate = "weeping-angel-canonical-catalog"
+kind = "exclusive"
+paths = ["crates/weeping-angel-canonical-catalog"]
+"#,
+    );
+    let collapsed = load_architecture_manifest(dir.path());
+    let collapsed_c01 = check_01_architecture_manifest(dir.path());
+    assert!(
+        collapsed.is_err() || is_fail(&collapsed_c01.status),
+        "sixth role persistence_owner and kind=exclusive without five keys must fail closed, got load={collapsed:?} guard={:?}",
+        collapsed_c01.status
+    );
+}
+
+/// CON-T14: seeded concepts cite live symbols in live workspace crates only.
+#[test]
+fn con_t14_seeded_concepts_cite_live_symbols_no_hypothetical_crates() {
+    let parsed = parse_domain_ownership();
+    let blob = read_domain_ownership();
+    for forbidden in HYPOTHETICAL_CRATES {
+        assert!(
+            !blob.contains(forbidden),
+            "domain-ownership.toml must not name hypothetical crate {forbidden}"
+        );
+    }
+
+    let applicability = concept_table(&parsed, "applicability");
+    assert_eq!(
+        owner_seat(applicability, "semantic_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert_eq!(
+        owner_seat(applicability, "projection_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert_eq!(
+        owner_seat(applicability, "storage_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    let appl_blob = format!("{applicability:?}");
+    assert!(
+        appl_blob.contains("ApplicabilitySnapshot") || blob.contains("ApplicabilitySnapshot"),
+        "applicability must cite representation ApplicabilitySnapshot"
+    );
+    assert!(
+        appl_blob.contains("lineage") || blob.contains("LineageApplicabilitySnapshot"),
+        "applicability storage maps persistence_owner=lineage to storage_owner + LineageApplicabilitySnapshot"
+    );
+    let snapshot = read_live("crates/weeping-angel-assurance/src/applicability/snapshot.rs");
+    assert!(
+        snapshot.contains("struct ApplicabilitySnapshot"),
+        "live ApplicabilitySnapshot must remain in weeping-angel-assurance"
+    );
+    let lineage = read_live("crates/weeping-angel-assurance/src/lineage.rs");
+    assert!(
+        lineage.contains("struct LineageApplicabilitySnapshot"),
+        "live LineageApplicabilitySnapshot must remain in lineage.rs"
+    );
+
+    let readiness = concept_table(&parsed, "readiness");
+    assert_eq!(
+        owner_seat(readiness, "semantic_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert!(
+        blob.contains("project_readiness"),
+        "readiness must cite project_readiness"
+    );
+    let readiness_src = read_live("crates/weeping-angel-assurance/src/readiness.rs");
+    assert!(
+        readiness_src.contains("pub fn project_readiness"),
+        "live project_readiness must remain"
+    );
+
+    let catalog = concept_table(&parsed, "catalog");
+    assert_eq!(
+        owner_seat(catalog, "semantic_owner").as_str(),
+        "weeping-angel-canonical-catalog"
+    );
+    assert!(
+        blob.contains("CanonicalCatalog") && blob.contains("load"),
+        "catalog must cite CanonicalCatalog::load"
+    );
+    let catalog_src = read_live("crates/weeping-angel-canonical-catalog/src/lib.rs");
+    assert!(
+        catalog_src.contains("pub fn load("),
+        "live CanonicalCatalog::load must remain"
+    );
+
+    let framework = concept_table(&parsed, "framework");
+    assert_eq!(
+        owner_seat(framework, "semantic_owner").as_str(),
+        "weeping-angel-framework"
+    );
+    assert!(
+        blob.contains("compile_framework"),
+        "framework must cite compile_framework"
+    );
+    let framework_src = read_live("crates/weeping-angel-framework/src/lib.rs");
+    assert!(
+        framework_src.contains("pub fn compile_framework"),
+        "live compile_framework must remain"
+    );
+
+    let evidence = concept_table(&parsed, "evidence");
+    assert_eq!(
+        owner_seat(evidence, "semantic_owner").as_str(),
+        "weeping-angel-evidence"
+    );
+    assert_eq!(
+        owner_seat(evidence, "storage_owner").as_str(),
+        "weeping-angel-evidence"
+    );
+    assert!(
+        blob.contains("current") && blob.contains("as_of") && blob.contains("latest"),
+        "evidence must cite ledger current/as_of/latest"
+    );
+    let ledger = read_live("crates/weeping-angel-evidence/src/ledger.rs");
+    assert!(
+        ledger.contains("pub fn current(")
+            && ledger.contains("pub fn as_of(")
+            && ledger.contains("pub fn latest("),
+        "live evidence ledger current/as_of/latest must remain"
+    );
+
+    let replay = concept_table(&parsed, "assessment_replay");
+    assert_eq!(
+        owner_seat(replay, "semantic_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert!(
+        blob.contains("replay_assessment"),
+        "assessment_replay must cite replay_assessment"
+    );
+    assert!(
+        lineage.contains("pub fn replay_assessment"),
+        "live replay_assessment must remain"
+    );
+
+    let soa = concept_table(&parsed, "soa");
+    assert_eq!(
+        owner_seat(soa, "semantic_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert_eq!(
+        owner_seat(soa, "projection_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert!(
+        blob.contains("project_soa_from_snapshot"),
+        "soa must cite project_soa_from_snapshot"
+    );
+    let soa_src = read_live("crates/weeping-angel-assurance/src/soa.rs");
+    assert!(
+        soa_src.contains("pub fn project_soa_from_snapshot"),
+        "live project_soa_from_snapshot must remain"
+    );
+
+    let kernel = concept_table(&parsed, "control_test_kernel");
+    assert_eq!(
+        owner_seat(kernel, "semantic_owner").as_str(),
+        "weeping-angel-control-test"
+    );
+    assert_eq!(
+        owner_seat(kernel, "evaluation_primitive_owner").as_str(),
+        "weeping-angel-control-test"
+    );
+    assert!(
+        blob.contains("evaluate") && blob.contains("run.inc"),
+        "control_test_kernel must cite evaluate in run.inc"
+    );
+    let run_inc = read_live("crates/weeping-angel-control-test/src/run.inc");
+    assert!(
+        run_inc.contains("pub fn evaluate("),
+        "live evaluate in run.inc must remain"
+    );
+
+    let validity = concept_table(&parsed, "evidence_validity");
+    assert_eq!(
+        owner_seat(validity, "semantic_owner").as_str(),
+        "weeping-angel-evidence"
+    );
+    assert!(
+        blob.contains("project_validity"),
+        "evidence_validity must cite project_validity"
+    );
+    let validity_src = read_live("crates/weeping-angel-evidence/src/validity.rs");
+    assert!(
+        validity_src.contains("pub fn project_validity"),
+        "live project_validity must remain"
+    );
+
+    let catalog_loading = concept_table(&parsed, "catalog_loading");
+    assert_eq!(
+        owner_seat(catalog_loading, "semantic_owner").as_str(),
+        "weeping-angel-canonical-catalog"
+    );
+
+    let framework_compilation = concept_table(&parsed, "framework_compilation");
+    assert_eq!(
+        owner_seat(framework_compilation, "semantic_owner").as_str(),
+        "weeping-angel-framework"
+    );
+
+    let cli = concept_table(&parsed, "assurance_cli");
+    assert_eq!(owner_seat(cli, "semantic_owner").as_str(), "weeping-angel");
+    assert!(
+        blob.contains("src/main.rs") && blob.contains("src/cli.rs"),
+        "assurance_cli facade must cite src/main.rs and src/cli.rs"
+    );
+    assert!(
+        live_root().join("src/main.rs").is_file() && live_root().join("src/cli.rs").is_file(),
+        "CLI facade files must remain at src/main.rs and src/cli.rs"
+    );
+
+    let collectors = concept_table(&parsed, "collectors");
+    assert_eq!(
+        owner_seat(collectors, "semantic_owner").as_str(),
+        "weeping-angel-collector"
+    );
+    assert_eq!(
+        owner_seat(collectors, "adapter_owner").as_str(),
+        "weeping-angel-collector"
+    );
+    assert!(
+        blob.contains("CollectorAdapter"),
+        "collectors must cite CollectorAdapter"
+    );
+    let adapter = read_live("crates/weeping-angel-collector/src/ports/adapter.rs");
+    assert!(
+        adapter.contains("CollectorAdapter"),
+        "live CollectorAdapter must remain"
+    );
+
+    let ir = read_live("crates/weeping-angel-assurance-ir/src/implementation.rs");
+    assert!(
+        ir.contains("enum ImplementationStatus"),
+        "live ImplementationStatus must remain in weeping-angel-assurance-ir"
+    );
+    let ctl = read_live("crates/weeping-angel-control-test/src/lib.rs");
+    assert!(
+        ctl.contains("enum Effectiveness"),
+        "live Effectiveness must remain in weeping-angel-control-test"
+    );
+    assert!(
+        blob.contains("ImplementationStatus") && blob.contains("Effectiveness"),
+        "control_status seed must cite ImplementationStatus and Effectiveness"
+    );
+}
+
+/// CON-T15: temporal_evaluation and control_status are split=divided, not fake exclusive.
+#[test]
+fn con_t15_temporal_evaluation_and_control_status_are_divided() {
+    let parsed = parse_domain_ownership();
+    let blob = read_domain_ownership();
+
+    let temporal = concept_table(&parsed, "temporal_evaluation");
+    assert_eq!(
+        temporal.get("split").and_then(|v| v.as_str()),
+        Some("divided"),
+        "temporal_evaluation.split must be divided (do not copy architecture.toml kind=exclusive)"
+    );
+    assert_eq!(
+        owner_seat(temporal, "semantic_owner").as_str(),
+        "weeping-angel-control-test"
+    );
+    assert_eq!(
+        owner_seat(temporal, "evaluation_primitive_owner").as_str(),
+        "weeping-angel-control-test"
+    );
+    assert_eq!(
+        owner_seat(temporal, "projection_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert_eq!(
+        owner_seat(temporal, "storage_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert!(
+        blob.contains("select_latest_as_of"),
+        "temporal_evaluation must cite select_latest_as_of"
+    );
+    assert_ne!(
+        temporal.get("kind").and_then(|v| v.as_str()),
+        Some("exclusive"),
+        "domain-ownership must not claim fake exclusivity on temporal_evaluation"
+    );
+    let control_temporal = read_live("crates/weeping-angel-control-test/src/temporal.rs");
+    assert!(
+        control_temporal.contains("pub fn select_latest_as_of"),
+        "evaluation primitive remains in weeping-angel-control-test"
+    );
+    let assurance_temporal = read_live("crates/weeping-angel-assurance/src/temporal.rs");
+    assert!(
+        assurance_temporal.contains("pub fn project_timeline")
+            && !assurance_temporal.contains("pub fn select_latest_as_of"),
+        "assurance temporal.rs stays the timeline/diff projection"
+    );
+
+    let status = concept_table(&parsed, "control_status");
+    assert_eq!(
+        status.get("split").and_then(|v| v.as_str()),
+        Some("divided"),
+        "control_status.split must be divided"
+    );
+    assert_eq!(
+        owner_seat(status, "semantic_owner").as_str(),
+        "divided",
+        "control_status semantic_owner is divided, not one exclusive crate"
+    );
+    assert_eq!(
+        owner_seat(status, "evaluation_primitive_owner").as_str(),
+        "weeping-angel-control-test"
+    );
+    assert_eq!(
+        owner_seat(status, "projection_owner").as_str(),
+        "weeping-angel-assurance"
+    );
+    assert_ne!(
+        status.get("kind").and_then(|v| v.as_str()),
+        Some("exclusive"),
+        "control_status must not copy kind=exclusive as fake exclusivity"
+    );
+}
+
+/// CON-T16: domain-ownership invariants fold into Guard 01/04; no Guard 16.
+#[test]
+fn con_t16_domain_ownership_invariants_no_guard_16() {
+    let invariants = read_live("architecture/invariants.toml");
+    for id in DOMAIN_OWNERSHIP_INVARIANTS {
+        assert!(
+            invariants.contains(id),
+            "architecture/invariants.toml must declare {id}"
+        );
+    }
+    let src = xtask_src_tree();
+    for id in DOMAIN_OWNERSHIP_INVARIANTS {
+        assert!(
+            src.contains(id),
+            "evaluate_invariant must have a predicate for {id} (unknown-id fail-closed is not enough)"
+        );
+    }
+    assert!(
+        src.contains("eval_domain_ownership")
+            || src.contains("INV-DOMAIN-OWNERSHIP-PRESENT")
+                && src.contains("INV-DOMAIN-OWNERSHIP-ROLES"),
+        "Guard 04 must evaluate domain-ownership invariants"
+    );
+    assert_eq!(KNOWN_CHECK_IDS.len(), 15);
+    assert!(
+        src.contains("KNOWN_CHECK_IDS: [&str; 15]"),
+        "do not add Guard 16"
+    );
+    assert!(
+        !src.contains("cargo xtask consolidation") && !src.contains("Some(\"consolidation\")"),
+        "do not add a second health CLI"
+    );
+    let live = check_04_architecture_invariants(&live_root());
+    match &live.status {
+        CheckStatus::Fail(msg) => {
+            panic!(
+                "Guard 04 must pass on the live tree once INV-DOMAIN-OWNERSHIP* predicates exist, got {msg}"
+            );
+        }
+        CheckStatus::Pass => {}
+        other => panic!("Guard 04 unexpected status: {other:?}"),
+    }
+}
+
+/// CON-T17: dual-suite stays under xtask/tests; Phase 0 ids remain; ownership law is wired.
+#[test]
+fn con_t17_dual_suite_under_xtask_tests_phase0_ids_remain() {
+    let xtask_tests = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let target = xtask_tests.join("sdd_architectural_consolidation_target.rs");
+    let baseline = xtask_tests.join("sdd_architectural_consolidation_baseline.rs");
+    assert!(
+        target.is_file(),
+        "target suite must live under xtask/tests/"
+    );
+    let target_text =
+        fs::read_to_string(&target).unwrap_or_else(|e| panic!("read consolidation target: {e}"));
+    for id in [
+        "con_t01", "con_t02", "con_t03", "con_t04", "con_t05", "con_t06", "con_t08", "con_t09",
+        "con_t11", "con_t12", "con_t13", "con_t14", "con_t15", "con_t16", "con_t17", "con_t18",
+        "con_t19", "con_t20",
+    ] {
+        assert!(
+            target_text.contains(id),
+            "target suite must keep Phase 0 and Phase 1 id {id}"
+        );
+    }
+    assert!(
+        !baseline.exists(),
+        "superseded xtask baseline suite must be deleted"
+    );
+    assert!(!live_root().join("tests/sdd").exists());
+    assert!(!live_root().join("test/sdd").exists());
+    assert!(!read_live("Cargo.toml").contains("sdd_architectural_consolidation"));
+    assert!(!read_live("xtask/Cargo.toml").contains("[[test]]"));
+    assert!(
+        domain_ownership_path().is_file() && loader_mentions_domain_ownership(),
+        "dual-suite Phase 1 is ownership law: domain-ownership.toml must exist and be parsed"
+    );
+}
+
+/// CON-T18: one program spec; ADR 0050 exists; no colliding 0003/0011 filenames.
+#[test]
+fn con_t18_single_program_spec_and_adr_0050() {
+    let layout = read_live("tests/contracts/documentation_layout.rs");
+    let spec_hits = layout
+        .matches("docs/specs/architectural-consolidation-program.md")
+        .count();
+    assert_eq!(
+        spec_hits, 1,
+        "CANONICAL_SPECS must list the consolidation spec once, not a forked SSOT"
+    );
+    assert!(
+        !layout.contains("docs/specs/domain-ownership"),
+        "do not fork a second program spec for domain-ownership"
+    );
+    let life = read_live("architecture/spec-lifecycle.toml");
+    assert!(
+        life.contains("docs/specs/architectural-consolidation-program.md"),
+        "Guard 15 existing consolidation spec row must remain"
+    );
+    let adr_path = live_root().join("docs/adr/0050-domain-ownership-model.md");
+    assert!(adr_path.is_file(), "ADR 0050 file must exist");
+    let adr = fs::read_to_string(&adr_path).unwrap_or_else(|e| panic!("read ADR 0050: {e}"));
+    assert!(
+        adr.contains("id = \"0050\""),
+        "ADR 0050 weeping-angel-adr-meta must set id = \"0050\""
+    );
+    assert!(
+        adr.contains("status = \"draft\"") || adr.contains("status = \"accepted\""),
+        "ADR 0050 meta status is draft until GREEN, then accepted"
+    );
+    let adr_dir = live_root().join("docs/adr");
+    let entries = fs::read_dir(&adr_dir).unwrap_or_else(|e| panic!("read docs/adr: {e}"));
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        assert!(
+            !name.starts_with("0003-domain-ownership"),
+            "do not mint 0003-domain-ownership*: {name}"
+        );
+        if name.starts_with("0011-") {
+            assert_eq!(
+                name.as_ref(),
+                "0011-repository-guard-governance.md",
+                "do not mint a colliding 0011-* ADR: {name}"
+            );
+        }
+    }
+    assert!(
+        domain_ownership_path().is_file(),
+        "ADR 0050 cites architecture/domain-ownership.toml as the machine SSOT; the file must exist"
+    );
+    let parsed = parse_domain_ownership();
+    assert_eq!(
+        parsed.get("schema").and_then(|v| v.as_str()),
+        Some(DOMAIN_OWNERSHIP_SCHEMA)
+    );
+}
+
+/// CON-T19: INV-NO-SUPERSEDED-BASELINES means leftover after GREEN / ignored / tests/sdd,
+/// not a live xtask dual-suite window file.
+#[test]
+fn con_t19_no_superseded_baselines_honesty_window() {
+    let invariants = read_live("architecture/invariants.toml");
+    assert!(
+        invariants.contains("INV-NO-SUPERSEDED-BASELINES"),
+        "honesty-amend the existing invariant; do not invent a new leftover id"
+    );
+    let src = xtask_src_tree();
+    assert!(
+        src.contains("INV-NO-SUPERSEDED-BASELINES"),
+        "evaluate_invariant must keep INV-NO-SUPERSEDED-BASELINES"
+    );
+    let start = src
+        .find("fn eval_no_superseded_baselines")
+        .unwrap_or_else(|| panic!("eval_no_superseded_baselines predicate must exist"));
+    let rest = &src[start..];
+    let end = rest.find("\nfn ").unwrap_or(rest.len().min(2500));
+    let predicate = &rest[..end];
+    assert!(
+        predicate.contains("tests/sdd") || predicate.contains("test/sdd"),
+        "honesty-amended leftover rule must still fail-close tests/sdd baselines"
+    );
+    assert!(
+        predicate.contains("ignore"),
+        "honesty-amended leftover rule must fail-close #[ignore] baselines"
+    );
+    assert!(
+        predicate.contains("xtask/tests")
+            || predicate.contains("dual-suite")
+            || predicate.contains("sdd_architectural_consolidation_baseline"),
+        "honesty-amended leftover rule must allow a live non-ignored xtask/tests/sdd_*_baseline.rs during the window"
+    );
+
+    let baseline = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/sdd_architectural_consolidation_baseline.rs");
+    if baseline.is_file() {
+        let text =
+            fs::read_to_string(&baseline).unwrap_or_else(|e| panic!("read window baseline: {e}"));
+        assert!(
+            !text.contains("#[ignore"),
+            "window characterization must not be #[ignore]-superseded"
+        );
+        assert!(
+            text.contains("con_b11") && text.contains("con_b16"),
+            "window baseline encodes CON-B11–B16"
+        );
+    }
+    assert!(
+        !live_root().join("tests/sdd").exists(),
+        "tests/sdd leftover baselines remain forbidden"
+    );
+}
+
+/// CON-T20: neighbors stay green; product needles are not rewritten; ownership law is live.
+#[test]
+fn con_t20_neighbors_green_product_needles_unchanged() {
+    let xtask_tests = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
+    assert!(
+        xtask_tests
+            .join("sdd_architectural_cleanup_target.rs")
+            .is_file()
+    );
+    assert!(
+        xtask_tests
+            .join("sdd_structural_reconciliation_target.rs")
+            .is_file()
+    );
+
+    let freeze = program_table(&read_live("architecture/architecture.toml"));
+    assert_eq!(
+        freeze.get("status").and_then(|v| v.as_str()),
+        Some("active")
+    );
+    assert_eq!(
+        freeze.get("feature_expansion").and_then(|v| v.as_str()),
+        Some("restricted"),
+        "Phase 0 freeze stays active"
+    );
+
+    let applicability = read_live("crates/weeping-angel-assurance/src/applicability/snapshot.rs");
+    assert!(applicability.contains("struct ApplicabilitySnapshot"));
+    let readiness = read_live("crates/weeping-angel-assurance/src/readiness.rs");
+    assert!(readiness.contains("fn project_readiness"));
+    let lineage = read_live("crates/weeping-angel-assurance/src/lineage.rs");
+    assert!(lineage.contains("fn replay_assessment"));
+    assert!(lineage.contains("struct LineageApplicabilitySnapshot"));
+
+    let blob = read_domain_ownership();
+    assert!(
+        blob.contains("ApplicabilitySnapshot")
+            && blob.contains("project_readiness")
+            && blob.contains("replay_assessment"),
+        "Phase 1 names owners of live applicability/readiness/lineage symbols; it must not rewrite them"
     );
 
     let report = run_guard(&live_root());

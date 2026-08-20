@@ -1,0 +1,46 @@
+id = "DUP-013"
+wave = 2
+lane = "C"
+depends_on = []
+invariant = "Framework pack applicability TOML is parsed once in weeping-angel-framework; assurance only maps typed rows"
+
+canonical_owner = "crates/weeping-angel-framework::LoadedPack.applicability (PackApplicabilityRow)"
+canonical_symbol = "LoadedPack.applicability"
+
+allowed_modifications = [
+  "crates/weeping-angel-framework/**",
+  "crates/weeping-angel-assurance/src/lib.rs (pack row mapping only)",
+  "crates/weeping-angel-assurance/src/soa.rs (load_pack_soa_rows only)",
+  "directly associated tests",
+  "docs/debt/structural-duplication.toml",
+]
+
+forbidden = [
+  "re-toml::from_str of applicability.toml in assurance",
+  "new parser",
+  "new crates",
+  "silent Vec::new swallowing PackError without an explicit architect decision",
+]
+
+required_deletion = [
+  "manual toml::Value picks of applicability.toml in assurance",
+  "soa silent continue/ok parse fork unless explicitly documented as compatibility-only with sunset",
+]
+
+goal = "Parser path → 1 (framework pack). Assurance consumes LoadedPack.applicability."
+
+metric_name = "applicability_toml_parsers"
+metric_from = 3
+metric_to = 1
+
+acceptance = [
+  "cargo test -p weeping-angel-framework",
+  "cargo xtask guard (Guard 06 PackError stays)",
+  "grep shows no second applicability.toml parser in assurance",
+]
+
+do_not = [
+  "weaken pack-parse tests",
+  "move parse into assurance to make mapping easier",
+  "edit Guard 06 to allow a second parser",
+]

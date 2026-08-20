@@ -1,0 +1,46 @@
+id = "DUP-017"
+wave = 1
+lane = "A"
+depends_on = []
+invariant = "architecture.toml temporal ownership metadata matches physical seats; no fake exclusivity"
+
+canonical_owner = "architecture.toml [ownership.temporal_evidence_selection] plus architecture/domain-ownership.toml concept.temporal_evaluation"
+canonical_symbol = "select_latest_as_of"
+
+allowed_modifications = [
+  "architecture/architecture.toml (metadata paths/comments only)",
+  "architecture/domain-ownership.toml",
+  "docs/debt/structural-duplication.toml",
+  "docs/adr/0050-domain-ownership-model.md",
+  "xtask/src/architecture.rs (parser only if Phase 1 already requires it)",
+]
+
+forbidden = [
+  "moving weeping-angel-control-test::temporal::select_latest_as_of into assurance",
+  "new temporal selection functions",
+  "changing evaluation semantics",
+  "new crates",
+]
+
+required_deletion = [
+  "comments/paths that claim exclusive ownership of the leaf primitive in assurance",
+]
+
+goal = "Metadata matches physical architecture: control-test owns the leaf primitive; assurance owns projection/selection policy as recorded in domain-ownership (split=divided)."
+
+metric_name = "temporal_ownership_lies"
+metric_from = 1
+metric_to = 0
+
+acceptance = [
+  "cargo xtask guard",
+  "architecture.toml does not claim the control-test primitive lives in assurance/src/temporal.rs as exclusive code ownership of the algorithm",
+  "domain-ownership temporal_evaluation.split = divided if that file exists",
+  "ACP-T07 / TLE-015 still hold (primitive not moved)",
+]
+
+do_not = [
+  "move functions to make metadata true",
+  "collapse five domain roles into kind=exclusive",
+  "edit guards to ignore the drift",
+]

@@ -29,7 +29,7 @@ guard_check = "14"
 
 [[invariant]]
 id = "INV-NO-SUPERSEDED-BASELINES"
-summary = "Superseded *.baseline.rs suites are deleted, not ignored"
+summary = "Superseded leftovers (#[ignore] baselines, tests/sdd, leftover after GREEN) are deleted; live non-ignored xtask/tests dual-suite window files are allowed"
 guard_check = "13"
 
 [[invariant]]
@@ -50,4 +50,14 @@ guard_check = "04"
 [[invariant]]
 id = "INV-STRUCTURAL-DUPLICATION-BACKLOG"
 summary = "docs/debt/structural-duplication.toml is the v2 program backlog with close law"
+guard_check = "04"
+
+[[invariant]]
+id = "INV-DOMAIN-OWNERSHIP-PRESENT"
+summary = "architecture/domain-ownership.toml exists, schema weeping-angel/domain-ownership/v1, parsed, five required_roles"
+guard_check = "04"
+
+[[invariant]]
+id = "INV-DOMAIN-OWNERSHIP-ROLES"
+summary = "Every concept has five roles; no persistence_owner; seeded concepts and divided splits are honest"
 guard_check = "04"

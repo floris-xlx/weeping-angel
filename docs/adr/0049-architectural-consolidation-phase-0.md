@@ -74,4 +74,5 @@ Field-level law is [`docs/specs/architectural-consolidation-program.md`](../spec
 - Pointer: [`docs/sdd/architectural-consolidation-program.md`](../sdd/architectural-consolidation-program.md)
 - Frozen snapshot: [`docs/debt/consolidation-baseline.md`](../debt/consolidation-baseline.md)
 - Backlog: [`docs/debt/structural-duplication.toml`](../debt/structural-duplication.toml)
+- Successor (Phase 1 ownership law): [ADR 0050](0050-domain-ownership-model.md)
 - Predecessor: [ADR 0048](0048-structural-reconciliation.md)

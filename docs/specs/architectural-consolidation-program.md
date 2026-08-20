@@ -1,24 +1,24 @@
-# SDD: Weeping Angel Architectural Consolidation Program — Phase 0 (freeze + baseline + backlog schema)
+# SDD: Weeping Angel Architectural Consolidation Program — Phase 0 (implemented) + Phase 1 (domain ownership law)
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented (Phase 0).** Consolidation mode, frozen baseline snapshot, and v2 duplication backlog schema are landed. Dual-suite target is GREEN; baseline suite deleted (`INV-NO-SUPERSEDED-BASELINES`). |
+| Status | **Phase 0 implemented.** Consolidation mode, frozen baseline snapshot, and v2 duplication backlog schema are landed (CON-T01–T10 GREEN; Phase 0 baseline deleted). **Phase 1 implemented:** `architecture/domain-ownership.toml` is the concept-level SSOT; xtask parses five roles fail-closed (CON-T11–T20 GREEN; Phase 1 baseline deleted). |
 | Program | Architectural Consolidation Program (preserve architecture; eliminate parallel truths). |
-| Slice | **Phase 0 only** (0.1 consolidation mode, 0.2 frozen baseline snapshot, 0.3 structural-duplication backlog schema). **Not** Phases 1+ consumer migrations, duplicate deletes, or product rewrites. |
-| Dual-suite | `xtask/tests/sdd_architectural_consolidation_target.rs` via `cargo test -p xtask` auto-discovery. Phase 0 baseline suite **deleted** (`INV-NO-SUPERSEDED-BASELINES`; do not `#[ignore]`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD` / architectural-cleanup Phase 0 freeze item 6). Do not invent `test/sdd/*.ts`. Do not add a new root `[[test]]`. |
-| ADR | **Accepted** [`docs/adr/0049-architectural-consolidation-phase-0.md`](../adr/0049-architectural-consolidation-phase-0.md). Next unused prefix is **0050**. Do **not** mint `0003-*` or a colliding `0011-*`. |
-| Human SSOT | **This file** under `docs/specs/`. [`docs/sdd/architectural-consolidation-program.md`](../sdd/architectural-consolidation-program.md) is the SDD run pointer only. Generated traces stay in `.sdd/`. |
-| Predecessor law | [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md) (ACP Phase 0 is **spec-law-only freeze**, a different program), [`docs/specs/structural-reconciliation.md`](structural-reconciliation.md), [`docs/specs/repository-integrity.md`](repository-integrity.md), ADRs 0004, 0009–0012, 0048. |
+| Slice | **Phase 0 complete.** **This slice: Phase 1 ownership law only** (who owns which concept; which roles may split). **Not** Phase 2+ consumer migrations, duplicate deletes, or product semantic rewrites of applicability / readiness / lineage. |
+| Dual-suite | `xtask/tests/sdd_architectural_consolidation_target.rs` via `cargo test -p xtask` auto-discovery. Phase 0 CON-T01–T06 / T08–T09 **stay GREEN**. Phase 1 CON-T11–T20 **GREEN**. CON-T07 allowed the live non-ignored Phase 1 characterization file during the window; the file is **deleted** after GREEN (`INV-NO-SUPERSEDED-BASELINES`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Do not add a new root or xtask `[[test]]`. |
+| ADR | **Accepted** [`docs/adr/0049-architectural-consolidation-phase-0.md`](../adr/0049-architectural-consolidation-phase-0.md). **Accepted** [`docs/adr/0050-domain-ownership-model.md`](../adr/0050-domain-ownership-model.md) (`weeping-angel-adr-meta` `id = "0050"`). Do **not** mint `0003-*` or a colliding `0011-*`. Next unused prefix after 0050 is **0051**. |
+| Human SSOT | **This file** under `docs/specs/`. [`docs/sdd/architectural-consolidation-program.md`](../sdd/architectural-consolidation-program.md) is the SDD run pointer only. Do **not** add a second program spec. Generated traces stay in `.sdd/`. Guard **15** keeps the **existing** consolidation spec row. |
+| Predecessor law | [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md) (ACP Phase 0 is **spec-law-only freeze**, a different program), [`docs/specs/structural-reconciliation.md`](structural-reconciliation.md), [`docs/specs/repository-integrity.md`](repository-integrity.md), ADRs 0004, 0009–0012, 0048, 0049. |
 | Public contract | [`docs/specs/assurance-runtime.md`](assurance-runtime.md) untouched. |
 | Spine (still law) | [`docs/specs/assurance-runtime-spine.md`](assurance-runtime-spine.md), ADR 0001 |
 | Neighbors (must stay GREEN) | `sdd_documentation_layout` `CANONICAL_SPECS`, Guard **15** `architecture/spec-lifecycle.toml`, `cargo xtask guard` 01–15, `sdd_architectural_cleanup_target`, `sdd_structural_reconciliation_target`. |
-| Collision fence | Do **not** treat architectural-cleanup Phase 0 (spec-law-only freeze) as this program. This slice makes freeze + baseline + backlog schema **machine-readable**. Do not invent `weeping-angel-catalog` / `weeping-angel-assurance-cli`. |
-| Toolchain | Cargo workspace (seven `weeping-angel-*` crates + unpublished `xtask`). **pnpm / `apps/docs` out of scope.** |
-| Inventory SSOT | `cargo xtask inventory` / `xtask/src/inventory.rs` / schema `weeping-angel/inventory/v1` / live snapshot [`docs/debt/current.md`](../debt/current.md). Extend that projection; **do not** invent a second counter (DUP-014). |
-| `adr_needed` | **true** — architecture policy table, guard evaluation of extra TOML, freeze vs expansion. |
-| Protocol | **Complete.** Spec first → baseline GREEN on pre-implement tree → target RED for the three missing artifacts → implement 0.1–0.3 → target GREEN → **delete** baseline suite → Accept ADR 0049. |
+| Collision fence | Do **not** treat architectural-cleanup Phase 0 (spec-law-only freeze) as this program. Phase 0 freeze remains **active** (`feature_expansion=restricted`). Phase 1 is `allowed_change_classes` **consolidation** + **consolidation-docs**. Do not invent `weeping-angel-catalog` / `weeping-angel-assurance-cli`. |
+| Toolchain | Cargo workspace (seven `weeping-angel-*` crates + unpublished `xtask` + root `weeping-angel`). **pnpm / `apps/docs` out of scope.** |
+| Inventory SSOT | `cargo xtask inventory` / `xtask/src/inventory.rs` / schema `weeping-angel/inventory/v1` / live snapshot [`docs/debt/current.md`](../debt/current.md). Do **not** invent a second counter (DUP-014). Phase 1 must not raise frozen expansion metrics (`INV-CONSOLIDATION-EXPANSION-RESTRICTED`). |
+| `adr_needed` | **true** — concept-level role split vs crate-kind exclusivity; sibling domain-ownership SSOT; honesty-amend `INV-NO-SUPERSEDED-BASELINES` for the dual-suite window. |
+| Protocol | Phase 0 **complete** (Accept ADR 0049). Phase 1 **complete** (Accept ADR 0050): spec + dual-suite + parser/TOML/invariants GREEN; Phase 1 baseline suite **deleted**. |
 
-This document is the durable human SSOT for **Phase 0** of the Architectural Consolidation Program.
+This document is the durable human SSOT for the Architectural Consolidation Program. **Phase 0** (§0–§10) is implemented law. **Phase 1** (§11) is implemented ownership law (who owns which concept; which roles may split). Do not fork a second program SSOT.
 
 ---
 
@@ -37,24 +37,25 @@ Enforcement seat remains `cargo xtask guard` (CI already runs it on PRs). Do **n
 
 ## 1. Collision fence
 
-Phase 0 may change **only** (implement slice; this spec-first commit is docs/ADR + neighbor index):
+Phase 0 may change **only** (implement slice; Phase 0 spec-first was docs/ADR + neighbor index). Phase 1 allowed homes are in §11.0; Phase 0 freeze remains active.
 
 | Concern | Home |
 | --- | --- |
 | This SSOT | `docs/specs/architectural-consolidation-program.md` |
 | SDD pointer | `docs/sdd/architectural-consolidation-program.md` |
-| Accepted ADR | `docs/adr/0049-architectural-consolidation-phase-0.md` |
+| Accepted ADR | `docs/adr/0049-architectural-consolidation-phase-0.md` (Phase 0). `docs/adr/0050-domain-ownership-model.md` (Phase 1). |
 | Consolidation mode | `architecture/architecture.toml` `[program.architectural_consolidation]` + parse on `ArchitectureManifest` |
+| Concept-level ownership | `architecture/domain-ownership.toml` (`weeping-angel/domain-ownership/v1`; five roles; Guard 01/04) |
 | Freeze evaluation | Guard **01 / 02 / 03 / 04** and/or a new `[[invariant]]` with a predicate in `evaluate_invariant` — **not** Guard 16 |
 | Frozen snapshot | `docs/debt/consolidation-baseline.json` + `docs/debt/consolidation-baseline.md` projected from `xtask/src/inventory.rs` |
 | Live mechanical snapshot | `docs/debt/current.md` (unchanged role) |
 | Backlog schema | `docs/debt/structural-duplication.toml` (`weeping-angel/structural-duplication/v2`) |
-| Dual-suite | `xtask/tests/sdd_architectural_consolidation_target.rs` (baseline deleted) |
+| Dual-suite | `xtask/tests/sdd_architectural_consolidation_target.rs` (Phase 0 and Phase 1 baselines deleted — §11.5) |
 | Neighbor index | `architecture/spec-lifecycle.toml`, `tests/contracts/documentation_layout.rs` `CANONICAL_SPECS` |
 
 | Do not touch | Owner |
 | --- | --- |
-| Phases 1+ consumer migrations; deleting DUP duplicate files | Later program phases |
+| Phase 1+ **consumer migrations**; deleting DUP duplicate files | Phase 2+ (Phase 1 is ownership law only — §11) |
 | Rewriting assurance / collector / catalog / IR | Product programs |
 | New frameworks, collectors, ISMS engines, SARIF/report formats, product scanners | Never this slice |
 | Hypothetical packages `weeping-angel-catalog`, `weeping-angel-assurance-cli` | Forbidden (Guard 03) |
@@ -101,7 +102,7 @@ Definition of done for Phase 0: *a contributor cannot merge a second SSOT / new 
 | Debt register | `docs/debt/register.toml` | Do not reopen resolved `DEBT-GUARD-*`. Optional new finding only if a live exemption is unavoidable (prefer none). |
 | Forbidden patterns | `architecture/forbidden-patterns.toml` | Keep `FORBID-TESTS-SDD` and hypothetical packages. May add data-driven patterns for extra schema trees / extra crates; not a new grep crate. |
 | Dual-suite discovery | `xtask/tests/*.rs` | Auto-discovered. **Never** root `[[test]]` for this program. |
-| `INV-NO-SUPERSEDED-BASELINES` | Guard 13 / 04 | Phase 0 baseline suite **deleted**. Do not restore it as `#[ignore]`. |
+| `INV-NO-SUPERSEDED-BASELINES` | Guard 13 / 04 | Phase 0 baseline suite **deleted** (do not `#[ignore]`). Phase 1 **honesty-amends** the predicate for the dual-suite window (§11.4.5 / [ADR 0050](../adr/0050-domain-ownership-model.md)); leftover after GREEN still fail-closes. |
 | Docs layout / lifecycle | `CANONICAL_SPECS`, `spec-lifecycle.toml` | This path listed; `state = "active"`; `ownership = ["repository_guard"]`. |
 | `ASSURANCE_IR_SCHEMA` | `assurance-ir/v1` | Untouched. |
 | Maintainability budget | `architecture/maintainability.toml` | Not a second inventory. Freeze uses inventory + baseline comparison. |
@@ -467,22 +468,409 @@ Protocol (complete):
 
 ---
 
-## 9. remaining_backlog (not this slice)
+## 9. remaining_backlog (not Phase 0)
 
-1. Phase 1+ migrate consumers onto canonical owners (DUP-002 helpers, DUP-004 snapshot shapes, DUP-011 readiness constructors, …)
-2. Delete duplicate files once close law holds (e.g. remaining schema copies)
-3. Merge inventory and `RepositoryModel` walks (DUP-014) without a third walker
-4. Semantic detection of new projection paths beyond count/ownership heuristics
-5. Flipping `feature_expansion` to unrestricted (requires a later ADR)
-6. Architectural-cleanup Phases 2–28 product work (separate program)
+1. **Phase 1 (implemented):** canonical domain-ownership SSOT + parser + Guard 01/04 fold-in. **Not** consumer migration.
+2. Phase 2+ migrate consumers onto canonical owners (DUP-002 helpers, DUP-004 snapshot shapes, DUP-011 readiness constructors, …)
+3. Delete duplicate files once close law holds (e.g. remaining schema copies)
+4. Merge inventory and `RepositoryModel` walks (DUP-014) without a third walker
+5. Semantic detection of new projection paths beyond count/ownership heuristics
+6. Flipping `feature_expansion` to unrestricted (requires a later ADR)
+7. Architectural-cleanup Phases 2–28 product work (separate program)
 
 ---
 
 ## 10. Related
 
 - Accepted decision: [`docs/adr/0049-architectural-consolidation-phase-0.md`](../adr/0049-architectural-consolidation-phase-0.md)
+- Accepted decision: [`docs/adr/0050-domain-ownership-model.md`](../adr/0050-domain-ownership-model.md)
 - Pointer: [`docs/sdd/architectural-consolidation-program.md`](../sdd/architectural-consolidation-program.md)
 - [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md) — **different** Phase 0
 - [`docs/specs/structural-reconciliation.md`](structural-reconciliation.md), [ADR 0048](../adr/0048-structural-reconciliation.md)
 - [`docs/specs/repository-integrity.md`](repository-integrity.md), ADRs [0004](../adr/0004-documentation-architecture.md), [0009](../adr/0009-repository-health-gate.md), [0010](../adr/0010-architecture-as-law.md), [0011](../adr/0011-repository-guard-governance.md)
 - [`docs/debt/current.md`](../debt/current.md), [`docs/debt/structural-duplication.toml`](../debt/structural-duplication.toml)
+
+---
+
+## 11. Phase 1 — canonical domain ownership (implemented)
+
+Program law (unchanged):
+
+```text
+One concept → one semantic owner → one canonical representation
+  → one computation path → multiple projections.
+```
+
+Phase 1 **names** the owner seats. It does **not** migrate consumers onto those seats (Phase 2+). Preserve existing crate architecture. Phase 0 freeze stays **active**.
+
+```text
+architecture.toml [ownership.*]     crate-level kinds (exclusive|facade|projection|adapter|shared-primitive)
+        ↓ expand, do not replace
+architecture/domain-ownership.toml  concept-level five-role SSOT (this slice)
+```
+
+### 11.0 Collision fence
+
+Phase 1 **implement** (landed) may change **only**:
+
+| Concern | Home |
+| --- | --- |
+| This SSOT (Phase 1 section) | `docs/specs/architectural-consolidation-program.md` — **same** Guard 15 / `CANONICAL_SPECS` row |
+| SDD pointer / run note | `docs/sdd/architectural-consolidation-program.md` (pointer only; not a second spec) |
+| Accepted ADR | `docs/adr/0050-domain-ownership-model.md` |
+| Semantic ownership SSOT | `architecture/domain-ownership.toml` (new file; fail-closed if missing/malformed) |
+| Parser | `xtask/src/architecture.rs` (`load_domain_ownership` or equivalent) + `RepositoryModel` / `ArchitectureManifest` additive field |
+| Enforcement | Guard **01** (manifest load) **and/or** Guard **04** `[[invariant]]` (`INV-DOMAIN-OWNERSHIP-PRESENT`, `INV-DOMAIN-OWNERSHIP-ROLES` or equivalent). **Not** Guard **16**. **Not** `cargo xtask consolidation`. |
+| Dual-suite | `xtask/tests/sdd_architectural_consolidation_{baseline,target}.rs` only |
+| `INV-NO-SUPERSEDED-BASELINES` | Honesty-amend predicate for the dual-suite **window**; after GREEN, leftovers still fail-closed |
+
+| Do not touch | Owner |
+| --- | --- |
+| Consumer migrations; deleting DUP duplicate files | Phase 2+ |
+| Changing applicability / readiness / lineage **product** semantics (`ApplicabilitySnapshot`, `project_readiness`, `replay_assessment`, …) | Product programs |
+| Collapsing five roles into crate `kind = exclusive` | Forbidden (fake exclusivity) |
+| Hypothetical packages `weeping-angel-catalog`, `weeping-angel-assurance-cli` | Forbidden (`FORBID-HYPOTHETICAL-*`) |
+| Sixth role key `persistence_owner` | Map to `storage_owner` |
+| `tests/sdd/`, `test/sdd/*.ts`, new root/xtask `[[test]]`, Guard 16, second health CLI | Forbidden |
+| Second program spec / second Guard 15 row | Forbidden |
+| pnpm / `apps/docs` | Out of scope |
+| Raising frozen expansion metrics (`pub struct`/`pub enum`/`pub use`/`[[test]]`/crates) | Freeze (`INV-CONSOLIDATION-EXPANSION-RESTRICTED`). Parser types stay crate-private unless a later ADR rebases the freeze. |
+
+### 11.1 Problem / user-visible goal
+
+**Found-case (CURRENT, 2026-08-20).** Phase 0 made consolidation mode machine-readable. Ownership is still **crate-level**:
+
+1. `architecture/domain-ownership.toml` **does not exist**.
+2. `architecture.toml` `[ownership.*]` rows are crate + `kind` + `paths` for `catalog`, `framework_compilation`, `readiness_projection`, `temporal_evidence_selection`, `assessment_lineage`, `evidence_persistence`, `assurance_cli`, `repository_guard`. Kinds are `exclusive | facade | projection | adapter | shared-primitive`. There are **no** `semantic_owner` / `storage_owner` / `projection_owner` / `evaluation_primitive_owner` / `adapter_owner` keys.
+3. `load_architecture_manifest` (`xtask/src/architecture.rs`) parses `schema` + `[policy]` + `[ownership]` + `[program.architectural_consolidation]` from **`architecture/architecture.toml` only**. Extra files under `architecture/` are not loaded. A paper `domain-ownership.toml` would not be a gate (same class of bug Phase 0 fixed for extra tables).
+4. `architecture.toml` `[ownership.temporal_evidence_selection]` is `kind = exclusive` on `weeping-angel-assurance` / `src/temporal.rs` (timeline / temporal-diff **projection**). The evaluation primitive `select_latest_as_of` still lives in `crates/weeping-angel-control-test/src/temporal.rs`. Forcing exclusivity here is a **lie**; domain-ownership must record the **split**.
+5. There is **no** `INV-DOMAIN-OWNERSHIP*` row. Guard IDs remain **01–15** (`KNOWN_CHECK_IDS`; implemented 01–04, 13–14, 15; `ProductLawCheck` 05–12).
+6. `INV-NO-SUPERSEDED-BASELINES` (`eval_no_superseded_baselines`) fail-closes on any `RepositoryModel.filesystem` path ending in `.baseline.rs` or `_baseline.rs`. `RepositoryModel::load` indexes `architecture`, `docs/adr`, `docs/specs`, `docs/debt`, `frameworks`, `catalog`, `crates`, `src`, `tests` — **not** `xtask/`. CON-T07 **additionally** asserts `xtask/tests/sdd_architectural_consolidation_baseline.rs` is deleted. Recreating that file **without** amending CON-T07 (and, if the walk grows to include `xtask/`, the invariant) REDS the dual-suite / Guard 04 on CURRENT.
+
+**User-visible goal (Phase 1):** later SSOT phases have a named owner per concept and a **required** distinction of roles that are **allowed to be split**. Contributors cannot treat crate `kind = exclusive` as “this crate owns the whole concept.”
+
+```text
+Phase 1.1  architecture/domain-ownership.toml (five roles; seeded concepts)
+Phase 1.2  xtask parses it fail-closed (missing/malformed → Guard 01 and/or 04)
+Phase 1.3  honesty-amend INV-NO-SUPERSEDED-BASELINES for the dual-suite window
+        ↓
+Ownership law is executable; consumers are not migrated
+```
+
+Definition of done for Phase 1: *a paper `domain-ownership.toml` is not a pass; seeded concepts cite live crates/modules/symbols; temporal evaluation vs temporal evidence storage/selection is recorded as a split; no hypothetical crates; dual-suite GREEN then baseline **deleted** (not `#[ignore]`).*
+
+### 11.2 Compatibility / dependencies
+
+| Surface | Location | Rule for this slice |
+| --- | --- | --- |
+| Crate ownership | `architecture.toml` `[ownership.*]` | **Preserved.** Domain-ownership **expands** it. Do not delete crate-kind rows. |
+| Architecture loader | `load_architecture_manifest` | Must **also** parse `architecture/domain-ownership.toml` (same module; sibling file). Missing/malformed → `Err` (Guard 01) **or** dedicated invariant fail (Guard 04) — never ignore. |
+| `ArchitectureManifest` / `RepositoryModel` | Additive field | Domain-ownership struct required; tests may read it from the model. Prefer **crate-private** types so frozen `public_structs` / `public_enums` do not rise. |
+| Guard IDs | `KNOWN_CHECK_IDS` length 15 | No Guard **16**. No `cargo xtask consolidation`. |
+| Phase 0 freeze | `[program.architectural_consolidation]` | `status=active`, `feature_expansion=restricted`. This slice is `consolidation` + `consolidation-docs`. |
+| `INV-NO-SUPERSEDED-BASELINES` | Guard 04 predicate; `guard_check = "13"` metadata | Honesty-amend meaning: **superseded leftovers**, not “any `*_baseline.rs` during an in-flight dual-suite window.” See §11.5. |
+| CON-T01–T10 | `sdd_architectural_consolidation_target.rs` | Keep CON-T01–T06 / T08–T09 GREEN. Amend CON-T07 for the window; CON-T10 stays live guard 01–15 pass. |
+| Spec lifecycle | `architecture/spec-lifecycle.toml` | **Existing** row for this file; no second program spec. |
+| Forbidden patterns | `FORBID-HYPOTHETICAL-*`, `FORBID-TESTS-SDD` | Unchanged. |
+| Product law needles | Guard 05–12 | Unchanged (`CanonicalCatalog::load`, `project_readiness`, ledger `current`/`as_of`/`latest`, `replay_assessment`, `project_soa_from_snapshot`, …). |
+
+### 11.3 Current behavior (baseline — GREEN on CURRENT before Phase 1 product)
+
+§11.3 is the **pre-implement characterization**. It is **not** current law after implement. Executable CON-B11+ must PASS on the pre-implement tree.
+
+#### 11.3.1 Domain-ownership file and loader
+
+- `architecture/domain-ownership.toml` is **not a file**.
+- `load_architecture_manifest` reads only `architecture/architecture.toml`. There is no `load_domain_ownership`. Extra architecture files are not fail-closed.
+- `ArchitectureManifest` fields: `schema`, `policy`, `ownership`, `consolidation`. No domain-ownership field.
+- Guard **01** passes when `architecture.toml` loads. A paper sibling file cannot fail Guard 01.
+
+#### 11.3.2 Crate-level kinds without the five roles
+
+Live `[ownership.*]` (crate-level):
+
+| Concept key | crate | kind | paths |
+| --- | --- | --- | --- |
+| `catalog` | `weeping-angel-canonical-catalog` | exclusive | `crates/weeping-angel-canonical-catalog` |
+| `framework_compilation` | `weeping-angel-framework` | exclusive | `crates/weeping-angel-framework` |
+| `readiness_projection` | `weeping-angel-assurance` | projection | `…/src/readiness.rs` |
+| `temporal_evidence_selection` | `weeping-angel-assurance` | **exclusive** | `…/src/temporal.rs` |
+| `assessment_lineage` | `weeping-angel-assurance` | exclusive | `…/src/lineage.rs` |
+| `evidence_persistence` | `weeping-angel-evidence` | exclusive | `crates/weeping-angel-evidence` |
+| `assurance_cli` | `weeping-angel` | facade | `src/main.rs`, `src/cli.rs` |
+| `repository_guard` | `xtask` | exclusive | `xtask` |
+
+Comment on `temporal_evidence_selection` already admits the primitive still lives in control-test; `kind = exclusive` still claims exclusivity. Domain-ownership must not copy that lie.
+
+#### 11.3.3 Temporal split (honesty hinge)
+
+| Seat | Live evidence |
+| --- | --- |
+| Assurance temporal **projection** / timeline / diff | `crates/weeping-angel-assurance/src/temporal.rs` (`project_timeline`, `EvidenceTimeline`, `TemporalDiff`) |
+| Control-test **evaluation primitive** | `crates/weeping-angel-control-test/src/temporal.rs` `pub fn select_latest_as_of` |
+| Evidence **storage** / validity | `weeping-angel-evidence` ledger `current()` / `as_of()` / `latest()`; `src/validity.rs` `project_validity` |
+
+#### 11.3.4 Live workspace (do not invent crates)
+
+`Cargo.toml` `[workspace].members`: `weeping-angel-assurance-ir`, `weeping-angel-framework`, `weeping-angel-evidence`, `weeping-angel-collector`, `weeping-angel-control-test`, `weeping-angel-assurance`, `weeping-angel-canonical-catalog`, `xtask`. Root package `weeping-angel`. **No** `weeping-angel-catalog`. **No** `weeping-angel-assurance-cli`.
+
+#### 11.3.5 Dual-suite / invariant CURRENT
+
+- Phase 0 baseline file is **deleted**. CON-T07 asserts `!xtask/tests/sdd_architectural_consolidation_baseline.rs.exists()`.
+- CON-T01–T10 exist and are GREEN on the healthy tree.
+- No CON-T11+. No CON-B11+.
+- `eval_no_superseded_baselines` treats **any** indexed `*.baseline.rs` / `*_baseline.rs` as leftover. Root `tests/contracts/*.baseline.rs` are already deleted (product dual-suites use `*.target.rs`). `xtask/` is **not** in `repo.filesystem` today.
+
+#### 11.3.6 Baseline suite IDs (must be GREEN on CURRENT pre-implement code)
+
+Recreate `xtask/tests/sdd_architectural_consolidation_baseline.rs` in the **implement** dual-suite window (not this spec-first commit). Do **not** `#[ignore]`. Characterization:
+
+| ID | Characterization |
+| --- | --- |
+| CON-B11 | `architecture/domain-ownership.toml` is not a file |
+| CON-B12 | `load_architecture_manifest` / `architecture.rs` have no domain-ownership parser; sibling files are not loaded |
+| CON-B13 | `[ownership.*]` uses crate-level `kind` only; source/text has no required five role keys as ownership law |
+| CON-B14 | `temporal_evidence_selection` `kind=exclusive` on assurance while `select_latest_as_of` lives in `weeping-angel-control-test` |
+| CON-B15 | No `INV-DOMAIN-OWNERSHIP*` in `invariants.toml`; `evaluate_invariant` has no such predicates |
+| CON-B16 | Workspace members do not include `weeping-angel-catalog` or `weeping-angel-assurance-cli` |
+
+Target RED must fail **because CON-T11+ obligations are unmet**, not because Guard 05–12 / catalog product code regress.
+
+### 11.4 Desired behavior (target — GREEN after Phase 1 implement)
+
+**Implemented.** CON-T11–T20 GREEN on the healthy tree. Field-level law below is the live Phase 1 contract.
+
+#### 11.4.1 File and schema
+
+`architecture/domain-ownership.toml` (schema + roles as shipped):
+
+```toml
+schema = "weeping-angel/domain-ownership/v1"
+
+required_roles = [
+  "semantic_owner",
+  "storage_owner",
+  "projection_owner",
+  "evaluation_primitive_owner",
+  "adapter_owner",
+]
+```
+
+| Key | Law |
+| --- | --- |
+| `schema` | Exactly `weeping-angel/domain-ownership/v1` |
+| `required_roles` | Non-empty; **must** include the five names above. A sixth key `persistence_owner` is **illegal**. The program brief’s `persistence_owner` **maps to** `storage_owner`. |
+| `[concept.<id>]` | One table per named concept. Missing seeded ids → fail closed. |
+
+Every `[concept.*]` table **must** include the five role keys (string values). Additional evidence keys (`module`, `function`, `parser`, `compiler`, `representation`, `split`) are **not** roles.
+
+**Owner-seat values** (closed):
+
+- a **live** workspace package name (`weeping-angel-*`, `xtask`, `weeping-angel`), **or**
+- `none` when that role is unoccupied, **or**
+- `divided` **only** for `semantic_owner` when `split = "divided"` and the other four roles still name occupying seats.
+
+Never `weeping-angel-catalog` or `weeping-angel-assurance-cli`. Module-only seats (e.g. lineage storage) use `storage_owner` = the crate plus `storage_module` / `representation` evidence keys — do not invent a crate named `lineage`.
+
+`split` closed set: `unified | divided | facade`. Default `unified` if omitted.
+
+Parser fail-closed if: file missing; not parseable TOML; wrong/missing schema; empty `required_roles`; missing any of the five role names; a concept missing a required role key; illegal owner-seat (unknown package that is not `none`/`divided`); hypothetical package names; `persistence_owner` used as a role key.
+
+#### 11.4.2 Seeded concepts (live evidence only)
+
+Needles must exist in the named crate **on CURRENT**. Do not rewrite product code to invent them.
+
+| Concept id | semantic_owner | Evidence (CURRENT paths/symbols) | Other roles / split |
+| --- | --- | --- | --- |
+| `applicability` | `weeping-angel-assurance` | module `applicability`; representation `ApplicabilitySnapshot` in `crates/weeping-angel-assurance/src/applicability/snapshot.rs` | `projection_owner = weeping-angel-assurance`; `storage_owner = weeping-angel-assurance` with `storage_module = "lineage"` and `LineageApplicabilitySnapshot` (`src/lineage.rs`). Brief `persistence_owner=lineage` **is** this storage seat. |
+| `readiness` | `weeping-angel-assurance` | module `readiness`; `pub fn project_readiness` (`src/readiness.rs`) | `projection_owner = weeping-angel-assurance`; other roles `none` unless a later phase names storage |
+| `catalog` | `weeping-angel-canonical-catalog` | parser `CanonicalCatalog::load` (`pub fn load`) | `adapter_owner = none` |
+| `framework` | `weeping-angel-framework` | compiler `compile_framework` | |
+| `evidence` | `weeping-angel-evidence` | ledger `current()` / `as_of()` / `latest()` | `storage_owner = weeping-angel-evidence`; validity via `evidence_validity` |
+| `temporal_evaluation` | `weeping-angel-control-test` | `evaluation_primitive_owner` + function `select_latest_as_of` (`control-test/src/temporal.rs`) | **`split = "divided"`**. `storage_owner` / `projection_owner` = `weeping-angel-assurance` (`src/temporal.rs` timeline/diff). Must **not** copy architecture.toml `kind=exclusive` as if control-test did not own the primitive. |
+| `assessment_replay` | `weeping-angel-assurance` | `pub fn replay_assessment` (`src/lineage.rs`) | |
+| `soa` | `weeping-angel-assurance` | `pub fn project_soa_from_snapshot` (`src/soa.rs`; Guard **12** needle) | `projection_owner = weeping-angel-assurance` |
+| `control_status` | `divided` | `ImplementationStatus` in `weeping-angel-assurance-ir` (`src/implementation.rs`); `Effectiveness` in `weeping-angel-control-test` (`src/lib.rs`); SoA projection in assurance | **`split = "divided"`**. `evaluation_primitive_owner = weeping-angel-control-test`; `projection_owner = weeping-angel-assurance`; `storage_owner` may be `none` this slice. Do **not** force one exclusive crate. |
+| `control_test_kernel` | `weeping-angel-control-test` | `evaluate` in `src/run.inc` | `evaluation_primitive_owner = weeping-angel-control-test` |
+| `evidence_validity` | `weeping-angel-evidence` | `pub fn project_validity` (`src/validity.rs`) | |
+| `catalog_loading` | `weeping-angel-canonical-catalog` | `CanonicalCatalog::load` | same parser seat as `catalog` (named for later SSOT phases) |
+| `framework_compilation` | `weeping-angel-framework` | `compile_framework` | aligned with architecture.toml concept key |
+| `assurance_cli` | `weeping-angel` | facade `src/main.rs` + `src/cli.rs` | `adapter_owner`/`split = facade` as needed; **not** `weeping-angel-assurance-cli` |
+| `collectors` | `weeping-angel-collector` | `CollectorAdapter` in `src/ports/adapter.rs` | `adapter_owner = weeping-angel-collector` |
+
+`repository_guard` may be recorded (`semantic_owner = xtask`) so later guard SSOT phases have a named owner; optional this slice if the required seed list above is complete.
+
+#### 11.4.3 Loader and Guard fold-in
+
+**Loader:** `xtask/src/architecture.rs` parses `architecture/domain-ownership.toml`. Call from `load_architecture_manifest` **or** `RepositoryModel::load` such that Guard **01** cannot pass when the file is missing/malformed. Paper file on disk without parse is **not** a pass (fixture CON-T12).
+
+**Invariants (Guard 04)** — implement **must** add predicates (unknown ids already fail closed). Suggested ids:
+
+| Invariant id | Predicate sketch |
+| --- | --- |
+| `INV-DOMAIN-OWNERSHIP-PRESENT` | File exists; schema exact; parsed into the model; required_roles contains the five names |
+| `INV-DOMAIN-OWNERSHIP-ROLES` | Every `[concept.*]` has the five keys; no `persistence_owner` role; no hypothetical packages; seeded concepts present; `temporal_evaluation.split = divided` and `select_latest_as_of` cited; `control_status.split = divided` |
+
+Fold into existing 01–15. Do **not** add Guard 16. Do **not** add a second health CLI.
+
+#### 11.4.4 Dual-suite target IDs (GREEN on the healthy tree)
+
+Extend `xtask/tests/sdd_architectural_consolidation_target.rs` (same auto-discovered binary; no new `[[test]]`):
+
+| ID | Obligation |
+| --- | --- |
+| CON-T11 | `architecture/domain-ownership.toml` parsed; schema `weeping-angel/domain-ownership/v1`; five `required_roles`; seeded concept tables present |
+| CON-T12 | Missing/malformed file fails Guard 01 and/or 04 (fixture); paper extra file without parse is **not** a pass |
+| CON-T13 | Roles not collapsed: a concept that only copies `kind=exclusive` without the five keys fails; `persistence_owner` as a sixth role fails |
+| CON-T14 | Seeded concepts cite live symbols (`ApplicabilitySnapshot`, `project_readiness`, `CanonicalCatalog::load` / `pub fn load`, `compile_framework`, `select_latest_as_of`, `replay_assessment`, `project_soa_from_snapshot`, `ImplementationStatus`, `Effectiveness`, `evaluate` in `run.inc`, `project_validity`, `CollectorAdapter`); no hypothetical crate names |
+| CON-T15 | `temporal_evaluation` records the control-test primitive **and** assurance projection/storage split (`split = divided`); does not claim fake exclusivity |
+| CON-T16 | `INV-DOMAIN-OWNERSHIP-PRESENT` and `INV-DOMAIN-OWNERSHIP-ROLES` (or equivalent) have `evaluate_invariant` predicates; `KNOWN_CHECK_IDS.len()==15`; no Guard 16; no `cargo xtask consolidation` |
+| CON-T17 | Dual-suite under `xtask/tests/sdd_architectural_consolidation_*.rs`; no `tests/sdd/`; no new root/xtask `[[test]]`; Phase 0 CON-T01–T06 / T08–T09 still pass |
+| CON-T18 | This spec remains the **only** program spec in `CANONICAL_SPECS` + `spec-lifecycle.toml`; ADR 0050 file exists with meta `id = "0050"` (Draft until GREEN, then Accepted) |
+| CON-T19 | `INV-NO-SUPERSEDED-BASELINES` honesty: live **non-ignored** `xtask/tests/sdd_*_baseline.rs` allowed **during** the dual-suite window; `#[ignore]` baselines, `tests/sdd/` leftovers, and leftover after GREEN fail-closed |
+| CON-T20 | Neighbors: ACP target, SR target, `cargo xtask guard` 01–15 pass; applicability/readiness/lineage product needles unchanged |
+
+Keep Phase 0 CON-T01–T06 / T08–T09 GREEN. CON-T07: **during** the slice, **allow** `xtask/tests/sdd_architectural_consolidation_baseline.rs` if it is non-ignored and encodes CON-B11–B16; **after GREEN**, reassert deletion (`INV-NO-SUPERSEDED-BASELINES`).
+
+#### 11.4.5 `INV-NO-SUPERSEDED-BASELINES` honesty amendment (ADR 0050)
+
+**CURRENT (too coarse):** any indexed path ending `.baseline.rs` / `_baseline.rs` fails.
+
+**DESIRED meaning:** fail-closed on **superseded leftovers**:
+
+1. `#[ignore]` on a dual-suite baseline (skip-supersede), **or**
+2. baseline under `tests/sdd/` / `test/sdd/` (forbidden location), **or**
+3. leftover `xtask/tests/sdd_*_baseline.rs` **after** the owning slice’s target is GREEN and the protocol requires delete.
+
+**Allow:** one live, **non-ignored** `xtask/tests/sdd_*_baseline.rs` characterization suite **during** an in-flight dual-suite window (Phase 1 CON-B11–B16). Do **not** `#[ignore]` that file.
+
+If implementation expands `RepositoryModel` filesystem to include `xtask/`, the amended predicate is **mandatory** before recreating the file, or Guard 04 / CON-T10 go RED for the wrong reason.
+
+After CON-T11–T20 GREEN: baseline suite **FAIL** on the new tree, then **DELETE** (not ignore). CON-T07 reasserts absence.
+
+### 11.5 Dual-suite and verify commands
+
+```text
+cargo test -p xtask --test sdd_architectural_consolidation_target
+cargo xtask guard
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --features demo -- -D warnings
+cargo test --workspace --features demo --all-targets
+```
+
+Protocol (complete):
+
+1. Spec first (this §11) + Draft ADR 0050.
+2. Dual-suite: recreated baseline CON-B11–B16 GREEN on CURRENT; CON-T11–T20 RED on CURRENT for the right reason; CON-T07 allowed the window; honesty-amended the invariant **before** a walk that would see `xtask/tests/*_baseline.rs` as leftover.
+3. Implemented 1.1–1.3 until CON-T11–T20 GREEN; baseline FAIL.
+4. **Deleted** the baseline suite (did not `#[ignore]`).
+5. **Accepted** ADR 0050.
+
+### 11.6 Acceptance criteria (testable)
+
+- [x] Dual-suite lives in `xtask/tests/sdd_architectural_consolidation_{baseline,target}.rs` (not `tests/sdd/`, not `test/sdd/*.ts`, not a new `[[test]]`). After GREEN, baseline **deleted**.
+- [x] CON-B11–B16 PASS on the pre-implement tree (missing file, no parser, crate-level kinds without five roles, temporal exclusive lie vs `select_latest_as_of`, no domain-ownership invariants, no hypothetical crates).
+- [x] CON-T11–T20 FAIL on CURRENT **because** domain-ownership file/parser/roles/seeds/split/invariants are absent (not unrelated product code), then PASS after implement.
+- [x] Phase 0 CON-T01–T06 / T08–T09 stay GREEN. CON-T07 allows the live non-ignored baseline during the window and reasserts deletion after GREEN.
+- [x] `architecture/domain-ownership.toml` schema `weeping-angel/domain-ownership/v1`; five role keys required; `persistence_owner` is not a sixth role; seeded concepts + live symbols as §11.4.2.
+- [x] `temporal_evaluation` and `control_status` are `split = divided` (no fake exclusivity).
+- [x] Guard 01 and/or 04 fail-closed on missing/malformed/paper-unparsed file. No Guard 16. No second health CLI.
+- [x] `INV-NO-SUPERSEDED-BASELINES` means superseded leftovers; live dual-suite window file allowed; leftover after GREEN fail-closed.
+- [x] Neighbors stay green: `CANONICAL_SPECS`, Guard 15 **existing** consolidation spec row, ACP target, SR target, `cargo xtask guard` 01–15.
+- [x] ADR 0050 **Accepted** only after target GREEN. No `0003-*` / colliding `0011-*`.
+- [x] Phase 1 does not migrate consumers, delete DUP sources, or change applicability/readiness/lineage product semantics.
+- [x] Implementation does not raise frozen expansion metrics; no hypothetical crates.
+
+### 11.7 Out of scope (Phase 1)
+
+1. Phase 2+ consumer migrations and deleting DUP duplicate source trees
+2. Rewriting assurance / collector / catalog / IR product semantics
+3. New frameworks, collectors, ISMS engines, SARIF/report formats, product scanners
+4. Hypothetical packages `weeping-angel-catalog` / `weeping-angel-assurance-cli`
+5. `tests/sdd/`, `test/sdd/*.ts`, new root or xtask `[[test]]`
+6. Guard 16 / `cargo xtask consolidation` / second health CLI
+7. A second program spec or second Guard 15 consolidation row
+8. Mass ADR renumber; `#[ignore]`-superseding the baseline
+9. pnpm / `apps/docs`
+10. Flipping `feature_expansion` to unrestricted
+11. Collapsing five roles into crate `kind = exclusive`
+12. Treating Phase 1 as “move `select_latest_as_of` into assurance” (that is a later phase; this slice **records** the split)
+
+### 11.8 Risks
+
+- A paper `domain-ownership.toml` without loader changes looks like ownership law but is not a gate (CON-T12 exists to prevent it).
+- Copying architecture.toml `kind=exclusive` onto `temporal_evaluation` or `control_status` hides the live split (CON-T15 / CON-T13).
+- Recreating `sdd_architectural_consolidation_baseline.rs` without amending CON-T07 REDS Phase 0 CON-T07 for the wrong protocol reason.
+- Expanding `RepositoryModel.filesystem` to `xtask/` without the honesty-amended invariant REDS Guard 04 / CON-T10 while the dual-suite window is open.
+- `#[ignore]` on the baseline after GREEN violates `INV-NO-SUPERSEDED-BASELINES`.
+- Adding `pub struct` parser types in xtask raises frozen `public_structs` (`INV-CONSOLIDATION-EXPANSION-RESTRICTED`).
+- Inventing `weeping-angel-catalog` / `weeping-angel-assurance-cli` as owner seats trips `FORBID-HYPOTHETICAL-*`.
+- A second `docs/specs/*consolidation*` file forks the program SSOT (Guard 15 / expansion / `CANONICAL_SPECS`).
+- Dual-suite needles that rewrite product modules make target RED for the wrong reason.
+- Adding Guard 16 or a new xtask health subcommand forks the health plane ([ADR 0011](../adr/0011-repository-guard-governance.md)).
+
+### 11.9 remaining_backlog (not Phase 1)
+
+1. Phase 2+ migrate consumers onto the seats named here
+2. Delete duplicate files once close law holds
+3. Move or unify temporal primitives only under a later phase that **changes** product architecture (Phase 1 records the divide)
+4. Merge `control_status` into one semantic owner (today honestly divided)
+5. Rebase the frozen consolidation baseline if a later ADR must add public parser types
+6. Flip `feature_expansion` to unrestricted (later ADR)
+
+---
+
+## 12. Convergence increments (C01–C16)
+
+Phase 0 freeze and Phase 1 ownership law stay in **this file**. Do **not** author a second giant “architectural cleanup” spec.
+
+After ownership law exists, cleanup uses `/workflow xylex-sdd-consolidation` (not expansion SDD). That workflow inverts dual-suite toward **net reduction**:
+
+```text
+Does this capability already exist, partially or under another representation?
+If yes: EXTEND / MIGRATE / CONSOLIDATE. Do not CREATE.
+```
+
+Hard rules per run:
+
+1. No feature creation.
+2. Exactly one `debt_id` (C01…C16 or one `DUP-*`).
+3. Canonical owner named before implementation.
+4. Delete or migrate the old path — do not add a parallel abstraction.
+5. Incomplete until the old representation is gone or compatibility-only.
+6. Guards and specs may not be weakened to pass.
+7. Public API, duplicate-type, root-test, and duplicate-helper counts may not increase.
+8. Finish by regenerating `cargo xtask inventory` and updating debt state from evidence.
+
+Per-increment spec is the **small** run spec (`docs/sdd/<slug>-<run>/spec.md`). Dual-suite lives under `xtask/tests/sdd_consolidation_<id>_*.rs`. Never `tests/sdd/`. Prefer compiler / visibility / dependency direction / `cargo xtask guard` over source-string probes when the property can move.
+
+### 12.1 Order
+
+| Increment | Target | Debt | Expected reduction | Parallelism |
+| --- | --- | --- | --- | --- |
+| C01 | Contract-test support consolidation | DUP-002 | `fn require_needles` 18 → 1 | Independent of C04–C09 |
+| C02 | `RepositoryModel` consolidation | DUP-014 | filesystem walkers 2 → 1 | Independent of C04–C09 |
+| C03 | Temporal ownership reconciliation | DUP-017 | metadata matches physical architecture | After Phase 1 seats exist |
+| C04 | Readiness SSOT | DUP-011 | readiness derivation paths → 1 | **Serial semantic graph** |
+| C05 | Applicability SSOT | DUP-004 | duplicate applicability models removed | **Serial semantic graph** |
+| C06 | Framework pack parse SSOT | DUP-013 | parser path → 1 | **Serial semantic graph** |
+| C07 | Lineage replay boundary | DUP-005 | unverified public reconstruction removed | **Serial semantic graph** |
+| C08 | SoA temporal semantics | DUP-006 | explicit live/pinned paths | **Serial semantic graph** |
+| C09 | Temporal leaf primitive | DUP-007 | duplicate algorithm removed/shared | **Serial semantic graph** |
+| C10 | Collector migration | DUP-015 | old collector façade removed | Independent of C04–C09 |
+| C11 | Evidence persistence boundary | (evidence crate / SQLite adapter) | domain isolated from adapter | Independent of C04–C09 |
+| C12 | Assurance internal structure | (assurance crate coupling) | flatter coupling | After C04–C09 |
+| C13 | Root application thinning | (root `src/` orchestration) | orchestration leaves root lib | After C12 |
+| C14 | Scanner restructuring | DUP-016 / `engine` vs `engines` | ambiguity removed | Independent of C04–C09 |
+| C15 | Public surface reduction | `pub` / re-export / alias | public symbol count down | After C04–C09 and C07 |
+| C16 | Test architecture reduction | repository-law tests → xtask | source-scanning contract tests leave `tests/contracts` | After C01; can overlap C14 |
+
+C04–C09 share one semantic graph. **Do not run them in parallel:**
+
+```text
+Applicability → Assessment → Lineage → Readiness → SoA → Temporal reconstruction
+```
+
+C01 (test support) and C14 (scanner) may run beside that serial chain. C03 waits for Phase 1 domain-ownership seats. C01 increment spec: [`docs/sdd/c01-contract-test-support-consolidation-run/spec.md`](../sdd/c01-contract-test-support-consolidation-run/spec.md) (**implemented**; DUP-002 verified; live `require_needles_fns` = 1).
+
+Close a row only when canonical owner exists, consumers use it, old path is gone or compatibility-only, **and** a regression guard exists. Green tests with competing semantic paths are not done.

@@ -1,6 +1,8 @@
 schema = "weeping-angel/architecture/v1"
 
-# Canonical concept ownership. Package names are live workspace members only.
+# Canonical crate-level concept ownership (kind + paths).
+# Concept-level five-role SSOT is architecture/domain-ownership.toml (ADR 0050).
+# Package names are live workspace members only.
 # Do not invent weeping-angel-catalog or weeping-angel-assurance-cli.
 
 [policy]
@@ -30,12 +32,19 @@ crate = "weeping-angel-assurance"
 kind = "projection"
 paths = ["crates/weeping-angel-assurance/src/readiness.rs"]
 
-# kind = exclusive is metadata for Phase 5. Primitives still live in
-# weeping-angel-control-test::temporal::select_latest_as_of; do not move code.
+# Crate-level row: kind=exclusive names the assurance timeline/diff façade
+# (ACP-T07). It is not whole-concept exclusivity of the leaf algorithm.
+# Physical seats (DUP-017): select_latest_as_of stays in control-test;
+# project_timeline stays in assurance. Concept split=divided is
+# architecture/domain-ownership.toml (ADR 0050). Do not move the primitive.
 [ownership.temporal_evidence_selection]
+# Façade vs leaf: project_timeline in assurance; select_latest_as_of in control-test.
 crate = "weeping-angel-assurance"
 kind = "exclusive"
-paths = ["crates/weeping-angel-assurance/src/temporal.rs"]
+paths = [
+  "crates/weeping-angel-assurance/src/temporal.rs",
+  "crates/weeping-angel-control-test/src/temporal.rs",
+]
 
 [ownership.assessment_lineage]
 crate = "weeping-angel-assurance"

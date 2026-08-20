@@ -7,7 +7,17 @@ use std::path::{Path, PathBuf};
 pub const INVENTORY_SCHEMA: &str = "weeping-angel/inventory/v1";
 pub const CONSOLIDATION_BASELINE_SCHEMA: &str = "weeping-angel/consolidation-baseline/v1";
 
-const EXCLUSIONS: [&str; 3] = ["target/", "target-*", "node_modules/"];
+/// JSON documentation of [`crate::model::should_skip_dir`]. Not a second skip set.
+fn documented_exclusions() -> Vec<String> {
+    let mut out = Vec::new();
+    for name in crate::model::SKIP_DIR_NAMES {
+        out.push(format!("{name}/"));
+        if name == "target" {
+            out.push("target-*".to_string());
+        }
+    }
+    out
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InventoryCounts {
@@ -33,7 +43,7 @@ pub struct InventoryAbsences {
     pub structural_reconciliation_spec: bool,
 }
 
-/// Phase 0 extra metrics projected from the same `walk_included` inventory walker.
+/// Phase 0 extra metrics projected from the model filesystem walker.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InventoryExtended {
     pub workspace_crates: u64,
@@ -72,7 +82,11 @@ pub struct InventoryReport {
 impl InventoryReport {
     pub fn collect(root: &Path) -> Self {
         let mut files: Vec<PathBuf> = Vec::new();
-        walk_included(root, root, &mut files);
+        crate::model::walk_tree(root, &mut |path, is_dir| {
+            if !is_dir {
+                files.push(path.to_path_buf());
+            }
+        });
 
         let mut ignored_test_attrs = 0u64;
         let mut unwrap_calls = 0u64;
@@ -117,7 +131,7 @@ impl InventoryReport {
                 unwrap_calls += count_needle(line, ".unwrap()");
                 expect_calls += count_needle(line, ".expect(");
                 require_needles_calls += count_needle(line, "require_needles(");
-                if trimmed.contains("fn require_needles") {
+                if trimmed.starts_with("fn require_needles") {
                     defines_require_needles = true;
                 }
                 if !trimmed.starts_with("//") {
@@ -173,7 +187,7 @@ impl InventoryReport {
 
         Self {
             schema: INVENTORY_SCHEMA.to_string(),
-            exclusions: EXCLUSIONS.iter().map(|s| (*s).to_string()).collect(),
+            exclusions: documented_exclusions(),
             counts: InventoryCounts {
                 root_test_binaries,
                 tests_rs_autodiscovered,
@@ -259,7 +273,13 @@ impl InventoryReport {
         out.push_str("This file is the **current** mechanical snapshot. ");
         out.push_str("`docs/debt/baseline-2026-08.md` is **Historical** evidence only.\n\n");
         out.push_str("Inclusion rule: all matching paths under the repo root **excluding** ");
-        out.push_str("`target/`, `target-*`, and `node_modules/`.\n\n");
+        let quoted: Vec<String> = self
+            .exclusions
+            .iter()
+            .map(|e| format!("`{e}`"))
+            .collect();
+        out.push_str(&quoted.join(", "));
+        out.push_str(".\n\n");
         out.push_str("## Counts\n\n");
         out.push_str("| Metric | Count |\n| --- | --- |\n");
         out.push_str(&format!(
@@ -409,7 +429,7 @@ impl InventoryReport {
         out.push_str("This file is the **frozen Phase 0** consolidation snapshot, **not** the live [`current.md`](current.md). ");
         out.push_str("`docs/debt/current.md` remains the live mechanical inventory projection (`weeping-angel/inventory/v1`). ");
         out.push_str(
-            "Counts come from the same `xtask/src/inventory.rs` walker (`walk_included`). ",
+            "Counts come from the same `xtask/src/model.rs` walker (`walk_tree`). ",
         );
         out.push_str("Public-symbol / type-name metrics are a **line-based heuristic** (not a uniqueness ban).\n\n");
         out.push_str(&format!(
@@ -689,35 +709,6 @@ fn read_git_sha(root: &Path) -> Option<String> {
         Some(text.to_string())
     } else {
         None
-    }
-}
-
-fn should_skip_dir(name: &str) -> bool {
-    if name == "node_modules" || name == "target" || name == ".git" {
-        return true;
-    }
-    if name.starts_with("target-") || name.starts_with("target_") {
-        return true;
-    }
-    false
-}
-
-fn walk_included(_root: &Path, dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = entry.file_name();
-        let name_str = name.to_string_lossy();
-        if path.is_dir() {
-            if should_skip_dir(&name_str) {
-                continue;
-            }
-            walk_included(_root, &path, out);
-        } else {
-            out.push(path);
-        }
     }
 }
 

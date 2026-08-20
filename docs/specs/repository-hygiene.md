@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** — `sdd_repository_hygiene_target` is law. Baseline skip-superseded. **Schema SSOT closed (Phase 3):** only `schemas/codex-security/`; `DEBT-SCHEMA-DUP` resolved; `codex-security/schemas/` must not be reintroduced. |
+| Status | **Implemented** — `sdd_repository_hygiene_target` is law. Baseline skip-superseded. **Schema SSOT closed (Phase 3):** only `schemas/codex-security/`; `DEBT-SCHEMA-DUP` resolved; `codex-security/schemas/` must not be reintroduced. C01 later extracted contract-test `require_needles` into `tests/support/mod.rs` (DUP-002); hygiene-owned suites still must not call it. |
 | Program | Repository cleanup (concurrent Prompts 1–4) |
 | Slice | Prompt 4 — ignored-test retirement, dual-suite collapse (non-colliding), panic budget, Codex Security schema SSOT, generated-artifact policy, `.gitignore` / README hygiene |
 | Dual-suite | `sdd_repository_hygiene_baseline` · `sdd_repository_hygiene_target` (`tests/contracts/repository_hygiene.{baseline,target}.rs`) — registered as `[[test]]` in root `Cargo.toml`. **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md)) |
@@ -157,7 +157,7 @@ All 16 definitions are in `tests/contracts/*.target.rs`:
 
 `assessment_lineage`, `continuity_resilience`, `control_implementation_registry`, `controlled_documents`, `incident_governance`, `interested_parties_obligations`, `internal_audit`, `iso27001_assurance`, `nonconformity_capa`, `operational_soa`, `population_runtime`, `remediation_engine`, `risk_register`, `supplier_risk`, `temporal_assurance`, `typed_evidence`.
 
-`tests/support/` **does not exist**.
+Prompt 4 characterization: `tests/support/` **did not exist**. **Live (C01 / DUP-002):** crate-private `fn require_needles` lives in `tests/support/mod.rs`; the 17 contract binaries `include!` it. Hygiene-owned suites still must not call it. Do not add `tests/support.rs`.
 
 ### 3.4 Production unwrap / expect
 
@@ -246,10 +246,10 @@ If no completed pair is safely owned this increment, **do not** delete foreign b
 
 ### 4.3 Source-grep policy
 
-- Hygiene-owned tests (`repository_hygiene.*`, `tests/support/**`) **must not** introduce `require_needles`.
+- Hygiene-owned tests (`repository_hygiene.*`) **must not** call `require_needles`.
 - Prefer public API behavior, typed metadata, serialized schema bytes, compile-time boundaries, or filesystem/hash equality.
 - Keep source-grep only when **exact source structure is the invariant**, and comment why (one-line `// source-structure invariant: …`).
-- Do **not** rewrite the 16 existing `require_needles` target files while Prompts 2/3 own them. Record the collision. A later non-concurrent pass may move those helpers into `tests/support` and replace needles with semantic asserts.
+- Concurrent Prompt 2/3 skip (this slice): do **not** rewrite the existing `require_needles` target files. **Later non-concurrent C01** moved the helper into `tests/support/mod.rs` for those 17 contract binaries (DUP-002). Needles in those files remain product-surface invariants; uniqueness is inventory + C01 target, not a second hygiene grep.
 
 ### 4.4 Panic budget
 
@@ -393,7 +393,7 @@ Skipped collapse (target asserts baseline presence): `controlled_documents`, `co
 | Concern | Home | Landed |
 | --- | --- | --- |
 | Hygiene dual-suite | `tests/contracts/repository_hygiene.{baseline,target}.rs` + root `[[test]]` | Yes. Target GREEN; baseline skip-superseded. |
-| Shared test helpers | `tests/support/` (optional; no `require_needles`) | Not added — hygiene tests use filesystem/hash equality, not needles. |
+| Shared test helpers | `tests/support/` | Hygiene did **not** add this directory. C01 later placed crate-private `require_needles` here for contract binaries (DUP-002). Hygiene suites still do not call it. |
 | Schema SSOT | keep `schemas/codex-security/`; generate or retarget `codex-security/schemas/` | SSOT kept. Second tree stamped `codex-security/schemas/GENERATED_FROM_SSOT`. |
 | Equivalence test | hygiene target (SHA-256) | Yes. |
 | Panic conversion | narrow `src/**` Result paths | `scan-diff` missing `--base`; Pipfile `split_once`. Regex literals marked `panic-ok`. |
@@ -440,7 +440,7 @@ Skipped collapse (target asserts baseline presence): `controlled_documents`, `co
 
 - Obsolete ignored **hygiene-owned** baseline suites are removed, not merely left ignored.
 - Valuable characterization / GREEN target coverage remains (including all skipped Prompt 1–3 suites).
-- Hygiene-owned tests do not use `require_needles`; remaining needles in Prompt 2/3 files are skipped and justified in §6 / §12.
+- Hygiene-owned tests do not use `require_needles`. Contract binaries share one helper in `tests/support/mod.rs` (C01 / DUP-002); that is not hygiene-owned surface.
 - Panic-prone production paths in budgeted `src/**` modules return typed errors; remaining unwraps are `panic-ok` or test-only.
 - Codex Security schemas have one SSOT; any second copy is generated and byte-equivalent (tested).
 - Raw generated audit/execution artifacts (`audit.txt`, `*.pyc`) are not hand-maintained source.
@@ -481,8 +481,8 @@ Record live numbers here at spec-first. After column filled at implement. Snapsh
 | `tests/contracts/*.baseline.rs` | 38 | 40 (hygiene + Prompt 3 `temporal_lineage_evidence_soa`; **0 collapses** — targets still assert baselines) |
 | `tests/contracts/*.target.rs` | 39 | 41 (same two additions) |
 | Root `[[test]]` | 80 | 84 (hygiene pair + Prompt 3 pair; no collapsed rows) |
-| `fn require_needles` | 16 | 16 (Prompt 2/3 files skipped) |
-| `require_needles(` matches | 203 | 203 (hygiene files added 0) |
+| `fn require_needles` | 16 | 16 (Prompt 2/3 files skipped). **Live after C01:** 1 (`tests/support/mod.rs`; see `docs/debt/current.md`) |
+| `require_needles(` matches | 203 | 203 (hygiene files added 0). **Live after C01:** 206 |
 | `src/**` `.unwrap()` | 174 | 172 (`lib.rs` scan-diff base + Pipfile `split_once` converted) |
 | `src/**` `.expect(` | 60 | 60 (regex-literal continuation lines marked `panic-ok`) |
 | `src/**` unwrap/expect outside `#[cfg(test)]` | ≈88 / 52 | 86 / 52; **unmarked budgeted-module panics = 0** |

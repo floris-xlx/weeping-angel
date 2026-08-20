@@ -1,0 +1,56 @@
+id = "DUP-002"
+wave = 1
+lane = "A"
+depends_on = []
+# Closed 2026-08-20 (C01): owner tests/support/mod.rs; 17 consumers migrated; copies gone.
+invariant = "Exactly one fn require_needles definition exists; all contract suites call it"
+
+canonical_owner = "tests/support/mod.rs::require_needles"
+canonical_symbol = "require_needles"
+
+allowed_modifications = [
+  "tests/support/**",
+  "tests/contracts/*.target.rs",
+  "Cargo.toml (dev path for tests/support only if required; prefer include without a new [[test]])",
+  "xtask/tests/sdd_consolidation_c01_*.rs",
+  "docs/debt/structural-duplication.toml",
+  "docs/debt/current.md",
+]
+
+forbidden = [
+  "tests/sdd/",
+  "new root [[test]]",
+  "new xtask [[test]]",
+  "Guard 16",
+  "new public domain types",
+  "editing architecture.toml",
+  "C04–C09 semantic files",
+]
+
+required_deletion = [
+  "per-file fn require_needles in tests/contracts/*.target.rs",
+]
+
+goal = "require_needles definitions 18 → 1. Call sites stay 222 or drop; definitions must not stay duplicated."
+
+metric_name = "require_needles_fns"
+metric_from = 18
+metric_to = 1
+# Evidence: live require_needles_fns = 1, require_needles_calls = 206. DUP-002 status = verified.
+# Postcheck 2026-08-20: cargo xtask guard 01–15 pass; inventory --check exit 0;
+# root_test_binaries=45 tests_rs_autodiscovered=16 tests_contracts_rs=43.
+
+acceptance = [
+  "cargo test -p xtask",
+  "cargo test --test assessment_lineage --test typed_evidence (and other retargeted contract binaries that still exist)",
+  "cargo xtask guard",
+  "cargo xtask inventory",
+  "rg -c '^fn require_needles' tests → 1 (or the single tests/support definition only)",
+  "DUP-002 status verified (close law holds: owner, 17 consumers, copies gone, C01 target + Guard 04)",
+]
+
+do_not = [
+  "weaken needles or skip contract tests",
+  "add compatibility aliases for old helpers",
+  "update architecture rules to allow 18 copies",
+]

@@ -1,0 +1,51 @@
+id = "DUP-011"
+wave = 2
+lane = "B"
+depends_on = ["DUP-017"]
+invariant = "Every non-empty FrameworkReadinessSnapshot originates from project_readiness() or already-projected canonical rows"
+
+canonical_owner = "crates/weeping-angel-assurance/src/readiness.rs::project_readiness"
+canonical_symbol = "project_readiness"
+
+allowed_modifications = [
+  "crates/weeping-angel-assurance/src/readiness.rs",
+  "crates/weeping-angel-assurance/src/drift.rs",
+  "crates/weeping-angel-assurance/src/lineage.rs",
+  "crates/weeping-angel-assurance/src/scheduler.rs",
+  "directly associated tests",
+  "docs/debt/structural-duplication.toml",
+]
+
+forbidden = [
+  "new readiness types",
+  "new readiness constructors",
+  "compatibility aliases",
+  "changing readiness semantics",
+  "new crates",
+  "unrelated refactors",
+  "editing architecture.toml to match a second projector",
+]
+
+required_deletion = [
+  "drift::readiness_view independent derivation of status strings",
+  "inline FrameworkReadinessSnapshot construction in lineage where it invents status",
+]
+
+goal = "Readiness derivation paths N → 1. scheduler may keep ReadinessInput::empty / empty_readiness as a neutral empty input, not a semantic snapshot."
+
+metric_name = "readiness_derivation_paths"
+metric_from = 4
+metric_to = 1
+
+acceptance = [
+  "focused cargo test for readiness + drift + lineage",
+  "cargo xtask guard (Guard 08 stays)",
+  "inventory metrics must not increase",
+  "grep confirms no competing semantic constructors of FrameworkReadinessSnapshot outside readiness.rs / deserialization / test fixtures",
+]
+
+do_not = [
+  "add new public APIs unless unavoidable",
+  "weaken RDY tests",
+  "update architectural rules to accommodate leftover inline construction",
+]

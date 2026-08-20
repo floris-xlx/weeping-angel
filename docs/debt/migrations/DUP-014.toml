@@ -1,0 +1,47 @@
+id = "DUP-014"
+wave = 1
+lane = "A"
+depends_on = ["DUP-002"]
+invariant = "One filesystem walker owns inclusion/exclusion; inventory and guard share it"
+
+canonical_owner = "xtask/src/model.rs::RepositoryModel walk / SKIP_DIR_NAMES"
+canonical_symbol = "RepositoryModel::load"
+
+allowed_modifications = [
+  "xtask/src/model.rs",
+  "xtask/src/inventory.rs",
+  "xtask/src/lib.rs",
+  "xtask/tests/**",
+  "docs/debt/structural-duplication.toml",
+  "docs/debt/current.md",
+]
+
+forbidden = [
+  "a third walker",
+  "new crates",
+  "changing product semantics",
+  "editing architecture.toml ownership seats",
+]
+
+required_deletion = [
+  "xtask/src/inventory.rs::walk_included / should_skip_dir as a parallel implementation",
+]
+
+goal = "filesystem walkers 2 → 1. Inventory reuses the model walk; exclusion sets aligned on purpose, not copied ad hoc."
+
+metric_name = "xtask_filesystem_walkers"
+metric_from = 2
+metric_to = 1
+
+acceptance = [
+  "cargo test -p xtask",
+  "cargo xtask guard",
+  "cargo xtask inventory --check",
+  "no second directory-walk implementation remaining except a thin wrapper",
+]
+
+do_not = [
+  "invent a second FS crate",
+  "silently change inventory exclusion semantics without documenting the alignment",
+  "weaken Guard 01–15",
+]

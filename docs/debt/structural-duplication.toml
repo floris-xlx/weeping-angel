@@ -484,22 +484,26 @@ concept = "xtask-filesystem-walk"
 severity = "p1"
 canonical_owner = "xtask/src/model.rs (RepositoryModel walk / SKIP_DIR_NAMES)"
 canonical_symbol = "RepositoryModel::load"
-duplicates = ["xtask/src/inventory.rs::walk_included / should_skip_dir"]
-migration_state = "confirmed parallel walkers; Phase 0 reuses inventory and does not add a third walker"
-removal_blockers = ["exclusion sets are overlapping but not identical"]
+duplicates = []
+migration_state = "canonical owner exists; inventory calls model::walk_tree; parallel walk_included / should_skip_dir deleted"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = ["sdd_structural_reconciliation_target"]
-status = "confirmed"
+tests = ["sdd_structural_reconciliation_target", "sdd_consolidation_c02_dup014"]
+status = "verified"
 action = "consolidate-into-canonical"
-debt_id = ""
+debt_id = "DUP-014"
 consumers = ["cargo xtask guard", "cargo xtask inventory"]
 migration = """
-Reuse model walk helpers from inventory. Align exclusion sets carefully
-(model also skips __pycache__/apps; inventory uses target-*/target_* patterns).
+Extracted walk_tree / should_skip_dir in model.rs as the single skip+walk.
+index_tree and collect_files are thin visitors. Inventory collect() calls
+walk_tree; walk_included / should_skip_dir deleted (not aliased).
+Exclusion JSON now documents the model skip set: target/, target-*,
+node_modules/, .git/, __pycache__/, apps/. Prefix rule remains name
+starts_with target. No third walker. No second FS crate.
 """
-guard = "inventory exclusions JSON; SR target suite; do not invent a second FS crate."
-evidence = "Parallel directory walkers with overlapping but non-identical skip sets."
+guard = "inventory exclusions JSON; SR target suite; sdd_consolidation_c02_dup014; do not invent a second FS crate. KNOWN_CHECK_IDS stays 15."
+evidence = "C02 extract+migrate+delete: model.rs owns SKIP_DIR_NAMES, should_skip_dir, walk_tree. inventory.rs has no fn should_skip_dir / fn walk_included. C02 target xtask/tests/sdd_consolidation_c02_dup014.rs pins owner uniqueness, skip behavior on a temp tree, and close law. No Guard 16. architecture.toml not edited to fit."
 
 [[duplication]]
 id = "DUP-015"
@@ -549,19 +553,22 @@ id = "DUP-017"
 concept = "temporal-ownership-path-metadata-drift"
 severity = "p2"
 canonical_owner = "architecture.toml ownership.temporal_evidence_selection (metadata must match seats)"
-canonical_symbol = "unknown"
-duplicates = [
-  "architecture.toml paths pointing at assurance/src/temporal.rs while leaf primitive is control-test::select_latest_as_of",
-]
-migration_state = "candidate; metadata drift only, do not move functions"
-removal_blockers = ["ACP-T07 / TLE-015 forbid moving select_latest_as_of"]
+canonical_symbol = "select_latest_as_of"
+duplicates = []
+migration_state = "paths list both seats; kind=exclusive remains crate-level façade (ACP-T07); primitive not moved"
+removal_blockers = []
 public_api_impact = "none"
 serialization_impact = "none"
-tests = []
-status = "candidate"
+tests = ["sdd_consolidation_c03_dup017", "sdd_architectural_cleanup_target", "sdd_architectural_consolidation_target"]
+status = "verified"
 action = "document-intentional"
-debt_id = ""
+debt_id = "DUP-017"
 consumers = ["Guard 02 ownership readers; humans"]
-migration = "Update architecture.toml to list control-test temporal primitive + assurance timeline façade without moving functions."
-guard = "ACP-T07 / TLE-015 forbid moving select_latest_as_of."
-evidence = "assurance/src/temporal.rs is timeline/diff façade; select_latest_as_of lives in control-test."
+migration = """
+architecture.toml paths now list assurance/src/temporal.rs (timeline façade)
+and control-test/src/temporal.rs (select_latest_as_of). Comments forbid reading
+kind=exclusive as whole-concept ownership of the leaf algorithm. Domain-ownership
+temporal_evaluation.split remains divided. Functions were not moved.
+"""
+guard = "sdd_consolidation_c03_dup017; ACP-T07 / TLE-015 / CON-T15. KNOWN_CHECK_IDS stays 15."
+evidence = "Live paths include both temporal.rs files. pub fn select_latest_as_of remains in weeping-angel-control-test. assurance temporal.rs has project_timeline and not the leaf primitive."

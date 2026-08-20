@@ -6,8 +6,8 @@ use std::path::Path;
 
 use crate::architecture::{
     ARCH_SCHEMA, ArchitectureInvariant, CONSOLIDATION_ALLOWED_CLASSES,
-    CONSOLIDATION_FORBIDDEN_CLASSES, ForbiddenPattern, InvariantResult, REQUIRED_OWNERSHIP,
-    SPEC_STATES,
+    CONSOLIDATION_FORBIDDEN_CLASSES, DOMAIN_OWNERSHIP_ROLES, DOMAIN_OWNERSHIP_SCHEMA,
+    DOMAIN_OWNERSHIP_SEEDED, ForbiddenPattern, InvariantResult, REQUIRED_OWNERSHIP, SPEC_STATES,
 };
 use crate::duplication::load_structural_duplication;
 use crate::inventory::{
@@ -300,6 +300,8 @@ fn evaluate_invariant(
         "INV-CONSOLIDATION-BASELINE-PRESENT" => eval_consolidation_baseline_present(repo),
         "INV-CONSOLIDATION-EXPANSION-RESTRICTED" => eval_consolidation_expansion_restricted(repo),
         "INV-STRUCTURAL-DUPLICATION-BACKLOG" => eval_structural_duplication_backlog(repo),
+        "INV-DOMAIN-OWNERSHIP-PRESENT" => eval_domain_ownership_present(repo),
+        "INV-DOMAIN-OWNERSHIP-ROLES" => eval_domain_ownership_roles(repo),
         "INV-INVARIANTS-EVALUATED" => {
             let backlog = inv
                 .summary
@@ -680,18 +682,220 @@ fn eval_structural_duplication_backlog(repo: &RepositoryModel) -> (bool, String)
 }
 
 fn eval_no_superseded_baselines(repo: &RepositoryModel) -> (bool, String) {
-    let leftovers: Vec<String> = repo
-        .filesystem
-        .iter()
-        .filter(|p| p.ends_with(".baseline.rs") || p.ends_with("_baseline.rs"))
-        .cloned()
-        .collect();
+    // Honesty: fail-closed on superseded leftovers (`#[ignore]` skip-supersede,
+    // tests/sdd, leftover after GREEN). Allow a live non-ignored dual-suite
+    // window file under xtask/tests (sdd_architectural_consolidation_baseline.rs).
+    let mut leftovers: Vec<String> = Vec::new();
+    for p in &repo.filesystem {
+        if !is_baseline_rs(p) {
+            continue;
+        }
+        if p.contains("tests/sdd") || p.contains("test/sdd") {
+            leftovers.push(p.clone());
+            continue;
+        }
+        if p.contains("xtask/tests") {
+            if baseline_file_is_ignored(&repo.root, p) {
+                leftovers.push(p.clone());
+            }
+            continue;
+        }
+        leftovers.push(p.clone());
+    }
+    collect_forbidden_sdd_baselines(&repo.root, "tests/sdd", &mut leftovers);
+    collect_forbidden_sdd_baselines(&repo.root, "test/sdd", &mut leftovers);
+    if let Ok(entries) = fs::read_dir(repo.root.join("xtask/tests")) {
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if !(name.ends_with("_baseline.rs") || name.ends_with(".baseline.rs")) {
+                continue;
+            }
+            let rel = format!("xtask/tests/{name}");
+            // dual-suite window: live non-ignored xtask/tests/sdd_*_baseline.rs
+            // (e.g. sdd_architectural_consolidation_baseline.rs) is allowed.
+            if baseline_file_is_ignored(&repo.root, &rel) {
+                leftovers.push(rel);
+            }
+        }
+    }
+    leftovers.sort();
+    leftovers.dedup();
     if leftovers.is_empty() {
-        (true, "no superseded baseline suites on disk".into())
+        (
+            true,
+            "no superseded leftovers (#[ignore] baselines, tests/sdd, leftover after GREEN)".into(),
+        )
     } else {
         (
             false,
             format!("deleted-baseline leftovers: {}", leftovers.join(", ")),
+        )
+    }
+}
+
+fn is_baseline_rs(path: &str) -> bool {
+    path.ends_with(".baseline.rs") || path.ends_with("_baseline.rs")
+}
+
+fn baseline_file_is_ignored(root: &Path, rel: &str) -> bool {
+    fs::read_to_string(root.join(rel))
+        .map(|text| text.contains("#[ignore"))
+        .unwrap_or(false)
+}
+
+fn collect_forbidden_sdd_baselines(root: &Path, rel: &str, leftovers: &mut Vec<String>) {
+    let dir = root.join(rel);
+    let Ok(entries) = fs::read_dir(&dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.ends_with(".rs") {
+            leftovers.push(format!("{rel}/{name}"));
+        }
+    }
+}
+
+fn eval_domain_ownership_present(repo: &RepositoryModel) -> (bool, String) {
+    if let Some(err) = &repo.architecture_error
+        && err.contains("domain-ownership")
+    {
+        return (false, err.clone());
+    }
+    let Some(arch) = &repo.architecture else {
+        return (
+            false,
+            repo.architecture_error.clone().unwrap_or_else(|| {
+                "INV-DOMAIN-OWNERSHIP-PRESENT: architecture/domain-ownership.toml was not parsed"
+                    .into()
+            }),
+        );
+    };
+    let d = &arch.domain_ownership;
+    let mut problems = Vec::new();
+    if d.schema != DOMAIN_OWNERSHIP_SCHEMA {
+        problems.push(format!(
+            "schema must be {DOMAIN_OWNERSHIP_SCHEMA}, got {}",
+            d.schema
+        ));
+    }
+    if d.required_roles.is_empty() {
+        problems.push("required_roles must be non-empty".into());
+    }
+    for role in DOMAIN_OWNERSHIP_ROLES {
+        if !d.required_roles.iter().any(|r| r == role) {
+            problems.push(format!("required_roles missing {role}"));
+        }
+    }
+    if d.required_roles.iter().any(|r| r == "persistence_owner") {
+        problems.push("persistence_owner is not a sixth role".into());
+    }
+    if !repo
+        .root
+        .join("architecture/domain-ownership.toml")
+        .is_file()
+    {
+        problems.push("architecture/domain-ownership.toml is not a file".into());
+    }
+    if problems.is_empty() {
+        (
+            true,
+            format!(
+                "INV-DOMAIN-OWNERSHIP-PRESENT: parsed {} concepts with five required_roles",
+                d.concepts.len()
+            ),
+        )
+    } else {
+        (
+            false,
+            format!("INV-DOMAIN-OWNERSHIP-PRESENT: {}", problems.join("; ")),
+        )
+    }
+}
+
+fn eval_domain_ownership_roles(repo: &RepositoryModel) -> (bool, String) {
+    let Some(arch) = &repo.architecture else {
+        return (
+            false,
+            repo.architecture_error.clone().unwrap_or_else(|| {
+                "INV-DOMAIN-OWNERSHIP-ROLES: domain-ownership.toml was not parsed".into()
+            }),
+        );
+    };
+    let d = &arch.domain_ownership;
+    let mut problems = Vec::new();
+    if d.required_roles.iter().any(|r| r == "persistence_owner") {
+        problems.push("persistence_owner is not a sixth role".into());
+    }
+    for id in DOMAIN_OWNERSHIP_SEEDED {
+        let Some(c) = d.concepts.get(id) else {
+            problems.push(format!("missing seeded [concept.{id}]"));
+            continue;
+        };
+        for (role, seat) in [
+            ("semantic_owner", c.semantic_owner.as_str()),
+            ("storage_owner", c.storage_owner.as_str()),
+            ("projection_owner", c.projection_owner.as_str()),
+            (
+                "evaluation_primitive_owner",
+                c.evaluation_primitive_owner.as_str(),
+            ),
+            ("adapter_owner", c.adapter_owner.as_str()),
+        ] {
+            if seat.is_empty() {
+                problems.push(format!("[concept.{id}].{role} is empty"));
+            }
+            if seat == "weeping-angel-catalog" || seat == "weeping-angel-assurance-cli" {
+                problems.push(format!("[concept.{id}].{role} hypothetical crate {seat}"));
+            }
+        }
+    }
+    match d.concepts.get("temporal_evaluation") {
+        Some(t) => {
+            if t.split != "divided" {
+                problems.push(
+                    "temporal_evaluation.split must be divided (not architecture.toml exclusive)"
+                        .into(),
+                );
+            }
+            let cites = t
+                .evidence
+                .values()
+                .any(|v| v.contains("select_latest_as_of"));
+            if !cites {
+                problems.push("temporal_evaluation must cite select_latest_as_of".into());
+            }
+            if t.evaluation_primitive_owner != "weeping-angel-control-test" {
+                problems.push(
+                    "temporal_evaluation.evaluation_primitive_owner must be weeping-angel-control-test"
+                        .into(),
+                );
+            }
+        }
+        None => problems.push("missing [concept.temporal_evaluation]".into()),
+    }
+    match d.concepts.get("control_status") {
+        Some(s) => {
+            if s.split != "divided" {
+                problems.push("control_status.split must be divided".into());
+            }
+            if s.semantic_owner != "divided" {
+                problems.push("control_status.semantic_owner must be divided".into());
+            }
+        }
+        None => problems.push("missing [concept.control_status]".into()),
+    }
+    if problems.is_empty() {
+        (
+            true,
+            "INV-DOMAIN-OWNERSHIP-ROLES: five roles present; seeded splits are honest".into(),
+        )
+    } else {
+        (
+            false,
+            format!("INV-DOMAIN-OWNERSHIP-ROLES: {}", problems.join("; ")),
         )
     }
 }

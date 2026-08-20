@@ -1,0 +1,57 @@
+id = "DUP-003"
+wave = 1
+lane = "A"
+depends_on = ["DUP-002"]
+invariant = "Contract suites share one filesystem/discovery helper module; per-file manifest_dir / read_repo_file / crate_sources_joined / text_has copies are gone"
+
+canonical_owner = "tests/support/mod.rs filesystem helpers"
+canonical_symbol = "tests/support::filesystem_helpers"
+
+allowed_modifications = [
+  "tests/support/**",
+  "tests/contracts/*.target.rs",
+  "xtask/tests/sdd_consolidation_c01_*.rs",
+  "docs/debt/structural-duplication.toml",
+  "docs/debt/current.md",
+]
+
+forbidden = [
+  "tests/sdd/",
+  "new root [[test]]",
+  "new xtask [[test]]",
+  "Guard 16",
+  "new public domain types",
+  "editing architecture.toml",
+  "C04–C09 semantic files",
+  "a second support module beside the DUP-002 owner",
+]
+
+required_deletion = [
+  "per-file fn manifest_dir",
+  "per-file fn read_repo_file",
+  "per-file fn crate_sources_joined",
+  "per-file fn text_has (if it is a duplicate of the shared helper)",
+]
+
+goal = "Same tests/support module as DUP-002. Duplicate contract-test filesystem helpers collapse onto that module. Do not invent tests/sdd/."
+
+metric_name = "contract_fs_helper_copies"
+metric_from = 17
+metric_to = 1
+
+acceptance = [
+  "DUP-002 close law still holds (one require_needles)",
+  "cargo test -p xtask",
+  "retargeted contract binaries still pass",
+  "cargo xtask guard",
+  "cargo xtask inventory",
+  "rg of fn manifest_dir / fn crate_sources_joined in tests/contracts is empty or only re-exports the support module",
+  "DUP-003 not verified until copies are gone and a regression guard exists",
+]
+
+do_not = [
+  "weaken contract needles",
+  "add a parallel tests/helpers crate",
+  "update architecture rules to allow per-file copies",
+  "split a second tests/support owner beside DUP-002 require_needles",
+]

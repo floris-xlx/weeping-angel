@@ -5,6 +5,6 @@ max_superseded_baseline_files = 0
 max_debt_backed_guard_skips = 0
 max_duplicate_adr_prefixes = 0
 max_require_needles_in_src = 0
-# Remaining require_needles live only in tests/contracts where source
-# structure is the contract (architecture-as-law).
+# Canonical fn require_needles is tests/support/mod.rs (C01 / DUP-002).
+# Call sites remain in tests/contracts where source structure is the contract.
 max_codex_security_schema_sso_ts = 1

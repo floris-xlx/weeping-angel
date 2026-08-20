@@ -1,0 +1,174 @@
+schema = "weeping-angel/domain-ownership/v1"
+
+# Concept-level semantic ownership SSOT (Architectural Consolidation Phase 1).
+# Expands crate-level [ownership.*] in architecture.toml; does not replace it.
+# persistence_owner maps to storage_owner; it is not a sixth role.
+
+required_roles = [
+  "semantic_owner",
+  "storage_owner",
+  "projection_owner",
+  "evaluation_primitive_owner",
+  "adapter_owner",
+]
+
+# Live evidence only (workspace packages; no hypothetical owner seats):
+# ApplicabilitySnapshot, LineageApplicabilitySnapshot, project_readiness,
+# CanonicalCatalog::load, compile_framework, current() / as_of() / latest(),
+# select_latest_as_of, replay_assessment, project_soa_from_snapshot,
+# ImplementationStatus, Effectiveness, evaluate in run.inc, project_validity,
+# CollectorAdapter, src/main.rs, src/cli.rs.
+
+[concept.applicability]
+semantic_owner = "weeping-angel-assurance"
+storage_owner = "weeping-angel-assurance"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+module = "applicability"
+representation = "ApplicabilitySnapshot"
+storage_module = "lineage"
+storage_representation = "LineageApplicabilitySnapshot"
+split = "unified"
+
+[concept.readiness]
+semantic_owner = "weeping-angel-assurance"
+storage_owner = "none"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+module = "readiness"
+function = "project_readiness"
+split = "unified"
+
+[concept.catalog]
+semantic_owner = "weeping-angel-canonical-catalog"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+parser = "CanonicalCatalog::load"
+split = "unified"
+
+[concept.framework]
+semantic_owner = "weeping-angel-framework"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+compiler = "compile_framework"
+split = "unified"
+
+[concept.evidence]
+semantic_owner = "weeping-angel-evidence"
+storage_owner = "weeping-angel-evidence"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+ledger = "current/as_of/latest"
+split = "unified"
+
+[concept.temporal_evaluation]
+semantic_owner = "weeping-angel-control-test"
+storage_owner = "weeping-angel-assurance"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "weeping-angel-control-test"
+adapter_owner = "none"
+function = "select_latest_as_of"
+module = "crates/weeping-angel-control-test/src/temporal.rs"
+projection_module = "crates/weeping-angel-assurance/src/temporal.rs"
+split = "divided"
+
+[concept.assessment_replay]
+semantic_owner = "weeping-angel-assurance"
+storage_owner = "weeping-angel-assurance"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+function = "replay_assessment"
+module = "lineage"
+split = "unified"
+
+[concept.soa]
+semantic_owner = "weeping-angel-assurance"
+storage_owner = "none"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+function = "project_soa_from_snapshot"
+split = "unified"
+
+[concept.control_status]
+semantic_owner = "divided"
+storage_owner = "none"
+projection_owner = "weeping-angel-assurance"
+evaluation_primitive_owner = "weeping-angel-control-test"
+adapter_owner = "none"
+ir_type = "ImplementationStatus"
+kernel_type = "Effectiveness"
+split = "divided"
+
+[concept.control_test_kernel]
+semantic_owner = "weeping-angel-control-test"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "weeping-angel-control-test"
+adapter_owner = "none"
+function = "evaluate"
+module = "run.inc"
+split = "unified"
+
+[concept.evidence_validity]
+semantic_owner = "weeping-angel-evidence"
+storage_owner = "weeping-angel-evidence"
+projection_owner = "weeping-angel-evidence"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+function = "project_validity"
+split = "unified"
+
+[concept.catalog_loading]
+semantic_owner = "weeping-angel-canonical-catalog"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+parser = "CanonicalCatalog::load"
+split = "unified"
+
+[concept.framework_compilation]
+semantic_owner = "weeping-angel-framework"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "none"
+compiler = "compile_framework"
+split = "unified"
+
+[concept.assurance_cli]
+semantic_owner = "weeping-angel"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "weeping-angel"
+facade = "src/main.rs"
+cli = "src/cli.rs"
+split = "facade"
+
+[concept.collectors]
+semantic_owner = "weeping-angel-collector"
+storage_owner = "none"
+projection_owner = "none"
+evaluation_primitive_owner = "none"
+adapter_owner = "weeping-angel-collector"
+adapter = "CollectorAdapter"
+module = "src/ports/adapter.rs"
+split = "unified"
+
+[concept.repository_guard]
+semantic_owner = "xtask"
+storage_owner = "none"
+projection_owner = "xtask"
+evaluation_primitive_owner = "xtask"
+adapter_owner = "none"
+split = "unified"

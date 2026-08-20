@@ -1,0 +1,66 @@
+# Architect work-package queue. Implementation agents do not reorder this file.
+schema = "weeping-angel/migration-queue/v1"
+program = "architectural-consolidation"
+max_concurrent_implementers = 3
+absolute_cap_implementers = 6
+
+# Lanes may run concurrently. Items inside a lane are serial.
+# Lane B (assurance semantics) is never parallel with itself.
+
+[[lane]]
+id = "A"
+name = "repository-infrastructure"
+serial = ["DUP-002", "DUP-003", "DUP-014"]
+concurrent_with = ["C", "D", "E"]
+
+[[lane]]
+id = "B"
+name = "assurance-semantics"
+serial = ["DUP-004", "DUP-011", "DUP-005", "DUP-006"]
+concurrent_with = []
+notes = "Applicability, lineage, readiness, SoA overlap. One agent at a time."
+
+[[lane]]
+id = "C"
+name = "framework-catalog"
+serial = ["DUP-008", "DUP-013"]
+concurrent_with = ["A", "D", "E"]
+
+[[lane]]
+id = "D"
+name = "evidence-temporal"
+serial = ["DUP-007"]
+concurrent_with = ["A", "C", "E"]
+
+[[lane]]
+id = "E"
+name = "scanner"
+serial = ["DUP-016"]
+concurrent_with = ["A", "C", "D"]
+
+[[wave]]
+id = 1
+name = "mechanical"
+items = ["DUP-002", "DUP-003", "DUP-014", "DUP-017"]
+
+[[wave]]
+id = 2
+name = "ssot"
+items = ["DUP-011", "DUP-004", "DUP-013", "DUP-005", "DUP-007", "DUP-006"]
+
+[[wave]]
+id = 3
+name = "boundaries"
+items = ["DUP-015", "DUP-016"]
+
+[[wave]]
+id = 4
+name = "surface"
+items = []
+notes = "pub→pub(crate), aliases, re-exports, root [[test]] reduction, architecture tests → xtask. Specify per-task later."
+
+# First six tightly specified packages (disproportionate ambiguity reduction).
+first_six = ["DUP-002", "DUP-014", "DUP-017", "DUP-011", "DUP-004", "DUP-013"]
+
+# Lane A serial after DUP-002 (not first_six; contract exists so the queue is complete).
+# DUP-002 closed (C01, verified). DUP-003.toml shares tests/support with DUP-002.

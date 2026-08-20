@@ -43,6 +43,12 @@ edition = "2024"
         )
         .unwrap();
     }
+    let live_domain =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../architecture/domain-ownership.toml");
+    let domain_text = fs::read_to_string(&live_domain).unwrap_or_else(|e| {
+        panic!("read live architecture/domain-ownership.toml for fixture: {e}")
+    });
+    fs::write(root.join("architecture/domain-ownership.toml"), domain_text).unwrap();
     fs::write(
         root.join("architecture/architecture.toml"),
         r#"schema = "weeping-angel/architecture/v1"

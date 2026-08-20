@@ -10,6 +10,50 @@ pub const INVARIANTS_SCHEMA: &str = "weeping-angel/architecture-invariants/v1";
 pub const FORBIDDEN_SCHEMA: &str = "weeping-angel/forbidden-patterns/v1";
 pub const ADR_IDENTITY_SCHEMA: &str = "weeping-angel/adr-identity/v1";
 pub const SPEC_LIFECYCLE_SCHEMA: &str = "weeping-angel/spec-lifecycle/v1";
+pub const DOMAIN_OWNERSHIP_SCHEMA: &str = "weeping-angel/domain-ownership/v1";
+
+pub(crate) const DOMAIN_OWNERSHIP_ROLES: [&str; 5] = [
+    "semantic_owner",
+    "storage_owner",
+    "projection_owner",
+    "evaluation_primitive_owner",
+    "adapter_owner",
+];
+
+pub(crate) const DOMAIN_OWNERSHIP_SEEDED: [&str; 15] = [
+    "applicability",
+    "readiness",
+    "catalog",
+    "framework",
+    "evidence",
+    "temporal_evaluation",
+    "assessment_replay",
+    "soa",
+    "control_status",
+    "control_test_kernel",
+    "evidence_validity",
+    "catalog_loading",
+    "framework_compilation",
+    "assurance_cli",
+    "collectors",
+];
+
+const HYPOTHETICAL_OWNER_CRATES: [&str; 2] =
+    ["weeping-angel-catalog", "weeping-angel-assurance-cli"];
+
+const LIVE_OWNER_PACKAGES: [&str; 9] = [
+    "weeping-angel-assurance-ir",
+    "weeping-angel-framework",
+    "weeping-angel-evidence",
+    "weeping-angel-collector",
+    "weeping-angel-control-test",
+    "weeping-angel-assurance",
+    "weeping-angel-canonical-catalog",
+    "xtask",
+    "weeping-angel",
+];
+
+const SPLIT_VALUES: [&str; 3] = ["unified", "divided", "facade"];
 
 /// Compatibility view of the seven increment-1 concepts (tests / ACP).
 /// Policy SSOT is `architecture/architecture.toml` `[policy]` + `[ownership.*]`.
@@ -111,6 +155,26 @@ pub struct ArchitectureManifest {
     pub policy: ArchitecturePolicy,
     pub ownership: BTreeMap<String, OwnershipRow>,
     pub consolidation: ConsolidationProgram,
+    pub(crate) domain_ownership: DomainOwnership,
+}
+
+/// Parsed `architecture/domain-ownership.toml` (crate-private; not a freeze bump).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DomainOwnership {
+    pub(crate) schema: String,
+    pub(crate) required_roles: Vec<String>,
+    pub(crate) concepts: BTreeMap<String, ConceptRoles>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ConceptRoles {
+    pub(crate) semantic_owner: String,
+    pub(crate) storage_owner: String,
+    pub(crate) projection_owner: String,
+    pub(crate) evaluation_primitive_owner: String,
+    pub(crate) adapter_owner: String,
+    pub(crate) split: String,
+    pub(crate) evidence: BTreeMap<String, String>,
 }
 
 /// One `[[invariant]]` row from `architecture/invariants.toml`.
@@ -211,12 +275,231 @@ pub fn load_architecture_manifest(root: &Path) -> Result<ArchitectureManifest, S
         );
     }
     let consolidation = parse_consolidation_program(&value)?;
+    let domain_ownership = load_domain_ownership(root)?;
     Ok(ArchitectureManifest {
         schema: ARCH_SCHEMA.to_string(),
         policy,
         ownership,
         consolidation,
+        domain_ownership,
     })
+}
+
+/// Fail-closed parse of `architecture/domain-ownership.toml`.
+pub(crate) fn load_domain_ownership(root: &Path) -> Result<DomainOwnership, String> {
+    let path = root.join("architecture/domain-ownership.toml");
+    if !path.is_file() {
+        return Err("architecture/domain-ownership.toml is not a file".into());
+    }
+    let value = read_toml(&path)?;
+    require_schema(&value, DOMAIN_OWNERSHIP_SCHEMA, &path)?;
+    let required_roles = domain_string_array(&value, "required_roles")?;
+    if required_roles.is_empty() {
+        return Err("architecture/domain-ownership.toml required_roles must be non-empty".into());
+    }
+    if required_roles.iter().any(|r| r == "persistence_owner") {
+        return Err(
+            "architecture/domain-ownership.toml persistence_owner is not a sixth role; map it to storage_owner"
+                .into(),
+        );
+    }
+    for role in DOMAIN_OWNERSHIP_ROLES {
+        if !required_roles.iter().any(|r| r == role) {
+            return Err(format!(
+                "architecture/domain-ownership.toml required_roles must include {role}"
+            ));
+        }
+    }
+    let concept_table = value
+        .get("concept")
+        .and_then(|v| v.as_table())
+        .ok_or_else(|| {
+            "architecture/domain-ownership.toml missing [concept.*] tables".to_string()
+        })?;
+    let packages = live_owner_packages(root);
+    let mut concepts = BTreeMap::new();
+    for (id, entry) in concept_table {
+        let table = entry.as_table().ok_or_else(|| {
+            format!("architecture/domain-ownership.toml [concept.{id}] must be a table")
+        })?;
+        if table.contains_key("persistence_owner") {
+            return Err(format!(
+                "architecture/domain-ownership.toml [concept.{id}] must not declare persistence_owner (map to storage_owner)"
+            ));
+        }
+        let mut roles: BTreeMap<&str, String> = BTreeMap::new();
+        for role in DOMAIN_OWNERSHIP_ROLES {
+            let seat = table
+                .get(role)
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    format!(
+                        "architecture/domain-ownership.toml [concept.{id}] missing required role {role}"
+                    )
+                })?
+                .to_string();
+            roles.insert(role, seat);
+        }
+        let split = table
+            .get("split")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unified")
+            .to_string();
+        if !SPLIT_VALUES.contains(&split.as_str()) {
+            return Err(format!(
+                "architecture/domain-ownership.toml [concept.{id}].split must be unified|divided|facade, got {split:?}"
+            ));
+        }
+        for role in DOMAIN_OWNERSHIP_ROLES {
+            validate_owner_seat(id, role, &roles[role], &split, &packages)?;
+        }
+        let mut evidence = BTreeMap::new();
+        for (k, v) in table {
+            if DOMAIN_OWNERSHIP_ROLES.contains(&k.as_str()) || k == "split" {
+                continue;
+            }
+            if let Some(s) = v.as_str() {
+                evidence.insert(k.clone(), s.to_string());
+            } else if let Some(arr) = v.as_array() {
+                let joined = arr
+                    .iter()
+                    .filter_map(|item| item.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                evidence.insert(k.clone(), joined);
+            }
+        }
+        concepts.insert(
+            id.clone(),
+            ConceptRoles {
+                semantic_owner: roles["semantic_owner"].clone(),
+                storage_owner: roles["storage_owner"].clone(),
+                projection_owner: roles["projection_owner"].clone(),
+                evaluation_primitive_owner: roles["evaluation_primitive_owner"].clone(),
+                adapter_owner: roles["adapter_owner"].clone(),
+                split,
+                evidence,
+            },
+        );
+    }
+    for id in DOMAIN_OWNERSHIP_SEEDED {
+        if !concepts.contains_key(id) {
+            return Err(format!(
+                "architecture/domain-ownership.toml missing seeded [concept.{id}]"
+            ));
+        }
+    }
+    let temporal = concepts.get("temporal_evaluation").ok_or_else(|| {
+        "architecture/domain-ownership.toml missing [concept.temporal_evaluation]".to_string()
+    })?;
+    if temporal.split != "divided" {
+        return Err(
+            "architecture/domain-ownership.toml [concept.temporal_evaluation].split must be divided (not fake exclusive)"
+                .into(),
+        );
+    }
+    let cites_primitive = temporal
+        .evidence
+        .values()
+        .any(|v| v.contains("select_latest_as_of"));
+    if !cites_primitive {
+        return Err(
+            "architecture/domain-ownership.toml temporal_evaluation must cite select_latest_as_of"
+                .into(),
+        );
+    }
+    let status = concepts.get("control_status").ok_or_else(|| {
+        "architecture/domain-ownership.toml missing [concept.control_status]".to_string()
+    })?;
+    if status.split != "divided" || status.semantic_owner != "divided" {
+        return Err(
+            "architecture/domain-ownership.toml [concept.control_status] must be split=divided with semantic_owner=divided"
+                .into(),
+        );
+    }
+    Ok(DomainOwnership {
+        schema: DOMAIN_OWNERSHIP_SCHEMA.to_string(),
+        required_roles,
+        concepts,
+    })
+}
+
+fn domain_string_array(value: &toml::Value, key: &str) -> Result<Vec<String>, String> {
+    let arr = value.get(key).and_then(|v| v.as_array()).ok_or_else(|| {
+        format!("architecture/domain-ownership.toml {key} must be a non-empty array")
+    })?;
+    Ok(arr
+        .iter()
+        .filter_map(|v| v.as_str().map(str::to_string))
+        .collect())
+}
+
+fn live_owner_packages(root: &Path) -> BTreeSet<String> {
+    let mut names: BTreeSet<String> = LIVE_OWNER_PACKAGES
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+    let cargo_path = root.join("Cargo.toml");
+    let Ok(value) = read_toml(&cargo_path) else {
+        return names;
+    };
+    if let Some(name) = value
+        .get("package")
+        .and_then(|p| p.get("name"))
+        .and_then(|n| n.as_str())
+    {
+        names.insert(name.to_string());
+    }
+    if let Some(listed) = value
+        .get("workspace")
+        .and_then(|w| w.get("members"))
+        .and_then(|m| m.as_array())
+    {
+        for item in listed {
+            let Some(rel) = item.as_str() else { continue };
+            let member_cargo = root.join(rel).join("Cargo.toml");
+            if let Ok(member) = read_toml(&member_cargo)
+                && let Some(name) = member
+                    .get("package")
+                    .and_then(|p| p.get("name"))
+                    .and_then(|n| n.as_str())
+            {
+                names.insert(name.to_string());
+            }
+        }
+    }
+    names
+}
+
+fn validate_owner_seat(
+    concept: &str,
+    role: &str,
+    seat: &str,
+    split: &str,
+    packages: &BTreeSet<String>,
+) -> Result<(), String> {
+    if HYPOTHETICAL_OWNER_CRATES.iter().any(|h| *h == seat) {
+        return Err(format!(
+            "architecture/domain-ownership.toml [concept.{concept}].{role} must not use hypothetical crate {seat}"
+        ));
+    }
+    if seat == "none" {
+        return Ok(());
+    }
+    if seat == "divided" {
+        if role != "semantic_owner" || split != "divided" {
+            return Err(format!(
+                "architecture/domain-ownership.toml [concept.{concept}].{role}=divided is only legal for semantic_owner when split=divided"
+            ));
+        }
+        return Ok(());
+    }
+    if packages.contains(seat) {
+        return Ok(());
+    }
+    Err(format!(
+        "architecture/domain-ownership.toml [concept.{concept}].{role} illegal owner-seat {seat:?}"
+    ))
 }
 
 fn parse_consolidation_program(value: &toml::Value) -> Result<ConsolidationProgram, String> {

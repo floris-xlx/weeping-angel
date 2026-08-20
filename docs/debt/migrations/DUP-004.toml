@@ -1,0 +1,48 @@
+id = "DUP-004"
+wave = 2
+lane = "B"
+depends_on = ["DUP-011"]
+invariant = "One canonical ApplicabilitySnapshot; lineage stores a pin or that type, not a parallel domain model"
+
+canonical_owner = "crates/weeping-angel-assurance/src/applicability/snapshot.rs::ApplicabilitySnapshot"
+canonical_symbol = "ApplicabilitySnapshot"
+
+allowed_modifications = [
+  "crates/weeping-angel-assurance/src/applicability/**",
+  "crates/weeping-angel-assurance/src/lineage.rs",
+  "crates/weeping-angel-assurance/src/soa.rs",
+  "crates/weeping-angel-assurance/src/lib.rs (re-exports only)",
+  "directly associated tests",
+  "docs/debt/structural-duplication.toml",
+]
+
+forbidden = [
+  "a second pub struct ApplicabilitySnapshot",
+  "new applicability semantics",
+  "running concurrently with DUP-005 / DUP-006 / DUP-011",
+  "new crates",
+  "editing architecture.toml ownership to mint a second SSOT",
+]
+
+required_deletion = [
+  "lineage.rs parallel domain ApplicabilitySnapshot (after pin DTO or canonical embed)",
+]
+
+goal = "Applicability snapshot representations N → 1 canonical + optional serialization pin DTO. SoA and lineage consume the same type."
+
+metric_name = "applicability_snapshot_types"
+metric_from = 2
+metric_to = 1
+
+acceptance = [
+  "cargo test for applicability + lineage + soa",
+  "cargo xtask guard",
+  "inventory public struct count must not increase net of deleted duplicate",
+  "no second pub struct ApplicabilitySnapshot outside applicability/",
+]
+
+do_not = [
+  "leave LineageApplicabilitySnapshot as a second domain model",
+  "weaken LIN / SoA tests",
+  "add compatibility type aliases that preserve both shapes indefinitely without sunset",
+]

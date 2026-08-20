@@ -11,7 +11,35 @@ use crate::architecture::{
 };
 use crate::debt::load_and_validate_debt_register;
 
-const SKIP_DIR_NAMES: [&str; 5] = ["target", "node_modules", ".git", "__pycache__", "apps"];
+/// Directory names skipped by the single repository walker.
+/// Names starting with `target` are also skipped (`target-*` / `target_*`).
+pub(crate) const SKIP_DIR_NAMES: [&str; 5] =
+    ["target", "node_modules", ".git", "__pycache__", "apps"];
+
+/// Inclusion/exclusion predicate for [`walk_tree`]. Guard and inventory share this.
+pub(crate) fn should_skip_dir(name: &str) -> bool {
+    SKIP_DIR_NAMES.iter().any(|s| *s == name) || name.starts_with("target")
+}
+
+/// Recursively visit non-skipped entries under `dir`. The only directory walk.
+pub(crate) fn walk_tree(dir: &Path, visit: &mut impl FnMut(&Path, bool)) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = entry.file_name();
+        let name_str = name.to_string_lossy();
+        if should_skip_dir(&name_str) {
+            continue;
+        }
+        let is_dir = path.is_dir();
+        visit(&path, is_dir);
+        if is_dir {
+            walk_tree(&path, visit);
+        }
+    }
+}
 
 /// Snapshot loaded once per `run_guard`: workspace, package graph, filesystem,
 /// architecture manifests, debt register, ADR/spec metadata, framework packs,
@@ -279,41 +307,22 @@ fn collect_dep_names(value: &toml::Value) -> BTreeSet<String> {
 }
 
 fn index_tree(root: &Path, dir: &Path, out: &mut BTreeSet<String>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = entry.file_name();
-        let name_str = name.to_string_lossy();
-        if SKIP_DIR_NAMES.iter().any(|s| *s == name_str) || name_str.starts_with("target") {
-            continue;
-        }
+    walk_tree(dir, &mut |path, _is_dir| {
         if let Ok(rel) = path.strip_prefix(root) {
             out.insert(rel.to_string_lossy().replace('\\', "/"));
         }
-        if path.is_dir() {
-            index_tree(root, &path, out);
-        }
-    }
+    });
 }
 
 fn collect_files(root: &Path, dir: &Path, out: &mut Vec<String>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().into_owned();
-        if SKIP_DIR_NAMES.iter().any(|s| *s == name) {
-            continue;
+    walk_tree(dir, &mut |path, is_dir| {
+        if is_dir {
+            return;
         }
-        if path.is_dir() {
-            collect_files(root, &path, out);
-        } else if let Ok(rel) = path.strip_prefix(root) {
+        if let Ok(rel) = path.strip_prefix(root) {
             out.push(rel.to_string_lossy().replace('\\', "/"));
         }
-    }
+    });
 }
 
 fn list_dir_files(dir: &Path, ext: &str) -> Vec<String> {
