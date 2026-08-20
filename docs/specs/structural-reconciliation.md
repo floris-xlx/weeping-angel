@@ -2,9 +2,9 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Implemented** — Phase 0+1: `cargo xtask inventory`, Historical `baseline-2026-08.md`, mechanical `docs/debt/current.md`, RI/debt active-plane reconcile, active-spec drift (Guard 15). Target suite GREEN; baseline skip-superseded. |
+| Status | **Phase 0+1 Implemented.** **Phase 2 map written** — [`docs/debt/structural-duplication.toml`](../debt/structural-duplication.toml) (DUP-001…012). No Phase 2 deletes. Next: Phase 3 closes `DEBT-SCHEMA-DUP` / DUP-001. |
 | Program | Structural Reconciliation Program (subtractive honesty: docs + debt evidence match the live tree). |
-| Slice | **Phase 0** (feature freeze + exit criteria + absence characterization) + **Phase 1** (`cargo xtask inventory`, historical baseline marker, mechanical `docs/debt/current.md`, RI active/Historical reconcile, active-spec drift guard). **Not** later phases (no new frameworks / collectors / ISMS / report formats / product scanners). |
+| Slice | **Phase 0+1** complete. **Phase 2** = duplication inventory only (no opportunistic dedupe). **Not** yet Phases 3+ (schema delete, baseline leftovers, panic budget, semantic P0 closures). No new frameworks / collectors / ISMS / report formats / product scanners. |
 | Dual-suite | `xtask/tests/sdd_structural_reconciliation_{baseline,target}.rs` (Cargo auto-discovers `cargo test -p xtask`). **Do not** create `tests/sdd/` ([ADR 0004](../adr/0004-documentation-architecture.md) / `FORBID-TESTS-SDD`). Do not invent `test/sdd/*.ts`. Integrity dual-suite remains `tests/contracts/repository_integrity.{baseline,target}.rs` (root `[[test]]`); amend assertions only where this slice requires live-plane honesty. |
 | ADR | **Accepted** [`docs/adr/0048-structural-reconciliation.md`](../adr/0048-structural-reconciliation.md). Do **not** mint another `0003-*` / colliding `0011-*`. |
 | Predecessor law | [`docs/specs/repository-integrity.md`](repository-integrity.md), [`docs/specs/architectural-cleanup-program.md`](architectural-cleanup-program.md), [`docs/specs/repository-hygiene.md`](repository-hygiene.md), ADRs 0009–0012. |

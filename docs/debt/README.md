@@ -2,7 +2,7 @@
 
 Canonical machine register: [`register.toml`](register.toml) (`schema = "weeping-angel/debt-register/v1"`). Decisions: [`docs/adr/0009-repository-health-gate.md`](../adr/0009-repository-health-gate.md), [`docs/adr/0010-architecture-as-law.md`](../adr/0010-architecture-as-law.md).
 
-This README is not a second register. **Current** mechanical counts: [`current.md`](current.md) (regenerate / verify with `cargo xtask inventory --markdown` / `--check`). [`baseline-2026-08.md`](baseline-2026-08.md) is **Historical** evidence only, not live status.
+This README is not a second register. **Current** mechanical counts: [`current.md`](current.md) (regenerate / verify with `cargo xtask inventory --markdown` / `--check`). [`baseline-2026-08.md`](baseline-2026-08.md) is **Historical** evidence only, not live status. Structural duplication inventory (Phase 2 map only — no deletes): [`structural-duplication.toml`](structural-duplication.toml) (`schema = "weeping-angel/structural-duplication/v1"`).
 
 Repository-hygiene before/after counts live in [`docs/specs/repository-hygiene.md`](../specs/repository-hygiene.md) §12 (and optionally `.sdd/runs/`), not in `register.toml`. [ADR 0012](../adr/0012-repository-hygiene.md) does not close `DEBT-IGNORE` / `DEBT-UNWRAP` / `DEBT-SCHEMA-DUP` from this slice.
 

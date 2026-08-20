@@ -1,0 +1,428 @@
+# Phase 2 map only — no deletions in this file's commit.
+# Schema: weeping-angel/structural-duplication/v1
+# Statuses: candidate | confirmed | migrating | resolved | false-positive
+# Five questions per row: concept, canonical_owner, duplicates(+consumers),
+# migration, guard. Measured 2026-08-20 against HEAD after Phase 0+1.
+
+schema = "weeping-angel/structural-duplication/v1"
+program = "structural-reconciliation"
+phase = 2
+measured = "2026-08-20"
+notes = """
+Inventory of structural duplication. Do not delete from this phase.
+Phase 3 starts with DUP-001 (Codex Security schema trees).
+Debt register DEBT-P0-* summaries that still say 'guard stub' are honesty debt
+(see DUP-010); ProductLawCheck 05–12 already pass on the live tree.
+"""
+
+[[duplication]]
+id = "DUP-001"
+concept = "codex-security-json-schema-files"
+canonical_owner = "schemas/codex-security"
+duplicates = [
+  "codex-security/schemas/coverage.schema.json",
+  "codex-security/schemas/findings.schema.json",
+  "codex-security/schemas/scan-manifest.schema.json",
+]
+status = "confirmed"
+action = "delete-duplicate"
+debt_id = "DEBT-SCHEMA-DUP"
+consumers = [
+  "tests/contracts/repository_hygiene.target.rs (byte-identity + GENERATED_FROM_SSOT)",
+  "docs/adr/0012-repository-hygiene.md",
+  "docs/specs/repository-hygiene.md",
+  "docs/specs/vulnerability-canonical-assurance-catalog.md (path references)",
+  "packaging / Codex Security distribution under codex-security/",
+]
+migration = """
+Retarget every tracked consumer to schemas/codex-security/. Prefer no symlink.
+If packaging still requires codex-security/schemas/, keep only a build artifact
+outside source control — do not hand-edit a second tree. Then delete the three
+tracked *.schema.json under codex-security/schemas/ (and empty dirs).
+"""
+guard = """
+GUARD-SCHEMA-SSOT (Phase 3): only schemas/codex-security may hold Codex Security
+schema SSOT; forbid tracked codex-security/schemas/*.schema.json; reject duplicate
+JSON Schema $id across the tree. Hygiene suite must prove single SSOT.
+"""
+evidence = """
+SHA-256 pairs match (coverage/findings/scan-manifest). stamp file
+codex-security/schemas/GENERATED_FROM_SSOT documents SSOT=schemas/codex-security/.
+$id URLs are https://openai.com/codex-security/schemas/*.schema.json (identifier, not FS home).
+register.toml DEBT-SCHEMA-DUP status=open.
+"""
+
+[[duplication]]
+id = "DUP-002"
+concept = "contract-test-require-needles-helper"
+canonical_owner = "tests/support (proposed; does not exist yet) or a single shared test module"
+duplicates = [
+  "tests/contracts/assessment_lineage.target.rs",
+  "tests/contracts/control_implementation_registry.target.rs",
+  "tests/contracts/controlled_documents.target.rs",
+  "tests/contracts/continuity_resilience.target.rs",
+  "tests/contracts/iso27001_assurance.target.rs",
+  "tests/contracts/interested_parties_obligations.target.rs",
+  "tests/contracts/incident_governance.target.rs",
+  "tests/contracts/nonconformity_capa.target.rs",
+  "tests/contracts/internal_audit.target.rs",
+  "tests/contracts/operational_soa.target.rs",
+  "tests/contracts/population_runtime.target.rs",
+  "tests/contracts/remediation_engine.target.rs",
+  "tests/contracts/risk_register.target.rs",
+  "tests/contracts/supplier_risk.target.rs",
+  "tests/contracts/temporal_lineage_evidence_soa.target.rs",
+  "tests/contracts/temporal_assurance.target.rs",
+  "tests/contracts/typed_evidence.target.rs",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = ""
+consumers = ["SDD dual-suite / contract target binaries that needle-grep crate sources"]
+migration = """
+Extract one shared require_needles(+ optional crate_sources_joined) into a
+tests/support module or xtask test helper crate used only by contract tests.
+Rewrite call sites; delete local copies. Do not invent tests/sdd/.
+"""
+guard = """
+Inventory count of 'fn require_needles' should trend to 1 (or a documented small set).
+Optional forbidden-pattern / maintainability rule capping duplicate helper definitions.
+"""
+evidence = """
+inventory current.md: 18 files defining fn require_needles, 222 call sites.
+rg -l 'fn require_needles' tests/contracts lists 17+ target files with near-copies.
+"""
+
+[[duplication]]
+id = "DUP-003"
+concept = "contract-test-filesystem-discovery-helpers"
+canonical_owner = "tests/support (proposed)"
+duplicates = [
+  "tests/contracts/**/*.target.rs :: manifest_dir / read_repo_file / crate_sources_joined / text_has",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = ""
+consumers = ["nearly every tests/contracts/*.target.rs suite"]
+migration = """
+Same shared test-support module as DUP-002. Replace per-file
+PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")) helpers with one API.
+"""
+guard = "Maintainability / inventory metric on duplicate helper fn names in tests/contracts."
+evidence = """
+rg shows dozens of identical fn manifest_dir / read_repo_file / crate_sources_joined
+definitions across target suites (~299 matching lines sampled).
+"""
+
+[[duplication]]
+id = "DUP-004"
+concept = "applicability-snapshot-type-pair"
+canonical_owner = "crates/weeping-angel-assurance/src/applicability/snapshot.rs::ApplicabilitySnapshot"
+duplicates = [
+  "crates/weeping-angel-assurance/src/lineage.rs::ApplicabilitySnapshot",
+  "crates/weeping-angel-assurance/src/lineage.rs::ApplicabilityDecision",
+  "crates/weeping-angel-assurance/src/lineage.rs::PackApplicabilityEntry",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = ""
+consumers = [
+  "lineage::LineageBundle.applicability / snapshot_applicability",
+  "soa.rs imports applicability::ApplicabilitySnapshot for operational SoA",
+  "lib.rs re-exports lineage::ApplicabilitySnapshot for public API",
+]
+migration = """
+Pick the richer applicability::snapshot model as SSOT (or explicitly rename
+lineage's type to LineageApplicabilityPin). Migrate LineageBundle to store the
+canonical type or a thin pin DTO derived from it. Delete the parallel structs
+in lineage.rs once all reconstruct/replay paths compile.
+"""
+guard = """
+Architecture ownership / forbidden-patterns: forbid a second pub struct
+ApplicabilitySnapshot outside applicability/. Contract tests for lineage +
+operational SoA must share one schema id.
+"""
+evidence = """
+Two distinct pub struct ApplicabilitySnapshot definitions with incompatible
+fields (scope: AssessmentScope vs String; decisions: ItemDecision vs simplified
+Decision). soa.rs uses applicability::*; lib.rs re-exports lineage::*.
+"""
+
+[[duplication]]
+id = "DUP-005"
+concept = "lineage-reconstruct-public-aliases"
+canonical_owner = "crates/weeping-angel-assurance/src/lineage.rs::replay_assessment"
+duplicates = [
+  "crates/weeping-angel-assurance/src/lineage.rs::reconstruct",
+  "crates/weeping-angel-assurance/src/lineage.rs::load_lineage",
+]
+status = "candidate"
+action = "consolidate-into-canonical"
+debt_id = "DEBT-P0-LINEAGE-REBUILD"
+consumers = [
+  "src/assurance_soa.rs (replay_assessment)",
+  "Guard 10 ProductLawCheck (requires replay_assessment; forbids Ok(reconstruct(bundle)))",
+  "any caller of load_lineage / reconstruct",
+]
+migration = """
+Keep reconstruct as private implementation detail of replay_assessment.
+Deprecate/remove public load_lineage alias (it is reconstruct without verify).
+Ensure no public path returns Ok(reconstruct(...)) without verify_replay_bundle.
+"""
+guard = "Guard 10 already forbids Ok(reconstruct(bundle)) string; extend to forbid pub fn load_lineage if removed."
+evidence = """
+load_lineage body is `reconstruct(bundle)`. replay_assessment = verify + reconstruct.
+Guard check 10 required needle: pub fn replay_assessment(; forbidden: Ok(reconstruct(bundle)).
+"""
+
+[[duplication]]
+id = "DUP-006"
+concept = "soa-projection-paths"
+canonical_owner = "crates/weeping-angel-assurance/src/soa.rs::project_soa_from_snapshot (+ project_operational_soa)"
+duplicates = [
+  "crates/weeping-angel-assurance/src/soa.rs::project_soa",
+]
+status = "candidate"
+action = "document-intentional"
+debt_id = "DEBT-P0-SOA"
+consumers = [
+  "scheduler run_project calls project_soa(framework, version) then project_readiness",
+  "src/assurance_soa.rs historical path uses project_soa_from_snapshot",
+  "Guard 12 requires project_soa_from_snapshot",
+]
+migration = """
+Document live project_soa as non-historical convenience only (already commented).
+Prefer callers that need auditability to pin_soa_snapshot + project_soa_from_snapshot.
+Optionally rename project_soa to project_soa_live to make the seam obvious.
+Do not delete until scheduler/CLI historical paths are audited.
+"""
+guard = "Guard 12 ProductLawCheck; assurance-runtime / SoA specs must keep one historical path."
+evidence = """
+soa.rs comments: pinned snapshot is historical reconstruction; live project_soa
+builds empty operational graph. Three public entrypoints share StatementOfApplicability.
+"""
+
+[[duplication]]
+id = "DUP-007"
+concept = "temporal-valid-leaf-selection-algorithm"
+canonical_owner = "crates/weeping-angel-control-test/src/temporal.rs::select_latest_as_of (evaluation primitive; ADR 0047 freeze)"
+duplicates = [
+  "crates/weeping-angel-evidence/src/ledger.rs::select_leaf_as_of (private; powers as_of/current)",
+]
+status = "confirmed"
+action = "document-intentional"
+debt_id = "DEBT-P0-EVIDENCE-LATEST"
+consumers = [
+  "control-test population/temporal evaluation",
+  "EvidenceLedger::as_of / current",
+]
+migration = """
+Do not move select_latest_as_of into evidence (ACP-T07 / TLE-015). Optional later:
+extract a tiny shared validity-leaf helper both call without changing public APIs.
+Keep ledger latest ≠ as_of semantics (ADR 0047 four clocks). Public API surface is intentional; the duplicated algorithm body is the debt.
+"""
+guard = "ACP-T07 / Guard 09–11; architecture ownership comments must list both seats."
+evidence = """
+Near-identical filter/supersede/sort by observed_at/collected_at/digest in both functions.
+Public latest/current/as_of APIs remain distinct clocks (not accidental aliases).
+"""
+
+[[duplication]]
+id = "DUP-008"
+concept = "catalog-root-search-and-pin-walks"
+canonical_owner = "crates/weeping-angel-canonical-catalog (CanonicalCatalog::load + WorkspaceCatalogLoader)"
+duplicates = [
+  "crates/weeping-angel-assurance/src/lib.rs::catalog_search_roots / load_catalog_pin",
+  "crates/weeping-angel-assurance/src/snapshot.rs::catalog_digest",
+  "crates/weeping-angel-canonical-catalog/src/lib.rs::workspace_catalog_roots / load_workspace_catalog",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = "DEBT-P0-CATALOG-SSOT"
+consumers = [
+  "assess-start pin establishment",
+  "framework pack load via WorkspaceCatalogLoader",
+  "CLI catalog paths",
+]
+migration = """
+Keep CanonicalCatalog::load as the only TOML catalog parser.
+Extract one shared root-candidate list (or only use WorkspaceCatalogLoader / projection digest).
+Serialize paths must keep calling stored pins, never live reload (ADR 0046).
+"""
+guard = "Guard 05; ADR 0046 pin-pure serialize; CAT contract tests."
+evidence = """
+Three near-identical CARGO_MANIFEST_DIR + catalog/canonical/v1 root walks.
+discover_catalog_index absent from framework (Guard 05 forbids reintroduction).
+"""
+
+[[duplication]]
+id = "DUP-009"
+concept = "canonical-digest-shared-primitive"
+canonical_owner = "crates/weeping-angel-assurance-ir::canonical_digest"
+duplicates = [
+  "framework FrameworkPackDigest wrapping canonical_digest",
+  "catalog CatalogDigest wrapping canonical_digest",
+  "evidence envelope/validity digests via canonical_digest",
+]
+status = "false-positive"
+action = "document-intentional"
+debt_id = "DEBT-P0-FRAMEWORK-DIGEST"
+consumers = ["pack load, catalog digest, evidence seal, SoA snapshot digest"]
+migration = "None — domain digests correctly share one IR primitive."
+guard = "Guard 07 requires FrameworkPackDigest type; IR remains single digest function."
+evidence = "All sampled digest paths import weeping_angel_assurance_ir::canonical_digest."
+
+[[duplication]]
+id = "DUP-010"
+concept = "debt-register-stale-p0-stub-language"
+canonical_owner = "docs/debt/register.toml (resolved DEBT-GUARD-05..12 + live ProductLawCheck)"
+duplicates = [
+  "docs/debt/register.toml DEBT-P0-PACK-PARSE summary still cites 'guard check 06 stub'",
+  "docs/debt/register.toml DEBT-P0-CATALOG-SSOT summary still cites 'guard check 05 stub'",
+  "docs/debt/register.toml DEBT-P0-FRAMEWORK-DIGEST / READINESS / LINEAGE / EVIDENCE / SOA summaries cite stub backlog",
+]
+status = "confirmed"
+action = "document-intentional"
+debt_id = ""
+consumers = ["humans reading open/confirmed P0 rows; agents triaging remaining_backlog"]
+migration = """
+Rewrite DEBT-P0-* summaries to distinguish: (a) ProductLawCheck surface already
+green via DEBT-GUARD-NN resolved, vs (b) remaining deep semantic backlog still
+confirmed. Do not reopen resolved guard findings.
+"""
+guard = "Phase 1 active-spec drift + inventory honesty; optional debt-register prose check."
+evidence = """
+register.toml lines ~45–98 still say 'guard check NN stub' while DEBT-GUARD-05..12
+are resolved and cargo xtask guard prints pass for 05–12.
+"""
+
+[[duplication]]
+id = "DUP-011"
+concept = "readiness-snapshot-construction"
+canonical_owner = "crates/weeping-angel-assurance/src/readiness.rs::project_readiness"
+duplicates = [
+  "crates/weeping-angel-assurance/src/drift.rs::readiness_view",
+  "crates/weeping-angel-assurance/src/lineage.rs (inline FrameworkReadinessSnapshot in report serialize)",
+  "crates/weeping-angel-assurance/src/scheduler.rs::empty_readiness",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = "DEBT-P0-READINESS-SSOT"
+consumers = [
+  "detect_isms_drift compare path",
+  "AssessmentReport JSON readiness embedding",
+  "scheduler first-run / missing previous readiness",
+]
+migration = """
+empty_readiness may remain an empty constructor. readiness_view / report serialize
+must not invent requirement status strings — call project_readiness or copy
+already-projected rows. overlay_privileged_mfa_presence already absent (Guard 08).
+"""
+guard = "Guard 08; ADR 0046 §6; RDY-T01/T02."
+evidence = """
+project_readiness is the mapping-honesty status owner; drift/lineage/scheduler
+construct FrameworkReadinessSnapshot without always going through it.
+"""
+
+[[duplication]]
+id = "DUP-012"
+concept = "document-current-vs-evidence-current-naming"
+canonical_owner = "domain-specific current() APIs (do not merge)"
+duplicates = [
+  "weeping-angel-evidence EvidenceLedger::current",
+  "weeping-angel-assurance-ir document registry current()",
+]
+status = "false-positive"
+action = "document-intentional"
+debt_id = ""
+consumers = ["evidence temporal selection; controlled documents"]
+migration = "None — different aggregates. Prefer qualified docs if confusion persists."
+guard = "Type ownership by crate; no shared trait required."
+evidence = "Same method name on unrelated types (EvidenceLedger vs DocumentVersion registry)."
+
+[[duplication]]
+id = "DUP-013"
+concept = "framework-pack-applicability-toml-parse"
+canonical_owner = "crates/weeping-angel-framework/src/pack.rs::load_applicability"
+duplicates = [
+  "crates/weeping-angel-assurance/src/lib.rs::load_pack_applicability_rows",
+  "crates/weeping-angel-assurance/src/soa.rs::load_pack_soa_rows",
+]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = "DEBT-P0-PACK-PARSE"
+consumers = [
+  "LoadedPack digest body (framework)",
+  "AssessmentRun / lineage pack_entries",
+  "project_operational_soa / live project_soa",
+]
+migration = """
+Expose typed applicability rows from LoadedPack / pack API. Assurance callers
+consume LoadedPack.applicability instead of re-toml::from_str. Resolve the
+fail-closed PackError path vs soa silent Vec::new behavior fork deliberately.
+"""
+guard = "Guard 06 PackError; ADR 0046 pack-as-projection; one parse seat in framework."
+evidence = """
+Three readers of applicability.toml: typed PackError path in pack.rs;
+manual Value picks in lib.rs; silent continue/ok in soa.rs.
+"""
+
+[[duplication]]
+id = "DUP-014"
+concept = "xtask-filesystem-walk"
+canonical_owner = "xtask/src/model.rs (RepositoryModel walk / SKIP_DIR_NAMES)"
+duplicates = ["xtask/src/inventory.rs::walk_included / should_skip_dir"]
+status = "confirmed"
+action = "consolidate-into-canonical"
+debt_id = ""
+consumers = ["cargo xtask guard", "cargo xtask inventory"]
+migration = """
+Reuse model walk helpers from inventory. Align exclusion sets carefully
+(model also skips __pycache__/apps; inventory uses target-*/target_* patterns).
+"""
+guard = "inventory exclusions JSON; SR target suite; do not invent a second FS crate."
+evidence = "Parallel directory walkers with overlapping but non-identical skip sets."
+
+[[duplication]]
+id = "DUP-015"
+concept = "collector-public-api-dual-surface"
+canonical_owner = "crates/weeping-angel-collector hexagonal CollectionEngine / CollectorAdapter"
+duplicates = ["EvidenceCollector trait + GitHubCollector/LocalCollector façade used by scheduler"]
+status = "candidate"
+action = "document-intentional"
+debt_id = ""
+consumers = ["weeping-angel-assurance::scheduler", "CLI collect paths"]
+migration = "Deferred to collector hexagonal program. Do not rewrite scheduler in structural reconciliation."
+guard = "ADR 0013; collector_hexagonal.target; Phase 0 freeze against new collector crates."
+evidence = "Scheduler uses EvidenceCollector; LocalCollector::collect delegates through CollectionEngine."
+
+[[duplication]]
+id = "DUP-016"
+concept = "scan-workbench-sqlite-surfaces"
+canonical_owner = "investigate — likely two products"
+duplicates = [
+  "codex-security/scripts/workbench_*.py",
+  "src/workbench/{mod,compare,remediation}.rs",
+]
+status = "candidate"
+action = "investigate"
+debt_id = ""
+consumers = ["weeping-angel workbench CLI", "codex-security deep_scan / skills"]
+migration = "If schemas/DB diverge intentionally, document-intentional. If overlapping sealed-scan index, pick one runtime."
+guard = "none today"
+evidence = "Both open SQLite workbench DBs and register/list scans across language trees."
+
+[[duplication]]
+id = "DUP-017"
+concept = "temporal-ownership-path-metadata-drift"
+canonical_owner = "architecture.toml ownership.temporal_evidence_selection (metadata must match seats)"
+duplicates = [
+  "architecture.toml paths pointing at assurance/src/temporal.rs while leaf primitive is control-test::select_latest_as_of",
+]
+status = "candidate"
+action = "document-intentional"
+debt_id = ""
+consumers = ["Guard 02 ownership readers; humans"]
+migration = "Update architecture.toml to list control-test temporal primitive + assurance timeline façade without moving functions."
+guard = "ACP-T07 / TLE-015 forbid moving select_latest_as_of."
+evidence = "assurance/src/temporal.rs is timeline/diff façade; select_latest_as_of lives in control-test."
